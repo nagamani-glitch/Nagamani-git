@@ -1,0 +1,95 @@
+/* src/components/Header.css */
+
+.custom-navbar {
+    background-color: cadetblue;
+    padding: 0.5rem 1rem;
+  }
+  
+  .brand {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    color: white !important;
+  }
+  
+  .path-indicator {
+    color: white;
+    margin-right: auto;
+    font-size: 1rem;
+  }
+  
+  .path-indicator span {
+    margin-right: 5px;
+  }
+  
+  .time-box {
+    background-color: green;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-right: 15px;
+    position: relative;
+  }
+  
+  .time-box:hover {
+    background-color: #28a745;
+  }
+  
+  .time-display {
+    font-weight: bold;
+  }
+  
+  .icon-link {
+    position: relative;
+    color: white !important;
+    margin-right: 15px;
+  }
+  
+  .icon-link:hover {
+    color: #ddd !important;
+  }
+  
+  .notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(50%, -50%);
+  }
+  
+  .dropdown-menu.show {
+    display: block;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    float: left;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    margin: 0.125rem 0 0;
+    font-size: 1rem;
+    color: #212529;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 0.25rem;
+  }
+  
+  .profile-dropdown .dropdown-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .logout-item {
+    cursor: pointer;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 992px) {
+    .path-indicator {
+      display: none;
+    }
+  }
+  

@@ -1,0 +1,51 @@
+/* Main Container */
+.main-container {
+  background-color: #f0f8ff;
+  text-align: center;
+  padding-top: 50px;
+  min-height: 100vh;
+}
+
+/* Icon Grid */
+.icon-grid {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Icon Item */
+.icon-item {
+  display: inline-block;
+  text-align: center;
+  padding: 20px;
+  animation: jump 1s ease infinite alternate;
+}
+
+/* Icon Circle and Hover */
+.icon-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.icon-item:hover .icon-circle {
+  transform: scale(1.2);
+  background-color: #f39c12;
+}
+
+/* Jump Animation */
+@keyframes jump {
+  0%, 100% {
+      transform: translateY(0);
+  }
+  50% {
+      transform: translateY(-15px);
+  }
+}

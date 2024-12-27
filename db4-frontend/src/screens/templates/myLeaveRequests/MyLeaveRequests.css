@@ -1,0 +1,53 @@
+.App {
+    padding: 20px;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .header-actions button {
+    margin-left: 10px;
+  }
+  
+  .leave-cards {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    margin-bottom: 20px;
+  }
+  
+  .leave-card {
+    padding: 20px;
+    min-width: 250px;
+    text-align: center;
+    cursor: pointer;
+    background-color: #f0f0f0;
+  }
+  
+  .card-content p {
+    margin: 5px 0;
+  }
+  
+  .leave-table {
+    overflow-x: auto;
+    margin-top: 20px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  th {
+    background-color: #f8f8f8;
+  }
+  

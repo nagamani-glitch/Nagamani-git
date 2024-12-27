@@ -1,0 +1,59 @@
+.profile-page-container {
+    padding: 20px;
+    width: 100% !important;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .edit-button {
+    margin-top: 10px;
+  }
+  
+  
+  .profile-card, .details-card {
+    margin-bottom: 20px;
+  }
+  
+
+  .custom-nav .nav-link {
+    font-size: 12px;
+    font-weight: 400;
+    color: #555;
+    margin-right: 5px;
+    border: none;
+    background-color: transparent !important;
+    padding-bottom: 5px;
+    transition: color 0.3s, border-bottom 0.3s;
+  }
+  
+  .custom-nav .nav-link:hover {
+    color: #007bff; /* Change to the color you want on hover */
+  }
+  
+  .custom-nav .nav-link.active {
+    color: #000; /* Change to the color you want when active */
+    border-bottom: 3px solid #ff5100; /* Change to the color you want for the underline */
+  }
+  
+  .custom-nav .nav-link.active:hover {
+    color: #000; /* Ensure active hover color remains consistent */
+  }
+  

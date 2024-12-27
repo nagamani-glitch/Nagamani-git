@@ -1,0 +1,39 @@
+.leave-table {
+    margin-top: 20px;
+    overflow-y: auto;
+    max-height: 300px; /* Adjust height as needed */
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+  }
+  
+  .headers{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    
+  }
+
+  .leave-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .leave-table th,
+  .leave-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .leave-table th {
+    background-color: #f5f5f5;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  
+  .leave-table tbody tr:hover {
+    background-color: #f9f9f9;
+  }
+  
