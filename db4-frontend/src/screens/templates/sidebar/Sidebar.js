@@ -108,7 +108,7 @@ function Sidebar({ setActiveScreen }) {
       <hr />
       </div>
       <ul>
-        <li onClick={() => handleMainClick('dashboard')}>
+        <li onClick={() => handleSubClick('dashboard')}>
           <FontAwesomeIcon icon={faChartPie} /> Dashboard
         </li>
         <li onClick={() => handleMainClick('recruitment')}>
@@ -116,14 +116,12 @@ function Sidebar({ setActiveScreen }) {
         </li>
         {activeMenu === 'recruitment' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('recruitmentDashboard')}>Dashboard</li>
+            <li onClick={() => handleSubClick('recruitmentdashboard')}>Dashboard</li>
             <li onClick={() => handleSubClick('recruitmentPipeline')}>Recruitment Pipeline</li>
             <li onClick={() => handleSubClick('recruitmentSurvey')}>Recruitment Survey</li>
             <li onClick={() => handleSubClick('candidates')}>Candidates</li>
             <li onClick={() => handleSubClick('interview')}>Interview</li>
-            <li onClick={() => handleSubClick('recruitment')}>Recruitment</li>
             <li onClick={() => handleSubClick('openJobs')}>Open Jobs</li>
-            <li onClick={() => handleSubClick('stages')}>Stages</li>
             <li onClick={() => handleSubClick('skillZone')}>Skill Zone</li>
           </ul>
         )}
