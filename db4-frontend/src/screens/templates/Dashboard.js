@@ -6,6 +6,16 @@ import OKRs from './OKRsScreen/OKRs';
 // import WorkManagement from './workManagement/EmployeeListing';
 // import ProductManagement from './productManagement/DocumentRequestPage';
 import DocumentRequestPage from './productManagement/DocumentRequestPage';
+import MainDashboard from './MainDashboard';
+import RecruitmentDashboard from './Recruitment/RecruitmentDashboard';
+import RecruitmentPipeline from './Recruitment/RecruitmentPipeline';
+import RecruitmentSurvey from './Recruitment/RecruitmentSurvey';
+import RecruitmentCandidate from './Recruitment/RecruitmentCandidate';
+import Interview from './Recruitment/Interview';
+import OpenJobs from './Recruitment/OpenJobs';
+import SkillZone from './Recruitment/SkillZone';
+import OnboardingView from './Onboarding/OnboardingView';
+import CandidatesView from './Onboarding/CandidateView';
 import './Dashboard.css';
 import { useSidebar } from '../../Context';
 import EmployeeListing from './employeeListing/EmployeeListing';
@@ -38,9 +48,25 @@ function Dashboard() {
       case 'onboardingView':
         return <OnboardingView />
       case 'dashboard':
-        return <Hr />;
-      case 'recruitment':
-        return <OKRs />;
+        return <MainDashboard /> ;
+      case 'recruitmentdashboard':
+        return <RecruitmentDashboard />;
+      case 'recruitmentPipeline':
+        return <RecruitmentPipeline />;
+      case 'recruitmentSurvey':
+        return <RecruitmentSurvey />;
+      case 'candidates':
+        return <RecruitmentCandidate />;
+      case 'interview':
+        return <Interview />;
+      case 'openJobs':
+        return <OpenJobs />;
+      case 'skillZone':
+        return <SkillZone />;
+      case 'onboardingView':
+        return <OnboardingView />;
+      case 'candidatesView':
+        return <CandidatesView />;
       case 'profile':
         return <ProfilePage employeeId={selectedEmployeeId} />;
       case 'employee':
