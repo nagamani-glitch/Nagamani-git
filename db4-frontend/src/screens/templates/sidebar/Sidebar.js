@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+
 import {
   faChartPie,
   faBullseye,
@@ -111,25 +113,41 @@ function Sidebar({ setActiveScreen }) {
         </li> 
         {activeMenu === 'payroll' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('payrollDashboard')}>Dashboard</li> 
-            <li onClick={() => handleSubClick('allowances')}>Allowancess</li>
-            {/* <li onClick={() => handleSubClick('/allowances/create')}>CreateAllowance</li> */}
-            <li onClick={() => handleSubClick('contract')}>Contract</li>
-            <li onClick={() => handleSubClick('deductions')}>Deductions</li>
-            <li onClick={() => handleSubClick('payslips')}>Payslips</li>
-            <li onClick={() => handleSubClick('federalTax')}>Federal Tax</li>
-          </ul>
+          <li onClick={() => handleSubClick('payrollDashboard')}>Dashboard</li>
+          <li onClick={() => handleSubClick('allowances')}>Allowances</li>
+          <li onClick={() => handleSubClick('createAllowance')}>Create Allowance</li>
+          <li onClick={() => handleSubClick('contract')}>Contract</li>
+          <li onClick={() => handleSubClick('deductions')}>Deductions</li>
+          <li onClick={() => handleSubClick('createDeduction')}>Create Deduction</li>
+          <li onClick={() => handleSubClick('payslips')}>Payslips</li>
+          <li onClick={() => handleSubClick('federalTax')}>Federal Tax</li>
+        </ul>
+          // <ul className="sub-menu">
+          //   <li onClick={() => handleSubClick('payrollDashboard')}>Dashboard</li> 
+          //   <li onClick={() => handleSubClick('allowances')}>Allowancess</li>
+          //   {/* <li onClick={() => handleSubClick('/allowances/create')}>CreateAllowance</li> */}
+          //   <li onClick={() => handleSubClick('contract')}>Contract</li>
+          //   <li onClick={() => handleSubClick('deductions')}>Deductions</li>
+          //   <li onClick={() => handleSubClick('payslips')}>Payslips</li>
+          //   <li onClick={() => handleSubClick('federalTax')}>Federal Tax</li>
+          // </ul>
         )}
         <li onClick={() => handleMainClick('performance')}>
         <FontAwesomeIcon icon={faChartLine} /> Performance
         </li>
         {activeMenu === 'performance' && (
-          
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
-            <li onClick={() => handleSubClick('objectives')}>Objectives</li>
-            <li onClick={() => handleSubClick('feedbck')}>360 Feedback</li>
-</ul>
+          <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
+          <li onClick={() => handleSubClick('objectives')}>Objectives</li>
+          <li onClick={() => handleSubClick('feedback')}>360 Feedback</li>
+          <li onClick={() => handleSubClick('createFeedback')}>Create Feedback</li>
+        </ul>
+          
+//           <ul className="sub-menu">
+//             <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
+//             <li onClick={() => handleSubClick('objectives')}>Objectives</li>
+//             <li onClick={() => handleSubClick('feedbck')}>360 Feedback</li>
+// </ul>
         )}
         <li onClick={() => handleMainClick('offboarding')}>
         <FontAwesomeIcon icon={faSignOutAlt} /> Offboarding
