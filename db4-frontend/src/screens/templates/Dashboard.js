@@ -34,6 +34,23 @@ import ProfilePage from './profilePage/ProfilePage';
 import MyLeaveRequests from './myLeaveRequests/MyLeaveRequests';
 import LeaveRequests from './leaveRequests/LeaveRequests';
 
+// Sangeeta 
+import PayrollDashboard from './Payroll/PayrollDashboard';
+import Allowances from './Payroll/Allowances';
+import CreateAllowance from './Payroll/CreateAllowance';
+import Contract from './Payroll/Contract';
+import Deductions from './Payroll/Deductions';
+import FederalTax from './Payroll/FederalTax';
+import Payslips from './Payroll/Payslips';
+
+import PerformanceDashboard from './Performance/PerformanceDashboard';
+import Objectives from './Performance/Objectives';
+import Feedback from './Performance/Feedback';
+
+import HomePage  from './Offboarding/HomePage';
+import RegistrationPage from './Offboarding/RegistrationPage';
+
+
 function Dashboard() {
   // State to manage the active screen
   const [activeScreen, setActiveScreen] = useState('');
@@ -45,7 +62,7 @@ function Dashboard() {
   const renderScreen = () => {
     switch (activeScreen) {
       case 'dashboard':
-        return <MainDashboard /> ;
+        return <MainDashboard />;
       case 'recruitmentdashboard':
         return <RecruitmentDashboard />;
       case 'recruitmentPipeline':
@@ -91,7 +108,33 @@ function Dashboard() {
       case "leaveRequests":
         return <LeaveRequests />
       case "myLeaveRequests":
-        return <MyLeaveRequests />    
+        return <MyLeaveRequests />
+      case "payrollDashboard":
+        return <PayrollDashboard />;
+      case "allowances":
+        return <Allowances />;
+      case "/allowances/create":
+        return <CreateAllowance />;
+      case "contract":
+        return <Contract />;
+      case "deductions":
+        return <Deductions />;
+      case "federalTax":
+        return <FederalTax />;
+      case "payslips":
+        return <Payslips />;
+      case "performanceDashboard":
+        return <PerformanceDashboard />;
+      case "objectives":
+        return <Objectives />
+      case "feedback":
+        return <Feedback  />;
+        case "exitProcess":
+          return <HomePage />;
+          case "registrationPage":
+            return <RegistrationPage />;
+
+
       default:
         return null
     }

@@ -1,0 +1,168 @@
+.objectives {
+    max-width: 1200px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .header-row h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+  }
+  
+  .toolbar {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .toolbar input[type="text"] {
+    padding: 8px;
+    width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .toolbar button {
+    padding: 8px 12px;
+    border: none;
+    background-color: #1a8116c4;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .tabs {
+    display: flex;
+    border: 2px solid #f9f6f6;
+    justify-content:last baseline;
+    text-align: left;
+    background-color: #eae7e7;
+  }
+  
+  .tabs button {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .tabs button.active {
+    border-bottom: 2px solid #08782f;
+    font-weight: bold;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  th, td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+  }
+  
+  th {
+    background-color: #f4f4f4;
+  }
+  
+  td button {
+    margin-right: 5px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    
+  }
+  
+  .pagination {
+    text-align: right;
+    font-size: 14px;
+    color: #777;
+  }
+  
+
+  /*  For filter popup styling */
+
+  .filter-modal {
+    position: absolute;
+    top: 20%;
+    right: 10%;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 450px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    height: 350px;
+  }
+  
+  .filter-modal-content h3 {
+    margin-top: 0;
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #333;
+  }
+  
+  .filter-modal-content label {
+    display: block;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 4px;
+  }
+  
+  .filter-modal-content input[type="number"],
+  .filter-modal-content input[type="text"],
+  .filter-modal-content select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  .filter-modal-content button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+  }
+  
+  .filter-modal-content button:first-child {
+    background-color: #007bff;
+    color: #fff;
+  }
+  
+  .filter-modal-content button:last-child {
+    background-color: #6c757d;
+    color: #fff;
+  }
+  
+  .filter-modal-content button:last-child:hover {
+    background-color: #5a6268;
+  }
+  
+  .filter-modal-content button:first-child:hover {
+    background-color: #0069d9;
+  }
+  
+  .group {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 15px;
+    width: 100%;
+  }
+
+  .group label{
+    flex: 1;
+  }

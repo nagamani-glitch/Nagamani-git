@@ -1,0 +1,329 @@
+
+.main-container{
+    border: 1.5px solid rgb(246, 235, 235);
+    padding: 20px;
+    max-width: 700px;
+    margin: 40px auto;
+    background-color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    height: 130vh;
+  }  
+
+.create-allowance-container {
+    padding: 30px;
+    max-width: 700px;
+    margin: 40px auto;
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 1.5px solid rgb(216, 212, 212);
+    
+  }
+
+  
+  .create-allowance-container h2 {
+    text-align: start;
+    color: #333;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  
+  }
+
+  .create-allowance-container hr{
+    margin-bottom: 30px;
+  }
+  
+  .form-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    flex: 1;
+  }
+  
+  .form-group.half-width {
+    flex: 0.5;
+  }
+  
+  .form-group label {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: black;
+    margin-bottom: 5px;
+    font-size: 15px;
+  }
+  
+  .form-group label span {
+    color: #ff4d4d;
+    margin-left: 4px;
+  }
+  
+  .info-icon {
+    margin-left: 5px;
+    color: #888;
+    cursor: help;
+    font-size: 0.85rem;
+  }
+  
+  input[type="text"],
+  input[type="date"],
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-size: 14px;
+    color: rgb(199, 108, 137);
+
+  }
+  
+  .filter-btn {
+    background-color: #f0f0f0;
+    color: #555;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  
+  .filter-icons {
+    display: flex;
+    gap: 5px;
+    margin-top: 8px;
+    justify-content: end;
+    padding: 6px;
+  }
+  
+  .small-filter-icon {
+    font-size: 1.2rem;
+    color: orangered;
+    text-align: end;
+  }
+
+  .filter-span{
+    color: orangered;
+  }
+  
+  /* Toggle Switch */
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    margin-top: 8px;
+  }
+  
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(219, 198, 198);
+    transition: 0.4s;
+    border-radius: 20px;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+  }
+  
+  input:checked + .slider {
+    background-color: orangered;
+  }
+  
+  input:checked + .slider:before {
+    transform: translateX(15px);
+  }
+
+  .condition-options{
+    font-size: 12px;
+    color: rgb(151, 146, 146);
+  }
+  
+  /* Multi-select box and tag styles */
+.multi-select-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #ddd;
+    padding: 5px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+  }
+  
+  .tag {
+    display: flex;
+    align-items: center;
+    background-color: #a8b4c0;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    margin: 3px;
+  }
+  
+  .remove-tag {
+    margin-left: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+
+  /* Avatar styling for selected employee */
+.avatar-container{
+    display: flex;
+  }
+.avatar {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    background-color: #b5b0b0;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: bold;
+    color: #ffffff;
+    text-transform: uppercase;
+    border: 2px solid #ccc;
+  }
+  
+  .avatar-text {
+    text-align: center;
+    line-height: 40px; /* Centers text vertically */
+  }
+
+  /* Modal Styling */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background: white;
+    width: 500px;
+    padding: 20px;
+    border-radius: 8px;
+    position: relative;
+  }
+  
+  .close-modal {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+  }
+  
+  .search-bar {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  .employee-list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 5px;
+  }
+
+  .employee-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .employee-item .avatar {
+    width: 30px;
+    height: 30px;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .add-employee {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .add-employee:hover {
+    background-color: #218838;
+  }
+  
+  .save-btn-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 0.5;
+  }
+  
+  .save-btn {
+    padding: 12px 20px;
+    background-color: #1bc429;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .save-btn:hover {
+    background-color: #59da61;
+  }
+  
+  @media (max-width: 600px) {
+    .form-row {
+      flex-direction: column;
+    }
+  }
+  
