@@ -69,10 +69,7 @@ import CreateFeedback from './Performance/CreateFeedback';
 //offboarding
 import HomePage  from './Offboarding/HomePage';
 import RegistrationPage from './Offboarding/RegistrationPage';
-<<<<<<< HEAD
-=======
 
->>>>>>> 8705f165b76ea72f28584c6573bbcb7382a8d4d2
 
 
 function Dashboard() {
@@ -159,12 +156,9 @@ function Dashboard() {
       case "leaveRequests":
         return <LeaveRequests />
       case "myLeaveRequests":
-<<<<<<< HEAD
         return <MyLeaveRequests /> 
-=======
         return <MyLeaveRequests />
         //sangeeta
->>>>>>> 8705f165b76ea72f28584c6573bbcb7382a8d4d2
       case "assetHistory":
         return <AssetHistory />
       case "assetView":
@@ -183,11 +177,8 @@ function Dashboard() {
         return <FaqCategory />
       case "faqPage":
         return <FaqPage />
-<<<<<<< HEAD
         
         return <MyLeaveRequests />
-=======
->>>>>>> 8705f165b76ea72f28584c6573bbcb7382a8d4d2
       case "payrollDashboard":
         return <PayrollDashboard />;
       case "allowances":
