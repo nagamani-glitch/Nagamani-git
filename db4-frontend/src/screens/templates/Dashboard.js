@@ -5,10 +5,12 @@ import Sidebar from './sidebar/Sidebar';
 //import ProductDevelopment from './profilePage/ProfilePage';
 // import WorkManagement from './workManagement/EmployeeListing';
 // import ProductManagement from './productManagement/DocumentRequestPage';
-
-// Subikshan's Integration
 import DocumentRequestPage from './productManagement/DocumentRequestPage';
+
+//Subikshan Integration
+//Dasboard
 import MainDashboard from './MainDashboard';
+//Recruitment
 import RecruitmentDashboard from './Recruitment/RecruitmentDashboard';
 import RecruitmentPipeline from './Recruitment/RecruitmentPipeline';
 import RecruitmentSurvey from './Recruitment/RecruitmentSurvey';
@@ -16,8 +18,8 @@ import RecruitmentCandidate from './Recruitment/RecruitmentCandidate';
 import Interview from './Recruitment/Interview';
 import OpenJobs from './Recruitment/OpenJobs';
 import SkillZone from './Recruitment/SkillZone';
+//Onboarding
 import OnboardingView from './Onboarding/OnboardingView_1';
-
 import CandidatesView from './Onboarding/CandidateView';
 import './Dashboard.css';
 import { useSidebar } from '../../Context';
@@ -50,6 +52,7 @@ import FaqPage from './faqs/FaqPage';
 // import OnboardingView from './onboarding/OnboardingView';
 
 // Sangeeta 
+//Payroll
 import PayrollDashboard from './Payroll/PayrollDashboard';
 import Allowances from './Payroll/Allowances';
 import CreateAllowance from './Payroll/CreateAllowance';
@@ -57,16 +60,15 @@ import Contract from './Payroll/Contract';
 import Deductions from './Payroll/Deductions';
 import FederalTax from './Payroll/FederalTax';
 import Payslips from './Payroll/Payslips';
-
+import CreateDeduction from './Payroll/CreateDeduction';
+//Performance 
 import PerformanceDashboard from './Performance/PerformanceDashboard';
 import Objectives from './Performance/Objectives';
 import Feedback from './Performance/Feedback';
-
+import CreateFeedback from './Performance/CreateFeedback';
+//offboarding
 import HomePage  from './Offboarding/HomePage';
 import RegistrationPage from './Offboarding/RegistrationPage';
-
-import CreateDeduction from './Payroll/CreateDeduction';
-import CreateFeedback from './Performance/CreateFeedback';
 
 
 
@@ -156,7 +158,6 @@ function Dashboard() {
       case "myLeaveRequests":
         return <MyLeaveRequests />
         //sangeeta
-        return <MyLeaveRequests /> 
       case "assetHistory":
         return <AssetHistory />
       case "assetView":
@@ -175,8 +176,6 @@ function Dashboard() {
         return <FaqCategory />
       case "faqPage":
         return <FaqPage />
-    
-        return <MyLeaveRequests />
       case "payrollDashboard":
         return <PayrollDashboard />;
       case "allowances":
@@ -188,7 +187,7 @@ function Dashboard() {
       case "deductions":
         return <Deductions />;
         case 'createDeduction':
-  return <CreateDeduction />;
+        return <CreateDeduction />;
       case "federalTax":
         return <FederalTax />;
       case "payslips":
