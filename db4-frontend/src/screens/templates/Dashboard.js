@@ -33,7 +33,6 @@ import TimeOffRequests from './timeOffRequests/TimeOffRequests';
 import ProfilePage from './profilePage/ProfilePage';
 import MyLeaveRequests from './myLeaveRequests/MyLeaveRequests';
 import LeaveRequests from './leaveRequests/LeaveRequests';
-<<<<<<< HEAD
 //import OnboardingView from './onboarding/OnboardingView';
 import AssetHistory from './Assets/AssetHistory';
 import AssetView from './Assets/AssetView';
@@ -45,7 +44,6 @@ import RestrictLeaves from './configuration/RestrictLeaves';
 import FaqCategory from './faqs/FaqCategory';
 import FaqPage from './faqs/FaqPage';
 
-=======
 // import OnboardingView from './onboarding/OnboardingView';
 
 // Sangeeta 
@@ -63,7 +61,6 @@ import Feedback from './Performance/Feedback';
 
 import HomePage  from './Offboarding/HomePage';
 import RegistrationPage from './Offboarding/RegistrationPage';
->>>>>>> 961aa28324a6e342a78df63c4fbbe217ba0e8bd2
 
 
 function Dashboard() {
@@ -123,7 +120,6 @@ function Dashboard() {
       case "leaveRequests":
         return <LeaveRequests />
       case "myLeaveRequests":
-<<<<<<< HEAD
         return <MyLeaveRequests /> 
       case "assetHistory":
         return <AssetHistory />
@@ -143,9 +139,6 @@ function Dashboard() {
         return <FaqCategory />
       case "faqPage":
         return <FaqPage />
-        
-=======
-        return <MyLeaveRequests />
       case "payrollDashboard":
         return <PayrollDashboard />;
       case "allowances":
@@ -172,7 +165,6 @@ function Dashboard() {
             return <RegistrationPage />;
 
 
->>>>>>> 961aa28324a6e342a78df63c4fbbe217ba0e8bd2
       default:
         return null
     }
