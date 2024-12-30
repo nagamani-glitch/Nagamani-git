@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 // import React, { useState, useEffect } from 'react';
 // import { fetchHolidays, createHoliday, updateHoliday, deleteHoliday, fetchFilteredHolidays } from './api/holiday.js'; // Ensure `fetchFilteredHolidays` is defined in your backend API
 // import './Holiday.css';
+=======
+import React, { useState, useEffect } from 'react';
+import { fetchHolidays, createHoliday, updateHoliday, deleteHoliday, fetchFilteredHolidays } from '../api/holidays'; // Ensure `fetchFilteredHolidays` is defined in your backend API
+import './Holiday.css';
+>>>>>>> 90981ed281df90097f6f79891c91ce2acc814442
 
 // export default function Holidays() {
 //     const [holidays, setHolidays] = useState([]);
