@@ -6,6 +6,14 @@ import employeesRouter from './routes/employeesRouter.js'
 import authRouter from './routes/authRouter.js'
 import profileRouter from './routes/profileRouter.js'
 import contractRouter from './routes/contractRouter.js'
+import applicantProfileRoutes from './routes/applicantProfileRoutes.js'
+import candidateRoutes from './routes/candidateRoutes.js'
+import employeeRoutes from './routes/employeeRoutes.js'
+import interviewRoutes from './routes/interviewRoutes.js'
+import skillZoneRoutes from './routes/skillZoneRoutes.js'
+import surveyRoutes from './routes/surveyRoutes.js'
+
+
 
 dotenv.config()
 connectDB()
@@ -23,6 +31,12 @@ app.use('/api/employees', employeesRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/profiles', profileRouter)
 app.use('/api/contracts', contractRouter);
+app.use(candidateRoutes);  
+app.use(surveyRoutes); 
+app.use('/api/applicantProfiles', applicantProfileRoutes);
+app.use('/api/interviews', interviewRoutes);
+app.use('/api/skill-zone', skillZoneRoutes);
+app.use('/api/employees',employeeRoutes);
 
 
 const PORT = process.env.PORT || 5000

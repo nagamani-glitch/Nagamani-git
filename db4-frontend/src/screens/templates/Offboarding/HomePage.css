@@ -1,0 +1,140 @@
+.home-page {
+  padding: 20px;
+  background-color: #f9f9f9;
+  width: 100%;
+  height: 100vh;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  padding: 8px 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  font-size: 16px;
+  border: none;
+  background-color: hwb(96 7% 50% / 0.879);
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+  display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.create-btn {
+  padding: 8px 16px;
+  font-size: 16px;
+  border: none;
+  background-color: hwb(96 7% 50% / 0.879);
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+  display: flex;
+    align-items: center;
+}
+
+.filter-btn:hover, .create-btn:hover {
+  background-color: rgb(61, 96, 37);
+}
+
+.create-popup, .filter-popup {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -20%);
+  background-color: #fff;
+  padding: 20px;
+  border: 1px solid #ddd;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-row {
+  margin-bottom: 15px;
+}
+
+.required {
+  color: red;
+}
+
+.offboarding-list {
+  margin-top: 20px;
+}
+
+.stage-item {
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+}
+
+.stage-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  cursor: pointer;
+  background-color: #f9f9f9;
+}
+
+.stage-content {
+  padding: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th, table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+table th {
+  background-color: #f0f0f0;
+}
+
+.highlight {
+  background-color: yellow;
+  font-weight: bold;
+}
+
+.filter-popup .apply-btn {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.filter-popup .apply-btn:hover {
+  background-color: #0056b3;
+}
+
+.filter-popup .cancel-btn {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.filter-popup .cancel-btn:hover {
+  background-color: #5a6268;
+}
+
+.create-popup-button{
+  padding: 8px 16px;
+  font-size: 16px;
+  border: none;
+  background-color: hwb(96 38% 34% / 0.879);
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+}
