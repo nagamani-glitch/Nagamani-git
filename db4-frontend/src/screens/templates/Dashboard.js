@@ -14,7 +14,7 @@ import RecruitmentCandidate from './Recruitment/RecruitmentCandidate';
 import Interview from './Recruitment/Interview';
 import OpenJobs from './Recruitment/OpenJobs';
 import SkillZone from './Recruitment/SkillZone';
-import OnboardingView from './Onboarding/OnboardingView';
+import OnboardingView from './Onboarding/OnboardingView_1';
 import CandidatesView from './Onboarding/CandidateView';
 import './Dashboard.css';
 import { useSidebar } from '../../Context';
@@ -33,7 +33,18 @@ import TimeOffRequests from './timeOffRequests/TimeOffRequests';
 import ProfilePage from './profilePage/ProfilePage';
 import MyLeaveRequests from './myLeaveRequests/MyLeaveRequests';
 import LeaveRequests from './leaveRequests/LeaveRequests';
-import OnboardingView from './onboarding/OnboardingView';
+//import OnboardingView from './onboarding/OnboardingView';
+import AssetHistory from './Assets/AssetHistory';
+import AssetView from './Assets/AssetView';
+import AssetBatch from './Assets/AssetBatch';
+import AssetDashboard from './Assets/AssetDashboard';
+import Holidays from './configuration/Holidays';
+import CompanyHolidays from './configuration/CompanyHolidays';
+import RestrictLeaves from './configuration/RestrictLeaves';
+import FaqCategory from './faqs/FaqCategory';
+import FaqPage from './faqs/FaqPage';
+
+
 
 function Dashboard() {
   // State to manage the active screen
@@ -94,7 +105,26 @@ function Dashboard() {
       case "leaveRequests":
         return <LeaveRequests />
       case "myLeaveRequests":
-        return <MyLeaveRequests />    
+        return <MyLeaveRequests /> 
+      case "assetHistory":
+        return <AssetHistory />
+      case "assetView":
+        return <AssetView />
+      case "assetBatch":
+        return <AssetBatch />
+      case "assetDashboard":
+        return <AssetDashboard />
+      case "holidays":
+        return <Holidays />
+      case "companyHolidays":
+        return <CompanyHolidays />
+      case "restrictLeaves":
+        return <RestrictLeaves />
+      case "faqCategory":
+        return <FaqCategory />
+      case "faqPage":
+        return <FaqPage />
+        
       default:
         return null
     }
