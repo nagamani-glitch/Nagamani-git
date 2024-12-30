@@ -33,7 +33,7 @@ import TimeOffRequests from './timeOffRequests/TimeOffRequests';
 import ProfilePage from './profilePage/ProfilePage';
 import MyLeaveRequests from './myLeaveRequests/MyLeaveRequests';
 import LeaveRequests from './leaveRequests/LeaveRequests';
-import OnboardingView from './onboarding/OnboardingView';
+// import OnboardingView from './onboarding/OnboardingView';
 
 function Dashboard() {
   // State to manage the active screen
