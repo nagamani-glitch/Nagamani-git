@@ -278,6 +278,8 @@
 
 import React, { useState } from 'react';
 import Footer from '../components/Footer';
+import { TextField, RadioGroup, FormControlLabel, Radio, Paper, FormControl, Button, Typography, Grid, InputLabel, FormHelperText } from '@mui/material';
+import { motion } from 'framer-motion';
 
 const PersonalInformationForm = ({ nextStep, handleFormDataChange }) => {
   // State for Personal Info
@@ -400,200 +402,238 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange }) => {
     <div className="joining-container">
       <form onSubmit={handleSubmit} className='personalForm' >
         {step === 1 && (
-          <div className="form-section">
-            <h2 className="form-subtitle">Employee Personal Information</h2>
-            <div className="form-grid">
-              <div className="joiningFormElement">
-                <label>First Name<span className='star'>*</span>:</label>
-                <input
-                  name="firstName"
-                  type="text"
-                  value={formData.firstName}
-                  onChange={handlePersonalChange}
-                  className={Formerrors.firstName ? 'error-input' : ''}
-                  placeholder={Formerrors.firstName || "Your first name"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Last Name<span className='star'>*</span>:</label>
-                <input
-                  name="lastName"
-                  type="text"
-                  value={formData.lastName}
-                  onChange={handlePersonalChange}
-                  className={Formerrors.lastName ? 'error-input' : ''}
-                  placeholder={Formerrors.lastName || "Your last name"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Date of Birth<span className='star'>*</span>:</label>
-                <input
-                  name="dob"
-                  type="date"
-                  value={formData.dob}
-                  onChange={handlePersonalChange}
-                  className={Formerrors.dob ? 'error-input' : ''}
-                  placeholder={Formerrors.dob || ""}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Gender<span className='star'>*</span>:</label>
-                <div className="joiningFormElement">
-                  <input type="radio" name="gender" className='radio' value="Male" onChange={handlePersonalChange} /> Male
-                  <input type="radio" name="gender" className='radio' value="Female" onChange={handlePersonalChange} /> Female
-                  <input type="radio" name="gender" className='radio' value="Other" onChange={handlePersonalChange} /> Other
-                </div>
-              </div>
-              <div className="joiningFormElement">
-                <label>Marital Status<span className='star'>*</span>:</label>
-                <input
-                  name="maritalStatus"
-                  type="text"
-                  value={formData.maritalStatus}
-                  onChange={handlePersonalChange}
-                  className={Formerrors.maritalStatus ? 'error-input' : ''}
-                  placeholder={Formerrors.maritalStatus || "Your marital status"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Caste<span className='star'>*</span>:</label>
-                <input
-                  name="caste"
-                  type="text"
-                  value={formData.caste}
-                  onChange={handlePersonalChange}
-                  className={Formerrors.caste ? 'error-input' : ''}
-                  placeholder={Formerrors.caste || "Your caste"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Category<span className='star'>*</span>:</label>
-                <input
-                  name="category"
-                  type="text"
-                  value={formData.category}
-                  onChange={handlePersonalChange}
-                  className={Formerrors.category ? 'error-input' : ''}
-                  placeholder={Formerrors.category || "Your category"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Religion<span className='star'>*</span>:</label>
-                <input
-                  name="religion"
-                  type="text"
-                  value={formData.religion}
-                  onChange={handlePersonalChange}
-                  className={Formerrors.religion ? 'error-input' : ''}
-                  placeholder={Formerrors.religion || "Your religion"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Blood Group<span className='star'>*</span>:</label>
-                <input
-                  name="bloodGroup"
-                  type="text"
-                  value={formData.bloodGroup}
-                  onChange={handlePersonalChange}
-                  className={Formerrors.bloodGroup ? 'error-input' : ''}
-                  placeholder={Formerrors.bloodGroup || "Your blood group"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Home State:</label>
-                <input
-                  name="homeState"
-                  type="text"
-                  value={formData.homeState}
-                  onChange={handlePersonalChange}
-                  placeholder="Your home state"
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Home District:</label>
-                <input
-                  name="homeDistrict"
-                  type="text"
-                  value={formData.homeDistrict}
-                  onChange={handlePersonalChange}
-                  placeholder="Your home district"
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Employee Image:</label>
-                <input type="file" name="employeeImage" className='file-input' onChange={handleImageChange} />
-                {employeeImage && (
-                  <div>
-                    <p>Image uploaded: {employeeImage.name}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Paper elevation={3} sx={{ padding: 3, borderRadius: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Employee Personal Information
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="First Name"
+                required
+                name="firstName"
+                value={formData.firstName}
+                onChange={handlePersonalChange}
+                error={!!Formerrors.firstName}
+                helperText={Formerrors.firstName}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Last Name"
+                required
+                name="lastName"
+                value={formData.lastName}
+                onChange={handlePersonalChange}
+                error={!!Formerrors.lastName}
+                helperText={Formerrors.lastName}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Date of Birth"
+                type="date"
+                required
+                InputLabelProps={{ shrink: true }}
+                name="dob"
+                value={formData.dob}
+                onChange={handlePersonalChange}
+                error={!!Formerrors.dob}
+                helperText={Formerrors.dob}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl component="fieldset">
+                <Typography variant="body1" sx={{ mb: 1 }}>Gender<span className="star">*</span>:</Typography>
+                <RadioGroup row name="gender" value={formData.gender} onChange={handlePersonalChange}>
+                  <FormControlLabel value="Male" control={<Radio />} label="Male" />
+                  <FormControlLabel value="Female" control={<Radio />} label="Female" />
+                  <FormControlLabel value="Other" control={<Radio />} label="Other" />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Marital Status"
+                required
+                name="maritalStatus"
+                value={formData.maritalStatus}
+                onChange={handlePersonalChange}
+                error={!!Formerrors.maritalStatus}
+                helperText={Formerrors.maritalStatus}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Caste"
+                required
+                name="caste"
+                value={formData.caste}
+                onChange={handlePersonalChange}
+                error={!!Formerrors.caste}
+                helperText={Formerrors.caste}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Category"
+                required
+                name="category"
+                value={formData.category}
+                onChange={handlePersonalChange}
+                error={!!Formerrors.category}
+                helperText={Formerrors.category}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Religion"
+                required
+                name="religion"
+                value={formData.religion}
+                onChange={handlePersonalChange}
+                error={!!Formerrors.religion}
+                helperText={Formerrors.religion}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Blood Group"
+                required
+                name="bloodGroup"
+                value={formData.bloodGroup}
+                onChange={handlePersonalChange}
+                error={!!Formerrors.bloodGroup}
+                helperText={Formerrors.bloodGroup}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Home State"
+                name="homeState"
+                value={formData.homeState}
+                onChange={handlePersonalChange}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Home District"
+                name="homeDistrict"
+                value={formData.homeDistrict}
+                onChange={handlePersonalChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <InputLabel>Employee Image:</InputLabel>
+              <Button variant="contained" component="label">
+                Upload File
+                <input type="file" hidden name="employeeImage" onChange={handleImageChange} />
+              </Button>
+              {employeeImage && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Image uploaded: {employeeImage.name}
+                </Typography>
+              )}
+            </Grid>
+          </Grid>
+        </Paper>
+      </motion.div>
+    )}
 
-        {step === 2 && (
-          <div className="form-section">
-            <h2 className="form-subtitle">Address Information</h2>
-            <div className="form-grid">
-              <div className="joiningFormElement">
-                <label>Present Address<span className='star'>*</span>:</label>
-                <input
-                  name="presentAddress"
-                  type="text"
-                  value={addressData.presentAddress}
-                  onChange={handleAddressChange}
-                  className={Formerrors.presentAddress ? 'error-input' : ''}
-                  placeholder={Formerrors.presentAddress || "Your present address"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>District<span className='star'>*</span>:</label>
-                <input
-                  name="district"
-                  type="text"
-                  value={addressData.district}
-                  onChange={handleAddressChange}
-                  className={Formerrors.district ? 'error-input' : ''}
-                  placeholder={Formerrors.district || "Your district"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>State<span className='star'>*</span>:</label>
-                <input
-                  name="state"
-                  type="text"
-                  value={addressData.state}
-                  onChange={handleAddressChange}
-                  className={Formerrors.state ? 'error-input' : ''}
-                  placeholder={Formerrors.state || "Your state"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Pin Code<span className='star'>*</span>:</label>
-                <input
-                  name="pinCode"
-                  type="text"
-                  value={addressData.pinCode}
-                  onChange={handleAddressChange}
-                  className={Formerrors.pinCode ? 'error-input' : ''}
-                  placeholder={Formerrors.pinCode || "Your pin code"}
-                />
-              </div>
-              <div className="joiningFormElement">
-                <label>Phone Number<span className='star'>*</span>:</label>
-                <input
-                  name="phoneNumber"
-                  type="text"
-                  value={addressData.phoneNumber}
-                  onChange={handleAddressChange}
-                  className={Formerrors.phoneNumber ? 'error-input' : ''}
-                  placeholder={Formerrors.phoneNumber || "Your phone number"}
-                />
-              </div>
-            </div>
-          </div>
-        )}
+{step === 2 && (
+  <motion.div 
+    initial={{ opacity: 0, y: 50 }} 
+    animate={{ opacity: 1, y: 0 }} 
+    transition={{ duration: 0.5 }}
+    className="form-section"
+  >
+    <Typography variant="h6" gutterBottom className="form-subtitle">
+      Address Information
+    </Typography>
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Present Address"
+          name="presentAddress"
+          variant="outlined"
+          required
+          value={addressData.presentAddress}
+          onChange={handleAddressChange}
+          error={Boolean(Formerrors.presentAddress)}
+          helperText={Formerrors.presentAddress || "Your present address"}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="District"
+          name="district"
+          variant="outlined"
+          required
+          value={addressData.district}
+          onChange={handleAddressChange}
+          error={Boolean(Formerrors.district)}
+          helperText={Formerrors.district || "Your district"}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="State"
+          name="state"
+          variant="outlined"
+          required
+          value={addressData.state}
+          onChange={handleAddressChange}
+          error={Boolean(Formerrors.state)}
+          helperText={Formerrors.state || "Your state"}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Pin Code"
+          name="pinCode"
+          variant="outlined"
+          required
+          value={addressData.pinCode}
+          onChange={handleAddressChange}
+          error={Boolean(Formerrors.pinCode)}
+          helperText={Formerrors.pinCode || "Your pin code"}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Phone Number"
+          name="phoneNumber"
+          variant="outlined"
+          required
+          value={addressData.phoneNumber}
+          onChange={handleAddressChange}
+          error={Boolean(Formerrors.phoneNumber)}
+          helperText={Formerrors.phoneNumber || "Your phone number"}
+        />
+      </Grid>
+    </Grid>
+  </motion.div>
+)}
 
         <div>
           {step > 1 && <button type="button" onClick={handlePrevious}>Previous</button>}

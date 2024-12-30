@@ -23,6 +23,7 @@ import TimeOffRequests from './timeOffRequests/TimeOffRequests';
 import ProfilePage from './profilePage/ProfilePage';
 import MyLeaveRequests from './myLeaveRequests/MyLeaveRequests';
 import LeaveRequests from './leaveRequests/LeaveRequests';
+import OnboardingView from './onboarding/OnboardingView';
 
 function Dashboard() {
   // State to manage the active screen
@@ -34,6 +35,8 @@ function Dashboard() {
   // Function to render the correct component based on the active screen
   const renderScreen = () => {
     switch (activeScreen) {
+      case 'onboardingView':
+        return <OnboardingView />
       case 'dashboard':
         return <Hr />;
       case 'recruitment':
