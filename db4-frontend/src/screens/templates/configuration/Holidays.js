@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchHolidays, createHoliday, updateHoliday, deleteHoliday, fetchFilteredHolidays } from './api/holiday.js'; // Ensure `fetchFilteredHolidays` is defined in your backend API
+import { fetchHolidays, createHoliday, updateHoliday, deleteHoliday, fetchFilteredHolidays } from '../api/holidays'; // Ensure `fetchFilteredHolidays` is defined in your backend API
 import './Holiday.css';
 
 export default function Holidays() {

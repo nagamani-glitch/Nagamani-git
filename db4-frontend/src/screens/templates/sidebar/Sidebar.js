@@ -158,7 +158,7 @@ function Sidebar({ setActiveScreen }) {
         </li>
         {activeMenu === 'helpDesk' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('faqs')}>FAQs</li>
+            <li onClick={() => handleSubClick('faqPage')}>FAQs</li>
             <li onClick={() => handleSubClick('tickets')}>Tickets</li>
             
           </ul>
@@ -168,9 +168,9 @@ function Sidebar({ setActiveScreen }) {
         </li>
         {activeMenu === 'configuration' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('multipleApprovals')}>Multiple Approvals</li>
+            {/* <li onClick={() => handleSubClick('multipleApprovals')}>Multiple Approvals</li>
             <li onClick={() => handleSubClick('mailTemplates')}>Mail Templates</li>
-            <li onClick={() => handleSubClick('mailAutomations')}>Mail Automations</li>
+            <li onClick={() => handleSubClick('mailAutomations')}>Mail Automations</li> */}
             <li onClick={() => handleSubClick('holidays')}>Holidays</li>
             <li onClick={() => handleSubClick('companyLeaves')}>Company Leaves</li>
             <li onClick={() => handleSubClick('restrictLeaves')}>Restrict Leaves</li>
