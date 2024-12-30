@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from './sidebar/Sidebar';
-import Hr from './hrScreen/Hr';
-import OKRs from './OKRsScreen/OKRs';
+//import Hr from './hrScreen/Hr';
+//import OKRs from './OKRsScreen/OKRs';
 //import ProductDevelopment from './profilePage/ProfilePage';
 // import WorkManagement from './workManagement/EmployeeListing';
 // import ProductManagement from './productManagement/DocumentRequestPage';
@@ -33,7 +33,7 @@ import TimeOffRequests from './timeOffRequests/TimeOffRequests';
 import ProfilePage from './profilePage/ProfilePage';
 import MyLeaveRequests from './myLeaveRequests/MyLeaveRequests';
 import LeaveRequests from './leaveRequests/LeaveRequests';
-import OnboardingView from './onboarding/OnboardingView';
+//import OnboardingView from './onboarding/OnboardingView';
 
 function Dashboard() {
   // State to manage the active screen
@@ -63,8 +63,6 @@ function Dashboard() {
         return <OpenJobs />;
       case 'skillZone':
         return <SkillZone />;
-      case 'onboardingView':
-        return <OnboardingView />;
       case 'candidatesView':
         return <CandidatesView />;
       case 'profile':
