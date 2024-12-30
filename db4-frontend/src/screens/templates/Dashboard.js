@@ -14,7 +14,7 @@ import RecruitmentCandidate from './Recruitment/RecruitmentCandidate';
 import Interview from './Recruitment/Interview';
 import OpenJobs from './Recruitment/OpenJobs';
 import SkillZone from './Recruitment/SkillZone';
-import OnboardingView from './Onboarding/OnboardingView';
+import OnboardingView from './Onboarding/OnboardingView_1';
 import CandidatesView from './Onboarding/CandidateView';
 import './Dashboard.css';
 import { useSidebar } from '../../Context';
@@ -33,7 +33,38 @@ import TimeOffRequests from './timeOffRequests/TimeOffRequests';
 import ProfilePage from './profilePage/ProfilePage';
 import MyLeaveRequests from './myLeaveRequests/MyLeaveRequests';
 import LeaveRequests from './leaveRequests/LeaveRequests';
+<<<<<<< HEAD
 //import OnboardingView from './onboarding/OnboardingView';
+import AssetHistory from './Assets/AssetHistory';
+import AssetView from './Assets/AssetView';
+import AssetBatch from './Assets/AssetBatch';
+import AssetDashboard from './Assets/AssetDashboard';
+import Holidays from './configuration/Holidays';
+import CompanyHolidays from './configuration/CompanyHolidays';
+import RestrictLeaves from './configuration/RestrictLeaves';
+import FaqCategory from './faqs/FaqCategory';
+import FaqPage from './faqs/FaqPage';
+
+=======
+// import OnboardingView from './onboarding/OnboardingView';
+
+// Sangeeta 
+import PayrollDashboard from './Payroll/PayrollDashboard';
+import Allowances from './Payroll/Allowances';
+import CreateAllowance from './Payroll/CreateAllowance';
+import Contract from './Payroll/Contract';
+import Deductions from './Payroll/Deductions';
+import FederalTax from './Payroll/FederalTax';
+import Payslips from './Payroll/Payslips';
+
+import PerformanceDashboard from './Performance/PerformanceDashboard';
+import Objectives from './Performance/Objectives';
+import Feedback from './Performance/Feedback';
+
+import HomePage  from './Offboarding/HomePage';
+import RegistrationPage from './Offboarding/RegistrationPage';
+>>>>>>> 961aa28324a6e342a78df63c4fbbe217ba0e8bd2
+
 
 function Dashboard() {
   // State to manage the active screen
@@ -48,7 +79,7 @@ function Dashboard() {
       case 'onboardingView':
         return <OnboardingView />
       case 'dashboard':
-        return <MainDashboard /> ;
+        return <MainDashboard />;
       case 'recruitmentdashboard':
         return <RecruitmentDashboard />;
       case 'recruitmentPipeline':
@@ -92,7 +123,56 @@ function Dashboard() {
       case "leaveRequests":
         return <LeaveRequests />
       case "myLeaveRequests":
-        return <MyLeaveRequests />    
+<<<<<<< HEAD
+        return <MyLeaveRequests /> 
+      case "assetHistory":
+        return <AssetHistory />
+      case "assetView":
+        return <AssetView />
+      case "assetBatch":
+        return <AssetBatch />
+      case "assetDashboard":
+        return <AssetDashboard />
+      case "holidays":
+        return <Holidays />
+      case "companyHolidays":
+        return <CompanyHolidays />
+      case "restrictLeaves":
+        return <RestrictLeaves />
+      case "faqCategory":
+        return <FaqCategory />
+      case "faqPage":
+        return <FaqPage />
+        
+=======
+        return <MyLeaveRequests />
+      case "payrollDashboard":
+        return <PayrollDashboard />;
+      case "allowances":
+        return <Allowances />;
+      case "/allowances/create":
+        return <CreateAllowance />;
+      case "contract":
+        return <Contract />;
+      case "deductions":
+        return <Deductions />;
+      case "federalTax":
+        return <FederalTax />;
+      case "payslips":
+        return <Payslips />;
+      case "performanceDashboard":
+        return <PerformanceDashboard />;
+      case "objectives":
+        return <Objectives />
+      case "feedback":
+        return <Feedback  />;
+        case "exitProcess":
+          return <HomePage />;
+          case "registrationPage":
+            return <RegistrationPage />;
+
+
+>>>>>>> 961aa28324a6e342a78df63c4fbbe217ba0e8bd2
       default:
         return null
     }

@@ -1,0 +1,193 @@
+/* Container for the entire asset view */
+.asset-view-container {
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #f1f1f1; /* Light background */
+  border-radius: 10px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); /* Soft shadow for a lifted effect */
+}
+
+/* Header container with flexible layout */
+.header-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  text-align: center; /* Center text in header */
+}
+
+.asset-heading {
+  font-size: 28px;
+  color: #333;
+  font-weight: bold;
+  flex: 1;
+}
+
+.search-input,
+.category-dropdown,
+.stage-dropdown {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  outline: none;
+}
+
+.search-input {
+  flex: 2;
+}
+
+.category-dropdown {
+  flex: 1;
+  background-color: #f5f5f5;
+}
+
+.add-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.add-button:hover {
+  background-color: #45a049;
+}
+
+/* Asset list container with responsive grid */
+.asset-list-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Auto-adjusting columns */
+  gap: 20px;
+  padding: 20px;
+
+  background: #f9f9f9; /* Light gray background for the whole list container */
+  border-radius: 10px;
+  border: 2px solid #ddd; /* Outer border for the list container */
+}
+
+.asset-table {
+  width: 1; /* Full width of the parent container */
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+  margin-top: 20px; /* Add top margin for spacing */
+}
+
+/* Asset item grid (individual asset card) */
+.asset-item {
+  background-color: #ffffff; /* White background for each asset item */
+  border: 1px solid #ddd; /* Lighter gray border */
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05); /* Subtle shadow effect */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Align content to the left */
+  justify-content: space-between;
+}
+
+.asset-item h4 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #333;
+  text-align: left;
+}
+
+.asset-item p {
+  margin: 5px 0;
+  color: #666;
+  text-align: left;
+}
+
+/* Asset Table (styled as a grid) */
+
+
+.asset-table th,
+.asset-table td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #ddd; /* Border between rows and columns */
+}
+
+.asset-table th {
+  background-color: #f2f2f2;
+  color: #333;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.asset-table td {
+  color: #666;
+  font-size: 14px;
+}
+
+.asset-table tr:nth-child(even) {
+  background-color: #f9f9f9; /* Alternate row color */
+}
+
+/* Edit and Delete buttons in the asset list */
+.edit-button,
+.delete-button {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.edit-button:hover {
+  background-color: #0056b3;
+}
+
+.delete-button {
+  background-color: #dc3545;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
+
+/* Placeholder for empty state when no assets are found */
+.no-assets {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  grid-column: span 6; /* Make the message span across the full width of the grid */
+}
+
+/* Additional padding and spacing for assets */
+.asset-item {
+  margin: 10px 0;
+  padding: 15px;
+}
+
+/* Table and Grid Layout Balance */
+.asset-view-container .asset-list-container,
+.asset-view-container .asset-table {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+/* Add a grid-like layout to the asset view for consistency */
+.asset-view-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.asset-view-container .asset-table {
+  display: block;
+  width: 100%; /* Ensuring it takes up full width of the parent */
+  margin-top: 20px; /* Add some spacing above the table */
+}
