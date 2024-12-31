@@ -1,91 +1,196 @@
-// AddAsset.js
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
+import gsap from 'gsap';
+import { motion } from 'framer-motion';
 import axios from 'axios';
-import './AddAsset.css';
+
+const validationSchema = Yup.object().shape({
+  name: Yup.string().required('Asset name is required'),
+  category: Yup.string().required('Category is required'),
+  status: Yup.string().required('Status is required'),
+  currentEmployee: Yup.string().required('Current user is required'),
+  previousEmployees: Yup.string()
+});
 
 const AddAsset = ({ onClose, refreshAssets, editAsset }) => {
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState('');
-  const [status, setStatus] = useState('');
-  const [currentEmployee, setCurrentEmployee] = useState('');
-  const [previousEmployees, setPreviousEmployees] = useState('');
-
   useEffect(() => {
-    if (editAsset) {
-      // Pre-fill form with asset data if editing
-      setName(editAsset.name);
-      setCategory(editAsset.category);
-      setStatus(editAsset.status);
-      setCurrentEmployee(editAsset.currentEmployee);
-      setPreviousEmployees(editAsset.previousEmployees.join(', '));
-    }
-  }, [editAsset]);
+    // GSAP animation for modal entry
+    gsap.from('.modal-container', {
+      duration: 0.5,
+      y: -50,
+      opacity: 0,
+      ease: 'power3.out'
+    });
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (values, { setSubmitting }) => {
     const assetData = {
-      name,
-      category,
-      status,
-      currentEmployee,
-      previousEmployees: previousEmployees.split(',').map(emp => emp.trim())
+      ...values,
+      previousEmployees: values.previousEmployees.split(',').map(emp => emp.trim())
     };
-  
+
+    const API_URL= process.env.REACT_APP_API_URL;
+
     try {
       if (editAsset) {
-        // Update existing asset
-        console.log("Attempting to update asset:", assetData);
-        await axios.put(`https://db-4-demo-project-hlv5.vercel.app//api/assets/${editAsset._id}`, assetData);
-        console.log("Asset updated successfully.");
+        await axios.put(`${API_URL}/api/assets/${editAsset._id}`, assetData);
       } else {
-        // Create new asset
-        console.log("Attempting to create new asset:", assetData);
-        await axios.post('https://db-4-demo-project-hlv5.vercel.app//api/assets', assetData);
-        console.log("Asset created successfully.");
+        await axios.post(`${API_URL}/api/assets`, assetData);
       }
-  
-      // Refresh the asset list and close the modal
       refreshAssets();
       onClose();
     } catch (error) {
-      console.error("Error submitting asset data:", error);
-      alert("An error occurred while submitting data. Please try again.");
+      console.error("Error:", error);
     }
+    setSubmitting(false);
   };
-  
 
   return (
-    <div className="overlay">
-      <div className="modal-container">
-        <button onClick={onClose} className="close-button">&times;</button>
-        <h2>{editAsset ? 'Edit Asset' : 'Add Asset'}</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Name</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label>Category</label>
-            <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label>Status</label>
-            <input type="text" value={status} onChange={(e) => setStatus(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label>Current User</label>
-            <input type="text" value={currentEmployee} onChange={(e) => setCurrentEmployee(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label>Previous Employees</label>
-            <input type="text" value={previousEmployees} onChange={(e) => setPreviousEmployees(e.target.value)} />
-          </div>
-          <button type="submit" className="submit-button">Save</button>
-        </form>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={styles.overlay}
+    >
+      <div style={styles.modalContainer}>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={styles.closeButton}
+          onClick={onClose}
+        >
+          ×
+        </motion.button>
+
+        <h2 style={styles.title}>{editAsset ? 'Edit Asset' : 'Add Asset'}</h2>
+
+        <Formik
+          initialValues={{
+            name: editAsset?.name || '',
+            category: editAsset?.category || '',
+            status: editAsset?.status || '',
+            currentEmployee: editAsset?.currentEmployee || '',
+            previousEmployees: editAsset?.previousEmployees?.join(', ') || ''
+          }}
+          validationSchema={validationSchema}
+          onSubmit={handleSubmit}
+        >
+          {({ errors, touched, isSubmitting }) => (
+            <Form style={styles.form}>
+              {['name', 'category', 'status', 'currentEmployee', 'previousEmployees'].map((fieldName) => (
+                <div key={fieldName} style={styles.formGroup}>
+                  <label style={styles.label}>
+                    {fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, ' $1')}
+                  </label>
+                  <Field
+                    name={fieldName}
+                    style={styles.input}
+                    placeholder={`Enter ${fieldName.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
+                  />
+                  {errors[fieldName] && touched[fieldName] && (
+                    <div style={styles.error}>{errors[fieldName]}</div>
+                  )}
+                </div>
+              ))}
+
+              <motion.button
+                type="submit"
+                disabled={isSubmitting}
+                style={styles.submitButton}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isSubmitting ? 'Saving...' : 'Save Asset'}
+              </motion.button>
+            </Form>
+          )}
+        </Formik>
       </div>
-    </div>
+    </motion.div>
   );
+};
+
+const styles = {
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000
+  },
+  modalContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    padding: '2rem',
+    width: '90%',
+    maxWidth: '500px',
+    position: 'relative',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: '1rem',
+    right: '1rem',
+    background: 'none',
+    border: 'none',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+    color: '#666',
+  },
+  title: {
+    textAlign: 'center',
+    color: '#333',
+    marginBottom: '2rem',
+    fontSize: '1.8rem'
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.2rem'
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem'
+  },
+  label: {
+    fontSize: '0.9rem',
+    color: '#555',
+    fontWeight: '500'
+  },
+  input: {
+    padding: '0.8rem',
+    borderRadius: '8px',
+    border: '1px solid #ddd',
+    fontSize: '1rem',
+    transition: 'border-color 0.3s ease',
+    ':focus': {
+      borderColor: '#007bff',
+      outline: 'none'
+    }
+  },
+  submitButton: {
+    backgroundColor: '#007bff',
+    color: 'white',
+    padding: '1rem',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    marginTop: '1rem',
+    transition: 'background-color 0.3s ease'
+  },
+  error: {
+    color: '#dc3545',
+    fontSize: '0.8rem',
+    marginTop: '0.2rem'
+  }
 };
 
 export default AddAsset;

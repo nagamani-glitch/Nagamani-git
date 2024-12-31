@@ -1,6 +1,9 @@
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { getAssets, createAsset, updateAsset, deleteAsset } from '../api/assetHistory';
 import './AssetHistory.css';
+
+const API_URL = process.env.REACT_APP_API_URL + '/api/assetHistory';
 
 const AssetHistory = () => {
   const [assets, setAssets] = useState([]);

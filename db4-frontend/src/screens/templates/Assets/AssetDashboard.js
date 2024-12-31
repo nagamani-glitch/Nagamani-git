@@ -36,10 +36,12 @@ const Dashboard = () => {
     };
   }, []);
 
+  const APP_URL = process.env.REACT_APP_API_URL;
+
   const fetchDashboardData = async () => {
     try {
       // Adjusted API URL to match backend
-      const response = await axios.get('https://db-4-demo-project-hlv5.vercel.app/api/assetHistory/summary');
+      const response = await axios.get(`${APP_URL}/api/assetHistory/summary`);
       setTotalAssets(response.data.totalAssets);
       setAssetsInUse(response.data.assetsInUse);
       setCategoryData(response.data.categoryData);

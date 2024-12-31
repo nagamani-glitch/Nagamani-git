@@ -69,6 +69,9 @@ import CreateFeedback from './Performance/CreateFeedback';
 //offboarding
 import HomePage  from './Offboarding/HomePage';
 import RegistrationPage from './Offboarding/RegistrationPage';
+
+
+
  
  
  
@@ -156,6 +159,7 @@ function Dashboard() {
       case "leaveRequests":
         return <LeaveRequests />
       case "myLeaveRequests":
+        return <MyLeaveRequests /> 
         return <MyLeaveRequests />
         //sangeeta
       case "assetHistory":
@@ -176,6 +180,8 @@ function Dashboard() {
         return <FaqCategory />
       case "faqPage":
         return <FaqPage />
+        
+        return <MyLeaveRequests />
       case "payrollDashboard":
         return <PayrollDashboard />;
       case "allowances":
