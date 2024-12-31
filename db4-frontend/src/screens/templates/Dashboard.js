@@ -48,6 +48,8 @@ import CompanyHolidays from './configuration/CompanyHolidays';
 import RestrictLeaves from './configuration/RestrictLeaves';
 import FaqCategory from './faqs/FaqCategory';
 import FaqPage from './faqs/FaqPage';
+import { fetchHolidays, createHoliday, updateHoliday, deleteHoliday, fetchFilteredHolidays } from './configuration/Holidays';
+
  
 // import OnboardingView from './onboarding/OnboardingView';
  
@@ -160,7 +162,7 @@ function Dashboard() {
         return <LeaveRequests />
       case "myLeaveRequests":
         return <MyLeaveRequests /> 
-        return <MyLeaveRequests />
+      
         //sangeeta
       case "assetHistory":
         return <AssetHistory />
@@ -181,7 +183,7 @@ function Dashboard() {
       case "faqPage":
         return <FaqPage />
         
-        return <MyLeaveRequests />
+      
       case "payrollDashboard":
         return <PayrollDashboard />;
       case "allowances":
