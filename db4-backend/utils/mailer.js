@@ -1,31 +1,3 @@
-// import nodemailer from 'nodemailer';
-
-// const transporter = nodemailer.createTransport({
-//   host:process.env.HOST,
-//     service:process.env.SERVICE,
-//     port:Number(process.env.EMAIL_PORT),
-//     secure:Boolean(process.env.SECURE),
-//   auth: {
-//     user: process.env.USER,  // Gmail user from .env
-//     pass: process.env.PASS,  // Gmail password from .env
-//   },
-// });
-
-// export const sendOtpEmail = async (email, otp) => {
-//   const mailOptions = {
-//     from: process.env.USER,
-//     to: email,
-//     subject: 'OTP for Email Verification',
-//     text: `Your OTP is: ${otp}. It will expire in 10 minutes.`,
-//   };
-
-//   try {
-//     await transporter.sendMail(mailOptions);
-//   } catch (error) {
-//     throw new Error('Error sending OTP email');
-//   }
-// };
-
 
 import nodemailer from 'nodemailer';
 
