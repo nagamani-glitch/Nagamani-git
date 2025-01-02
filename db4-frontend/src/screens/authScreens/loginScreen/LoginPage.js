@@ -168,11 +168,7 @@ const LoginPage = () => {
       
       
       localStorage.setItem('token', response.data.token);
-<<<<<<< HEAD
       navigate('/Dashboards');
-=======
-      navigate('/home');
->>>>>>> 1db990a3128176f87a28635846e59738514912c0
     } catch (error) {
       if (error.response && error.response.status === 401) {
         setError('Invalid email or password. Please try again.');
