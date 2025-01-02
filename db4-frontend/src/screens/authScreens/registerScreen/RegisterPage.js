@@ -6,13 +6,10 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import icons from react-icons
 import './RegisterPage.css';
-=======
 import { motion } from 'framer-motion';
 import { Box, Button, TextField, Typography, Container } from '@mui/material';
->>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -21,16 +18,13 @@ const RegisterPage = () => {
     password: '',
   });
   const [error, setError] = useState('');
-<<<<<<< HEAD
   const [otpSent, setOtpSent] = useState(false); // State to track if OTP has been sent
   const [otp, setOtp] = useState('');
   const [errorOtp, setErrorOtp] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false); // State to control the OTP modal visibility
   const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
   
-=======
 
->>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -70,7 +64,7 @@ const RegisterPage = () => {
   };
 
   return (
-<<<<<<< HEAD
+    <>
     <div className="register-container">
       <form onSubmit={handleSubmit} className="form">
         <h4>Register</h4>
@@ -122,7 +116,6 @@ const RegisterPage = () => {
         </div>
       )}
     </div>
-=======
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
@@ -197,7 +190,7 @@ const RegisterPage = () => {
         </Box>
       </Container>
     </motion.div>
->>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
+    </>
   );
 };
 
