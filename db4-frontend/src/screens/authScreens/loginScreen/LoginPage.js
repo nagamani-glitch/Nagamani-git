@@ -185,42 +185,6 @@ const LoginPage = () => {
 
   return (
     <>
-    <div className="login-container">
-      <form onSubmit={handleSubmit} className="form">
-        <h4>Login</h4>
-        
-        {/* Email Input */}
-        <label htmlFor="email">Email</label>
-        <input 
-          type="email" 
-          id="email" 
-          name="email" 
-          placeholder="Your Email..." 
-          onChange={handleChange} 
-          value={formData.email}
-        />
-
-        {/* Password Input */}
-        <label htmlFor="password">Password</label>
-        <input 
-          type="password" 
-          id="password" 
-          name="password" 
-          placeholder="Your Password..." 
-          onChange={handleChange} 
-          value={formData.password}
-        />
-
-        {/* Display error if login fails */}
-        {error && <p className="error">{error}</p>}
-
-        {/* Submit Button */}
-        <button type="submit">Login</button>
-
-        {/* Registration link for new users */}
-        <p>New user? <Link to="/register">Register here</Link></p>
-      </form>
-    </div>
     <motion.div
       className="login-container"
       initial={{ opacity: 0 }}
