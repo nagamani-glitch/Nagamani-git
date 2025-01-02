@@ -1,181 +1,76 @@
-// import React, { useState, useEffect, useRef } from 'react';
-// import { Container, Navbar, Nav, NavDropdown, Image } from 'react-bootstrap';
-// import { LinkContainer } from 'react-router-bootstrap';
-// import { useNavigate } from 'react-router-dom';
-// import 'bootstrap-icons/font/bootstrap-icons.css'; // Ensure you have Bootstrap Icons loaded
-
-// const Header = () => {
-//   const [showProfileMenu, setShowProfileMenu] = useState(false);
-//   const profileMenuRef = useRef(null);
-//   const navigate = useNavigate()
-//   const token = localStorage.getItem('token')
-
-//   // Toggle profile dropdown on icon click
-//   const handleProfileToggle = () => {
-//     setShowProfileMenu(prev => !prev);
-//   };
-
-//   // Close dropdown if clicked outside of it
-//   const handleClickOutside = (e) => {
-//     if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
-//       setShowProfileMenu(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     // Add event listener to detect clicks outside the dropdown
-//     document.addEventListener('mousedown', handleClickOutside);
-
-//     return () => {
-//       // Cleanup the event listener on component unmount
-//       document.removeEventListener('mousedown', handleClickOutside);
-//     };
-//   }, []);
-
-//   const handleLogout=()=>{
-//     try{
-//     localStorage.removeItem('token')
-//       navigate('/')
-//   } catch(e){
-//     console.log(e)
-//   }
-//   }
-
-//   return (
-//     <header >
-//       <Navbar style={{ backgroundColor: 'cadetblue' }} expand="lg" variant="dark" collapseOnSelect>
-//         <Container>
-//           <LinkContainer to="/">
-//             <Navbar.Brand className="title" style={{ marginRight: '10px', fontSize: '1.5rem' }}>
-//               DB4Cloud
-//             </Navbar.Brand>
-//           </LinkContainer>
-//           <Navbar.Toggle aria-controls="basic-navbar-nav" />
-//           <Navbar.Collapse id="basic-navbar-nav">
-//             <Nav className="ms-auto">
-//               <LinkContainer to="/home">
-//                 <Nav.Link>Home</Nav.Link>
-//               </LinkContainer>
-//               <LinkContainer to="/hr">
-//                 <Nav.Link>HR</Nav.Link>
-//               </LinkContainer>
-//               {!token && 
-//               <LinkContainer to="/login">
-//               <Nav.Link>Login</Nav.Link>
-//             </LinkContainer>
-//               }
-              
-
-//               {/* Profile Dropdown */}
-//               <NavDropdown 
-//                 title={<i className="bi bi-person-circle" style={{ fontSize: '1.3rem', color: 'red'  }}></i>} 
-//                 id="profile-dropdown"
-//                 show={showProfileMenu} 
-//                 onClick={handleProfileToggle} // Toggle dropdown on hover
-//                 onMouseLeave={handleProfileToggle} // Close dropdown when leaving
-//                 ref={profileMenuRef} 
-//               >
-//                 <div className='down' style={{height:""}}>
-//                 <div className="dropdown-header" style={{ display: 'flex', alignItems: 'center' }}>
-//                   <Image
-//                     src="https://via.placeholder.com/30"
-//                     roundedCircle
-//                     alt="Profile"
-                    
-//                   />
-//                   <strong>Username</strong>
-//                 </div>
-//                 <LinkContainer to="/profile">
-//                   <NavDropdown.Item>View Profile</NavDropdown.Item>
-//                 </LinkContainer>
-//                 <LinkContainer to="/inbox">
-//                   <NavDropdown.Item>Inbox</NavDropdown.Item>
-//                 </LinkContainer>
-//                 <LinkContainer to="/notifications">
-//                   <NavDropdown.Item>Notifications</NavDropdown.Item>
-//                 </LinkContainer>
-//                 <LinkContainer to="/myworkday">
-//                   <NavDropdown.Item>My Workday 2.0</NavDropdown.Item>
-//                 </LinkContainer>
-//                 <LinkContainer to="/favorites">
-//                   <NavDropdown.Item>Favorites</NavDropdown.Item>
-//                 </LinkContainer>
-//                 <NavDropdown.Divider />
-//                 <div onClick={handleLogout} style={{ borderRadius:"5px", cursor: 'pointer', padding: '10px',  textAlign:"center"}}>
-//                   Sign Out
-//                 </div>
-//                 </div>
-//               </NavDropdown>
-//             </Nav>
-//           </Navbar.Collapse>
-//         </Container>
-//       </Navbar>
-//     </header>
-//   );
-// };
-
-
-// export default Header;
-
-
-// src/components/Header.js
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Navbar, Nav, NavDropdown, Image, Badge, Button } from 'react-bootstrap';
+import { Container, Navbar, Nav, NavDropdown, Button, Badge } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaBars, FaBell, FaCog, FaBuilding, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
-import 'bootstrap-icons/font/bootstrap-icons.css'; // Ensure you have Bootstrap Icons loaded
-import './Header.css'; // Custom CSS for Header
+import { FaBars, FaBell, FaCog, FaBuilding, FaUserCircle, FaSignOutAlt, FaSignInAlt, FaHome } from 'react-icons/fa';
+import './Header.css';
 import { useSidebar } from '../Context';
+
 const Header = () => {
-  const {toggleSidebar} = useSidebar()
+  const { toggleSidebar } = useSidebar();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCompanies, setShowCompanies] = useState(false);
   const profileMenuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  //const token = localStorage.getItem('token');
 
-  // Time state
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // Check-In/Check-Out State
+  const [timer, setTimer] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [startTime, setStartTime] = useState(null);
 
-  // Update time every second
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    let interval;
+    if (isTimerRunning) {
+      interval = setInterval(() => {
+        setTimer(Math.floor((new Date() - startTime) / 1000));
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
 
-  // Toggle profile dropdown on icon click
+    return () => clearInterval(interval);
+  }, [isTimerRunning, startTime]);
+
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleTimerClick = () => {
+    if (isTimerRunning) {
+      setIsTimerRunning(false);
+    } else {
+      setStartTime(new Date());
+      setIsTimerRunning(true);
+      setTimer(0);
+    }
+  };
+
   const handleProfileToggle = () => {
-    setShowProfileMenu(prev => !prev);
+    setShowProfileMenu((prev) => !prev);
   };
 
-  // Toggle notifications dropdown
   const handleNotificationsToggle = () => {
-    setShowNotifications(prev => !prev);
+    setShowNotifications((prev) => !prev);
   };
 
-  // Toggle companies dropdown
   const handleCompaniesToggle = () => {
-    setShowCompanies(prev => !prev);
+    setShowCompanies((prev) => !prev);
   };
 
-  // Close dropdowns if clicked outside
   const handleClickOutside = (e) => {
     if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
       setShowProfileMenu(false);
     }
-    // Add similar logic for other dropdowns if needed
   };
 
   useEffect(() => {
-    // Add event listener to detect clicks outside the dropdown
     document.addEventListener('mousedown', handleClickOutside);
-
     return () => {
-      // Cleanup the event listener on component unmount
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
@@ -189,12 +84,6 @@ const Header = () => {
     }
   };
 
-  // Format current time
-  const formatTime = (date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  };
-
-  // Path Indicator Logic
   const getPathIndicator = () => {
     const path = location.pathname.split('/').filter(Boolean);
     return path.map((segment, index) => (
@@ -205,12 +94,12 @@ const Header = () => {
   };
 
   return (
-    <header className='mb-5'>
+    <header className="mb-5">
       <Navbar className="custom-navbar" expand="lg" variant="dark" fixed="top">
         <Container fluid>
           {/* Hamburger Menu */}
           <Button variant="link" className="me-3" onClick={toggleSidebar}>
-            <FaBars size={24} color="white" />
+            <FaBars size={28} color="white" />
           </Button>
 
           {/* Brand */}
@@ -219,26 +108,45 @@ const Header = () => {
           </LinkContainer>
 
           {/* Path Indicator */}
-          <div className="path-indicator">
-            {getPathIndicator()}
-          </div>
+          <div className="path-indicator">{getPathIndicator()}</div>
 
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto align-items-center">
-              {/* Time Box */}
-              <div className="time-box">
-                <span className="time-display">{formatTime(currentTime)}</span>
+              {/* Check In/Check Out Button */}
+              <div className="check-in-out-box">
+                <Button
+                  className={`timer-button ${isTimerRunning ? 'active' : ''}`}
+                  onClick={handleTimerClick}
+                  title={isTimerRunning ? 'Click to check-out' : 'Click to check-in'}
+                >
+                  {isTimerRunning ? (
+                    <>
+                      <FaSignOutAlt size={28} className="me-2 rotate" />
+                      <span>{`Checked in... ${formatTime(timer)}`}</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaSignInAlt size={28} className="me-2 beat" />
+                      <span>Check-in</span>
+                    </>
+                  )}
+                </Button>
               </div>
 
+              {/* Home Icon */}
+              <Nav.Link className="icon-link ms-3" onClick={() => navigate('/home')}>
+                <FaHome size={32} title="Home" />
+              </Nav.Link>
+
               {/* Settings Icon */}
-              <Nav.Link className="icon-link" onClick={() => navigate('/settings')}>
-                <FaCog size={20} title="Settings" />
+              <Nav.Link className="icon-link ms-3" onClick={() => navigate('/settings')}>
+                <FaCog size={28} title="Settings" />
               </Nav.Link>
 
               {/* Notifications Icon */}
-              <Nav.Link className="icon-link" onClick={handleNotificationsToggle}>
-                <FaBell size={20} title="Notifications" />
+              <Nav.Link className="icon-link ms-3" onClick={handleNotificationsToggle}>
+                <FaBell size={28} title="Notifications" />
                 <Badge bg="danger" pill className="notification-badge">3</Badge>
               </Nav.Link>
               {showNotifications && (
@@ -251,34 +159,27 @@ const Header = () => {
               )}
 
               {/* Companies Icon */}
-              <Nav.Link className="icon-link" onClick={handleCompaniesToggle}>
-                <FaBuilding size={20} title="Companies" />
+              <Nav.Link className="icon-link ms-3" onClick={handleCompaniesToggle}>
+                <FaBuilding size={28} title="Companies" />
               </Nav.Link>
               {showCompanies && (
                 <div className="dropdown-menu dropdown-menu-end show">
                   <NavDropdown.Header>Companies</NavDropdown.Header>
                   <NavDropdown.Item href="#action/3.1" active>DB4Cloud</NavDropdown.Item>
-                  {/* Add more companies here if needed */}
                 </div>
               )}
 
               {/* Profile Dropdown */}
               <NavDropdown
-                title={<FaUserCircle size={24} color="white" />}
+                title={<FaUserCircle size={28} color="white" />}
                 id="profile-dropdown"
                 show={showProfileMenu}
                 onClick={handleProfileToggle}
                 ref={profileMenuRef}
                 align="end"
-                className="profile-dropdown"
+                className="profile-dropdown ms-3"
               >
                 <div className='dropdown-header d-flex align-items-center px-3 py-2'>
-                  <Image
-                    src="https://via.placeholder.com/30"
-                    roundedCircle
-                    alt="Profile"
-                    className="me-2"
-                  />
                   <strong>Username</strong>
                 </div>
                 <NavDropdown.Item onClick={() => navigate('/profile')}>My Profile</NavDropdown.Item>

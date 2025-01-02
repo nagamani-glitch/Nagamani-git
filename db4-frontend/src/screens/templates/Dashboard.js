@@ -44,7 +44,7 @@ import AssetView from './Assets/AssetView';
 import AssetBatch from './Assets/AssetBatch';
 import AssetDashboard from './Assets/AssetDashboard';
 import Holidays from './configuration/Holidays';
-// import CompanyHolidays from './configuration/CompanyHolidays';
+import CompanyHolidays from './configuration/CompanyHolidays';
 import RestrictLeaves from './configuration/RestrictLeaves';
 import FaqCategory from './faqs/FaqCategory';
 import FaqPage from './faqs/FaqPage';
@@ -174,8 +174,8 @@ function Dashboard() {
         return <AssetDashboard />
       case "holidays":
         return <Holidays />
-      // case "companyHolidays":
-      //   return <CompanyHolidays />
+      case "companyHolidays":
+        return <CompanyHolidays />
       case "restrictLeaves":
         return <RestrictLeaves />
       case "faqCategory":
