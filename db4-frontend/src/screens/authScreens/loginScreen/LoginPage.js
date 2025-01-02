@@ -12,6 +12,10 @@ const LoginPage = () => {
     password: '',
   });
   const [error, setError] = useState('');
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4983c096eb5c91a70e442a5ab2ba9ef1fd7d1655
   // Handle input changes
   const navigate = useNavigate();
 
@@ -28,6 +32,7 @@ const LoginPage = () => {
       const response = await axios.post('http://localhost:5000/api/auth/login', formData);
       alert('User logged in successfully');
       
+<<<<<<< HEAD
       // Store the token in localStorage
       localStorage.setItem('token', response.data.token);
 
@@ -36,6 +41,15 @@ const LoginPage = () => {
       
       localStorage.setItem('token', response.data.token);
       navigate('/home');
+=======
+      
+      localStorage.setItem('token', response.data.token);
+<<<<<<< HEAD
+      navigate('/Dashboards');
+=======
+      navigate('/home');
+>>>>>>> 1db990a3128176f87a28635846e59738514912c0
+>>>>>>> 4983c096eb5c91a70e442a5ab2ba9ef1fd7d1655
     } catch (error) {
       if (error.response && error.response.status === 401) {
         setError('Invalid email or password. Please try again.');
