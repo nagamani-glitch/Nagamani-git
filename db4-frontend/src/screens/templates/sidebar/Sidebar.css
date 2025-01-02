@@ -3,17 +3,21 @@
     background-color: #0a0a0a !important;
     padding: 20px;
     border-right: 1px solid #ddd !important;
+<<<<<<< HEAD
     overflow-y: auto !important; 
+=======
+    overflow-y: auto !important;
+>>>>>>> 1db990a3128176f87a28635846e59738514912c0
     margin: 0 !important;
     position: relative;
 }
-
+ 
 .sidebar ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
-
+ 
 .sidebar ul li {
     padding: 10px 15px;
     cursor: pointer;
@@ -24,13 +28,17 @@
     background-color: transparent !important;
     border: none !important;
 }
-
+ 
 .sidebar ul li:hover {
     background-color: #3b3d3d !important;
     color: aqua !important;
 }
-
+ 
 .sidebar ul li svg {
     margin-right: 10px;
     font-size: 18px;
+<<<<<<< HEAD
 }  
+=======
+}  
+>>>>>>> 1db990a3128176f87a28635846e59738514912c0

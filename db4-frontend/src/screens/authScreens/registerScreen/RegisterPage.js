@@ -60,6 +60,60 @@ const RegisterPage = () => {
 
   return (
     <>
+<<<<<<< HEAD
+=======
+    <div className="register-container">
+      <form onSubmit={handleSubmit} className="form">
+        <h4>Register</h4>
+        <label htmlFor='name'>Name</label>
+        <input type="text" name="name" id='name' placeholder="Your name..." onChange={handleChange} />
+        
+        <label htmlFor='email'>Email</label>
+        <input type="email" name="email" id='email' placeholder="Your email..." onChange={handleChange} />
+        
+        <label htmlFor='password'>Password</label>
+        <div className="password-container">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            id='password'
+            name="password"
+            placeholder="Your password..."
+            onChange={handleChange}
+          />
+          <button
+            type="button"
+            className="show-password-btn"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button>
+        </div>
+
+        {error && <p className="error">{error}</p>}
+        <button type="submit">Register</button>
+        <p>Already a user? <Link to='/login'>Login here</Link></p>
+      </form>
+
+      {showOtpModal && (
+        <div className="otp-modal">
+          <div className="otp-modal-content">
+            <h4>Verify Your Email</h4>
+            <label htmlFor='otp'>Enter OTP</label>
+            <input
+              type="text"
+              id='otp'
+              name="otp"
+              placeholder="Enter OTP"
+              onChange={(e) => setOtp(e.target.value)}
+            />
+            {errorOtp && <p className="error">{errorOtp}</p>}
+            <button onClick={handleOtpSubmit}>Verify OTP</button>
+            <button onClick={() => setShowOtpModal(false)}>Close</button>
+          </div>
+        </div>
+      )}
+    </div>
+>>>>>>> 1db990a3128176f87a28635846e59738514912c0
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
