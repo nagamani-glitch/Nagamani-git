@@ -147,7 +147,7 @@ function Sidebar({ setActiveScreen }) {
 //             <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
 //             <li onClick={() => handleSubClick('objectives')}>Objectives</li>
 //             <li onClick={() => handleSubClick('feedbck')}>360 Feedback</li>
-// </ul>
+//          </ul>
         )}
         <li onClick={() => handleMainClick('offboarding')}>
         <FontAwesomeIcon icon={faSignOutAlt} /> Offboarding

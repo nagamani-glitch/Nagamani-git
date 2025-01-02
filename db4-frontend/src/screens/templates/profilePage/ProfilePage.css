@@ -1,59 +1,99 @@
 .profile-page-container {
-    padding: 20px;
-    width: 100% !important;
-  }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .profile-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background-color: #6c757d;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-  
-  .edit-button {
-    margin-top: 10px;
-  }
-  
-  
-  .profile-card, .details-card {
-    margin-bottom: 20px;
-  }
-  
+  padding: 20px;
+  width: 100%;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
 
-  .custom-nav .nav-link {
-    font-size: 12px;
-    font-weight: 400;
-    color: #555;
-    margin-right: 5px;
-    border: none;
-    background-color: transparent !important;
-    padding-bottom: 5px;
-    transition: color 0.3s, border-bottom 0.3s;
-  }
-  
-  .custom-nav .nav-link:hover {
-    color: #007bff; /* Change to the color you want on hover */
-  }
-  
-  .custom-nav .nav-link.active {
-    color: #000; /* Change to the color you want when active */
-    border-bottom: 3px solid #ff5100; /* Change to the color you want for the underline */
-  }
-  
-  .custom-nav .nav-link.active:hover {
-    color: #000; /* Ensure active hover color remains consistent */
-  }
-  
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  border-radius: 16px;
+  background: linear-gradient(to right, #fff, #f8f9fa);
+  transition: transform 0.2s;
+}
+
+.profile-header:hover {
+  transform: translateY(-2px);
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #1976d2, #64b5f6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border: 4px solid white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.custom-tabs {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.custom-tabs .MuiTab-root {
+  border-radius: 8px 8px 0 0;
+  min-height: 48px;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.custom-tabs .Mui-selected {
+  background-color: rgba(25, 118, 210, 0.08);
+}
+
+.info-card {
+  padding: 24px;
+  height: 100%;
+  border-radius: 12px;
+  transition: box-shadow 0.3s;
+}
+
+.info-card:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+.list-item {
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.list-item:hover {
+  background-color: rgba(0,0,0,0.02);
+}
+
+.edit-button {
+  border-radius: 8px;
+  text-transform: none;
+  padding: 8px 24px;
+  transition: transform 0.2s;
+}
+
+.edit-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.dialog-paper {
+  border-radius: 16px;
+  min-width: 600px;
+}
+
+.table-container {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-header {
+  background-color: #f5f5f5;
+}
+
+.table-row:hover {
+  background-color: rgba(0,0,0,0.02);
+}
