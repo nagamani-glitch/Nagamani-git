@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 // import axios from 'axios';
 import Footer from '../components/Footer';
+import './styles.css'
 
 const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange }) => {
   // State to manage education details

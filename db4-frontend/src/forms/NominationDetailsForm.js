@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { TextField, Button, Grid, Typography, Container, Box } from '@mui/material';
+import { motion } from 'framer-motion';
 import Footer from '../components/Footer';
 
 const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange }) => {
@@ -52,141 +54,158 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange })
   };
 
   return (
-    <div className="container">
-      <h2>FORM-7:EMPLOYEE NOMINATION DETAILS</h2>
-      <form onSubmit={handleFinalSubmit}>
-        <div className="form-group">
-          <label>Nominee Name:</label>
-          <input
-            type="text"
-            name="name"
-            value={nominee.name}
-            onChange={handleInputChange}
-          />
-          {errors.name && <span className="error">{errors.name}</span>}
-        </div>
-        <div className="form-group">
-          <label>Relation with Employee:</label>
-          <input
-            type="text"
-            name="relation"
-            value={nominee.relation}
-            onChange={handleInputChange}
-          />
-          {errors.relation && <span className="error">{errors.relation}</span>}
-        </div>
-        <div className="form-group">
-          <label>Type of Nomination:</label>
-          <input
-            type="text"
-            name="typeOfNomination"
-            value={nominee.typeOfNomination}
-            onChange={handleInputChange}
-          />
-          {errors.typeOfNomination && <span className="error">{errors.typeOfNomination}</span>}
-        </div>
-        <div className="form-group">
-          <label>Nomination Percentage (%):</label>
-          <input
-            type="number"
-            name="nominationPercentage"
-            value={nominee.nominationPercentage}
-            onChange={handleInputChange}
-            min="0"
-            max="100"
-          />
-          {errors.nominationPercentage && <span className="error">{errors.nominationPercentage}</span>}
-        </div>
-        <div className="form-group">
-          <label>Nominee Age:</label>
-          <input
-            type="number"
-            name="nomineeAge"
-            value={nominee.nomineeAge}
-            onChange={handleInputChange}
-            min="0"
-            max="100"
-          />
-          {errors.nomineeAge && <span className="error">{errors.nomineeAge}</span>}
-        </div>
-        <div className="form-group">
-          <label>Present Address:</label>
-          <textarea
-            name="presentAddress"
-            value={nominee.presentAddress}
-            onChange={handleInputChange}
-          />
-          {errors.presentAddress && <span className="error">{errors.presentAddress}</span>}
-        </div>
-        <div className="form-group">
-          <label>Block:</label>
-          <input
-            type="text"
-            name="block"
-            value={nominee.block}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-group">
-          <label>Panchayat/Mandal:</label>
-          <input
-            type="text"
-            name="panchayatMandal"
-            value={nominee.panchayatMandal}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-group">
-          <label>District:</label>
-          <input
-            type="text"
-            name="district"
-            value={nominee.district}
-            onChange={handleInputChange}
-          />
-          {errors.district && <span className="error">{errors.district}</span>}
-        </div>
-        <div className="form-group">
-          <label>State:</label>
-          <input
-            type="text"
-            name="state"
-            value={nominee.state}
-            onChange={handleInputChange}
-          />
-          {errors.state && <span className="error">{errors.state}</span>}
-        </div>
-        <div className="form-group">
-          <label>Pin Code:</label>
-          <input
-            type="text"
-            name="pinCode"
-            value={nominee.pinCode}
-            onChange={handleInputChange}
-          />
-          {errors.pinCode && <span className="error">{errors.pinCode}</span>}
-        </div>
-        <div className="form-group">
-          <label>Phone Number:</label>
-          <input
-            type="text"
-            name="phoneNumber"
-            value={nominee.phoneNumber}
-            onChange={handleInputChange}
-          />
-          {errors.phoneNumber && <span className="error">{errors.phoneNumber}</span>}
-        </div>
-        <div className="actions">
-          <button type="button" onClick={prevStep}>
-           &lt; Previous
-          </button>
-          <button type="submit" >
+    <Container component={motion.div} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} maxWidth="md">
+      <Typography variant="h4" gutterBottom align="center" style={{ marginTop: '20px', fontWeight: 'bold' }}>
+        FORM-7: EMPLOYEE NOMINATION DETAILS
+      </Typography>
+      <Box component="form" onSubmit={handleFinalSubmit} sx={{ mt: 3 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Nominee Name"
+              name="name"
+              value={nominee.name}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!errors.name}
+              helperText={errors.name}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Relation with Employee"
+              name="relation"
+              value={nominee.relation}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!errors.relation}
+              helperText={errors.relation}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Type of Nomination"
+              name="typeOfNomination"
+              value={nominee.typeOfNomination}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!errors.typeOfNomination}
+              helperText={errors.typeOfNomination}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Nomination Percentage (%)"
+              type="number"
+              name="nominationPercentage"
+              value={nominee.nominationPercentage}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!errors.nominationPercentage}
+              helperText={errors.nominationPercentage}
+              inputProps={{ min: 0, max: 100 }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Nominee Age"
+              type="number"
+              name="nomineeAge"
+              value={nominee.nomineeAge}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!errors.nomineeAge}
+              helperText={errors.nomineeAge}
+              inputProps={{ min: 0, max: 100 }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Present Address"
+              name="presentAddress"
+              value={nominee.presentAddress}
+              onChange={handleInputChange}
+              fullWidth
+              multiline
+              rows={3}
+              error={!!errors.presentAddress}
+              helperText={errors.presentAddress}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Block"
+              name="block"
+              value={nominee.block}
+              onChange={handleInputChange}
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Panchayat/Mandal"
+              name="panchayatMandal"
+              value={nominee.panchayatMandal}
+              onChange={handleInputChange}
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="District"
+              name="district"
+              value={nominee.district}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!errors.district}
+              helperText={errors.district}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="State"
+              name="state"
+              value={nominee.state}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!errors.state}
+              helperText={errors.state}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Pin Code"
+              name="pinCode"
+              value={nominee.pinCode}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!errors.pinCode}
+              helperText={errors.pinCode}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Phone Number"
+              name="phoneNumber"
+              value={nominee.phoneNumber}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!errors.phoneNumber}
+              helperText={errors.phoneNumber}
+            />
+          </Grid>
+        </Grid>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+          <Button variant="outlined" onClick={prevStep} sx={{ padding: '10px 20px' }}>
+            Previous
+          </Button>
+          <Button type="submit" variant="contained" color="primary" sx={{ padding: '10px 20px' }}>
             Submit
-          </button>
-        </div>
-      </form>
+          </Button>
+        </Box>
+      </Box>
       <Footer />
-    </div>
+    </Container>
   );
 };
 

@@ -1,74 +1,7 @@
-// import React from 'react';
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import {
-//   faChartPie,
-//   faBullseye,
-//   faRocket,
-//   faUsers,
-//   faCalendarCheck,
-//   faCalendarTimes,
-//   faMoneyBillWave,
-//   faChartLine,
-//   faSignOutAlt,
-//   faLaptop,
-//   faHeadset,
-//   faCogs,
-// } from '@fortawesome/free-solid-svg-icons';
-// import './Sidebar.css';
-
-// function Sidebar({ setActiveScreen }) {
-//   return (
-//     <aside className="sidebar">
-//       <h5>DB4Cloud</h5>
-//       <p>My Company</p>
-//       <hr />
-//       <ul>
-//         <li onClick={() => setActiveScreen('dashboard')}>
-//           <FontAwesomeIcon icon={faChartPie} /> Dashboard
-//         </li>
-//         <li onClick={() => setActiveScreen('recruitment')}>
-//           <FontAwesomeIcon icon={faBullseye} /> Recruitment
-//         </li>
-//         <li onClick={() => setActiveScreen('onboarding')}>
-//           <FontAwesomeIcon icon={faRocket} /> Onboarding
-//         </li>
-//         <li onClick={() => setActiveScreen('employee')}>
-//           <FontAwesomeIcon icon={faUsers} /> Employee
-//         </li>
-//         <li onClick={() => setActiveScreen('attendance')}>
-//           <FontAwesomeIcon icon={faCalendarCheck} /> Attendance
-//         </li>
-//         <li onClick={() => setActiveScreen('leave')}>
-//           <FontAwesomeIcon icon={faCalendarTimes} /> Leave
-//         </li>
-//         <li onClick={() => setActiveScreen('payroll')}>
-//           <FontAwesomeIcon icon={faMoneyBillWave} /> Payroll
-//         </li>
-//         <li onClick={() => setActiveScreen('performance')}>
-//           <FontAwesomeIcon icon={faChartLine} /> Performance
-//         </li>
-//         <li onClick={() => setActiveScreen('offboarding')}>
-//           <FontAwesomeIcon icon={faSignOutAlt} /> Offboarding
-//         </li>
-//         <li onClick={() => setActiveScreen('assets')}>
-//           <FontAwesomeIcon icon={faLaptop} /> Assets
-//         </li>
-//         <li onClick={() => setActiveScreen('helpDesk')}>
-//           <FontAwesomeIcon icon={faHeadset} /> Help Desk
-//         </li>
-//         <li onClick={() => setActiveScreen('configuration')}>
-//           <FontAwesomeIcon icon={faCogs} /> Configuration
-//         </li>
-//       </ul>
-//     </aside>
-//   );
-// }
-
-// export default Sidebar;
-
-
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+
 import {
   faChartPie,
   faBullseye,
@@ -177,33 +110,44 @@ function Sidebar({ setActiveScreen }) {
 
 <li onClick={() => handleMainClick('payroll')}>
 <FontAwesomeIcon icon={faMoneyBillWave} /> Payroll
-        </li>
+        </li> 
         {activeMenu === 'payroll' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('payrollDashboard')}>Dashboard</li>
-            <li onClick={() => handleSubClick('employees')}>Contract</li>
-            <li onClick={() => handleSubClick('allowancess')}>Allowancess</li>
-            <li onClick={() => handleSubClick('deductions')}>Deductions</li>
-            <li onClick={() => handleSubClick('payslips')}>Payslips</li>
-            <li onClick={() => handleSubClick('loan')}>Loan / Advanced Salary</li>
-            <li onClick={() => handleSubClick('enhancements')}>Enhancements & Reimbursements</li>
-            <li onClick={() => handleSubClick('federalTax')}>Federal Tax</li>
-          </ul>
+          <li onClick={() => handleSubClick('payrollDashboard')}>Dashboard</li>
+          <li onClick={() => handleSubClick('allowances')}>Allowances</li>
+          <li onClick={() => handleSubClick('createAllowance')}>Create Allowance</li>
+          <li onClick={() => handleSubClick('contract')}>Contract</li>
+          <li onClick={() => handleSubClick('deductions')}>Deductions</li>
+          <li onClick={() => handleSubClick('createDeduction')}>Create Deduction</li>
+          <li onClick={() => handleSubClick('payslips')}>Payslips</li>
+          <li onClick={() => handleSubClick('federalTax')}>Federal Tax</li>
+        </ul>
+          // <ul className="sub-menu">
+          //   <li onClick={() => handleSubClick('payrollDashboard')}>Dashboard</li> 
+          //   <li onClick={() => handleSubClick('allowances')}>Allowancess</li>
+          //   {/* <li onClick={() => handleSubClick('/allowances/create')}>CreateAllowance</li> */}
+          //   <li onClick={() => handleSubClick('contract')}>Contract</li>
+          //   <li onClick={() => handleSubClick('deductions')}>Deductions</li>
+          //   <li onClick={() => handleSubClick('payslips')}>Payslips</li>
+          //   <li onClick={() => handleSubClick('federalTax')}>Federal Tax</li>
+          // </ul>
         )}
         <li onClick={() => handleMainClick('performance')}>
         <FontAwesomeIcon icon={faChartLine} /> Performance
         </li>
         {activeMenu === 'performance' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
-            <li onClick={() => handleSubClick('objectives')}>Objectives</li>
-            <li onClick={() => handleSubClick('360feedbck')}>360 Feedback</li>
-            <li onClick={() => handleSubClick('meetings')}>Meetings</li>
-            <li onClick={() => handleSubClick('keyResults')}>Key Results</li>
-            <li onClick={() => handleSubClick('employeeBonusPoint')}>Employee Bonus Point </li>
-            <li onClick={() => handleSubClick('period')}>Period</li>
-            <li onClick={() => handleSubClick('questionTemplate')}>Question template</li>
-          </ul>
+          <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
+          <li onClick={() => handleSubClick('objectives')}>Objectives</li>
+          <li onClick={() => handleSubClick('feedback')}>360 Feedback</li>
+          <li onClick={() => handleSubClick('createFeedback')}>Create Feedback</li>
+        </ul>
+          
+//           <ul className="sub-menu">
+//             <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
+//             <li onClick={() => handleSubClick('objectives')}>Objectives</li>
+//             <li onClick={() => handleSubClick('feedbck')}>360 Feedback</li>
+// </ul>
         )}
         <li onClick={() => handleMainClick('offboarding')}>
         <FontAwesomeIcon icon={faSignOutAlt} /> Offboarding
@@ -211,7 +155,7 @@ function Sidebar({ setActiveScreen }) {
         {activeMenu === 'offboarding' && (
           <ul className="sub-menu">
             <li onClick={() => handleSubClick('exitProcess')}>Exit Process</li>
-            <li onClick={() => handleSubClick('resignationLetters')}>Resignation Letters</li>
+            <li onClick={() => handleSubClick('registrationPage')}>Resignation Letters</li>
           </ul>
         )}
         
@@ -232,7 +176,7 @@ function Sidebar({ setActiveScreen }) {
         </li>
         {activeMenu === 'helpDesk' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('faqs')}>FAQs</li>
+            <li onClick={() => handleSubClick('faqPage')}>FAQs</li>
             <li onClick={() => handleSubClick('tickets')}>Tickets</li>
             
           </ul>
@@ -242,14 +186,15 @@ function Sidebar({ setActiveScreen }) {
         </li>
         {activeMenu === 'configuration' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('multipleApprovals')}>Multiple Approvals</li>
+            {/* <li onClick={() => handleSubClick('multipleApprovals')}>Multiple Approvals</li>
             <li onClick={() => handleSubClick('mailTemplates')}>Mail Templates</li>
-            <li onClick={() => handleSubClick('mailAutomations')}>Mail Automations</li>
+            <li onClick={() => handleSubClick('mailAutomations')}>Mail Automations</li> */}
             <li onClick={() => handleSubClick('holidays')}>Holidays</li>
             <li onClick={() => handleSubClick('companyLeaves')}>Company Leaves</li>
             <li onClick={() => handleSubClick('restrictLeaves')}>Restrict Leaves</li>
           </ul>
         )}
+        
         
       </ul>
     </aside>

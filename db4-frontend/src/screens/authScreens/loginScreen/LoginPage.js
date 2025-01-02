@@ -140,6 +140,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+<<<<<<< HEAD
+=======
+import { motion } from 'framer-motion';
+import { Box, Button, TextField, Typography, Container } from '@mui/material';
+>>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -149,7 +154,12 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+<<<<<<< HEAD
   // Handle input changes
+=======
+  const navigate = useNavigate();
+
+>>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError(''); // Clear the error message when the user starts typing
@@ -162,6 +172,7 @@ const LoginPage = () => {
       // Send login request to backend
       const response = await axios.post('http://localhost:5000/api/auth/login', formData);
       alert('User logged in successfully');
+<<<<<<< HEAD
       
       // Store the token in localStorage
       localStorage.setItem('token', response.data.token);
@@ -169,6 +180,10 @@ const LoginPage = () => {
       // Redirect to home page after successful login
       navigate('/home');
       
+=======
+      localStorage.setItem('token', response.data.token);
+      navigate('/home');
+>>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
     } catch (error) {
       if (error.response && error.response.status === 401) {
         setError('Invalid email or password. Please try again.');
@@ -179,6 +194,7 @@ const LoginPage = () => {
   };
 
   return (
+<<<<<<< HEAD
     <div className="login-container">
       <form onSubmit={handleSubmit} className="form">
         <h4>Login</h4>
@@ -215,6 +231,67 @@ const LoginPage = () => {
         <p>New user? <Link to="/register">Register here</Link></p>
       </form>
     </div>
+=======
+    <motion.div
+      className="login-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      style={{marginTop:"120px"}}
+    >
+      <Container
+        component="main"
+        maxWidth="xs"
+        sx={{
+          mt: 8,
+          p: 4,
+          boxShadow: 3,
+          borderRadius: 2,
+          backgroundColor: 'white',
+        }}
+      >
+        <Typography variant="h4" component="h1" sx={{ mb: 2, textAlign: 'center' }}>
+          Login
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+          <TextField
+            margin="normal"
+            fullWidth
+            label="Email Address"
+            name="email"
+            type="email"
+            autoComplete="email"
+            autoFocus
+            onChange={handleChange}
+            required
+          />
+          <TextField
+            margin="normal"
+            fullWidth
+            label="Password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            onChange={handleChange}
+            required
+          />
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+            >
+              Login
+            </Button>
+          </motion.div>
+          <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
+            New user? <Link to='/register'>Register here</Link>
+          </Typography>
+        </Box>
+      </Container>
+    </motion.div>
+>>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
   );
 };
 
