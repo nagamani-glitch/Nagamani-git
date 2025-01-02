@@ -1,57 +1,147 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f7f7f7;
-  }
-  
-  .form {
-    background-color: white;
-    padding: 10px;
-    height: 80%;
-    
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
-  }
-  
-  .form h4 {
-    margin-bottom: 20px;
-    text-align: center;
-    text-decoration: underline;
-    color: rgb(214, 112, 112);
-    font-family: Georgia, 'Times New Roman', Times, serif;
-  }
-  
-  .form input {
-    display: block;
-    width: 100% !important;
-    height: 40px !important;
-    margin-bottom: 10px;
-    border: 1px solid #ddd !important;
-    border-radius: 3px;
+/* Form Container */
+.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Full viewport height */
+  padding: 0 15px;
+  background-color: #f8f9fa; /* Light background color */
+}
+
+/* Form Styling */
+.form {
+  background-color: white;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px; /* Updated for consistency */
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Form Header */
+.form h2,
+.form h4 {
+  margin-bottom: 20px;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  text-decoration: underline;
+  color: #d67070;
+}
+
+/* Input Fields */
+.form input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+/* Input Label */
+.form label {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  margin-bottom: 5px;
+  display: block;
+}
+
+/* Error Message */
+.error {
+  color: red;
+  font-size: 14px;
+  text-align: left;
+}
+
+/* Form Button */
+.form button {
+  padding: 10px;
+  background-color: #28a745;
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.form button:hover {
+  background-color: #218838;
+}
+
+/* Password Visibility */
+.password-container {
+  position: relative;
+}
+
+.password-container input {
+  padding-right: 40px; /* Space for visibility icon */
+}
+
+.show-password-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #555;
+}
+
+/* Login Link */
+.form p {
+  font-size: 14px;
+  color: #555;
+}
+
+/* OTP Section */
+.otp-section {
+  margin-top: 20px;
+}
+
+.otp-section input,
+.otp-section button {
+  margin-top: 10px;
+}
+
+/* Additional Styles for Centering Register and Login Containers */
+.register-container,
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 20px;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 500px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .form-container {
+    padding: 20px 10px;
   }
 
-  .form label {
-    font-size: 14px;
+  .form {
+    margin: 20px auto;
+    padding: 15px;
   }
-  
-  .form button {
-    display: block;
-    padding: 10px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
+
+  .register-container,
+  .login-container {
+    width: 90%;
+    padding: 20px 10px;
   }
-  
-  .form button:hover {
-    background-color: #218838;
-  }
-  
-  .register-container, .login-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height:100vh;
-  }
-  
+}
+
+
+

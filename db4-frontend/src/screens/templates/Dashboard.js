@@ -36,7 +36,7 @@ import LeaveRequests from './leaveRequests/LeaveRequests';
 
 function Dashboard() {
   // State to manage the active screen
-  const [activeScreen, setActiveScreen] = useState('');
+  const [activeScreen, setActiveScreen] = useState('dashboard');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('67343940a35795672c4c79a1');
 
   const { isSidebarOpen } = useSidebar();
