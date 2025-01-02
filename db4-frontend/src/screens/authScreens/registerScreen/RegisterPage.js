@@ -1,18 +1,10 @@
-
-
-
-
-
 import { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import icons from react-icons
 import './RegisterPage.css';
-=======
 import { motion } from 'framer-motion';
 import { Box, Button, TextField, Typography, Container } from '@mui/material';
->>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -21,16 +13,13 @@ const RegisterPage = () => {
     password: '',
   });
   const [error, setError] = useState('');
-<<<<<<< HEAD
   const [otpSent, setOtpSent] = useState(false); // State to track if OTP has been sent
   const [otp, setOtp] = useState('');
   const [errorOtp, setErrorOtp] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false); // State to control the OTP modal visibility
   const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
   
-=======
 
->>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -70,59 +59,7 @@ const RegisterPage = () => {
   };
 
   return (
-<<<<<<< HEAD
-    <div className="register-container">
-      <form onSubmit={handleSubmit} className="form">
-        <h4>Register</h4>
-        <label htmlFor='name'>Name</label>
-        <input type="text" name="name" id='name' placeholder="Your name..." onChange={handleChange} />
-        
-        <label htmlFor='email'>Email</label>
-        <input type="email" name="email" id='email' placeholder="Your email..." onChange={handleChange} />
-        
-        <label htmlFor='password'>Password</label>
-        <div className="password-container">
-          <input
-            type={showPassword ? 'text' : 'password'}
-            id='password'
-            name="password"
-            placeholder="Your password..."
-            onChange={handleChange}
-          />
-          <button
-            type="button"
-            className="show-password-btn"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
-          </button>
-        </div>
-
-        {error && <p className="error">{error}</p>}
-        <button type="submit">Register</button>
-        <p>Already a user? <Link to='/login'>Login here</Link></p>
-      </form>
-
-      {showOtpModal && (
-        <div className="otp-modal">
-          <div className="otp-modal-content">
-            <h4>Verify Your Email</h4>
-            <label htmlFor='otp'>Enter OTP</label>
-            <input
-              type="text"
-              id='otp'
-              name="otp"
-              placeholder="Enter OTP"
-              onChange={(e) => setOtp(e.target.value)}
-            />
-            {errorOtp && <p className="error">{errorOtp}</p>}
-            <button onClick={handleOtpSubmit}>Verify OTP</button>
-            <button onClick={() => setShowOtpModal(false)}>Close</button>
-          </div>
-        </div>
-      )}
-    </div>
-=======
+    <>
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
@@ -197,7 +134,7 @@ const RegisterPage = () => {
         </Box>
       </Container>
     </motion.div>
->>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
+    </>
   );
 };
 

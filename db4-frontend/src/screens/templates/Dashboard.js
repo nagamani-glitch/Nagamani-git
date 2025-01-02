@@ -170,7 +170,7 @@ function Dashboard() {
         return <AssetView />
       case "assetBatch":
         return <AssetBatch />
-      case "assetDashboard":
+      case "assetsDashboard":
         return <AssetDashboard />
       case "holidays":
         return <Holidays />

@@ -140,11 +140,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-<<<<<<< HEAD
-=======
 import { motion } from 'framer-motion';
 import { Box, Button, TextField, Typography, Container } from '@mui/material';
->>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -152,14 +149,10 @@ const LoginPage = () => {
     password: '',
   });
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
-<<<<<<< HEAD
   // Handle input changes
-=======
   const navigate = useNavigate();
 
->>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError(''); // Clear the error message when the user starts typing
@@ -172,18 +165,10 @@ const LoginPage = () => {
       // Send login request to backend
       const response = await axios.post('http://localhost:5000/api/auth/login', formData);
       alert('User logged in successfully');
-<<<<<<< HEAD
       
-      // Store the token in localStorage
-      localStorage.setItem('token', response.data.token);
-
-      // Redirect to home page after successful login
-      navigate('/home');
       
-=======
       localStorage.setItem('token', response.data.token);
-      navigate('/home');
->>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
+      navigate('/Dashboards');
     } catch (error) {
       if (error.response && error.response.status === 401) {
         setError('Invalid email or password. Please try again.');
@@ -194,44 +179,7 @@ const LoginPage = () => {
   };
 
   return (
-<<<<<<< HEAD
-    <div className="login-container">
-      <form onSubmit={handleSubmit} className="form">
-        <h4>Login</h4>
-        
-        {/* Email Input */}
-        <label htmlFor="email">Email</label>
-        <input 
-          type="email" 
-          id="email" 
-          name="email" 
-          placeholder="Your Email..." 
-          onChange={handleChange} 
-          value={formData.email}
-        />
-
-        {/* Password Input */}
-        <label htmlFor="password">Password</label>
-        <input 
-          type="password" 
-          id="password" 
-          name="password" 
-          placeholder="Your Password..." 
-          onChange={handleChange} 
-          value={formData.password}
-        />
-
-        {/* Display error if login fails */}
-        {error && <p className="error">{error}</p>}
-
-        {/* Submit Button */}
-        <button type="submit">Login</button>
-
-        {/* Registration link for new users */}
-        <p>New user? <Link to="/register">Register here</Link></p>
-      </form>
-    </div>
-=======
+    <>
     <motion.div
       className="login-container"
       initial={{ opacity: 0 }}
@@ -291,7 +239,7 @@ const LoginPage = () => {
         </Box>
       </Container>
     </motion.div>
->>>>>>> fb67bfbef3a9aaa236ede63dc2943547c799f8a0
+    </>
   );
 };
 
