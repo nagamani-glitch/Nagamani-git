@@ -8,7 +8,7 @@ const URL = `mongodb+srv://${userName}:${password}@hrms.e4ytt.mongodb.net/?retry
 const connectDB = async () => {
     try {
         const conn = await mongoose.connect(URL);
-        console.log(`MongoDB Connected: ${conn.connection.host}`.cyan.underline);
+        console.log(`🚀 MongoDB Connected: ${conn.connection.host}`.cyan.underline);
     } catch (error) {
         console.log(`Error connecting to MongoDB: ${error.message}`.red.underline.bold);
         process.exit(1);

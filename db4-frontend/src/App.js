@@ -30,6 +30,7 @@ import Dashboard from './screens/templates/Dashboard';
 import PrivateRoute from './screens/PrivateRoute';
 import { Container } from 'react-bootstrap';
 import { SidebarProvider } from './Context';
+import VerifyOtpPage from './screens/authScreens/registerScreen/VerifyOtpPage';
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
             <Route path='/' element={<MainScreen />} />
             <Route path='/login' element={<LoginPage />} />
             <Route path='/register' element={<RegisterPage />} />
+            <Route path='/verifyOtp' element={<VerifyOtpPage />} />
             <Route path='/home' element={<HomeScreen />} />
             <Route element={<PrivateRoute />}>
               <Route path='/My Team' element={<EmployeesScreen />} />
