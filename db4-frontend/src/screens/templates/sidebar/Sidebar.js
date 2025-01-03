@@ -134,16 +134,13 @@ function Sidebar({ setActiveScreen }) {
           <li onClick={() => handleSubClick('feedback')}>360 Feedback</li>
           <li onClick={() => handleSubClick('createFeedback')}>Create Feedback</li>
         </ul>
-<<<<<<< HEAD
           
 //           <ul className="sub-menu">
 //             <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
 //             <li onClick={() => handleSubClick('objectives')}>Objectives</li>
 //             <li onClick={() => handleSubClick('feedbck')}>360 Feedback</li>
 //          </ul>
-=======
          
->>>>>>> 1db990a3128176f87a28635846e59738514912c0
         )}
         <li onClick={() => handleMainClick('offboarding')}>
         <FontAwesomeIcon icon={faSignOutAlt} /> Offboarding
