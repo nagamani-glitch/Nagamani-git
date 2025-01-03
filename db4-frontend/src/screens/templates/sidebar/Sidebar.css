@@ -3,11 +3,7 @@
     background-color: #0a0a0a !important;
     padding: 20px;
     border-right: 1px solid #ddd !important;
-<<<<<<< HEAD
     overflow-y: auto !important; 
-=======
-    overflow-y: auto !important;
->>>>>>> 1db990a3128176f87a28635846e59738514912c0
     margin: 0 !important;
     position: relative;
 }
@@ -37,8 +33,4 @@
 .sidebar ul li svg {
     margin-right: 10px;
     font-size: 18px;
-<<<<<<< HEAD
 }  
-=======
-}  
->>>>>>> 1db990a3128176f87a28635846e59738514912c0
