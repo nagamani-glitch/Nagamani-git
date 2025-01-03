@@ -157,7 +157,7 @@ const CandidatesView = () => {
             </table>
 
             <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>Add New Candidate</DialogTitle>
+                <DialogTitle>Add New Candidate</DialogTitle> 
                 <DialogContent>
                     <TextField
                         autoFocus
