@@ -59,6 +59,7 @@ export const verifyOtp = async (req, res) => {
     // OTP verified successfully, clear OTP and expiration time
     user.otp = undefined;
     user.otpExpires = undefined;
+    user.isVerified = true;
     await user.save();
 
     res.status(200).json({ message: 'OTP verified successfully. Registration completed.' });
@@ -77,6 +78,10 @@ export const loginAuth = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    if(!user.isVerified) {
+      return res.status(400).json({ message: 'User is not verified' });
     }
 
     // Compare password

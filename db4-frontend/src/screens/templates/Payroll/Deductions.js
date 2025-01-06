@@ -1,5 +1,6 @@
-import React, { useState,useRef, useEffect } from "react";
-import {useNavigate} from 'react-router-dom'
+import React, { useState, useRef, useEffect } from "react";
+import CreateDeduction from "./CreateDeduction";
+import axios from "axios";
 import './Deductions.css'
 import {
   FaList,
@@ -34,7 +35,7 @@ const deductionsData = [
     fixed: true,
     pretax: "Yes",
   },
- 
+
   // Add more allowance data here
 ];
 
@@ -43,39 +44,117 @@ const Deductions = () => {
   const [view, setView] = useState("card"); // 'card' or 'list'
   const [filteredData, setFilteredData] = useState(deductionsData);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingDeduction, setEditingDeduction] = useState(null);
   const [filterOptions, setFilterOptions] = useState({
     taxable: "",
     condition: "",
     base: "",
   });
-  const navigate = useNavigate()
+  // Add this state for deductions data
+  const [deductions, setDeductions] = useState([]);
+  
 
-  const handleCreateAllowance = () => {
-    navigate('/deductions/create');
+  // Add useEffect to fetch deductions when component mounts
+  useEffect(() => {
+    fetchDeductions();
+  }, []);
+
+  // Add function to fetch deductions
+  const fetchDeductions = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/deductions');
+      setDeductions(response.data.data);
+      setFilteredData(response.data.data);
+    } catch (error) {
+      console.error("Error fetching deductions:", error);
+    }
   };
 
-  
+
+
+  const handleCreateAllowance = () => {
+    setShowCreateModal(true);
+  };
+
 
   const handleSearch = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
     if (term === "") {
-      setFilteredData(deductionsData);
+      setFilteredData(deductions); // Use fetched deductions instead of deductionsData
     } else {
-      const filtered = deductionsData.filter((deduction) =>
+      const filtered = deductions.filter((deduction) => // Use fetched deductions
         deduction.name.toLowerCase().includes(term.toLowerCase())
       );
       setFilteredData(filtered);
     }
   };
 
-  const handleEdit = (id) => {
-    alert(`Edit allowance with ID: ${id}`);
-  };
 
-  const handleDelete = (id) => {
-    alert(`Delete allowance with ID: ${id}`);
+
+  // const handleEdit = (deduction) => {
+  //   setEditingDeduction(deduction);
+  //   setShowCreateModal(true);
+  // };
+  
+
+  // const handleUpdate = async (updatedData) => {
+  //   try {
+  //     const response = await axios.put(`http://localhost:5000/api/deductions/${updatedData.id}`, updatedData);
+
+  //     setFilteredData(prevData =>
+  //       prevData.map(item =>
+  //         item.id === updatedData.id ? response.data : item
+  //       )
+  //     );
+
+  //     setEditingDeduction(null);
+  //     setShowCreateModal(false);
+  //     alert("Deduction updated successfully!");
+  //   } catch (error) {
+  //     console.error("Error updating deduction:", error);
+  //     alert("Failed to update deduction");
+  //   }
+  // };
+
+  
+  const handleEdit = (deduction) => {
+    setEditingDeduction(deduction);
+    setShowCreateModal(true);
   };
+  
+  const handleUpdate = async (updatedData) => {
+    try {
+      const response = await axios.put(`http://localhost:5000/api/deductions/${updatedData._id}`, updatedData);
+      setFilteredData(prevData => 
+        prevData.map(item => 
+          item._id === updatedData._id ? response.data.data : item
+        )
+      );
+      setEditingDeduction(null);
+      setShowCreateModal(false);
+      fetchDeductions();
+    } catch (error) {
+      console.error("Error updating deduction:", error);
+      alert("Failed to update deduction");
+    }
+  };
+  
+  
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this deduction?')) {
+      try {
+        await axios.delete(`http://localhost:5000/api/deductions/${id}`);
+        fetchDeductions();
+        alert('Deduction deleted successfully');
+      } catch (error) {
+        console.error('Error deleting deduction:', error);
+        alert('Failed to delete deduction');
+      }
+    }
+  };
+  
 
 
   const filterRef = useRef(null);
@@ -108,7 +187,7 @@ const Deductions = () => {
   const applyFilter = () => {
     let filtered = deductionsData;
 
-     // Filter based on taxable
+    // Filter based on taxable
     if (filterOptions.taxable) {
       filtered = filtered.filter((deduction) => deduction.taxable === filterOptions.taxable);
     }
@@ -119,7 +198,7 @@ const Deductions = () => {
       filtered = filtered.filter((deduction) => (filterOptions.condition === "Fixed" ? deduction.fixed : !deduction.fixed));
     }
 
-     // Apply the filtered data
+    // Apply the filtered data
     setFilteredData(filtered);
   };
 
@@ -136,7 +215,7 @@ const Deductions = () => {
     }
     return activeFilters;
   };
- 
+
   const removeFilter = (filter) => {
     if (filter.includes("Taxable")) {
       setFilterOptions((prev) => ({ ...prev, taxable: "" }));
@@ -145,6 +224,12 @@ const Deductions = () => {
     } else if (filter.includes("Base")) {
       setFilterOptions((prev) => ({ ...prev, base: "" }));
     }
+  };
+
+
+  const handleModalClose = () => {
+    setShowCreateModal(false);
+    fetchDeductions(); // This will refresh the deductions list
   };
 
 
@@ -175,14 +260,43 @@ const Deductions = () => {
           <button className="filter-btn" onClick={toggleFilterVisibility}>
             <FaFilter /> Filter
           </button>
-          <button className="create-btn" onClick={handleCreateAllowance}> 
+          <button className="create-btn" onClick={handleCreateAllowance}>
             <FaPlus /> Create
           </button>
+
+          {/* Create modal popup */}
+
+          {showCreateModal && (
+            <div className="modal-overlay">
+              <div className="modal-container">
+                <div className="modal-header">
+                  <h2 style={{ paddingTop: "20px" }}>{editingDeduction ? 'Edit Deduction' : 'Create Deduction'}</h2>
+                  <button
+                    className="close-modal-btn"
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      setEditingDeduction(null);
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="modal-content">
+                  <CreateDeduction
+                    onClose={handleModalClose}
+                    editData={editingDeduction}
+                    onUpdate={handleUpdate}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </header>
 
-       {/* Display active filters as tags */}
-       <div className="active-filters">
+      {/* Display active filters as tags */}
+      <div className="active-filters">
         {getActiveFilters().map((filter, index) => (
           <span key={index} className="filter-tag">
             {filter} <button onClick={() => removeFilter(filter)}>x</button>
@@ -193,61 +307,61 @@ const Deductions = () => {
       {isFilterVisible && (
         <div className="filter-popup" ref={filterRef}>
           <div className="filter-form">
-            <div style={{display: "flex", justifyContent: "space-between"}}>
-            <div className="filter-row">
-              <label>Pretax</label>
-              <select
-                name="taxable"
-                onChange={handleFilterChange}
-                value={filterOptions.taxable}
-              >
-                <option value="">Select Pretax </option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-            </div>
-            <div className="filter-row">
-              <label>Condition Based</label>
-              <select
-                name="condition"
-                onChange={handleFilterChange}
-                value={filterOptions.condition}
-              >
-                <option value="">Select Based  </option>
-                <option value="Based">Yes</option>
-                <option value="Non-Based">No</option>
-              </select>
-            </div>
-</div>
-
-          <div style={{display: "flex", justifyContent: "space-between"}}>
-            <div className="filter-row">
-              <label>Fixed</label>
-              <select
-                name="condition"
-                onChange={handleFilterChange}
-                value={filterOptions.condition}
-              >
-                <option value="">Select Fixed </option>
-                <option value="Fixed">Yes</option>
-                <option value="Non-Fixed">No</option>
-              </select>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div className="filter-row">
+                <label>Pretax</label>
+                <select
+                  name="taxable"
+                  onChange={handleFilterChange}
+                  value={filterOptions.taxable}
+                >
+                  <option value="">Select Pretax </option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div className="filter-row">
+                <label>Condition Based</label>
+                <select
+                  name="condition"
+                  onChange={handleFilterChange}
+                  value={filterOptions.condition}
+                >
+                  <option value="">Select Based  </option>
+                  <option value="Based">Yes</option>
+                  <option value="Non-Based">No</option>
+                </select>
+              </div>
             </div>
 
-            <div className="filter-row">
-              <label>Based</label>
-              <select
-                name="base"
-                onChange={handleFilterChange}
-                value={filterOptions.base}
-              >
-                <option value="">------</option>
-                <option value="Monthly">Basic Pay</option>
-                <option value="Hourly">Gross Pay</option>
-                <option value="Hourly">Taxable Gross Pay</option>
-                <option value="Hourly">Net Pay</option>
-              </select>
-            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div className="filter-row">
+                <label>Fixed</label>
+                <select
+                  name="condition"
+                  onChange={handleFilterChange}
+                  value={filterOptions.condition}
+                >
+                  <option value="">Select Fixed </option>
+                  <option value="Fixed">Yes</option>
+                  <option value="Non-Fixed">No</option>
+                </select>
+              </div>
+
+              <div className="filter-row">
+                <label>Based</label>
+                <select
+                  name="base"
+                  onChange={handleFilterChange}
+                  value={filterOptions.base}
+                >
+                  <option value="">------</option>
+                  <option value="Monthly">Basic Pay</option>
+                  <option value="Hourly">Gross Pay</option>
+                  <option value="Hourly">Taxable Gross Pay</option>
+                  <option value="Hourly">Net Pay</option>
+                </select>
+              </div>
             </div>
             <button onClick={applyFilter}>Apply Filter</button>
           </div>
@@ -267,7 +381,10 @@ const Deductions = () => {
         <div className="card-view">
           {filteredData.map((deduction) => (
             <div className="deduction-card" key={deduction.id}>
+               
               <div className="card-icon">{deduction.code}</div>
+           
+        
               <div className="card-content">
                 <h3>{deduction.name}</h3>
                 <p className="card-content-para">Employee Rate:  {deduction.employeeRate}</p>
@@ -275,16 +392,26 @@ const Deductions = () => {
                 <p className="card-content-para"> One Time Deduction: {deduction.oneTimeDeduction}</p>
                 <p className="card-content-para">Taxable: {deduction.taxable}</p>
               </div>
+              <div className="card-header">
+              <div className="card-actions">
+          <button className="edit-btn" onClick={() => handleEdit(deduction)}>
+            <FaEdit size={20} />
+          </button>
+          <button className="delete-btn" onClick={() => handleDelete(deduction._id)}>
+            <FaTrash size={18} />
+          </button>
+          </div>
+            </div>
             </div>
           ))}
         </div>
       ) : (
         <div className="list-view">
-           <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-              <th className="sticky-column">Deductions</th>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th className="sticky-column">Deductions</th>
                   <th className="scrollable-column">Specific Employees</th>
                   <th className="scrollable-column">Excluded Employees</th>
                   <th className="scrollable-column">Is Pretax</th>
@@ -295,40 +422,40 @@ const Deductions = () => {
                   <th className="scrollable-column">Based On</th>
                   <th className="scrollable-column">Rate</th>
                   <th className="sticky-column">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((deduction) => (
-                <tr key={deduction.id}>
-                  <td className="sticky-column">{deduction.name}</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>{deduction.taxable}</td>
-                  <td>No</td>
-                  <td>-</td>
-                  <td>{deduction.fixed ? "Yes" : "No"}</td>
-                  <td>{deduction.amount}</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td className="sticky-column">
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEdit(deduction.id)}
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(deduction.id)}
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filteredData.map((deduction) => (
+                  <tr key={deduction.id}>
+                    <td className="sticky-column">{deduction.name}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>{deduction.taxable}</td>
+                    <td>No</td>
+                    <td>-</td>
+                    <td>{deduction.fixed ? "Yes" : "No"}</td>
+                    <td>{deduction.amount}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td className="sticky-column">
+                      <button
+                        className="DedEdit-btn"
+                        onClick={() => handleEdit(deduction.id)}
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        className="DedDelete-btn"
+                        onClick={() => handleDelete(deduction._id)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

@@ -1,33 +1,13 @@
 import React, { useState } from 'react';
-import {Link} from 'react-router-dom'; 
+import CreateFeedback from './CreateFeedback';  
 import './Feedback.css';
-
-const initialFeedbackData = {
-  selfFeedback: [
-    { id: 1, employee: 'Hannah Brooks', title: 'Bewertung', status: 'Not Started', startDate: 'Nov. 1, 2024', dueDate: 'Nov. 1, 2024' },
-    { id: 2, employee: 'Virat Kohli', title: 'Cricketer', status: 'Started', startDate: 'Dec. 1, 2022', dueDate: 'Dec. 1, 2024' },
-    { id: 3, employee: 'Anusha Shetty', title: 'Trainer', status: 'Started', startDate: 'Jul. 21, 2024', dueDate: 'Jun. 1, 2025' },
-  ],
-  requestedFeedback: [
-    { id: 4, employee: 'Caleb Fisher', title: 'Tinubu’s Performance', status: 'On Track', startDate: 'Oct. 31, 2024', dueDate: 'Oct. 31, 2024' },
-    { id: 5, employee: 'John Admin', title: 'Administrator', status: 'Closed', startDate: 'Oct. 12, 2020', dueDate: 'Nov. 31, 2020' },
-    { id: 6, employee: 'Sania Fisher', title: 'Developer', status: 'On Track', startDate: 'Jan. 31, 2016', dueDate: 'Feb. 1, 2016' },
-  ],
-  feedbackToReview: [
-    { id: 7, employee: 'Lucy Cruz', title: 'Tinubu’s Performance', status: 'Closed', startDate: 'Mar. 31, 2022', dueDate: 'Apr. 31, 2023' },
-    { id: 8, employee: 'Amitha Chaudhary', title: 'React Developer', status: 'On Track', startDate: 'May. 17, 2004', dueDate: 'Jun. 17, 2004' },
-    { id: 9, employee: 'Ravi Gautam', title: 'Civil Engineer', status: 'Started', startDate: 'Aug. 15, 2019', dueDate: 'Sept. 15, 2019' },
-  ],
-  anonymousFeedback: [
-    { id: 10, employee: 'Alice Foster', title: 'Django Developer Feedback', status: 'On Track', startDate: 'May 1, 2024', dueDate: 'May 31, 2024' },
-    { id: 11, employee: 'Priyanka Gautam', title: 'Node Developer Feedback', status: 'Not Started', startDate: 'Sept 1, 2024', dueDate: 'Oct 31, 2024' },
-    { id: 12, employee: 'Sheetal Yadav', title: 'Redux Developer Feedback', status: 'Started', startDate: 'Nov 1, 2021', dueDate: 'Dec 31, 2021' },
-  ],
-};
 
 const Feedback = ({ feedbackData, setFeedbackData }) => {
     const [activeTab, setActiveTab] = useState('feedbackToReview');
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Add modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     
     // For filter data 
     const [filterPopupVisible, setFilterPopupVisible] = useState(false);
@@ -47,7 +27,9 @@ const Feedback = ({ feedbackData, setFeedbackData }) => {
         ...prevData,
         [activeTab]: [...prevData[activeTab], newFeedback],
       }));
+      setIsCreateModalOpen(false); // Close modal after saving
     };
+
   
     const handleDelete = (id) => {
       setFeedbackData(prevData => ({
@@ -114,14 +96,22 @@ const Feedback = ({ feedbackData, setFeedbackData }) => {
       <div className="feedback">
         <div className="feedback-header">
           <h2>Feedbacks</h2>
-          <div className="toolbar">
-            <input type="text" placeholder="Search" value={searchQuery} onChange={handleSearchChange} />
-            <button onClick={() => setFilterPopupVisible(true)}>Filter</button>
-            <button>Actions</button>
-            <Link to={{ pathname: "/feedback/create", state: { feedbackData, handleAddFeedback } }}>
-              <button className="create-btn">+ Create</button>
-            </Link>
-          </div>
+          
+  <div className="toolbar">
+    <input type="text" placeholder="Search" value={searchQuery} onChange={handleSearchChange} />
+    <button onClick={() => setFilterPopupVisible(true)}>Filter</button>
+    <button>Actions</button>
+    <button className="create-btn" onClick={() => setIsCreateModalOpen(true)}>+ Create</button>
+  </div>
+  {isCreateModalOpen && (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <button className="close-btn" onClick={() => setIsCreateModalOpen(false)}>×</button>
+        <CreateFeedback addFeedback={handleAddFeedback} />
+      </div>
+    </div>
+  )}
+
         </div>
   
         {/* Filter Popup */}

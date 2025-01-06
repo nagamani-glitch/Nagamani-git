@@ -1,17 +1,48 @@
 
 import nodemailer from 'nodemailer';
+import dns from 'dns';
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Force DNS to resolve to IPv4 addresses only
+dns.setDefaultResultOrder('ipv4first');
+
+console.log('User:', process.env.USER); // Debugging
+console.log('Pass:', process.env.PASS); // Debugging
 
 // Create a transporter using environment variables
 const transporter = nodemailer.createTransport({
-  host: process.env.HOST,           // SMTP host, e.g., smtp.gmail.com
-  service: process.env.SERVICE,     // Service name, e.g., 'gmail'
-  port: Number(process.env.EMAIL_PORT),  // Port number, e.g., 587
-  secure: Boolean(process.env.SECURE),   // Whether to use SSL/TLS (false for port 587)
+  host: 'smtp.gmail.com',  // Explicit hostname
+  port: 465,               // SSL port
+  secure: true,            // Use SSL
   auth: {
-    user: process.env.USER,          // Gmail user from .env
-    pass: process.env.PASS,          // Gmail app-specific password from .env
+    user: process.env.USER, // Your email
+    pass: process.env.PASS, // App-specific password
+  },
+  tls: {
+    rejectUnauthorized: false, // Ignore SSL certificate errors for testing
   },
 });
+
+export const sendOnboardingEmail = async (email, { name, jobPosition, joiningDate }) => {
+  const mailOptions = {
+    from: process.env.USER,
+    to: email,
+    subject: 'Welcome to DB4Cloud Technlogies!',
+    html: `
+      <h2>Welcome ${name}!</h2>
+      <p>We're excited to have you join our team as ${jobPosition}.</p>
+      <p>Your joining date is confirmed for ${joiningDate}.</p>
+      <p>Please complete your onboarding tasks and documentation before the joining date.</p>
+      <br>
+      <p>Best regards,</p>
+      <p>HR Team</p>
+    `
+  };
+
+  return await transporter.sendMail(mailOptions);
+};
+
 
 // Function to send OTP email
 export const sendOtpEmail = async (email, otp) => {
@@ -31,4 +62,6 @@ export const sendOtpEmail = async (email, otp) => {
     throw new Error('Error sending OTP email');
   }
 };
+
+
 

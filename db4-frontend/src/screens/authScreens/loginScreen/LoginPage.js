@@ -35,7 +35,7 @@ const LoginPage = () => {
       navigate('/Dashboards');
       
     } catch (error) {
-      if (error.response && error.response.status === 401) {
+      if (error.response) {
         setError('Invalid email or password. Please try again.');
       } else {
         setError('An error occurred. Please try again later.');
@@ -112,6 +112,7 @@ const LoginPage = () => {
               Login
             </Button>
           </motion.div>
+          {error && <Typography color="error">{error}</Typography>}
           <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
             New user? <Link to='/register'>Register here</Link>
           </Typography>
