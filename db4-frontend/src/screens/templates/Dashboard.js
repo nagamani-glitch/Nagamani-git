@@ -72,6 +72,8 @@ import CreateFeedback from './Performance/CreateFeedback';
 import HomePage  from './Offboarding/HomePage';
 import RegistrationPage from './Offboarding/RegistrationPage';
 
+import QuickActionButton from './QuickActionButton';
+
 
 
  
@@ -234,8 +236,10 @@ case 'resignationLetter':
       <div className="main-content">
         {renderScreen()}
       </div>
+      <QuickActionButton setSelectedPage={setActiveScreen} />
     </div>
   );
+  
 }
  
 export default Dashboard;

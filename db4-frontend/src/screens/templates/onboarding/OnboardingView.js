@@ -6,7 +6,6 @@ function OnboardingView() {
   const [candidates, setCandidates] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [stageFilter, setStageFilter] = useState('All');
-  const [currentPage, setCurrentPage] = useState(1);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [newCandidate, setNewCandidate] = useState({
@@ -20,10 +19,8 @@ function OnboardingView() {
     taskStatus: 'Pending'
   });
 
-  const itemsPerPage = 10;
   const uniqueStages = ['All', 'Test', 'Interview', 'Offer'];
 
-  // Fetch candidates on component mount and when filter changes
   useEffect(() => {
     fetchCandidates();
   }, [stageFilter]);
@@ -95,31 +92,17 @@ function OnboardingView() {
       alert('Failed to send email. Please try again.');
     }
   };
-  
 
   const filteredCandidates = candidates.filter((candidate) => 
     candidate.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const paginatedCandidates = filteredCandidates.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
-
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(1);
   };
 
   const handleStageFilterChange = (event) => {
     setStageFilter(event.target.value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
   };
 
   const toggleSelectCandidate = (id) => {
@@ -132,9 +115,9 @@ function OnboardingView() {
 
   const handleSelectAll = () => {
     setSelectedCandidates(
-      selectedCandidates.length === paginatedCandidates.length
+      selectedCandidates.length === filteredCandidates.length
         ? []
-        : paginatedCandidates.map(candidate => candidate._id)
+        : filteredCandidates.map(candidate => candidate._id)
     );
   };
 
@@ -243,7 +226,7 @@ function OnboardingView() {
                 <input
                   type="checkbox"
                   onChange={handleSelectAll}
-                  checked={selectedCandidates.length === paginatedCandidates.length && paginatedCandidates.length > 0}
+                  checked={selectedCandidates.length === filteredCandidates.length && filteredCandidates.length > 0}
                 />
               </th>
               <th>Candidate</th>
@@ -256,7 +239,7 @@ function OnboardingView() {
             </tr>
           </thead>
           <tbody>
-            {paginatedCandidates.map((candidate) => (
+            {filteredCandidates.map((candidate) => (
               <tr key={candidate._id}>
                 <td>
                   <input
@@ -272,13 +255,12 @@ function OnboardingView() {
                 <td>{new Date(candidate.joiningDate).toLocaleDateString()}</td>
                 <td>{candidate.stage}</td>
                 <td>
-                <button 
-                  onClick={() => sendMailToCandidate(candidate)} 
-                  className="send-mail-btn"
-               >
-                   Send Mail
-                </button>
-
+                  <button 
+                    onClick={() => sendMailToCandidate(candidate)} 
+                    className="send-mail-btn"
+                  >
+                    Send Mail
+                  </button>
                   <button 
                     onClick={() => handleDeleteCandidate(candidate._id)}
                     className="delete-btn"
@@ -290,26 +272,6 @@ function OnboardingView() {
             ))}
           </tbody>
         </table>
-
-        <div className="pagination">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => handlePageChange(currentPage - 1)}
-            className="pagination-btn"
-          >
-            Previous
-          </button>
-          <span className="pagination-text">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => handlePageChange(currentPage + 1)}
-            className="pagination-btn"
-          >
-            Next
-          </button>
-        </div>
       </div>
     </div>
   );
