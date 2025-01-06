@@ -70,7 +70,7 @@ import Feedback from './Performance/Feedback';
 import CreateFeedback from './Performance/CreateFeedback';
 //offboarding
 import HomePage  from './Offboarding/HomePage';
-import RegistrationPage from './Offboarding/RegistrationPage';
+import ResignationPage from './Offboarding/ResignationPage';
 
 
 

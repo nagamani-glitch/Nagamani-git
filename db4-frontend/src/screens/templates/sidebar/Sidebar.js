@@ -113,7 +113,7 @@ function Sidebar({ setActiveScreen }) {
           <ul className="sub-menu">
           <li onClick={() => handleSubClick('payrollDashboard')}>Dashboard</li>
           <li onClick={() => handleSubClick('allowances')}>Allowances</li>
-          <li onClick={() => handleSubClick('createAllowance')}>Create Allowance</li>
+          {/* <li onClick={() => handleSubClick('createAllowance')}>Create Allowance</li> */}
           <li onClick={() => handleSubClick('contract')}>Contract</li>
           <li onClick={() => handleSubClick('deductions')}>Deductions</li>
           <li onClick={() => handleSubClick('createDeduction')}>Create Deduction</li>
