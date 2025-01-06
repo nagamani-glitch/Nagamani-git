@@ -160,7 +160,7 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('assetsDashboard')}>Dashboard</li>
             <li onClick={() => handleSubClick('assetView')}>Asset View</li>
             <li onClick={() => handleSubClick('assetBatches')}>Asset Batches</li>
-            <li onClick={() => handleSubClick('requestAndAllocation')}>Request and Allocation</li>
+            {/* <li onClick={() => handleSubClick('requestAndAllocation')}>Request and Allocation</li> */}
             <li onClick={() => handleSubClick('assetHistory')}>Asset History</li>
           </ul>
         )}
@@ -169,8 +169,8 @@ function Sidebar({ setActiveScreen }) {
         </li>
         {activeMenu === 'helpDesk' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('faqPage')}>FAQs</li>
-            <li onClick={() => handleSubClick('tickets')}>Tickets</li>
+            <li onClick={() => handleSubClick('faqCategory')}>FAQs</li>
+            {/* <li onClick={() => handleSubClick('tickets')}>Tickets</li> */}
            
           </ul>
         )}

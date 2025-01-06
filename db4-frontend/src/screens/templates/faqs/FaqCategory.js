@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import "./FaqCategory.css";
 
 const apiBaseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
 export default function FaqCategory() {
     const [categories, setCategories] = useState([]);
+    const navigate = useNavigate();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [formData, setFormData] = useState({
-        title: '',
+        name: '',
         description: ''
     });
     const [searchTerm, setSearchTerm] = useState('');
+    const [errorMessage, setErrorMessage] = useState(null);
 
     useEffect(() => {
+        console.log("API Base URL:", apiBaseURL); // Debugging: Ensure base URL is correct
         fetchCategories();
     }, []);
 
@@ -33,13 +37,23 @@ export default function FaqCategory() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validate input fields
+        if (!formData.name.trim()) {
+            setErrorMessage('Category name is required.');
+            return;
+        }
+
         try {
+            console.log("Submitting form data:", formData); // Debugging payload
             await axios.post(`${apiBaseURL}/api/faqCategories`, formData);
-            fetchCategories();
+            fetchCategories(); // Refresh categories
             setIsAddModalOpen(false);
-            setFormData({ title: '', description: '' });
+            setFormData({ name: '', description: '' }); // Reset form
+            setErrorMessage(null); // Clear any previous errors
         } catch (err) {
             console.error('Error creating category:', err.response ? err.response.data : err.message);
+            setErrorMessage(err.response?.data?.error || 'Failed to create category.');
         }
     };
 
@@ -50,7 +64,7 @@ export default function FaqCategory() {
             <div className="category-actions">
                 <input
                     type="text"
-                    placeholder="Search by title"
+                    placeholder="Search by name"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -62,7 +76,7 @@ export default function FaqCategory() {
             <table className="category-table">
                 <thead>
                     <tr>
-                        <th>Title</th>
+                        <th>Name</th>
                         <th>Description</th>
                         <th>Actions</th>
                     </tr>
@@ -70,16 +84,16 @@ export default function FaqCategory() {
                 <tbody>
                     {categories
                         .filter(category =>
-                            category.title.toLowerCase().includes(searchTerm.toLowerCase())
+                            category.name.toLowerCase().includes(searchTerm.toLowerCase())
                         )
                         .map((category) => (
                             <tr key={category._id}>
-                                <td>{category.title}</td>
+                                <td>{category.name}</td>
                                 <td>{category.description}</td>
                                 <td>
-                                <button onClick={() => window.location.href = `/faq/${category._id}`}>
-                                    View FAQs
-                                </button>
+                                    <button onClick={() => navigate(`/faq/${category._id}`)}>
+                                        View FAQs
+                                    </button>
                                 </td>
                             </tr>
                         ))}
@@ -91,12 +105,13 @@ export default function FaqCategory() {
                     <div className="modal-content">
                         <h2>Add FAQ Category</h2>
                         <form onSubmit={handleSubmit}>
+                            {errorMessage && <p className="error">{errorMessage}</p>}
                             <label>
-                                Title:
+                                Name:
                                 <input
                                     type="text"
-                                    name="title"
-                                    value={formData.title}
+                                    name="name"
+                                    value={formData.name}
                                     onChange={handleChange}
                                     required
                                 />

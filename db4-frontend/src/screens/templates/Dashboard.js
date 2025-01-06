@@ -71,6 +71,7 @@ import CreateFeedback from './Performance/CreateFeedback';
 //offboarding
 import HomePage  from './Offboarding/HomePage';
 import RegistrationPage from './Offboarding/RegistrationPage';
+import { useParams } from 'react-router-dom';
 
 
 
@@ -78,6 +79,7 @@ import RegistrationPage from './Offboarding/RegistrationPage';
  
  
 function Dashboard() {
+  const {categoryId} = useParams();// for category id of faq
   // State to manage the active screen
   const [activeScreen, setActiveScreen] = useState('dashboard');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('67343940a35795672c4c79a1');
@@ -163,25 +165,39 @@ function Dashboard() {
       case "myLeaveRequests":
         return <MyLeaveRequests /> 
       
-        //sangeeta
-      case "assetHistory":
-        return <AssetHistory />
-      case "assetView":
-        return <AssetView />
-      case "assetBatch":
-        return <AssetBatch />
+        //dinesh
+        //assets
       case "assetsDashboard":
         return <AssetDashboard />
+      case "assetView":
+        return <AssetView />      
+      case "assetBatches":
+        return <AssetBatch />
+      case "assetHistory":
+        return <AssetHistory />
+        
+      //faq    
+      // In the renderScreen switch statement:
+      case 'faqCategory':
+        return <FaqCategory/>;
+      case 'faqPage':
+        return <FaqPage categoryId={categoryId} />;
+  
+      // case 'faqCategory':
+      //   return <FaqCategory />;
+      // case `faq/${categoryId}`:
+      //   return <FaqPage />;
+
+
+       //config       
       case "holidays":
         return <Holidays />
-      case "companyHolidays":
+      case "companyLeaves":
         return <CompanyHolidays />
       case "restrictLeaves":
         return <RestrictLeaves />
-      case "faqCategory":
-        return <FaqCategory />
-      case "faqPage":
-        return <FaqPage />
+
+      
         
       
       case "payrollDashboard":

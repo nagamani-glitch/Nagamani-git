@@ -1,8 +1,7 @@
 import express from 'express';
 import FaqCategory from '../models/FaqCategory.js';
+
 const router = express.Router();
-
-
 
 // Get all FAQ categories
 router.get('/', async (req, res) => {

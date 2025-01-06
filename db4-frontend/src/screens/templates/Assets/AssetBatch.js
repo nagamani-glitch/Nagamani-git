@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './AssetBatch.css';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 function AssetBatch() {
   const [assetBatches, setAssetBatches] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,20 +15,31 @@ function AssetBatch() {
     numberOfAssets: ''
   });
   const [editBatchId, setEditBatchId] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchAssetBatches();
   }, []);
 
   const fetchAssetBatches = async () => {
-    const response = await axios.get('https://db-4-demo-project-hlv5.vercel.app/api/asset-batches');
-    setAssetBatches(response.data);
+    try {
+      const response = await axios.get(`${API_URL}/api/asset-batches`);
+      setAssetBatches(response.data);
+    } catch (err) {
+      console.error('Error fetching asset batches:', err.message);
+      setError('Failed to fetch asset batches. Please check the server.');
+    }
   };
 
   const handleSearch = async (e) => {
     setSearchQuery(e.target.value);
-    const response = await axios.get(`https://db-4-demo-project-hlv5.vercel.app/api/asset-batches/search?q=${e.target.value}`);
-    setAssetBatches(response.data);
+    try {
+      const response = await axios.get(`${API_URL}/api/asset-batches/search?q=${e.target.value}`);
+      setAssetBatches(response.data);
+    } catch (err) {
+      console.error('Error during search:', err.message);
+      setError('Failed to fetch search results.');
+    }
   };
 
   const handleInputChange = (e) => {
@@ -36,17 +49,22 @@ function AssetBatch() {
 
   const handleCreateBatch = async (e) => {
     e.preventDefault();
-    if (isEditing) {
-      await axios.put(`https://db-4-demo-project-hlv5.vercel.app/api/asset-batches/${editBatchId}`, formData);
-      setAssetBatches(assetBatches.map(batch => batch._id === editBatchId ? { ...batch, ...formData } : batch));
-      setIsEditing(false);
-      setEditBatchId(null);
-    } else {
-      const response = await axios.post('https://db-4-demo-project-hlv5.vercel.app/api/asset-batches', formData);
-      setAssetBatches([...assetBatches, response.data]);
+    try {
+      if (isEditing) {
+        await axios.put(`${API_URL}/api/asset-batches/${editBatchId}`, formData);
+        setAssetBatches(assetBatches.map(batch => batch._id === editBatchId ? { ...batch, ...formData } : batch));
+        setIsEditing(false);
+        setEditBatchId(null);
+      } else {
+        const response = await axios.post(`${API_URL}/api/asset-batches`, formData);
+        setAssetBatches([...assetBatches, response.data]);
+      }
+      setFormData({ batchNumber: '', description: '', numberOfAssets: '' });
+      setShowForm(false);
+    } catch (err) {
+      console.error('Error creating/updating asset batch:', err.message);
+      setError('Failed to save asset batch. Please try again.');
     }
-    setFormData({ batchNumber: '', description: '', numberOfAssets: '' });
-    setShowForm(false);
   };
 
   const handleEdit = (batch) => {
@@ -61,13 +79,20 @@ function AssetBatch() {
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`https://db-4-demo-project-hlv5.vercel.app/api/asset-batches/${id}`);
-    setAssetBatches(assetBatches.filter(batch => batch._id !== id));
+    try {
+      await axios.delete(`${API_URL}/api/asset-batches/${id}`);
+      setAssetBatches(assetBatches.filter(batch => batch._id !== id));
+    } catch (err) {
+      console.error('Error deleting asset batch:', err.message);
+      setError('Failed to delete asset batch. Please try again.');
+    }
   };
 
   return (
     <div className="asset-batch-container">
       <h1 className="asset-batch-header">Asset Batch</h1>
+      
+      {error && <p className="error-message">{error}</p>}
       
       <div className="asset-batch-actions">
         <div className="asset-batch-search">
