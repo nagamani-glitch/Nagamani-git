@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import icons from react-icons
+import './RegisterPage.css';
 import { motion } from 'framer-motion';
 import { Box, Button, TextField, Typography, Container } from '@mui/material';
 
@@ -11,6 +13,11 @@ const RegisterPage = () => {
     password: '',
   });
   const [error, setError] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [errorOtp, setErrorOtp] = useState('');
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -22,9 +29,10 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/auth/register', formData);
-      alert('User registered successfully');
-      navigate('/login');
+       await axios.post('http://localhost:5000/api/auth/register', formData);
+      alert('OTP sent to email. Please verify.');
+      setOtpSent(true);
+      navigate('/verifyOtp', { state: { email: formData.email } });
     } catch (error) {
       if (error.response && error.response.status === 409) {
         setError('User already exists. Please try login!');
@@ -39,19 +47,12 @@ const RegisterPage = () => {
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      style={{marginTop:"120px"}}
+      style={{ marginTop: '120px' }}
     >
       <Container
         component="main"
         maxWidth="xs"
-        sx={{
-          mt: 8,
-          p: 4,
-          boxShadow: 3,
-          borderRadius: 2,
-          backgroundColor: 'white',
-          
-        }}
+        sx={{ mt: 8, p: 4, boxShadow: 3, borderRadius: 2, backgroundColor: 'white' }}
       >
         <Typography variant="h4" component="h1" sx={{ mb: 2, textAlign: 'center' }}>
           Register
@@ -94,12 +95,7 @@ const RegisterPage = () => {
             </Typography>
           )}
           <motion.div whileHover={{ scale: 1.05 }}>
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
+            <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
               Register
             </Button>
           </motion.div>

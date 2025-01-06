@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-
 import {
   faChartPie,
   faBullseye,
@@ -17,22 +15,22 @@ import {
   faCogs,
 } from '@fortawesome/free-solid-svg-icons';
 import './Sidebar.css';
-
+ 
 function Sidebar({ setActiveScreen }) {
   const [activeMenu, setActiveMenu] = useState('');
   const [activeSubMenu, setActiveSubMenu] = useState('');
-
+ 
   const handleMainClick = (menu) => {
     setActiveMenu(menu === activeMenu ? '' : menu); // Toggle menu
     setActiveSubMenu(''); // Reset sub-menu on main menu change
   };
-
+ 
   const handleSubClick = (subMenu) => {
     setActiveSubMenu(subMenu);
     setActiveScreen(subMenu); // Pass the active sub-menu to the main screen
     console.log(activeSubMenu)
   };
-
+ 
   return (
     <aside className="sidebar">
       <div>
@@ -58,9 +56,9 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('skillZone')}>Skill Zone</li>
           </ul>
         )}
-
-        <li onClick={() => handleMainClick('onboarding')}>
-          <FontAwesomeIcon icon={faRocket} /> Onboarding
+ 
+<li onClick={() => handleMainClick('onboarding')}>
+<FontAwesomeIcon icon={faRocket} /> Onboarding
         </li>
         {activeMenu === 'onboarding' && (
           <ul className="sub-menu">
@@ -68,9 +66,9 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('candidatesView')}>Candidates View</li>
           </ul>
         )}
-
-        <li onClick={() => handleMainClick('employee')}>
-          <FontAwesomeIcon icon={faUsers} /> Employee
+ 
+<li onClick={() => handleMainClick('employee')}>
+<FontAwesomeIcon icon={faUsers} /> Employee
         </li>
         {activeMenu === 'employee' && (
           <ul className="sub-menu">
@@ -86,7 +84,7 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('organizationChart')}>Organization Chart</li>
           </ul>
         )}
-
+ 
         <li onClick={() => handleMainClick('attendance')}>
           <FontAwesomeIcon icon={faCalendarCheck} /> Attendance
         </li>
@@ -96,7 +94,7 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('timeOffRequests')}>Time Off Requests</li>
           </ul>
         )}
-
+ 
         <li onClick={() => handleMainClick('leave')}>
           <FontAwesomeIcon icon={faCalendarTimes} /> Leave
         </li>
@@ -106,34 +104,36 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('leaveRequests')}>Leave Requests</li>
           </ul>
         )}
-
-              {/* Sangeeta */}
-
-        <li onClick={() => handleMainClick('payroll')}>
-          <FontAwesomeIcon icon={faMoneyBillWave} /> Payroll
+       
+ 
+<li onClick={() => handleMainClick('payroll')}>
+<FontAwesomeIcon icon={faMoneyBillWave} /> Payroll
         </li>
         {activeMenu === 'payroll' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('payrollDashboard')}>Dashboard</li>
-            <li onClick={() => handleSubClick('allowances')}>Allowances</li> 
-            <li onClick={() => handleSubClick('contract')}>Contract</li>
-            <li onClick={() => handleSubClick('deductions')}>Deductions</li>
-            <li onClick={() => handleSubClick('payslips')}>Payslips</li>
-            <li onClick={() => handleSubClick('federalTax')}>Federal Tax</li>
-          </ul>
+          <li onClick={() => handleSubClick('payrollDashboard')}>Dashboard</li>
+          <li onClick={() => handleSubClick('allowances')}>Allowances</li>
+          <li onClick={() => handleSubClick('createAllowance')}>Create Allowance</li>
+          <li onClick={() => handleSubClick('contract')}>Contract</li>
+          <li onClick={() => handleSubClick('deductions')}>Deductions</li>
+          <li onClick={() => handleSubClick('createDeduction')}>Create Deduction</li>
+          <li onClick={() => handleSubClick('payslips')}>Payslips</li>
+          <li onClick={() => handleSubClick('federalTax')}>Federal Tax</li>
+        </ul>
         )}
-
+          
         <li onClick={() => handleMainClick('performance')}>
           <FontAwesomeIcon icon={faChartLine} /> Performance
         </li>
         {activeMenu === 'performance' && (
           <ul className="sub-menu">
-            <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
-            <li onClick={() => handleSubClick('objectives')}>Objectives</li>
-            <li onClick={() => handleSubClick('feedback')}>360 Feedback</li>
-          </ul>
+          <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
+          <li onClick={() => handleSubClick('objectives')}>Objectives</li>
+          <li onClick={() => handleSubClick('feedback')}>360 Feedback</li>
+          <li onClick={() => handleSubClick('createFeedback')}>Create Feedback</li>
+        </ul>
         )}
-        
+
         <li onClick={() => handleMainClick('offboarding')}>
           <FontAwesomeIcon icon={faSignOutAlt} /> Offboarding
         </li>
@@ -143,6 +143,7 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('resignationLetter')}>Resignation Letters</li>
           </ul> 
         )}
+       
         <li onClick={() => handleMainClick('assets')}>
           <FontAwesomeIcon icon={faLaptop} /> Assets
         </li>
@@ -155,6 +156,7 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('assetHistory')}>Asset History</li>
           </ul>
         )}
+
         <li onClick={() => handleMainClick('helpDesk')}>
           <FontAwesomeIcon icon={faHeadset} /> Help Desk
         </li>
@@ -162,7 +164,7 @@ function Sidebar({ setActiveScreen }) {
           <ul className="sub-menu">
             <li onClick={() => handleSubClick('faqPage')}>FAQs</li>
             <li onClick={() => handleSubClick('tickets')}>Tickets</li>
-
+           
           </ul>
         )}
         <li onClick={() => handleMainClick('configuration')}>
@@ -170,19 +172,17 @@ function Sidebar({ setActiveScreen }) {
         </li>
         {activeMenu === 'configuration' && (
           <ul className="sub-menu">
-            {/* <li onClick={() => handleSubClick('multipleApprovals')}>Multiple Approvals</li>
-            <li onClick={() => handleSubClick('mailTemplates')}>Mail Templates</li>
-            <li onClick={() => handleSubClick('mailAutomations')}>Mail Automations</li> */}
+           
             <li onClick={() => handleSubClick('holidays')}>Holidays</li>
             <li onClick={() => handleSubClick('companyLeaves')}>Company Leaves</li>
             <li onClick={() => handleSubClick('restrictLeaves')}>Restrict Leaves</li>
           </ul>
         )}
-
-
+       
+       
       </ul>
     </aside>
   );
 }
-
+ 
 export default Sidebar;

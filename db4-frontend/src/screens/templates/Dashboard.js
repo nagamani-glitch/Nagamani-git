@@ -19,7 +19,7 @@ import Interview from './Recruitment/Interview';
 import OpenJobs from './Recruitment/OpenJobs';
 import SkillZone from './Recruitment/SkillZone';
 //Onboarding
-import OnboardingView from './Onboarding/OnboardingView_1';
+import OnboardingView from './Onboarding/OnboardingView';
 import CandidatesView from './Onboarding/CandidateView';
 import './Dashboard.css';
 import { useSidebar } from '../../Context';
@@ -48,7 +48,9 @@ import CompanyHolidays from './configuration/CompanyHolidays';
 import RestrictLeaves from './configuration/RestrictLeaves';
 import FaqCategory from './faqs/FaqCategory';
 import FaqPage from './faqs/FaqPage';
+import { fetchHolidays, createHoliday, updateHoliday, deleteHoliday, fetchFilteredHolidays } from './configuration/Holidays';
 
+ 
 // import OnboardingView from './onboarding/OnboardingView';
 
         // Sangeeta integration
@@ -67,9 +69,14 @@ import Objectives from './Performance/Objectives';
 import Feedback from './Performance/Feedback';
 import CreateFeedback from './Performance/CreateFeedback';
 //offboarding
-import HomePage from './Offboarding/HomePage';
-import ResignationPage from './Offboarding/ResignationPage';
+import HomePage  from './Offboarding/HomePage';
+import RegistrationPage from './Offboarding/RegistrationPage';
 
+
+
+ 
+ 
+ 
 function Dashboard() {
   // State to manage the active screen
   const [activeScreen, setActiveScreen] = useState('dashboard');
@@ -154,15 +161,16 @@ function Dashboard() {
       case "leaveRequests":
         return <LeaveRequests />
       case "myLeaveRequests":
-        return <MyLeaveRequests />
-
+        return <MyLeaveRequests /> 
+      
+        //sangeeta
       case "assetHistory":
         return <AssetHistory />
       case "assetView":
         return <AssetView />
       case "assetBatch":
         return <AssetBatch />
-      case "assetDashboard":
+      case "assetsDashboard":
         return <AssetDashboard />
       case "holidays":
         return <Holidays />
@@ -174,8 +182,8 @@ function Dashboard() {
         return <FaqCategory />
       case "faqPage":
         return <FaqPage />
-
-      //Sangeeta
+        
+      
       case "payrollDashboard":
         return <PayrollDashboard />;
       case "allowances":

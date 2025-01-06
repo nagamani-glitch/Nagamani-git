@@ -1,14 +1,12 @@
-import express from 'express'
-import multer from 'multer'
-import { loginAuth, registerAuth } from '../controllers/authController.js';
+import express from 'express';
+import { registerAuth, verifyOtp, loginAuth } from '../controllers/authController.js';
+
 const router = express.Router();
 
-// Multer configuration
-const upload = multer({ dest: 'uploads/' }); // Stores the image in 'uploads/' folder
-// Modify the POST route to include multer upload middleware
+router.post('/register', registerAuth);  // Register user and send OTP
+router.post('/verify-otp', verifyOtp);   // Verify OTP
+router.post('/login', loginAuth);        // User login
 
-router.route('/login').post(loginAuth)
-router.route('/register')
-.post(registerAuth)
+export default router;
 
-export default router
+

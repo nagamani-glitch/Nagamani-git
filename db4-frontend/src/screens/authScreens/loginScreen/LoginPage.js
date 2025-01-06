@@ -3,35 +3,48 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Box, Button, TextField, Typography, Container } from '@mui/material';
+import { Box, Button, TextField, Typography, Container, IconButton } from '@mui/material';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/api/auth/login', formData);
+      const response = await axios.post('http://localhost:5000/api/auth/login', formData);
       alert('User logged in successfully');
+      
       localStorage.setItem('token', response.data.token);
-      navigate('/home');
+      navigate('/Dashboards');
+      
     } catch (error) {
-      console.error(error);
+      if (error.response) {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError('An error occurred. Please try again later.');
+      }
     }
   };
 
   return (
     <motion.div
-      className="login-container"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -68,11 +81,27 @@ const LoginPage = () => {
             fullWidth
             label="Password"
             name="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             onChange={handleChange}
             required
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={togglePasswordVisibility}
+                  edge="end"
+                  aria-label="toggle password visibility"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </IconButton>
+              ),
+            }}
           />
+          {error && (
+            <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+              {error}
+            </Typography>
+          )}
           <motion.div whileHover={{ scale: 1.05 }}>
             <Button
               type="submit"
@@ -83,6 +112,7 @@ const LoginPage = () => {
               Login
             </Button>
           </motion.div>
+          {error && <Typography color="error">{error}</Typography>}
           <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
             New user? <Link to='/register'>Register here</Link>
           </Typography>
