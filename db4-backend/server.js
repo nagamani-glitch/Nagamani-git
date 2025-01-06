@@ -23,7 +23,10 @@ import companyHolidaysRoute from './routes/companyHolidays.js';
 import restrictLeaveRoutes from './routes/restrictLeaveRoutes.js';
 import holidayRoutes from './routes/holidays.js';
 
-
+// sangeeta integration
+import allowanceRoutes from './routes/allowanceRoutes.js';
+import payrollContractRoutes from './routes/payrollContractRoutes.js';
+import deductionRoutes from './routes/deductionRoutes.js'
 
 dotenv.config()
 connectDB()
@@ -57,6 +60,15 @@ app.use('/api/companyHolidays', companyHolidaysRoute);
 app.use('/api/restrictLeaves', restrictLeaveRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/faqCategories', faqCategoryRoutes);
+
+// sangeeta integration
+app.use('/api/allowances', allowanceRoutes);
+
+//  contract routes import and usage
+app.use('/api/contracts', payrollContractRoutes);
+app.use('/api/deductions', deductionRoutes);
+
+
 
 
 const PORT = process.env.PORT || 5000

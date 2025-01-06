@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import { IoFilterOutline } from "react-icons/io5";
+import axios from "axios";
 import './CreateDeduction.css'
 
 
-const CreateDeduction = () => {
+const CreateDeduction = ({ onClose, editData, onUpdate }) => {
   const [isTaxable, setIsTaxable] = useState(false);
   const [isFixed, setIsFixed] = useState(false);
   const [isConditionBased, setIsConditionBased] = useState(false);
@@ -22,6 +23,18 @@ const CreateDeduction = () => {
     { id: 6, name: "Charles babbage", role: "Developer" },
     { id: 7, name: "Ravijith Aggarwal", role: "Computer Engineer" },
   ];
+
+  // Initialize state with edit data if available
+  const [formData, setFormData] = useState({
+    title: editData?.name || '',
+    oneTimeDate: editData?.oneTimeDeduction || '',
+    amount: editData?.amount || '',
+    isTaxable: editData?.taxable === 'Yes',
+    isFixed: editData?.fixed || false,
+    isConditionBased: editData?.isConditionBased || false,
+    selectedEmployees: editData?.specificEmployees || []
+  });
+
 
   // Filter employee data based on the search input
   const filteredEmployees = employees.filter(
@@ -55,28 +68,87 @@ const CreateDeduction = () => {
     );
   };
 
-
-  const handleSave = (event) => {
+  // Handle saving the form data
+  const handleSave = async (event) => {
     event.preventDefault();
     const formData = {
-      title: document.querySelector("input[placeholder='Enter title']").value,
-      oneTimeDate: document.querySelector("input[type='date']").value,
-      selectedEmployees: selectedEmployee,
-      isTaxable,
-      isFixed,
-      isConditionBased,
-      amount: document.querySelector("input[type='number']").value,
+      code: document.querySelector("input[placeholder='Enter title']").value,
+      name: document.querySelector("input[placeholder='Enter title']").value,
+      amount: Number(document.querySelector("input[type='number']").value) || 0,
+      oneTimeDeduction: document.querySelector("input[type='date']").value ? 'Yes' : 'No',
+      taxable: isTaxable ? 'Yes' : 'No',
+      fixed: isFixed,
+      pretax: isTaxable ? 'Yes' : 'No',
+      specificEmployees: selectedEmployee,
+      employerRate: "6.25% of Gross Pay",
+      employeeRate: "7.75% of Gross Pay",
+      isConditionBased: isConditionBased,
+      ifChoice: document.querySelector("select[required]").value,
+      ifCondition: document.querySelector(".condition-options").value,
+      ifAmount: Number(document.querySelector("input[placeholder='0.0']").value) || 0,
+      updateCompensation: document.querySelector("select[required]").value
     };
 
-    console.log("Form Data:", formData);
-    alert("Form data saved successfully!");
+    try {
+      const response = await axios.post('http://localhost:5000/api/deductions', formData);
+      console.log("Form Data saved:", response.data);
+      alert("Form data saved successfully!");
+      onClose();
+    } catch (error) {
+      console.error("Error saving deduction:", error);
+      alert("Failed to save deduction data");
+    }
+  };
+
+
+
+  // Update handleSubmit to include all form fields
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formData = {
+      code: document.querySelector("input[placeholder='Enter title']").value,
+      name: document.querySelector("input[placeholder='Enter title']").value,
+      amount: Number(document.querySelector("input[placeholder='Enter amount']").value) || 0,
+      oneTimeDeduction: document.querySelector("input[type='date']").value ? 'Yes' : 'No',
+      taxable: isTaxable ? 'Yes' : 'No',
+      fixed: isFixed,
+      pretax: isTaxable ? 'Yes' : 'No',
+      specificEmployees: selectedEmployee,
+      employerRate: "6.25% of Gross Pay",
+      employeeRate: "7.75% of Gross Pay",
+      isConditionBased: isConditionBased,
+      ifChoice: document.querySelector("select[required]").value,
+      ifCondition: document.querySelector(".condition-options").value,
+      ifAmount: Number(document.querySelector("input[placeholder='0.0']").value) || 0,
+      updateCompensation: document.querySelector("select[required]").value
+    };
+
+    try {
+      if (editData) {
+        const response = await axios.put(`http://localhost:5000/api/deductions/${editData._id}`, formData);
+        console.log("Deduction updated:", response.data);
+        alert("Deduction updated successfully!");
+      } else {
+        const response = await axios.post('http://localhost:5000/api/deductions', formData);
+        console.log("Form Data saved:", response.data);
+        alert("Form data saved successfully!");
+      }
+      onClose();
+    } catch (error) {
+      console.error("Error:", error);
+      alert(editData ? "Failed to update deduction" : "Failed to save deduction data");
+    }
   };
 
 
   return (
     <div className="main-container">
       <div className="create-allowance-container">
-        <h2>Deduction </h2>
+        <div className="deduction-row">
+          <h2 className="deduction-heading">{editData ? 'Edit Deduction' : 'Create Deduction'}</h2>
+
+
+        </div>
         <hr />
         <form>
           {/* Title and One-time date in one row */}
@@ -120,9 +192,9 @@ const CreateDeduction = () => {
             </div>
             <div className="form-group">
               <label>Specific Employees *</label>
-              
+
               {/* Select employees as shown tags */}
-                <div className="multi-select-box">
+              <div className="multi-select-box">
                 {selectedEmployee.map((employeeName) => (
                   <div key={employeeName} className="tag">
                     {employeeName}
@@ -216,7 +288,7 @@ const CreateDeduction = () => {
                 Is tax
                 <FaInfoCircle
                   className="info-icon"
-                  title="The specify the deduction is tax or normal deduction "/>
+                  title="The specify the deduction is tax or normal deduction " />
               </label>
               <label className="toggle-switch">
                 <input
@@ -340,11 +412,13 @@ const CreateDeduction = () => {
             </div>
           </div>
 
-          <div className="form-group save-btn-container" style={{display:"flex",alignItems:"end"}}>
-              <button type="button" className="save-btn" onClick={handleSave}>
-                Save
-              </button>
-            </div>
+          <div className="form-group save-btn-container" style={{ display: "flex", alignItems: "end" }}>
+
+
+            <button onClick={handleSubmit} className="save-btn">
+              {editData ? 'Update' : 'Save'}
+            </button>
+          </div>
         </form>
 
 
@@ -374,6 +448,7 @@ const CreateDeduction = () => {
         )}
 
       </div>
+
     </div>
   );
 };

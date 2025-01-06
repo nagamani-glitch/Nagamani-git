@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './CreateFeedback.css'
 
 const CreateFeedback = ({ addFeedback }) => {
@@ -11,12 +10,11 @@ const CreateFeedback = ({ addFeedback }) => {
     colleague: '',
     period: '',
     startDate: '',
-    endDate: '',
+    endDate: '', 
     questionTemplate: '',
     keyResult: '',
   });
 
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,23 +24,41 @@ const CreateFeedback = ({ addFeedback }) => {
     }));
   };
 
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    addFeedback(formData); // Add new feedback
-    navigate('/performance/feedback'); // Navigate back to FeedbackPage
-  };
+    const newFeedback = {
+      id: Date.now(),
+      ...formData,
+      status: 'Not Started'
+    };
+    addFeedback(newFeedback);
+    setFormData({  // Reset form data
+      title: '',
+      employee: '',
+      manager: '',
+      subordinates: '',
+      colleague: '',
+      period: '',
+      startDate: '',
+      endDate: '', 
+      questionTemplate: '',
+      keyResult: '',
+    });
+  
+  };  
 
   return (
     <div className="create-filter-popup">
       <h3>Feedback</h3>
       <form onSubmit={handleSubmit}>
-        <label>Title</label>
-        <input type="text" name="title" value={formData.title} onChange={handleChange} required />
+        <label>Employee</label>
+        <input type="text" name="employee" value={formData.employee} onChange={handleChange} required />
         
         <div className="group">
           <label>
-            Employee
-            <input type="text" name="employee" value={formData.employee} onChange={handleChange} />
+            Title
+            <input type="text" name="title" value={formData.title} onChange={handleChange} />
           </label>
           <label>
             Manager

@@ -8,7 +8,7 @@ const ResignationPage = () => {
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
- 
+
   const [data, setData] = useState([
     {
       id: 1,
@@ -116,8 +116,8 @@ const ResignationPage = () => {
   };
 
 
-  
-/* For filter data */
+
+  /* For filter data */
   const filteredData = data.filter((item) => {
     const matchesSearch = item.name
       .toLowerCase()
@@ -196,7 +196,7 @@ const ResignationPage = () => {
               onChange={handleInputChange}
             />
 
-<input
+            <input
               type="text"
               name="description"
               placeholder="Description"
@@ -229,25 +229,22 @@ const ResignationPage = () => {
           </button>
           <button
             onClick={() => applyFilter("Approved")}
-            className={`filter-option ${
-              selectedStatus === "Approved" ? "active" : ""
-            }`}
+            className={`filter-option ${selectedStatus === "Approved" ? "active" : ""
+              }`}
           >
             Approved
           </button>
           <button
             onClick={() => applyFilter("Requested")}
-            className={`filter-option ${
-              selectedStatus === "Requested" ? "active" : ""
-            }`}
+            className={`filter-option ${selectedStatus === "Requested" ? "active" : ""
+              }`}
           >
             Requested
           </button>
           <button
             onClick={() => applyFilter("Rejected")}
-            className={`filter-option ${
-              selectedStatus === "Rejected" ? "active" : ""
-            }`}
+            className={`filter-option ${selectedStatus === "Rejected" ? "active" : ""
+              }`}
           >
             Rejected
           </button>
@@ -297,7 +294,7 @@ const ResignationPage = () => {
       )}
 
 
-<div className={viewMode === "grid" ? "card-grid" : "card-list"}>
+      <div className={viewMode === "grid" ? "card-grid" : "card-list"}>
         {filteredData.map((item) => (
           <div key={item.id} className="resignation-card">
             <div className="card-header">

@@ -2,12 +2,12 @@
   padding: 20px;
   background-color: #f9f9f9;
   width: 100%;
-  height: 100vh;
+  
   }
   
   .header-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between;  
     align-items: center;
     margin-bottom: 20px;
   }
@@ -128,7 +128,6 @@
   background-color: #ffffff;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  height: 130vh;
   }
 
   .create-page-sub-container{
@@ -139,7 +138,7 @@
     border-radius: 8px;
     border: 1.5px solid rgb(216, 212, 212);
   }
-
+ 
   .contract-row {
     padding-bottom: 20px;
     display: flex;

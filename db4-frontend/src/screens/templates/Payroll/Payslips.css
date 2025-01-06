@@ -144,7 +144,7 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     gap: 5px;
     padding: 5px 10px;
     background-color: #007bff;
-    color: white;
+    /* color: white; */
     border: none;
     border-radius: 3px;
     font-size: 0.9em;

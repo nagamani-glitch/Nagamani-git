@@ -31,10 +31,12 @@ import PrivateRoute from './screens/PrivateRoute';
 import { Container } from 'react-bootstrap';
 import { SidebarProvider } from './Context';
 
+
+
 function App() {
   return (
     <div >
-      <Router>
+      <Router> 
       <SidebarProvider>
         <Header />
         <Container fluid style={{ padding: "0", margin: "0", width: "100%" }}>
