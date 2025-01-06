@@ -72,6 +72,8 @@ import CreateFeedback from './Performance/CreateFeedback';
 import HomePage  from './Offboarding/HomePage';
 import ResignationPage from './Offboarding/ResignationPage';
 
+import QuickActionButton from './QuickActionButton';
+
 
 
  
@@ -234,8 +236,10 @@ function Dashboard() {
       <div className="main-content">
         {renderScreen()}
       </div>
+      <QuickActionButton setSelectedPage={setActiveScreen} />
     </div>
   );
+  
 }
 
 export default Dashboard;
