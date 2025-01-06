@@ -24,6 +24,25 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+export const sendOnboardingEmail = async (email, { name, jobPosition, joiningDate }) => {
+  const mailOptions = {
+    from: process.env.USER,
+    to: email,
+    subject: 'Welcome to Our Company!',
+    html: `
+      <h2>Welcome ${name}!</h2>
+      <p>We're excited to have you join our team as ${jobPosition}.</p>
+      <p>Your joining date is confirmed for ${joiningDate}.</p>
+      <p>Please complete your onboarding tasks and documentation before the joining date.</p>
+      <br>
+      <p>Best regards,</p>
+      <p>HR Team</p>
+    `
+  };
+
+  return await transporter.sendMail(mailOptions);
+};
+
 
 // Function to send OTP email
 export const sendOtpEmail = async (email, otp) => {
@@ -43,4 +62,6 @@ export const sendOtpEmail = async (email, otp) => {
     throw new Error('Error sending OTP email');
   }
 };
+
+
 

@@ -19,7 +19,7 @@ import Interview from './Recruitment/Interview';
 import OpenJobs from './Recruitment/OpenJobs';
 import SkillZone from './Recruitment/SkillZone';
 //Onboarding
-import OnboardingView from './Onboarding/OnboardingView_1';
+import OnboardingView from './Onboarding/OnboardingView';
 import CandidatesView from './Onboarding/CandidateView';
 import './Dashboard.css';
 import { useSidebar } from '../../Context';

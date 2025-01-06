@@ -19,6 +19,7 @@ import faqRoutes from './routes/faqRoutes.js';
 import companyHolidaysRoute from './routes/companyHolidays.js';
 import restrictLeaveRoutes from './routes/restrictLeaveRoutes.js';
 import holidayRoutes from './routes/holidays.js';
+import onboardingRoutes from './routes/onboardingRoutes.js';
  
  
  
@@ -45,7 +46,7 @@ app.use('/api/applicantProfiles', applicantProfileRoutes);
 app.use('/api/interviews', interviewRoutes);
 app.use('/api/skill-zone', skillZoneRoutes);
 app.use('/api/employees',employeeRoutes);
- 
+app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/dashboard', assetDashboardRoutes);
 app.use('/api/holidays', holidayRoutes);
@@ -57,4 +58,4 @@ app.use('/api/faqCategories', faqCategoryRoutes);
  
 const PORT = process.env.PORT || 5000
  
-app.listen(PORT, console.log(`Server running on port ${PORT}`.yellow.bold))
+app.listen(PORT, console.log(`✨ Server running on port ${PORT}`.yellow.bold))

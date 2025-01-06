@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
- 
- 
 import {
   faChartPie,
   faBullseye,
@@ -122,7 +120,7 @@ function Sidebar({ setActiveScreen }) {
           <li onClick={() => handleSubClick('payslips')}>Payslips</li>
           <li onClick={() => handleSubClick('federalTax')}>Federal Tax</li>
         </ul>
-          )}
+        )}
           
         <li onClick={() => handleMainClick('performance')}>
         <FontAwesomeIcon icon={faChartLine} /> Performance
@@ -134,14 +132,8 @@ function Sidebar({ setActiveScreen }) {
           <li onClick={() => handleSubClick('feedback')}>360 Feedback</li>
           <li onClick={() => handleSubClick('createFeedback')}>Create Feedback</li>
         </ul>
-          
-//           <ul className="sub-menu">
-//             <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
-//             <li onClick={() => handleSubClick('objectives')}>Objectives</li>
-//             <li onClick={() => handleSubClick('feedbck')}>360 Feedback</li>
-//          </ul>
-         
         )}
+
         <li onClick={() => handleMainClick('offboarding')}>
         <FontAwesomeIcon icon={faSignOutAlt} /> Offboarding
         </li>
@@ -164,6 +156,7 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('assetHistory')}>Asset History</li>
           </ul>
         )}
+
         <li onClick={() => handleMainClick('helpDesk')}>
         <FontAwesomeIcon icon={faHeadset} /> Help Desk
         </li>
