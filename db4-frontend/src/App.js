@@ -32,10 +32,12 @@ import { Container } from 'react-bootstrap';
 import { SidebarProvider } from './Context';
 import VerifyOtpPage from './screens/authScreens/registerScreen/VerifyOtpPage';
 
+
+
 function App() {
   return (
     <div >
-      <Router>
+      <Router> 
       <SidebarProvider>
         <Header />
         <Container fluid style={{ padding: "0", margin: "0", width: "100%" }}>

@@ -6,7 +6,7 @@ import Sidebar from './sidebar/Sidebar';
 // import WorkManagement from './workManagement/EmployeeListing';
 // import ProductManagement from './productManagement/DocumentRequestPage';
 import DocumentRequestPage from './productManagement/DocumentRequestPage';
- 
+
 //Subikshan Integration
 //Dasboard
 import MainDashboard from './MainDashboard';
@@ -52,8 +52,8 @@ import { fetchHolidays, createHoliday, updateHoliday, deleteHoliday, fetchFilter
 
  
 // import OnboardingView from './onboarding/OnboardingView';
- 
-// Sangeeta
+
+        // Sangeeta integration
 //Payroll
 import PayrollDashboard from './Payroll/PayrollDashboard';
 import Allowances from './Payroll/Allowances';
@@ -105,14 +105,14 @@ function Dashboard() {
       { type: 'anonymousFeedback', id: 12, employee: 'Sheetal Yadav', title: 'Redux Developer Feedback', status: 'Started', startDate: 'Nov 1, 2021', dueDate: 'Dec 31, 2021' },
     ],
   });
- 
- 
+
+
   const addFeedback = (newFeedback) => {
     setFeedbackData([...feedbackData, newFeedback]);
   };
- 
+
   const { isSidebarOpen } = useSidebar();
- 
+
   // Function to render the correct component based on the active screen
   const renderScreen = () => {
     switch (activeScreen) {
@@ -191,45 +191,45 @@ function Dashboard() {
       case "allowances":
         return <Allowances />;
       case "/allowances/create":
-        return <CreateAllowance />;
+        return <CreateAllowance setActiveScreen={setActiveScreen}  />;
       case "contract":
         return <Contract />;
       case "deductions":
         return <Deductions />;
-        case 'createDeduction':
+      case 'createDeduction':
         return <CreateDeduction />;
       case "federalTax":
         return <FederalTax />;
       case "payslips":
         return <Payslips />;
- 
-     // Performance Routes  
-case 'performanceDashboard':
-  return <PerformanceDashboard />;
-case 'objectives':
-  return <Objectives />;
-case 'feedback':
-  return <Feedback feedbackData={feedbackData} setFeedbackData={setFeedbackData} />;
-case 'createFeedback':
-  return <CreateFeedback addFeedback={addFeedback} />;
- 
-// Offboarding Routes
-case 'exitProcess':
-  return <HomePage />;
-case 'resignationLetter':
-  return <RegistrationPage />;
- 
- 
+
+      // Performance Routes  
+      case 'performanceDashboard':
+        return <PerformanceDashboard />;
+      case 'objectives':
+        return <Objectives />;
+      case 'feedback':
+        return <Feedback feedbackData={feedbackData} setFeedbackData={setFeedbackData} />;
+      case '/feedback/create':
+        return <CreateFeedback addFeedback={addFeedback} />;
+
+      // Offboarding Routes
+      case 'exitProcess':
+        return <HomePage />;
+      case 'resignationLetter':
+        return <ResignationPage />;
+
+
       default:
         return null
     }
   };
- 
+
   const handleEmployeeClick = (id) => {
     setSelectedEmployeeId(id);
     setActiveScreen('profile');
   };
- 
+
   return (
     <div className={`dashboard-container ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
       <Sidebar setActiveScreen={setActiveScreen} />
@@ -241,5 +241,5 @@ case 'resignationLetter':
   );
   
 }
- 
+
 export default Dashboard;

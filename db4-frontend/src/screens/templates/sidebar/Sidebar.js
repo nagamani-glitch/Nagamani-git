@@ -34,16 +34,16 @@ function Sidebar({ setActiveScreen }) {
   return (
     <aside className="sidebar">
       <div>
-      <h5 style={{color:"white"}}>DB4Cloud</h5>
-      <p style={{color:"white"}}>My Company</p>
-      <hr />
+        <h5 style={{ color: "white" }}>DB4Cloud</h5>
+        <p style={{ color: "white" }}>My Company</p>
+        <hr />
       </div>
       <ul>
         <li onClick={() => handleSubClick('dashboard')}>
           <FontAwesomeIcon icon={faChartPie} /> Dashboard
         </li>
         <li onClick={() => handleMainClick('recruitment')}>
-        <FontAwesomeIcon icon={faBullseye} /> Recruitment
+          <FontAwesomeIcon icon={faBullseye} /> Recruitment
         </li>
         {activeMenu === 'recruitment' && (
           <ul className="sub-menu">
@@ -123,7 +123,7 @@ function Sidebar({ setActiveScreen }) {
         )}
           
         <li onClick={() => handleMainClick('performance')}>
-        <FontAwesomeIcon icon={faChartLine} /> Performance
+          <FontAwesomeIcon icon={faChartLine} /> Performance
         </li>
         {activeMenu === 'performance' && (
           <ul className="sub-menu">
@@ -135,17 +135,17 @@ function Sidebar({ setActiveScreen }) {
         )}
 
         <li onClick={() => handleMainClick('offboarding')}>
-        <FontAwesomeIcon icon={faSignOutAlt} /> Offboarding
+          <FontAwesomeIcon icon={faSignOutAlt} /> Offboarding
         </li>
         {activeMenu === 'offboarding' && (
           <ul className="sub-menu">
             <li onClick={() => handleSubClick('exitProcess')}>Exit Process</li>
-            <li onClick={() => handleSubClick('registrationPage')}>Resignation Letters</li>
-          </ul>
+            <li onClick={() => handleSubClick('resignationLetter')}>Resignation Letters</li>
+          </ul> 
         )}
        
         <li onClick={() => handleMainClick('assets')}>
-        <FontAwesomeIcon icon={faLaptop} /> Assets
+          <FontAwesomeIcon icon={faLaptop} /> Assets
         </li>
         {activeMenu === 'assets' && (
           <ul className="sub-menu">
@@ -158,7 +158,7 @@ function Sidebar({ setActiveScreen }) {
         )}
 
         <li onClick={() => handleMainClick('helpDesk')}>
-        <FontAwesomeIcon icon={faHeadset} /> Help Desk
+          <FontAwesomeIcon icon={faHeadset} /> Help Desk
         </li>
         {activeMenu === 'helpDesk' && (
           <ul className="sub-menu">
@@ -168,7 +168,7 @@ function Sidebar({ setActiveScreen }) {
           </ul>
         )}
         <li onClick={() => handleMainClick('configuration')}>
-        <FontAwesomeIcon icon={faCogs} />  Configuration
+          <FontAwesomeIcon icon={faCogs} />  Configuration
         </li>
         {activeMenu === 'configuration' && (
           <ul className="sub-menu">

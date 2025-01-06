@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useDebounce } from "use-debounce";
+import CreateAllowance from "./CreateAllowance";
 import "./Allowances.css";
 import {
   FaList,
@@ -14,7 +14,7 @@ import {
 
 const initialAllowancesData = [
   {
-    id: 1,
+    _id: 1,
     code: "TA",
     name: "Travel Allowance",
     amount: 200.0,
@@ -23,7 +23,7 @@ const initialAllowancesData = [
     fixed: false,
   },
   {
-    id: 2,
+    _id: 2,
     code: "HA",
     name: "House Rent Allowance",
     amount: 1000.0,
@@ -32,7 +32,7 @@ const initialAllowancesData = [
     fixed: true,
   },
   {
-    id: 3,
+    _id: 3,
     code: "DA",
     name: "Dearness Allowance",
     amount: 1500.0,
@@ -44,7 +44,7 @@ const initialAllowancesData = [
 ];
 
 const Allowances = () => {
-  const [allowancesData, setAllowancesData] = useState(initialAllowancesData);
+  const [allowancesData, setAllowancesData] = useState([]);
   const [filteredData, setFilteredData] = useState(initialAllowancesData);
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("card");
@@ -55,7 +55,21 @@ const Allowances = () => {
     base: "",
   });
 
+
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500); // Delay of 500ms
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Add modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  // Add this state for edit form data
+  const [editFormData, setEditFormData] = useState({
+    code: "",
+    name: "",
+    amount: "",
+    oneTime: "No",
+    taxable: "No",
+    fixed: false,
+  });
 
   useEffect(() => {
     if (debouncedSearchTerm === "") {
@@ -68,79 +82,20 @@ const Allowances = () => {
     }
   }, [debouncedSearchTerm, allowancesData]);
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.state) {
-      console.log("Location state:", location.state);
-      if (location.state.newAllowance) {
-        const newAllowance = location.state.newAllowance;
-        setAllowancesData((prev) => [...prev, newAllowance]);
-        setFilteredData((prev) => [...prev, newAllowance]);
-      }
-    } else {
-      console.log("Location state is null or undefined");
-    }
-  }, [location.state]);
-
-  useEffect(() => {
-    const storedAllowance = localStorage.getItem("newAllowance");
-    if (storedAllowance) {
-      const newAllowance = JSON.parse(storedAllowance);
-      setAllowancesData((prev) => [...prev, newAllowance]);
-      setFilteredData((prev) => [...prev, newAllowance]);
-
-      // Optionally, clear localStorage to prevent future overwriting
-      localStorage.removeItem("newAllowance");
-    }
-  }, []);
-
-  useEffect(() => {
-    // Check for new allowance data in location.state
-    if (location.state?.newAllowance) {
-      const newAllowance = location.state.newAllowance;
-
-      // Update allowancesData with the new allowance
-      setAllowancesData((prev) => [...prev, newAllowance]);
-    }
-  }, [location.state]);
-
+  // Update initial data fetch
   useEffect(() => {
     const fetchAllowances = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/allowances"
-        );
-        if (response.data) {
-          setAllowancesData(response.data);
-          setFilteredData(response.data);
-        } else {
-          console.error("No data returned from API");
-        }
+        const response = await axios.get("http://localhost:5000/api/allowances");
+        setAllowancesData(response.data);
+        setFilteredData(response.data);
       } catch (error) {
         console.error("Error fetching allowances:", error);
       }
-    };
-
-    fetchAllowances();
-  }, []);
-
-  const handleCreateAllowance = async (newAllowance) => {
-    try {
-      // const response = await axios.post("http://localhost:5000/api/allowances", newAllowance, { headers: { 'Content-Type': 'application/json' } });
-      // setAllowancesData((prev) => [...prev, response.data]);
-      // setFilteredData((prev) => [...prev, response.data]);
-      // alert("Allowance created successfully!");
-      navigate("/allowances/create");
-    } catch (error) {
-      console.error(
-        "Error creating allowance:",
-        error.response?.data || error.message
-      );
-      alert("Failed to create allowance.");
     }
-  };
+
+    fetchAllowances()   // for showing the data in the frontend 
+  }, []);
 
   const areFiltersApplied =
     filterOptions.taxable || filterOptions.condition || filterOptions.base;
@@ -158,57 +113,48 @@ const Allowances = () => {
     }
   };
 
+
   const handleEdit = async (id) => {
-    const allowanceToEdit = allowancesData.find(
-      (allowance) => allowance._id === id
-    );
-    console.log(allowanceToEdit);
-    if (!allowanceToEdit) {
-      alert("Allowance not found!");
-      return;
-    }
+    const allowanceToEdit = allowancesData.find(allowance => allowance._id === id);
+    if (!allowanceToEdit) return;
 
-    const updatedAllowance = {
-      ...allowanceToEdit,
-      name:
-        prompt("Enter new name", allowanceToEdit.name) || allowanceToEdit.name, // Example: Ask for a new name
-    };
+    setEditFormData(allowanceToEdit);
+    setIsEditModalOpen(true);
+  };
 
+  // Add handleEditSubmit function
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/allowances/${id}`,
-        updatedAllowance
+        `http://localhost:5000/api/allowances/${editFormData._id}`,
+        editFormData
       );
-
-      setAllowancesData((prev) =>
-        prev.map((allowance) =>
-          allowance.id === id ? response.data : allowance
-        )
+      setAllowancesData(prev =>
+        prev.map(allowance => allowance._id === editFormData._id ? response.data : allowance)
       );
-      alert("Allowance updated successfully!");
+      setFilteredData(prev =>
+        prev.map(allowance => allowance._id === editFormData._id ? response.data : allowance)
+      );
+      setIsEditModalOpen(false);
     } catch (error) {
       console.error("Error updating allowance:", error);
-      alert("Failed to update allowance.");
     }
   };
 
+
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this allowance?")) {
+    if (!id || !window.confirm("Are you sure you want to delete this allowance?")) {
       return;
     }
 
     try {
       await axios.delete(`http://localhost:5000/api/allowances/${id}`);
-      setAllowancesData((prev) =>
-        prev.filter((allowance) => allowance.id !== id)
-      );
-      setFilteredData((prev) =>
-        prev.filter((allowance) => allowance.id !== id)
-      );
-      alert("Allowance deleted successfully!");
+      const updatedData = allowancesData.filter(allowance => allowance._id !== id);
+      setAllowancesData(updatedData);
+      setFilteredData(updatedData);
     } catch (error) {
-      console.error("Error deleting allowance:", error);
-      alert("Failed to delete allowance.");
+      console.error("Error details:", error.response?.data);
     }
   };
 
@@ -262,7 +208,7 @@ const Allowances = () => {
     } else if (filter.startsWith("Base")) {
       setFilterOptions((prev) => ({ ...prev, base: "" }));
     }
-    applyFilter(); // Reapply filter after removing a filter
+    applyFilter(); // Re-apply filter after removing a filter
   };
 
   return (
@@ -292,9 +238,118 @@ const Allowances = () => {
           <button className="filter-btn" onClick={toggleFilterVisibility}>
             <FaFilter /> Filter
           </button>
-          <button className="create-btn" onClick={handleCreateAllowance}>
+          <button className="create-btn" onClick={() => setIsCreateModalOpen(true)}>
             <FaPlus /> Create
           </button>
+
+          {isCreateModalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <button className="close-btn" onClick={() => setIsCreateModalOpen(false)}>×</button>
+                {/* Render the CreateAllowance component here */}
+
+
+
+                <CreateAllowance
+                  addAllowance={(newAllowance) => {
+                    setAllowancesData(prev => [...prev, newAllowance]);
+                    setFilteredData(prev => [...prev, newAllowance]);
+                    setIsCreateModalOpen(false);
+                  }}
+                />
+
+
+              </div>
+            </div>
+          )}
+
+
+          {/* // Add your edit modal JSX here */}
+
+
+          {isEditModalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <button className="close-btn" onClick={() => setIsEditModalOpen(false)}>×</button>
+                <h3>Edit Allowance</h3>
+                <form onSubmit={handleEditSubmit}>
+                  <div className="group">
+                    <label>
+                      Code:
+                      <input
+                        type="text"
+                        name="code"
+                        value={editFormData.code}
+                        onChange={(e) => setEditFormData({ ...editFormData, code: e.target.value })}
+                      />
+                    </label>
+                    <label>
+                      Name:
+                      <input
+                        type="text"
+                        name="name"
+                        value={editFormData.name}
+                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="group">
+                    <label>
+                      Amount:
+                      <input
+                        type="number"
+                        name="amount"
+                        value={editFormData.amount}
+                        onChange={(e) => setEditFormData({ ...editFormData, amount: Number(e.target.value) })}
+                      />
+                    </label>
+                    <label>
+                      One Time:
+                      <select
+                        name="oneTime"
+                        value={editFormData.oneTime}
+                        onChange={(e) => setEditFormData({ ...editFormData, oneTime: e.target.value })}
+                      >
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="group">
+                    <label>
+                      Taxable:
+                      <select
+                        name="taxable"
+                        value={editFormData.taxable}
+                        onChange={(e) => setEditFormData({ ...editFormData, taxable: e.target.value })}
+                      >
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </label>
+                    <label>
+                      Fixed:
+                      <input
+                        type="checkbox"
+                        name="fixed"
+                        checked={editFormData.fixed}
+                        onChange={(e) => setEditFormData({ ...editFormData, fixed: e.target.checked })}
+                      />
+                    </label>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button type="submit">Save Changes</button>
+                    <button type="button" onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+
         </div>
       </header>
 
@@ -433,13 +488,13 @@ const Allowances = () => {
                     <td className="sticky-column">
                       <button
                         className="edit-btn"
-                        onClick={() => handleEdit(allowance.id)}
+                        onClick={() => handleEdit(allowance._id)}
                       >
                         <FaEdit />
                       </button>
                       <button
                         className="delete-btn"
-                        onClick={() => handleDelete(allowance.id)}
+                        onClick={() => handleDelete(allowance._id)}
                       >
                         <FaTrash />
                       </button>
@@ -447,6 +502,11 @@ const Allowances = () => {
                   </tr>
                 ))}
               </tbody>
+
+
+
+
+
             </table>
           </div>
         </div>

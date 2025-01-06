@@ -26,23 +26,12 @@ const FederalTax = () => {
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
     };
-
-    const data = [
-        { id: 1, taxRate: "45.00%", minIncome: "ETB 1500.00", maxIncome: "ETB 4000.00" },
-        { id: 2, taxRate: "1.00%", minIncome: "ETB 13000.00", maxIncome: "ETB 500000.00" },
-    ];
-
-    const filteredData = data.filter((item) =>
-        item.taxRate.toString().includes(searchTerm) ||
-        item.minIncome.toString().includes(searchTerm) ||
-        item.maxIncome.toString().includes(searchTerm)
-    );
-
+    
     const handleCreateButtonClick = () => {
         setShowModal(true);
         setEditId(null); // Reset editId when creating a new entry
         setNewEntry({ taxRate: '', minIncome: '', maxIncome: '' }); // Clear the form
-   
+
 
     };
 
@@ -56,13 +45,8 @@ const FederalTax = () => {
         setNewEntry((prev) => ({ ...prev, [name]: value }));
     };
 
- {/**   const handleSaveEntry = () => {
-        setEntries((prev) => [...prev, { id: Date.now(), ...newEntry }]);
-        handleModalClose();
-    };
-     */}
 
-     const handleSaveEntry = () => {
+    const handleSaveEntry = () => {
         if (editId !== null) {
             // Update an existing entry
             setEntries((prevEntries) =>
@@ -95,7 +79,7 @@ const FederalTax = () => {
         item.maxIncome.toString().includes(searchTerm)
     );
 
-    
+
 
     return (
         <div className="filing-status">
@@ -114,8 +98,8 @@ const FederalTax = () => {
                     </button>
                 </div>
             </div>
-            <div style={{display:"flex", alignItems:"center"}}>
-            <button onClick={toggleTableVisibility} className="toggle-button" style={{textAlign:"center"}}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+                <button onClick={toggleTableVisibility} className="toggle-button" style={{ textAlign: "center" }}>
                     {showTable ? <FaMinus /> : <FaPlus />}
                 </button>
                 <h3>Porez</h3>
@@ -128,7 +112,7 @@ const FederalTax = () => {
                             <th>Tax Rate</th>
                             <th>Min. Income</th>
                             <th>Max. Income</th>
-                            <th>Actions</th>
+                            <th width="120">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -138,9 +122,19 @@ const FederalTax = () => {
                                 <td>{item.minIncome}</td>
                                 <td>{item.maxIncome}</td>
                                 <td>
-                                    <div className="action-buttons">
-                                        <button className="edit-button" onClick={() => handleEditEntry(item.id)}><FaEdit /></button>
-                                        <button className="delete-button" onClick={() => handleDeleteEntry(item.id)}><FaTrash /></button>
+                                    <div className="action-cell">
+                                        <button
+                                            className="action-btn edit-btn"
+                                            onClick={() => handleEditEntry(item.id)}
+                                        >
+                                            <FaEdit />
+                                        </button>
+                                        <button
+                                            className="action-btn delete-btn"
+                                            onClick={() => handleDeleteEntry(item.id)}
+                                        >
+                                            <FaTrash />
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -149,7 +143,8 @@ const FederalTax = () => {
                 </table>
             )}
 
-                {/* Modal */}
+
+            {/* Modal */}
             {showModal && (
                 <div className="modal-overlay">
                     <div className="modal-content">
@@ -192,11 +187,11 @@ const FederalTax = () => {
                                 placeholder="Max. Income"
                             />
                         </label>
-                        <div style={{display:"flex"}}> 
-                        <button onClick={handleSaveEntry} className="save-button">{editId ? "Update" : "Save"}
-                        </button>
-                        <button onClick={handleModalClose} className="close-button">Close</button>
-                    </div>
+                        <div style={{ display: "flex" }}>
+                            <button onClick={handleSaveEntry} className="save-button">{editId ? "Update" : "Save"}
+                            </button>
+                            <button onClick={handleModalClose} className="close-button">Close</button>
+                        </div>
                     </div>
                 </div>
             )}
