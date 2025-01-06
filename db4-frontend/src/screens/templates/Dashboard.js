@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from './sidebar/Sidebar';
+import { useParams } from 'react-router-dom';
 //import Hr from './hrScreen/Hr';
 //import OKRs from './OKRsScreen/OKRs';
 //import ProductDevelopment from './profilePage/ProfilePage';
