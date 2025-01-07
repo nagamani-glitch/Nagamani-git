@@ -153,7 +153,7 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
 
 .unselect-all { background-color: #6c757d; } /* Gray */
 .export-btn { background-color: #28a745; } /* Green */
-.delete-btn { background-color: #dc3545; } /* Red */
+.delete-btn { background-color: transparent; } 
 
 .unselect-all:hover,
 .export-btn:hover,
