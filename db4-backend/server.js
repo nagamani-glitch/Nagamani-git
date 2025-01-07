@@ -23,6 +23,12 @@ import companyHolidaysRoute from './routes/companyHolidays.js';
 import restrictLeaveRoutes from './routes/restrictLeaveRoutes.js';
 import holidayRoutes from './routes/holidays.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
+
+// Sangeeta 
+import allowanceRoutes from './routes/allowanceRoutes.js';
+import payrollContractRoutes from './routes/payrollContractRoutes.js';
+import deductionRoutes from './routes/deductionRoutes.js';
+
  
  
  
@@ -61,6 +67,15 @@ app.use('/api/faqs', faqRoutes);
 app.use('/api/faqCategories', faqCategoryRoutes);
  
  
+
+// Sangeeta integration
+
+app.use('/api/deductions', deductionRoutes);
+app.use('/api/allowances', allowanceRoutes);
+app.use('/api/payrollContracts', payrollContractRoutes);
+
+
+
 const PORT = process.env.PORT || 5000
  
 app.listen(PORT, console.log(`✨ Server running on port ${PORT}`.yellow.bold))

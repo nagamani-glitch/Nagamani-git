@@ -12,48 +12,44 @@ import {
   FaTrash,
 } from "react-icons/fa";
 
-const initialAllowancesData = [
-  {
-    _id: 1,
-    code: "TA",
-    name: "Travel Allowance",
-    amount: 200.0,
-    oneTime: "No",
-    taxable: "Yes",
-    fixed: false,
-  },
-  {
-    _id: 2,
-    code: "HA",
-    name: "House Rent Allowance",
-    amount: 1000.0,
-    oneTime: "No",
-    taxable: "Yes",
-    fixed: true,
-  },
-  {
-    _id: 3,
-    code: "DA",
-    name: "Dearness Allowance",
-    amount: 1500.0,
-    oneTime: "No",
-    taxable: "Yes",
-    fixed: true,
-  },
-  // Add more allowance data here
-];
+// const initialAllowancesData = [
+//   {
+//     _id: 1,
+//     code: "TA",
+//     name: "Travel Allowance",
+//     amount: 200.0,
+//     oneTime: "No",
+//     taxable: "Yes",
+//     fixed: false,
+//   },
+//   {
+//     _id: 2,
+//     code: "HA",
+//     name: "House Rent Allowance",
+//     amount: 1000.0,
+//     oneTime: "No",
+//     taxable: "Yes",
+//     fixed: true,
+//   },
+//   {
+//     _id: 3,
+//     code: "DA",
+//     name: "Dearness Allowance",
+//     amount: 1500.0,
+//     oneTime: "No",
+//     taxable: "Yes",
+//     fixed: true,
+//   },
+//   // Add more allowance data here
+// ];
 
 const Allowances = () => {
   const [allowancesData, setAllowancesData] = useState([]);
-  const [filteredData, setFilteredData] = useState(initialAllowancesData);
+  const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("card");
   const [isFilterVisible, setIsFilterVisible] = useState(false);
-  const [filterOptions, setFilterOptions] = useState({
-    taxable: "",
-    condition: "",
-    base: "",
-  });
+
 
 
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500); // Delay of 500ms
@@ -71,6 +67,16 @@ const Allowances = () => {
     fixed: false,
   });
 
+  const [filterOptions, setFilterOptions] = useState({
+    taxable: "",
+    condition: "",
+    base: "",
+    department: "", // Add if needed
+    position: ""    // Add if needed
+  });
+
+
+
   useEffect(() => {
     if (debouncedSearchTerm === "") {
       setFilteredData(allowancesData);
@@ -83,6 +89,21 @@ const Allowances = () => {
   }, [debouncedSearchTerm, allowancesData]);
 
   // Update initial data fetch
+  // useEffect(() => {
+  //   const fetchAllowances = async () => {
+  //     try {
+  //       const response = await axios.get("http://localhost:5000/api/allowances");
+  //       setAllowancesData(response.data);
+  //       setFilteredData(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching allowances:", error);
+  //     }
+  //   }
+
+  //   fetchAllowances()   // for showing the data in the frontend 
+  // }, []);
+
+
   useEffect(() => {
     const fetchAllowances = async () => {
       try {
@@ -92,10 +113,11 @@ const Allowances = () => {
       } catch (error) {
         console.error("Error fetching allowances:", error);
       }
-    }
-
-    fetchAllowances()   // for showing the data in the frontend 
+    };
+    fetchAllowances();
   }, []);
+  
+
 
   const areFiltersApplied =
     filterOptions.taxable || filterOptions.condition || filterOptions.base;
@@ -247,9 +269,6 @@ const Allowances = () => {
               <div className="modal-content">
                 <button className="close-btn" onClick={() => setIsCreateModalOpen(false)}>×</button>
                 {/* Render the CreateAllowance component here */}
-
-
-
                 <CreateAllowance
                   addAllowance={(newAllowance) => {
                     setAllowancesData(prev => [...prev, newAllowance]);
@@ -361,6 +380,10 @@ const Allowances = () => {
           </span>
         ))}
       </div>
+
+
+      
+
 
       {/* Render Filters */}
       {isFilterVisible && (
