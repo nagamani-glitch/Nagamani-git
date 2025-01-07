@@ -42,15 +42,30 @@ app.use(cors({
     credentials:true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }))
+// Sangeeta
+import allowanceRoutes from "./routes/allowanceRoutes.js";
+import deductionRoutes from "./routes/deductionRoutes.js";
+
+dotenv.config();
+connectDB();
+const app = express();
+
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
-app.use('/api/employees', employeesRouter)
-app.use('/api/auth', authRouter)
-app.use('/api/profiles', profileRouter)
-app.use('/api/contracts', contractRouter);
-app.use(candidateRoutes);  
+app.use("/api/employees", employeesRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/profiles", profileRouter);
+app.use("/api/contracts", contractRouter);
+app.use(candidateRoutes);
 app.use(surveyRoutes);
 app.use('/api/applicantProfiles', applicantProfileRoutes);
 app.use('/api/interviews', interviewRoutes);
@@ -76,8 +91,10 @@ app.use('/api/allowances', allowanceRoutes);
 app.use('/api/payrollContracts', payrollContractRoutes);
 app.use('/api/payslips', payslipRoutes);
 app.use('/api/federal-tax', federalTaxRoutes);
+app.use("/api/deductions", deductionRoutes);
+app.use("/api/allowances", allowanceRoutes);
 
 
-const PORT = process.env.PORT || 5000
- 
-app.listen(PORT, console.log(`✨ Server running on port ${PORT}`.yellow.bold))
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, console.log(`✨ Server running on port ${PORT}`.yellow.bold));
