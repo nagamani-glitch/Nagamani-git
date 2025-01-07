@@ -513,3 +513,4 @@ const applyFilters = () => {
 };
 
 export default Payslips;
+
