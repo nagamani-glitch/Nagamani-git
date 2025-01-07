@@ -116,7 +116,7 @@ function Sidebar({ setActiveScreen }) {
             {/* <li onClick={() => handleSubClick('createAllowance')}>Create Allowance</li> */}
             <li onClick={() => handleSubClick('contract')}>Contract</li>
             <li onClick={() => handleSubClick('deductions')}>Deductions</li>
-            <li onClick={() => handleSubClick('createDeduction')}>Create Deduction</li>
+            {/* <li onClick={() => handleSubClick('createDeduction')}>Create Deduction</li> */}
             <li onClick={() => handleSubClick('payslips')}>Payslips</li>
             <li onClick={() => handleSubClick('federalTax')}>Federal Tax</li>
           </ul>

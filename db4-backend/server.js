@@ -25,7 +25,7 @@ import onboardingRoutes from './routes/onboardingRoutes.js';
 
 // Sangeeta 
 import allowanceRoutes from './routes/allowanceRoutes.js';
-import payrollContractRoutes from './routes/payrollContractRoutes.js';
+// import payrollContractRoutes from './routes/payrollContractRoutes.js';
 import deductionRoutes from './routes/deductionRoutes.js';
 import payslipRoutes from './routes/payslipRoutes.js';
 import federalTaxRoutes from './routes/federalTaxRoutes.js';
@@ -42,21 +42,6 @@ app.use(cors({
     credentials:true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }))
-// Sangeeta
-import allowanceRoutes from "./routes/allowanceRoutes.js";
-import deductionRoutes from "./routes/deductionRoutes.js";
-
-dotenv.config();
-connectDB();
-const app = express();
-
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  })
-);
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
@@ -88,11 +73,9 @@ app.use('/api/faqCategories', faqCategoryRoutes);
 
 app.use('/api/deductions', deductionRoutes);
 app.use('/api/allowances', allowanceRoutes);
-app.use('/api/payrollContracts', payrollContractRoutes);
+// app.use('/api/payrollContracts', payrollContractRoutes);
 app.use('/api/payslips', payslipRoutes);
 app.use('/api/federal-tax', federalTaxRoutes);
-app.use("/api/deductions", deductionRoutes);
-app.use("/api/allowances", allowanceRoutes);
 
 
 const PORT = process.env.PORT || 5000;
