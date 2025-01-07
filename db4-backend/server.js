@@ -12,7 +12,7 @@ import employeeRoutes from './routes/employeeRoutes.js'
 import interviewRoutes from './routes/interviewRoutes.js'
 import skillZoneRoutes from './routes/skillZoneRoutes.js'
 import surveyRoutes from './routes/surveyRoutes.js'
-
+import payslipRoutes from './routes/payslipRoutes.js';
 import assetRoutes from './routes/assets.js';
 import assetDashboardRoutes from './routes/assetDashboardRoutes.js';
 import assetBatchRoutes from './routes/assetBatchRoutes.js';
@@ -59,6 +59,7 @@ app.use('/api/companyHolidays', companyHolidaysRoute);
 app.use('/api/restrictLeaves', restrictLeaveRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/faqCategories', faqCategoryRoutes);
+app.use('/api/payslips', payslipRoutes);
  
  
 const PORT = process.env.PORT || 5000
