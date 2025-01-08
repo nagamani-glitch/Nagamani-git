@@ -49,12 +49,9 @@ import CompanyHolidays from './configuration/CompanyHolidays';
 import RestrictLeaves from './configuration/RestrictLeaves';
 import FaqCategory from './faqs/FaqCategory';
 import FaqPage from './faqs/FaqPage';
-import { fetchHolidays, createHoliday, updateHoliday, deleteHoliday, fetchFilteredHolidays } from './configuration/Holidays';
 
- 
-// import OnboardingView from './onboarding/OnboardingView';
 
-        // Sangeeta integration
+  // Sangeeta integration
 //Payroll
 import PayrollDashboard from './Payroll/PayrollDashboard';
 import Allowances from './Payroll/Allowances';
@@ -200,7 +197,7 @@ function Dashboard() {
         return <RestrictLeaves />
 
       
-        
+        // Sangeeta 
       
       case "payrollDashboard":
         return <PayrollDashboard />;
@@ -234,8 +231,6 @@ function Dashboard() {
         return <HomePage />;
       case 'resignationLetter':
         return <ResignationPage />;
-
-
       default:
         return null
     }

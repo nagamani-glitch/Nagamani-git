@@ -360,13 +360,37 @@ td.sticky-column {
 }
 
 
-.card-actions button {
-  position: relative;
+.card-actions {
+  position: relative; 
   z-index: 10;
   padding: 10px;
   padding-right: 20px;
   background-color: white;
   font-size: 17px;
+}
+
+.allowance-card-edit-button{
+  color: #4CAF50;
+  background-color: transparent;
+  border: none;
+}
+
+.allowance-card-delete-button{
+  color: #e51212;
+  background-color: transparent;
+  border: none;
+}
+
+.all-list-edit-btn{
+  color: #4CAF50;
+  background-color: transparent;
+  border: none;
+}
+
+.all-list-delete-btn{
+  color: #e51212;
+  background-color: transparent;
+  border: none;
 }
 
 button {

@@ -5,7 +5,7 @@ import {
   updateContract,
   deleteContract,
   filterContracts
-} from '../controllers/payrollContractController.js';n
+} from '../controllers/payrollContractController.js';
 
 const router = express.Router();
 

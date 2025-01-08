@@ -5,6 +5,9 @@ import {
   FaSortUp,
   FaSortDown,
   FaInfoCircle,
+  FaEdit,
+  FaTrash,
+  FaSave,
 } from "react-icons/fa";
 import { IoIosOptions } from "react-icons/io";
 import "./Contract.css";
@@ -79,24 +82,26 @@ const Contract = () => {
     startDate: "",
     endDate: "",
     status: "",
-    wageType: ""
+    wageType: "",
   });
   const [filteredContracts, setFilteredContracts] = useState(contracts);
   const [selectedContracts, setSelectedContracts] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
-
   useEffect(() => {
     fetchContracts();
   }, []);
+
   const fetchContracts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/contracts');
+      const response = await axios.get(
+        "http://localhost:5000/api/payroll-contracts"
+      );
       const contractsData = response.data;
       setContracts(contractsData);
       setFilteredContracts(contractsData);
     } catch (error) {
-      console.error('Error fetching contracts:', error);
+      console.error("Error fetching contracts:", error);
       // Set default data if API fails
       const defaultData = [
         {
@@ -107,7 +112,7 @@ const Contract = () => {
           endDate: "2024-01-01",
           wageType: "Monthly",
           basicSalary: 5000,
-          filingStatus: "Filled"
+          filingStatus: "Filled",
         },
         {
           id: 2,
@@ -117,15 +122,14 @@ const Contract = () => {
           endDate: "2024-01-01",
           wageType: "Monthly",
           basicSalary: 5000,
-          filingStatus: "Filled"
-        }
+          filingStatus: "Filled",
+        },
         // ... other default contracts
       ];
       setContracts(defaultData);
       setFilteredContracts(defaultData);
     }
   };
-
 
   const handleCreateClick = () => {
     setShowCreatePage(true);
@@ -142,6 +146,7 @@ const Contract = () => {
 
   const handleSaveCreate = async () => {
     const newContract = {
+      contract: formData.contractTitle, // Add this line to map contractTitle to contract
       contractStatus: formData.contractStatus,
       employee: formData.employee,
       startDate: formData.startDate,
@@ -156,28 +161,37 @@ const Contract = () => {
       noticePeriod: Number(formData.noticePeriod),
       deductFromBasicPay: formData.deductFromBasicPay,
       calculateDailyLeave: formData.calculateDailyLeave,
-      note: formData.note
+      note: formData.note,
+      filingStatus: formData.filingStatus,
     };
 
     try {
-      const response = await axios.post("http://localhost:5000/api/contracts", newContract);
+      const response = await axios.post(
+        "http://localhost:5000/api/payroll-contracts",
+        newContract
+      );
       if (response.data.success) {
-        setContracts(prevContracts => [...prevContracts, response.data.data]);
-        setFilteredContracts(prevFiltered => [...prevFiltered, response.data.data]);
+        setContracts((prevContracts) => [...prevContracts, response.data.data]);
+        setFilteredContracts((prevFiltered) => [
+          ...prevFiltered,
+          response.data.data,
+        ]);
         setShowCreatePage(false);
-        alert("Contract created successfully!");
       }
     } catch (error) {
-      console.error("Contract creation error:", error.response?.data || error.message);
-      alert("Contract creation failed. Please check the console for details.");
+      console.error(
+        "Contract creation error:",
+        error.response?.data || error.message
+      );
     }
   };
 
-  // Add this useEffect for fetching contracts
   useEffect(() => {
     const fetchContracts = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/contracts");
+        const response = await axios.get(
+          "http://localhost:5000/api/payroll-contracts"
+        );
         if (response.data.success) {
           setContracts(response.data.data);
           setFilteredContracts(response.data.data);
@@ -188,9 +202,6 @@ const Contract = () => {
     };
     fetchContracts();
   }, []);
-
-
-
 
   const handleSort = (key) => {
     let direction = "asc";
@@ -207,111 +218,6 @@ const Contract = () => {
     setContracts(sortedContracts);
   };
 
-
-  // const handleEdit = (contract) => {
-  //   console.log("Editing contract:", contract);
-  //   setEditingId(contract._id);    // Using MongoDB's _id
-  //   setEditedData({...contract,
-  //     _id: contract._id // Ensure ID is preserved
-  //   }); //updated
-  // };
-
-  // const handleChange = (e) => {
-  //   const { name, value } = e.target;
-  //   //setEditedData({ ...editedData, [name]: value });
-  //   setEditedData((prevData) => ({ ...prevData, [name]: value }));
-  // };
-
-  // // const handleSave = async () => {
-  // //     try {
-  // //       console.log("Saving contract with ID:", editedData._id);
-
-  // //       const response = await axios.put(
-  // //         `http://localhost:5000/api/contracts/${editedData._id}`,
-  // //        // editedData,
-  // //        {
-  // //         contract: editedData.contract,
-  // //         employee: editedData.employee,
-  // //         startDate: editedData.startDate,
-  // //         endDate: editedData.endDate,
-  // //         wageType: editedData.wageType,
-  // //         basicSalary: editedData.basicSalary,
-  // //         filingStatus: editedData.filingStatus
-  // //       },
-  // //         {
-  // //           headers: {
-  // //             "Content-Type": "application/json"
-  // //           }
-  // //         }
-  // //       );
-
-  // //       if (response.data.success) {
-  // //         const updatedContract = response.data.data;
-  // //         setContracts(prevContracts => 
-  // //           prevContracts.map(contract => 
-  // //             contract._id === editedData._id ? updatedContract : contract
-  // //           )
-  // //         );
-  // //         setFilteredContracts(prevFiltered => 
-  // //           prevFiltered.map(contract => 
-  // //             contract._id === editedData._id ? updatedContract : contract
-  // //           )
-  // //         );
-  // //         setEditingId(null);
-  // //         alert("Contract updated successfully!");
-  // //       }
-  // //     } catch (error) {
-  // //       console.error("Save failed:", error);
-  // //       alert("Failed to update contract. Please try again.");
-  // //     }
-  // //   };
-
-
-  // const handleSave = async () => {
-  //   try {
-  //     console.log("Saving contract with ID:", editedData._id);
-  
-  //     const response = await axios.put(
-  //       `http://localhost:5000/api/contracts/${editedData._id}`, 
-  //       {
-  //         contract: editedData.contract,
-  //         employee: editedData.employee,
-  //         startDate: editedData.startDate,
-  //         endDate: editedData.endDate,
-  //         wageType: editedData.wageType,
-  //         basicSalary: editedData.basicSalary,
-  //         filingStatus: editedData.filingStatus
-  //       },
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json"
-  //         }
-  //       }
-  //     );
-  
-  //     if (response.data.success) {
-  //       const updatedContract = response.data.data;
-  //       setContracts(prevContracts => 
-  //         prevContracts.map(contract => 
-  //           contract._id === editedData._id ? updatedContract : contract
-  //         )
-  //       );
-  //       setFilteredContracts(prevFiltered => 
-  //         prevFiltered.map(contract => 
-  //           contract._id === editedData._id ? updatedContract : contract
-  //         )
-  //       );
-  //       setEditingId(null);
-  //       alert("Contract updated successfully!");
-  //     }
-  //   } catch (error) {
-  //     console.error("Save failed with ID:", editedData._id, error);
-  //   }
-  // };
-
-
-
-
   const handleEdit = (contract) => {
     console.log("Editing contract:", contract);
     // MongoDB uses _id
@@ -324,24 +230,24 @@ const Contract = () => {
       endDate: contract.endDate,
       wageType: contract.wageType,
       basicSalary: contract.basicSalary,
-      filingStatus: contract.filingStatus
+      filingStatus: contract.filingStatus,
     });
   };
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEditedData(prevData => ({
+    setEditedData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
   };
-  
+
   const handleSave = async () => {
     try {
       console.log("Saving contract with data:", editedData);
-  
+
       const response = await axios.put(
-        `http://localhost:5000/api/contracts/${editedData._id}`, 
+        `http://localhost:5000/api/payroll-contracts/${editedData._id}`,
         {
           contract: editedData.contract,
           employee: editedData.employee,
@@ -349,19 +255,19 @@ const Contract = () => {
           endDate: editedData.endDate,
           wageType: editedData.wageType,
           basicSalary: Number(editedData.basicSalary),
-          filingStatus: editedData.filingStatus
+          filingStatus: editedData.filingStatus,
         }
       );
-  
+
       if (response.data.success) {
         const updatedContract = response.data.data;
-        setContracts(prevContracts => 
-          prevContracts.map(contract => 
+        setContracts((prevContracts) =>
+          prevContracts.map((contract) =>
             contract._id === editedData._id ? updatedContract : contract
           )
         );
-        setFilteredContracts(prevFiltered => 
-          prevFiltered.map(contract => 
+        setFilteredContracts((prevFiltered) =>
+          prevFiltered.map((contract) =>
             contract._id === editedData._id ? updatedContract : contract
           )
         );
@@ -371,14 +277,13 @@ const Contract = () => {
       console.error("Save failed:", error);
     }
   };
-  
-  
-
 
   const handleDelete = async (id) => {
-    await axios.delete(`http://localhost:5000/api/contracts/${id}`);
+    await axios.delete(`http://localhost:5000/api/payroll-contracts/${id}`); //update api
     setContracts((prev) => prev.filter((contract) => contract._id !== id));
-    setFilteredContracts((prev) => prev.filter((contract) => contract._id !== id));
+    setFilteredContracts((prev) =>
+      prev.filter((contract) => contract._id !== id)
+    );
   };
 
   if (showCreatePage) {
@@ -675,7 +580,6 @@ const Contract = () => {
     );
   }
 
-
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -684,26 +588,72 @@ const Contract = () => {
     setShowFilterPopup(true);
   };
 
-  const handleFilterClose = () => {
-    setShowFilterPopup(false);
-  };
-
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterData({ ...filterData, [name]: value });
   };
 
+  // Add reset filter function
+  const handleResetFilter = () => {
+    setFilterData({
+      employeeName: "",
+      contractStatus: "",
+      startDate: "",
+      endDate: "",
+      status: "",
+      wageType: "",
+    });
+    setFilteredContracts(contracts);
+    setShowFilterPopup(false);
+  };
+
+  // Update the filter application logic
   const handleApplyFilter = () => {
-    const newFilteredContracts = contracts.filter((contract) =>
-      (filterData.status === "" || contract.contract === filterData.status)
-    );
+    const newFilteredContracts = contracts.filter((contract) => {
+      const matchesEmployeeName =
+        !filterData.employeeName ||
+        contract.employee
+          .toLowerCase()
+          .includes(filterData.employeeName.toLowerCase());
+
+      const matchesStatus =
+        !filterData.status ||
+        contract.contract.toLowerCase() === filterData.status.toLowerCase();
+
+      const matchesWageType =
+        !filterData.wageType ||
+        contract.wageType.toLowerCase() === filterData.wageType.toLowerCase();
+
+      const matchesContractStatus =
+        !filterData.contractStatus ||
+        contract.contractStatus.toLowerCase() ===
+          filterData.contractStatus.toLowerCase();
+
+      const matchesStartDate =
+        !filterData.startDate || contract.startDate >= filterData.startDate;
+
+      const matchesEndDate =
+        !filterData.endDate || contract.endDate <= filterData.endDate;
+
+      return (
+        matchesEmployeeName &&
+        matchesStatus &&
+        matchesWageType &&
+        matchesContractStatus &&
+        matchesStartDate &&
+        matchesEndDate
+      );
+    });
+
     setFilteredContracts(newFilteredContracts);
     setShowFilterPopup(false);
-  }
+  };
 
   const handleSelectContract = (id) => {
     if (selectedContracts.includes(id)) {
-      setSelectedContracts(selectedContracts.filter((contractId) => contractId !== id));
+      setSelectedContracts(
+        selectedContracts.filter((contractId) => contractId !== id)
+      );
     } else {
       setSelectedContracts([...selectedContracts, id]);
     }
@@ -723,15 +673,17 @@ const Contract = () => {
     console.log("Exporting contracts:", selectedContracts);
   };
 
-
-
   return (
     <div className="contract-page">
       {/* Header */}
       <div className="header-container">
         <h2 className="header-title">CONTRACT</h2>
         <div className="header-right">
-          <input type="text" placeholder="Search..." value={searchTerm} onChange={handleSearchChange}
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={handleSearchChange}
             className="search-input"
           />
 
@@ -793,7 +745,6 @@ const Contract = () => {
                 />
               </div>
 
-
               {/* wage status */}
               <div className="filter-group">
                 <label>Status:</label>
@@ -821,18 +772,17 @@ const Contract = () => {
                 </select>
               </div>
             </form>
-            <div style={{ display: "flex" }} >
+            <div style={{ display: "flex" }}>
               <button type="button" onClick={handleApplyFilter}>
                 Apply Filters
               </button>
-              <button className="close-button" onClick={handleFilterClose}>
-                Close
+              <button type="button" onClick={handleResetFilter}>
+                Reset
               </button>
             </div>
           </div>
         </div>
       )}
-
 
       {/* Options bar */}
       {selectedContracts.length > 0 && (
@@ -840,18 +790,25 @@ const Contract = () => {
           <button onClick={handleSelectAll}>
             {selectAll ? "Unselect All Contracts" : "Select All Contracts"}
           </button>
-          <button onClick={() => setSelectedContracts([])}>Clear Selection</button>
-          <button onClick={handleExportSelected}>Export Selected Contracts</button>
+          <button onClick={() => setSelectedContracts([])}>
+            Clear Selection
+          </button>
+          <button onClick={handleExportSelected}>
+            Export Selected Contracts
+          </button>
         </div>
       )}
-
 
       {/* Table */}
       <table className="contract-table">
         <thead>
           <tr>
             <th>
-              <input type="checkbox" checked={selectAll} onChange={handleSelectAll} />
+              <input
+                type="checkbox"
+                checked={selectAll}
+                onChange={handleSelectAll}
+              />
             </th>
             <th>Contract</th>
             <th onClick={() => handleSort("employee")}>
@@ -900,146 +857,131 @@ const Contract = () => {
           </tr>
         </thead>
         <tbody>
-
           {filteredContracts.length > 0 ? (
-           filteredContracts.map((contract) => (
-            <tr key={contract._id}>
-              <td>
-                <input type="checkbox" checked={selectedContracts.includes(contract._id)}
-                onChange={() => handleSelectContract(contract._id)} />
-              </td>
-              <td>
-                {editingId === contract._id ? (
+            filteredContracts.map((contract) => (
+              <tr key={contract._id}>
+                <td>
                   <input
-                    type="text"
-                    name="contract"
-                    value={editedData.contract || ""}
-                    onChange={handleChange}
+                    type="checkbox"
+                    checked={selectedContracts.includes(contract._id)}
+                    onChange={() => handleSelectContract(contract._id)}
                   />
-                ) : (
-                  contract.contract
-                )}
-              </td>
-              <td>
-                {editingId === contract._id ? (
-                  <input
-                    type="text"
-                    name="employee"
-                    value={editedData.employee || ""}
-                    onChange={handleChange}
-                  />
-                ) : (
-                  contract.employee
-                )}
-              </td>
-              <td>
-                {editingId === contract._id ? (
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={editedData.startDate || ""}
-                    onChange={handleChange}
-                  />
-                ) : (
-                  contract.startDate
-                )}
-              </td>
-              <td>
-                {editingId === contract._id ? (
-                  <input
-                    type="date"
-                    name="endDate"
-                    value={editedData.endDate || ""}
-                    onChange={handleChange}
-                  />
-                ) : (
-                  contract.endDate
-                )}
-              </td>
-              <td>
-                {editingId === contract._id ? (
-                  <input
-                    type="text"
-                    name="wageType"
-                    value={editedData.wageType || ""}
-                    onChange={handleChange}
-                  />
-                ) : (
-                  contract.wageType
-                )}
-              </td>
-              <td>
-                {editingId === contract._id ? (
-                  <input
-                    type="number"
-                    name="basicSalary"
-                    value={editedData.basicSalary || ""}
-                    onChange={handleChange}
-                  />
-                ) : (
-                  contract.basicSalary
-                )}
-              </td>
-              <td>
-                {editingId === contract._id ? (
-                  <input
-                    type="text"
-                    name="filingStatus"
-                    value={editedData.filingStatus || ""}
-                    onChange={handleChange}
-                  />
-                ) : (
-                  contract.filingStatus
-                )}
-              </td>
+                </td>
+                <td>
+                  {editingId === contract._id ? (
+                    <input
+                      type="text"
+                      name="contract"
+                      value={editedData.contract || ""}
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    contract.contract
+                  )}
+                </td>
+                <td>
+                  {editingId === contract._id ? (
+                    <input
+                      type="text"
+                      name="employee"
+                      value={editedData.employee || ""}
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    contract.employee
+                  )}
+                </td>
+                <td>
+                  {editingId === contract._id ? (
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={editedData.startDate || ""}
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    contract.startDate
+                  )}
+                </td>
+                <td>
+                  {editingId === contract._id ? (
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={editedData.endDate || ""}
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    contract.endDate
+                  )}
+                </td>
+                <td>
+                  {editingId === contract._id ? (
+                    <input
+                      type="text"
+                      name="wageType"
+                      value={editedData.wageType || ""}
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    contract.wageType
+                  )}
+                </td>
+                <td>
+                  {editingId === contract._id ? (
+                    <input
+                      type="number"
+                      name="basicSalary"
+                      value={editedData.basicSalary || ""}
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    contract.basicSalary
+                  )}
+                </td>
+                <td>
+                  {editingId === contract._id ? (
+                    <input
+                      type="text"
+                      name="filingStatus"
+                      value={editedData.filingStatus || ""}
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    contract.filingStatus
+                  )}
+                </td>
 
-              <td>
-    {editingId === contract._id ? (
-      <button className="table-action-button" onClick={handleSave}>
-        Save
-      </button>
-    ) : (
-      <button
-        className="table-action-button"
-        onClick={() => handleEdit(contract)}
-      >
-        Edit
-      </button>
-    )}
-    <button
-      className="table-action-button"
-      onClick={() => handleDelete(contract._id)}
-    >
-      Delete
-    </button>
-  </td>
-
-
-              {/* <td>
-                {editingId === contract._id ? (
-                  <button className="table-action-button" onClick={handleSave}>
-                    Save
-                  </button>
-                ) : (
+                <td>
+                  {editingId === contract._id ? (
+                    <button
+                      className="table-action-save-button"
+                      onClick={handleSave}
+                    >
+                      <FaSave size={20} />
+                    </button>
+                  ) : (
+                    <button
+                      className="table-action-edit-button"
+                      onClick={() => handleEdit(contract)}
+                    >
+                      <FaEdit size={20} />
+                    </button>
+                  )}
                   <button
-                    className="table-action-button"
-                    onClick={() => handleEdit(contract)}
+                    className="table-action-del-button"
+                    onClick={() => handleDelete(contract._id)}
                   >
-                    Edit
+                    <FaTrash size={18} />
                   </button>
-                )}
-                <button
-                  className="table-action-button"
-                  onClick={() => handleDelete(contract._id)}
-                >
-                  Delete
-                </button>
-              </td> */}
-            </tr>
-          ))
+                </td>
+              </tr>
+            ))
           ) : (
             <tr>
-              <td colSpan="7" className="no-data">No data found</td>
+              <td colSpan="7" className="no-data">
+                No data found
+              </td>
             </tr>
           )}
         </tbody>
