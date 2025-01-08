@@ -188,15 +188,12 @@ function Dashboard() {
       case "companyLeaves":
         return <CompanyHolidays />
       case "restrictLeaves":
-<<<<<<< HEAD
         return <RestrictLeaves />
 
       
         // Sangeeta 
-=======
         return <RestrictLeaves />      
         
->>>>>>> 6a61b94b8baa2cc389286726478bf0b8b9f490af
       
       case "payrollDashboard":
         return <PayrollDashboard />;
