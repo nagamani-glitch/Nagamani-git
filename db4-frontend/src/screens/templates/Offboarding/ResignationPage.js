@@ -1,85 +1,82 @@
-import React, { useState } from "react";
-import { FaList, FaTh } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaList, FaTh, FaEnvelope } from "react-icons/fa";
+import ReactQuill from 'react-quill';
+import axios from 'axios';
+import 'react-quill/dist/quill.snow.css';
 import "./ResignationPage.css";
 
 const ResignationPage = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [searchTerm, setSearchTerm] = useState("");
-
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const [data, setData] = useState([
-    {
-      id: 1,
-      name: "Priyanka Dutta",
-      position: "S/W Dept / React Dev",
-      status: "Approved",
-      description: "Test",
-    },
-    {
-      id: 2,
-      name: "Amith Shetty",
-      position: "React Dev",
-      status: "Approved",
-      description: "Resign letter",
-    },
-    {
-      id: 3,
-      name: "John Smith",
-      position: "Software Engineer",
-      status: "Requested",
-      description: "Moving abroad",
-    },
-    {
-      id: 4,
-      name: "Jane Doe",
-      position: "Frontend Dev",
-      status: "Rejected",
-      description: "Leaving soon",
-    },
-    {
-      id: 5,
-      name: "Alice Brown",
-      position: "Designer",
-      status: "Approved",
-      description: "Personal reasons",
-    },
+  const [data, setData] = useState([]);
 
-    // Add more items as per your data
-  ]);
+  useEffect(() => {
+    fetchResignations();
+  }, []);
+
+  const fetchResignations = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('http://localhost:5000/api/resignations');
+      setData(response.data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch resignations');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [showCreatePopup, setShowCreatePopup] = useState(false);
-  const [newResignation, setNewResignation] = useState({
-    name: "",
-    title: "",
-    status: "Approved",
-    description: "" //
-  });
-
-
-  //For edit-delete 
-
-  const [showPopup, setShowPopup] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
+  const [newResignation, setNewResignation] = useState({
+    name: "",
+    email: "",
+    title: "",
+    status: "Requested",
+    description: ""
+  });
 
   const handleEditClick = (res) => {
-    setShowPopup(true);
+    setShowCreatePopup(true);
     setIsEditing(true);
-    setCurrentId(res.id);
-    setNewResignation({ name: res.name, title: res.title, status: res.status });
+    setCurrentId(res._id);
+    setNewResignation({
+      name: res.name,
+      email: res.email,
+      title: res.position,
+      status: res.status,
+      description: res.description
+    });
   };
 
-  const handleDeleteClick = (id) => {
-    setData((prev) => prev.filter((res) => res.id !== id));
+  const handleDeleteClick = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/resignations/${id}`);
+      await fetchResignations();
+    } catch (error) {
+      console.error('Error deleting resignation:', error);
+      setError('Failed to delete resignation');
+    }
   };
-
 
   const handleCreateClick = () => {
     setShowCreatePopup(true);
     setIsEditing(false);
-    setNewResignation({ name: "", title: "", status: "Approved" });
+    setNewResignation({
+      name: "",
+      email: "",
+      title: "",
+      status: "Requested",
+      description: ""
+    });
   };
 
   const handleInputChange = (e) => {
@@ -87,46 +84,73 @@ const ResignationPage = () => {
     setNewResignation((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleDescriptionChange = (content) => {
+    setNewResignation((prev) => ({ ...prev, description: content }));
+  };
+
+  const handleSave = async () => {
+    try {
+      const resignationData = {
+        name: newResignation.name,
+        email: newResignation.email,
+        position: newResignation.title,
+        status: newResignation.status,
+        description: newResignation.description
+      };
+  
+      if (isEditing) {
+        const response = await axios.put(`http://localhost:5000/api/resignations/${currentId}`, resignationData);
+        setData(prevData => 
+          prevData.map(item => 
+            item._id === currentId ? response.data : item
+          )
+        );
+      } else {
+        const response = await axios.post('http://localhost:5000/api/resignations', resignationData);
+        setData(prevData => [...prevData, response.data]);
+      }
+      
+      handleClosePopup();
+      setError(null);
+    } catch (error) {
+      console.error('Error saving resignation:', error);
+      setError('Failed to save resignation');
+    }
+  };
+  
+
+  const handleClosePopup = () => {
+    setShowCreatePopup(false);
+    setIsEditing(false);
+    setCurrentId(null);
+    setNewResignation({
+      name: "",
+      email: "",
+      title: "",
+      status: "Requested",
+      description: ""
+    });
+  };
+
+  const handleSendEmail = async (employee) => {
+    try {
+      await axios.post('http://localhost:5000/api/resignations', {
+        name: employee.name,
+        email: employee.email,
+        position: employee.position,
+        status: employee.status,
+        description: employee.description
+      });
+      alert(`Resignation email sent successfully from ${employee.email}`);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      setError('Failed to send email');
+    }
+  };
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
   };
-
-
-
-
-  const handleSave = () => {
-    if (isEditing) {
-      setData((prev) =>
-        prev.map((res) =>
-          res.id === currentId
-            ? { ...res, name: newResignation.name, position: newResignation.title, status: newResignation.status, description: newResignation.description }
-            : res
-        )
-      );
-    } else {
-      setData((prev) => [
-        ...prev,
-        { id: prev.length + 1, name: newResignation.name, position: newResignation.title, status: newResignation.status, description: newResignation.descrip },
-      ]);
-    }
-    setShowCreatePopup(false);
-    setShowPopup(false);
-    setNewResignation({ name: "", title: "", status: "Approved" });
-  };
-
-
-
-  /* For filter data */
-  const filteredData = data.filter((item) => {
-    const matchesSearch = item.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus
-      ? item.status === selectedStatus
-      : true;
-    return matchesSearch && matchesStatus;
-  });
 
   const handleViewChange = (mode) => {
     setViewMode(mode);
@@ -141,6 +165,26 @@ const ResignationPage = () => {
     setFilterOpen(false);
   };
 
+  const filteredData = data.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         item.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = selectedStatus ? item.status === selectedStatus : true;
+    return matchesSearch && matchesStatus;
+  });
+
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, false] }],
+      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+      [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+      ['link'],
+      ['clean']
+    ],
+  };
+
+  if (loading) return <div className="loading">Loading...</div>;
+  if (error) return <div className="error">{error}</div>;
+
   return (
     <div className="resignation-letters">
       <div className="header">
@@ -148,179 +192,171 @@ const ResignationPage = () => {
         <div className="controls">
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search by name or email"
             value={searchTerm}
             onChange={handleSearch}
             className="search-input"
           />
-          <button
-            className="view-toggle"
-            onClick={() => handleViewChange("list")}
-          >
+          <button className="view-toggle" onClick={() => handleViewChange("list")}>
             <FaList />
           </button>
-          <button
-            className="view-toggle"
-            onClick={() => handleViewChange("grid")}
-          >
+          <button className="view-toggle" onClick={() => handleViewChange("grid")}>
             <FaTh />
           </button>
-
           <button className="filter-btn" onClick={toggleFilter}>
             Filter
           </button>
           <button className="create-btn" onClick={handleCreateClick}>
-            {" "}
             Create
           </button>
         </div>
       </div>
 
-      {/* Create Popup */}
-      {showCreatePopup && (
-        <div className="popup">
-          <div className="popup-content">
-            <h3>Create Resignation</h3>
-            <input
-              type="text"
-              name="name"
-              placeholder="Name"
-              value={newResignation.name}
-              onChange={handleInputChange}
-            />
-            <input
-              type="text"
-              name="title"
-              placeholder="Title"
-              value={newResignation.title}
-              onChange={handleInputChange}
-            />
-
-            <input
-              type="text"
-              name="description"
-              placeholder="Description"
-              value={newResignation.description}
-              onChange={handleInputChange}
-            />
-            <select
-              name="status"
-              value={newResignation.status}
-              onChange={handleInputChange}
-            >
-              <option value="Approved">Approved</option>
-              <option value="Requested">Requested</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-            <button onClick={handleSave}>Save</button>
-            <button onClick={() => setShowCreatePopup(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {/* For Filter  data */}
       {filterOpen && (
         <div className="filter-popup">
-          <button
-            onClick={() => applyFilter("")}
-            className={`filter-option ${selectedStatus === "" ? "active" : ""}`}
-          >
+          <button onClick={() => applyFilter("")} className={`filter-option ${selectedStatus === "" ? "active" : ""}`}>
             All
           </button>
-          <button
-            onClick={() => applyFilter("Approved")}
-            className={`filter-option ${selectedStatus === "Approved" ? "active" : ""
-              }`}
-          >
+          <button onClick={() => applyFilter("Approved")} className={`filter-option ${selectedStatus === "Approved" ? "active" : ""}`}>
             Approved
           </button>
-          <button
-            onClick={() => applyFilter("Requested")}
-            className={`filter-option ${selectedStatus === "Requested" ? "active" : ""
-              }`}
-          >
+          <button onClick={() => applyFilter("Requested")} className={`filter-option ${selectedStatus === "Requested" ? "active" : ""}`}>
             Requested
           </button>
-          <button
-            onClick={() => applyFilter("Rejected")}
-            className={`filter-option ${selectedStatus === "Rejected" ? "active" : ""
-              }`}
-          >
+          <button onClick={() => applyFilter("Rejected")} className={`filter-option ${selectedStatus === "Rejected" ? "active" : ""}`}>
             Rejected
           </button>
         </div>
       )}
 
-
-      {/* Popup for creating/editing a resignation */}
-      {showPopup && (
+      {showCreatePopup && (
         <div className="popup">
           <div className="popup-content">
             <h3>{isEditing ? 'Edit Resignation' : 'Create Resignation'}</h3>
-            <input
-              type="text"
-              name="name"
-              placeholder="Name"
-              value={newResignation.name}
-              onChange={handleInputChange}
-            />
-            <input
-              type="text"
-              name="title"
-              placeholder="Title"
-              value={newResignation.title}
-              onChange={handleInputChange}
-            />
-            <input
-              type="text"
-              name="description"
-              placeholder="Description"
-              value={newResignation.description}
-              onChange={handleInputChange}
-            />
-            <select
-              name="status"
-              value={newResignation.status}
-              onChange={handleInputChange}
-            >
-              <option value="Approved">Approved</option>
-              <option value="Requested">Requested</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-            <button onClick={handleSave}>{isEditing ? 'Update' : 'Save'}</button>
-            <button onClick={() => setShowPopup(false)}>Cancel</button>
+            <div className="form-row">
+              <label>Name</label>
+              <input
+                type="text"
+                name="name"
+                value={newResignation.name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                value={newResignation.email}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label>Position</label>
+              <input
+                type="text"
+                name="title"
+                value={newResignation.title}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label>Resignation Letter</label>
+              <ReactQuill
+                theme="snow"
+                value={newResignation.description}
+                onChange={handleDescriptionChange}
+                modules={modules}
+                placeholder="Write your resignation letter..."
+              />
+            </div>
+            <div className="form-row">
+              <label>Status</label>
+              <select
+                name="status"
+                value={newResignation.status}
+                onChange={handleInputChange}
+              >
+                <option value="Requested">Requested</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+            <div className="popup-actions">
+              <button type="button" onClick={handleSave}>
+                {isEditing ? 'Update' : 'Save'}
+              </button>
+              <button type="button" onClick={handleClosePopup}>
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-
-      <div className={viewMode === "grid" ? "card-grid" : "card-list"}>
-        {filteredData.map((item) => (
-          <div key={item.id} className="resignation-card">
-            <div className="card-header">
-              <span className="status">{item.status}</span>
-              <div className="card-icons">
-                <button className="icon-button" onClick={() => handleEditClick(item)}>✏️</button>
-                <button className="icon-button" onClick={() => handleDeleteClick(item.id)}>🗑️</button>
+      {viewMode === "list" ? (
+        <table className="resignation-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Position</th>
+              <th>Status</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((item) => (
+              <tr key={item._id}>
+                <td>{item.name}</td>
+                <td>{item.email}</td>
+                <td>{item.position}</td>
+                <td>{item.status}</td>
+                <td><div dangerouslySetInnerHTML={{ __html: item.description }} /></td>
+                <td>
+                  <button className="icon-button" onClick={() => handleEditClick(item)}>✏️</button>
+                  <button className="icon-button" onClick={() => handleDeleteClick(item._id)}>🗑️</button>
+                  <button className="email-btn" onClick={() => handleSendEmail(item)}>
+                    <FaEnvelope />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div className="card-grid">
+          {filteredData.map((item) => (
+            <div key={item._id} className="resignation-card">
+              <div className="card-header">
+                <span className={`status ${item.status}`}>{item.status}</span>
+                <div className="card-icons">
+                  <button className="icon-button" onClick={() => handleEditClick(item)}>✏️</button>
+                  <button className="icon-button" onClick={() => handleDeleteClick(item._id)}>🗑️</button>
+                </div>
+              </div>
+              <div className="card-content">
+                <h2>{item.name}</h2>
+                <p className="email">{item.email}</p>
+                <p>{item.position}</p>
+                <div dangerouslySetInnerHTML={{ __html: item.description }} />
+              </div>
+              <div className="card-footer">
+                <button className="email-btn" onClick={() => handleSendEmail(item)}>
+                  <FaEnvelope /> Send Email
+                </button>
               </div>
             </div>
-            <div className="card-content">
-              <h2>{item.name}</h2>
-              <p>{item.department}</p>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-            </div>
-            <div className="card-footer">
-              <button className="approve-btn">✔</button>
-              <button className="reject-btn">✘</button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
 export default ResignationPage;
+

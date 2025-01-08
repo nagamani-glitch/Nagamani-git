@@ -130,7 +130,7 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('performanceDashboard')}>Dashboard</li>
             <li onClick={() => handleSubClick('objectives')}>Objectives</li>
             <li onClick={() => handleSubClick('feedback')}>360 Feedback</li>
-            <li onClick={() => handleSubClick('createFeedback')}>Create Feedback</li>
+            {/* <li onClick={() => handleSubClick('createFeedback')}>Create Feedback</li> */}
           </ul>
         )}
 

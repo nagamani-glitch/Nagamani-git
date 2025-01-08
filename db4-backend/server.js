@@ -29,6 +29,10 @@ import allowanceRoutes from './routes/allowanceRoutes.js';
 import deductionRoutes from './routes/deductionRoutes.js';
 import payslipRoutes from './routes/payslipRoutes.js';
 import federalTaxRoutes from './routes/federalTaxRoutes.js';
+import objectiveRoutes from './routes/objectiveRoutes.js';
+import offboardingRoutes from './routes/offboardingRoutes.js';
+import resignationRoutes from './routes/resignationRoutes.js';
+import Feedback from './routes/feedbackRoutes.js';
  
  
  
@@ -37,11 +41,16 @@ connectDB()
 const app = express()
  
 app.use(cors({
-    origin:"*",
-    methods:["GET", "POST", "PUT", "DELETE"],
-    credentials:true,
-    allowedHeaders: ['Content-Type', 'Authorization']
-}))
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+    allowedHeaders: [
+        'Content-Type', 
+        'Authorization',
+        'Access-Control-Allow-Methods'
+    ]
+}));
+
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
@@ -76,6 +85,11 @@ app.use('/api/allowances', allowanceRoutes);
 // app.use('/api/payrollContracts', payrollContractRoutes);
 app.use('/api/payslips', payslipRoutes);
 app.use('/api/federal-tax', federalTaxRoutes);
+app.use('/api/objectives', objectiveRoutes);
+app.use('/api/feedback', Feedback);
+
+app.use('/api/offboarding', offboardingRoutes);
+app.use('/api/resignations', resignationRoutes);
 
 
 const PORT = process.env.PORT || 5000;
