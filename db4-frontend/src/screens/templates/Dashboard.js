@@ -179,25 +179,24 @@ function Dashboard() {
       // In the renderScreen switch statement:
       case 'faqCategory':
         return <FaqCategory/>;
-      case 'faqPage':
-        return <FaqPage categoryId={categoryId} />;
-  
-      // case 'faqCategory':
-      //   return <FaqCategory />;
-      // case `faq/${categoryId}`:
-      //   return <FaqPage />;
-
-
+      case 'faq/:categoryId':  
+        return <FaqPage />;  
+      
        //config       
       case "holidays":
         return <Holidays />
       case "companyLeaves":
         return <CompanyHolidays />
       case "restrictLeaves":
+<<<<<<< HEAD
         return <RestrictLeaves />
 
       
         // Sangeeta 
+=======
+        return <RestrictLeaves />      
+        
+>>>>>>> 6a61b94b8baa2cc389286726478bf0b8b9f490af
       
       case "payrollDashboard":
         return <PayrollDashboard />;
