@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import connectDB from './config/db.js';// Ensure User schema is defined correctly
+import connectDB from './config/db.js';
 import employeesRouter from './routes/employeesRouter.js'
 import authRouter from './routes/authRouter.js'
 import profileRouter from './routes/profileRouter.js'
@@ -82,7 +82,6 @@ app.use('/api/faqCategories', faqCategoryRoutes);
 
 app.use('/api/deductions', deductionRoutes);
 app.use('/api/allowances', allowanceRoutes);
-// app.use('/api/contracts', payrollContractRoutes);
 app.use('/api/payroll-contracts', payrollContractRoutes);
 app.use('/api/payslips', payslipRoutes);
 app.use('/api/federal-tax', federalTaxRoutes);
