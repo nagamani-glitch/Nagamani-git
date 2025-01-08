@@ -464,22 +464,24 @@ const Allowances = () => {
                 </div>
                 <div className="card-actions">
                   <button
+                  className="allowance-card-edit-button"
                     onClick={(e) => {
                       e.stopPropagation();
                       console.log("Edit clicked for ID:", allowance._id);
-                      handleEdit(allowance._id);
+                      handleEdit(allowance._id);  
                     }}
                   >
-                    <FaEdit />
+                    <FaEdit size={25}/>
                   </button>
                   <button
+                  className="allowance-card-delete-button"
                     onClick={(e) => {
                       e.stopPropagation();
                       console.log("Delete clicked for ID:", allowance._id);
                       handleDelete(allowance.id || allowance._id);
                     }}
                   >
-                    <FaTrash />
+                    <FaTrash size={20}/>
                   </button>
                 </div>
               </div>
@@ -522,13 +524,13 @@ const Allowances = () => {
                     <td>-</td>
                     <td className="sticky-column">
                       <button
-                        className="edit-btn"
+                        className="all-list-edit-btn"
                         onClick={() => handleEdit(allowance._id)}
                       >
                         <FaEdit />
                       </button>
                       <button
-                        className="delete-btn"
+                        className="all-list-delete-btn"
                         onClick={() => handleDelete(allowance._id)}
                       >
                         <FaTrash />

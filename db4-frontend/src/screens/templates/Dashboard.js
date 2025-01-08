@@ -49,12 +49,9 @@ import CompanyHolidays from './configuration/CompanyHolidays';
 import RestrictLeaves from './configuration/RestrictLeaves';
 import FaqCategory from './faqs/FaqCategory';
 import FaqPage from './faqs/FaqPage';
-import { fetchHolidays, createHoliday, updateHoliday, deleteHoliday, fetchFilteredHolidays } from './configuration/Holidays';
 
- 
-// import OnboardingView from './onboarding/OnboardingView';
 
-        // Sangeeta integration
+  // Sangeeta integration
 //Payroll
 import PayrollDashboard from './Payroll/PayrollDashboard';
 import Allowances from './Payroll/Allowances';
@@ -182,15 +179,9 @@ function Dashboard() {
       // In the renderScreen switch statement:
       case 'faqCategory':
         return <FaqCategory/>;
-      case 'faqPage':
-        return <FaqPage categoryId={categoryId} />;
-  
-      // case 'faqCategory':
-      //   return <FaqCategory />;
-      // case `faq/${categoryId}`:
-      //   return <FaqPage />;
-
-
+      case 'faq/:categoryId':  
+        return <FaqPage />;  
+      
        //config       
       case "holidays":
         return <Holidays />
@@ -200,6 +191,8 @@ function Dashboard() {
         return <RestrictLeaves />
 
       
+        // Sangeeta 
+        return <RestrictLeaves />      
         
       
       case "payrollDashboard":
@@ -239,8 +232,6 @@ function Dashboard() {
         return <ExitPage />;
       case 'resignationLetter':
         return <ResignationPage />;
-
-
       default:
         return null
     }

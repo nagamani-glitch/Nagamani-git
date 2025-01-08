@@ -27,6 +27,24 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.put('/:id', async (req, res) => {
+    try {
+        const updatedCategory = await FaqCategory.findByIdAndUpdate(
+            req.params.id,
+            {
+                title: req.body.title,
+                description: req.body.description
+            },
+            { new: true }
+        );
+        res.json(updatedCategory);
+    } catch (error) {
+        res.status(400).json({ error: 'Error updating category' });
+    }
+});
+
+
+
 // Delete an FAQ category
 router.delete('/:id', async (req, res) => {
     try {

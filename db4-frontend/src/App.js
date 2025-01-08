@@ -31,6 +31,7 @@ import PrivateRoute from './screens/PrivateRoute';
 import { Container } from 'react-bootstrap';
 import { SidebarProvider } from './Context';
 import VerifyOtpPage from './screens/authScreens/registerScreen/VerifyOtpPage';
+import FaqPage from './screens/templates/faqs/FaqPage';
 
 
 
@@ -64,6 +65,7 @@ function App() {
               <Route path='/Birthdays' element={<Birthdays />} />
               <Route path='/Anniversaries' element={<Anniversaries />} />
               <Route path='/Personal Information' element={<RegisterScreen />} />
+              <Route path="/faq/:categoryId" element={<FaqPage />} />
             </Route>
             <Route path='/hr' element={<Dashboards />} />
           </Routes>

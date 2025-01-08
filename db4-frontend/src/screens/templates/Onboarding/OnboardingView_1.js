@@ -58,16 +58,16 @@ function OnboardingView() {
     }
   };
 
-  const handleUpdateCandidate = async (id, updatedData) => {
-    try {
-      const response = await axios.put(`http://localhost:5000/api/onboarding/${id}`, updatedData);
-      setCandidates(candidates.map(candidate => 
-        candidate._id === id ? response.data : candidate
-      ));
-    } catch (error) {
-      console.error('Error updating candidate:', error);
-    }
-  };
+  // const handleUpdateCandidate = async (id, updatedData) => {
+  //   try {
+  //     const response = await axios.put(`http://localhost:5000/api/onboarding/${id}`, updatedData);
+  //     setCandidates(candidates.map(candidate => 
+  //       candidate._id === id ? response.data : candidate
+  //     ));
+  //   } catch (error) {
+  //     console.error('Error updating candidate:', error);
+  //   }
+  // };
 
   const handleDeleteCandidate = async (id) => {
     try {

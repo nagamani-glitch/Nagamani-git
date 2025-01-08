@@ -25,7 +25,6 @@ import onboardingRoutes from './routes/onboardingRoutes.js';
 
 // Sangeeta 
 import allowanceRoutes from './routes/allowanceRoutes.js';
-// import payrollContractRoutes from './routes/payrollContractRoutes.js';
 import deductionRoutes from './routes/deductionRoutes.js';
 import payslipRoutes from './routes/payslipRoutes.js';
 import federalTaxRoutes from './routes/federalTaxRoutes.js';
@@ -33,6 +32,7 @@ import objectiveRoutes from './routes/objectiveRoutes.js';
 import offboardingRoutes from './routes/offboardingRoutes.js';
 import resignationRoutes from './routes/resignationRoutes.js';
 import Feedback from './routes/feedbackRoutes.js';
+import payrollContractRoutes from './routes/payrollContractRoutes.js';
  
  
  
@@ -82,7 +82,8 @@ app.use('/api/faqCategories', faqCategoryRoutes);
 
 app.use('/api/deductions', deductionRoutes);
 app.use('/api/allowances', allowanceRoutes);
-// app.use('/api/payrollContracts', payrollContractRoutes);
+// app.use('/api/contracts', payrollContractRoutes);
+app.use('/api/payroll-contracts', payrollContractRoutes);
 app.use('/api/payslips', payslipRoutes);
 app.use('/api/federal-tax', federalTaxRoutes);
 app.use('/api/objectives', objectiveRoutes);
