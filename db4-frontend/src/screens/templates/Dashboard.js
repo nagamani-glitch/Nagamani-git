@@ -71,6 +71,7 @@ import CreateFeedback from './Performance/CreateFeedback';
 //offboarding
 import HomePage  from './Offboarding/HomePage';
 import RegistrationPage from './Offboarding/RegistrationPage';
+import OnboardingForms from './Onboarding/OnboardingForms';
 
 
 
@@ -116,6 +117,8 @@ function Dashboard() {
     switch (activeScreen) {
       case 'onboardingView':
         return <OnboardingView />
+      case 'onboardingForm':
+       return <OnboardingForms />  
       case 'dashboard':
         return <MainDashboard />;
       case 'recruitmentdashboard':

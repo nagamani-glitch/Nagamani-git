@@ -14,7 +14,7 @@ const Header = () => {
   const profileMenuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-
+  const token = localStorage.getItem('token');
   // Check-In/Check-Out State
   const [timer, setTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -185,9 +185,16 @@ const Header = () => {
                 <NavDropdown.Item onClick={() => navigate('/profile')}>My Profile</NavDropdown.Item>
                 <NavDropdown.Item onClick={() => navigate('/change-password')}>Change Password</NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item onClick={handleLogout} className="logout-item">
-                  <FaSignOutAlt className="me-2" /> Logout
-                </NavDropdown.Item>
+                {token ? (
+                  <NavDropdown.Item onClick={handleLogout} className="logout-item">
+                    <FaSignOutAlt className="me-2" /> Logout
+                  </NavDropdown.Item>
+                )
+                : (
+                    <NavDropdown.Item onClick={() => navigate('/login')} className="login-item">
+                      <FaSignInAlt className="me-2" /> Login
+                    </NavDropdown.Item>
+                  )}
               </NavDropdown>
             </Nav>
           </Navbar.Collapse>

@@ -9,6 +9,8 @@ import axios from "axios";
 
 const RegisterScreen = () => {
   const [currentStep, setCurrentStep] = useState(1); // Tracks the current form page
+
+  // Consolidated form data for all steps
   const [formData, setFormData] = useState({
     personalInfo: {},
     addressInfo: {},
@@ -17,7 +19,7 @@ const RegisterScreen = () => {
     trainingDetails:{},
     trainingInIndia:{},
     trainingInAbroad:{},
-    familyDetails: {},
+    familyDetails: [],
     serviceHistory: {},
     nominationDetails: {},
   });
@@ -46,9 +48,9 @@ const RegisterScreen = () => {
       const response = await axios.post('/api/employees/register', formData, {
         headers: { 'Content-Type': 'application/json' },
       });
-      console.log(formData)
+      console.log(formData);
       console.log('Data submitted:', response.data);
-      alert("Data Submitted Successfully")
+      alert("Data Submitted Successfully");
     } catch (error) {
       console.error('Error submitting data:', error);
     }
@@ -58,19 +60,59 @@ const RegisterScreen = () => {
   const renderForm = () => {
     switch (currentStep) {
       case 1:
-        return <PersonalInformationForm nextStep={nextStep} handleFormDataChange={handleFormDataChange} />;
-      // case 1:
-      //   return <AddressForm nextStep={nextStep} prevStep={prevStep} handleFormDataChange={handleFormDataChange} />;
+        return (
+          <PersonalInformationForm
+            nextStep={nextStep}
+            handleFormDataChange={handleFormDataChange}
+            savedPersonalInfo={formData.personalInfo} // Send saved data
+            savedAddressinfo={formData.addressInfo}
+          />
+        );
       case 2:
-        return <JoiningDetailsForm nextStep={nextStep} prevStep={prevStep} handleFormDataChange={handleFormDataChange} />;
+        return (
+          <JoiningDetailsForm
+            nextStep={nextStep}
+            prevStep={prevStep}
+            handleFormDataChange={handleFormDataChange}
+            savedJoiningDetails={formData.joiningDetails} // Send saved data
+          />
+        );
       case 3:
-        return <EducationDetailsForm nextStep={nextStep} prevStep={prevStep} handleFormDataChange={handleFormDataChange} />;
+        return (
+          <EducationDetailsForm
+            nextStep={nextStep}
+            prevStep={prevStep}
+            handleFormDataChange={handleFormDataChange}
+            savedEducationDetails={formData.educationDetails} // Send saved data
+          />
+        );
       case 4:
-        return <FamilyDetailsForm nextStep={nextStep} prevStep={prevStep} handleFormDataChange={handleFormDataChange} />;
+        return (
+          <FamilyDetailsForm
+            nextStep={nextStep}
+            prevStep={prevStep}
+            handleFormDataChange={handleFormDataChange}
+            savedFamilyDetails={formData.familyDetails} // Send saved data
+          />
+        );
       case 5:
-        return <ServiceHistoryForm nextStep={nextStep} prevStep={prevStep} handleFormDataChange={handleFormDataChange} />;
+        return (
+          <ServiceHistoryForm
+            nextStep={nextStep}
+            prevStep={prevStep}
+            handleFormDataChange={handleFormDataChange}
+            savedServiceHistory={formData.serviceHistory} // Send saved data
+          />
+        );
       case 6:
-        return <NominationDetailsForm prevStep={prevStep} handleFormDataChange={handleFormDataChange} handleSubmit={handleSubmit} />;
+        return (
+          <NominationDetailsForm
+            prevStep={prevStep}
+            handleFormDataChange={handleFormDataChange}
+            handleSubmit={handleSubmit}
+            savedNominationDetails={formData.nominationDetails} // Send saved data
+          />
+        );
       default:
         return null;
     }

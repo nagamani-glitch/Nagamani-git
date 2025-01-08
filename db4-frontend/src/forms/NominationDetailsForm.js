@@ -3,8 +3,8 @@ import { TextField, Button, Grid, Typography, Container, Box } from '@mui/materi
 import { motion } from 'framer-motion';
 import Footer from '../components/Footer';
 
-const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange }) => {
-  const [nominee, setNominee] = useState({
+const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, savedNominationDetails }) => {
+  const [nominee, setNominee] = useState(savedNominationDetails || {
     name: '',
     relation: '',
     typeOfNomination: '',

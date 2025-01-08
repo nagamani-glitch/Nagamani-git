@@ -1,4 +1,4 @@
-.home-screen{
+/* .home-screen{
   background-image: url("https://res.cloudinary.com/djestqza3/image/upload/v1728468030/download_fwy1ve.jpg");
   background-size: 50%;
   background-position: center center;
@@ -46,11 +46,11 @@ form{
   margin: 20px 0;
 }
 
-/* .form-grid {
+ .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-} */
+} 
 
 
 .joiningFormElement{
@@ -329,4 +329,4 @@ button:hover {
 .down{
   position: relative;
   
-}
+} */

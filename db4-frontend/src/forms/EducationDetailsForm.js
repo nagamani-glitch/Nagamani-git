@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import Footer from '../components/Footer';
 import './styles.css'
 
-const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange }) => {
+const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedEducationDetails }) => {
   // State to manage education details
-  const [educationDetails, setEducationDetails] = useState({
+  const [educationDetails, setEducationDetails] = useState(savedEducationDetails?.educationDetails || {
     basic: [
       { education: '', board: '', marks: '', year: '', stream: '', grade: '' },
     ],
@@ -18,11 +18,11 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
   });
 
   // State to manage training details
-  const [trainingInIndia, setTrainingInIndia] = useState([
+  const [trainingInIndia, setTrainingInIndia] = useState(savedEducationDetails?.trainingInIndia || [
     { type: '', topic: '', institute: '', sponsor: '', from: '', to: '' },
   ]);
 
-  const [trainingAbroad, setTrainingAbroad] = useState([
+  const [trainingAbroad, setTrainingAbroad] = useState(savedEducationDetails?.trainingAbroad || [
     { type: '', topic: '', institute: '', sponsor: '', from: '', to: '' },
   ]);
 

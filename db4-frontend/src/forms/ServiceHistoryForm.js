@@ -3,8 +3,8 @@ import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRo
 import { motion } from 'framer-motion';
 import Footer from '../components/Footer';
 
-const ServiceHistoryForm = ({ nextStep, prevStep, handleFormDataChange }) => {
-  const [serviceHistory, setServiceHistory] = useState([
+const ServiceHistoryForm = ({ nextStep, prevStep, handleFormDataChange, savedServiceHistory }) => {
+  const [serviceHistory, setServiceHistory] = useState(savedServiceHistory || [
     { transactionType: '', office: '', post: '', orderNumber: '', orderDate: '', incrementDate: '', payScale: '', otherDept: '', areaType: '' },
   ]);
   const [errors, setErrors] = useState([]);
