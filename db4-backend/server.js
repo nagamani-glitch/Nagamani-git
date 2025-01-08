@@ -12,7 +12,6 @@ import employeeRoutes from './routes/employeeRoutes.js'
 import interviewRoutes from './routes/interviewRoutes.js'
 import skillZoneRoutes from './routes/skillZoneRoutes.js'
 import surveyRoutes from './routes/surveyRoutes.js'
-
 import assetRoutes from './routes/assets.js';
 import assetDashboardRoutes from './routes/assetDashboardRoutes.js';
 import assetBatchRoutes from './routes/assetBatchRoutes.js';
@@ -23,6 +22,13 @@ import companyHolidaysRoute from './routes/companyHolidays.js';
 import restrictLeaveRoutes from './routes/restrictLeaveRoutes.js';
 import holidayRoutes from './routes/holidays.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
+
+// Sangeeta 
+import allowanceRoutes from './routes/allowanceRoutes.js';
+// import payrollContractRoutes from './routes/payrollContractRoutes.js';
+import deductionRoutes from './routes/deductionRoutes.js';
+import payslipRoutes from './routes/payslipRoutes.js';
+import federalTaxRoutes from './routes/federalTaxRoutes.js';
  
  
  
@@ -34,16 +40,17 @@ app.use(cors({
     origin:"*",
     methods:["GET", "POST", "PUT", "DELETE"],
     credentials:true,
+    allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
-app.use('/api/employees', employeesRouter)
-app.use('/api/auth', authRouter)
-app.use('/api/profiles', profileRouter)
-app.use('/api/contracts', contractRouter);
-app.use(candidateRoutes);  
+app.use("/api/employees", employeesRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/profiles", profileRouter);
+app.use("/api/contracts", contractRouter);
+app.use(candidateRoutes);
 app.use(surveyRoutes);
 app.use('/api/applicantProfiles', applicantProfileRoutes);
 app.use('/api/interviews', interviewRoutes);
@@ -61,6 +68,16 @@ app.use('/api/faqs', faqRoutes);
 app.use('/api/faqCategories', faqCategoryRoutes);
  
  
-const PORT = process.env.PORT || 5000
- 
-app.listen(PORT, console.log(`✨ Server running on port ${PORT}`.yellow.bold))
+
+// Sangeeta integration
+
+app.use('/api/deductions', deductionRoutes);
+app.use('/api/allowances', allowanceRoutes);
+// app.use('/api/payrollContracts', payrollContractRoutes);
+app.use('/api/payslips', payslipRoutes);
+app.use('/api/federal-tax', federalTaxRoutes);
+
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, console.log(`✨ Server running on port ${PORT}`.yellow.bold));

@@ -45,12 +45,13 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
 
   // Extract initials from the employee name
   const getInitials = (name) => {
-    if (typeof name === "string") {
-      const nameArray = name.split(" ");
-      const initials = nameArray.map((part) => part[0]).join("");
-      return initials.toUpperCase();
-    }
-    return "";
+    if (!name) return '';
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
 
@@ -67,6 +68,8 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
       selectedEmployee.filter((name) => name !== employeeName)
     );
   };
+
+
 
   // Handle saving the form data
   const handleSave = async (event) => {
@@ -103,26 +106,71 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
 
 
   // Update handleSubmit to include all form fields
+  // const handleSubmit = async (event) => {
+  //   event.preventDefault();
+  //   const formData = {
+  //     code: document.querySelector("input[placeholder='Enter title']").value,
+  //     name: document.querySelector("input[placeholder='Enter title']").value,
+  //     amount: Number(document.querySelector("input[placeholder='Enter amount']").value) || 0,
+  //     oneTimeDeduction: document.querySelector("input[type='date']").value ? 'Yes' : 'No',
+  //     taxable: isTaxable ? 'Yes' : 'No',
+  //     fixed: isFixed,
+  //     pretax: isTaxable ? 'Yes' : 'No',
+  //     specificEmployees: selectedEmployee,
+  //     employerRate: "6.25% of Gross Pay",
+  //     employeeRate: "7.75% of Gross Pay",
+  //     isConditionBased: isConditionBased,
+  //     ifChoice: document.querySelector("select[required]").value,
+  //     ifCondition: document.querySelector(".condition-options").value,
+  //     ifAmount: Number(document.querySelector("input[placeholder='0.0']").value) || 0,
+  //     updateCompensation: document.querySelector("select[required]").value
+  //   };
+
+  //   try {
+  //     if (editData) {
+  //       const response = await axios.put(`http://localhost:5000/api/deductions/${editData._id}`, formData);
+  //       console.log("Deduction updated:", response.data);
+  //       alert("Deduction updated successfully!");
+  //     } else {
+  //       const response = await axios.post('http://localhost:5000/api/deductions', formData);
+  //       console.log("Form Data saved:", response.data);
+  //       alert("Form data saved successfully!");
+  //     }
+  //     onClose();
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //     alert(editData ? "Failed to update deduction" : "Failed to save deduction data");
+  //   }
+  // };
+
+  const validateForm = () => {
+    const title = document.querySelector("input[placeholder='Enter title']").value;
+    const amount = document.querySelector("input[type='number']").value;
+    
+    if (!title || !amount) {
+      alert("Please fill all required fields");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+    
+    if (!validateForm()) return;
+    
     const formData = {
       code: document.querySelector("input[placeholder='Enter title']").value,
       name: document.querySelector("input[placeholder='Enter title']").value,
-      amount: Number(document.querySelector("input[placeholder='Enter amount']").value) || 0,
-      oneTimeDeduction: document.querySelector("input[type='date']").value ? 'Yes' : 'No',
+      amount: Number(document.querySelector("input[type='number']").value),
       taxable: isTaxable ? 'Yes' : 'No',
       fixed: isFixed,
-      pretax: isTaxable ? 'Yes' : 'No',
+      oneTimeDeduction: document.querySelector("input[type='date']").value ? 'Yes' : 'No',
       specificEmployees: selectedEmployee,
       employerRate: "6.25% of Gross Pay",
-      employeeRate: "7.75% of Gross Pay",
-      isConditionBased: isConditionBased,
-      ifChoice: document.querySelector("select[required]").value,
-      ifCondition: document.querySelector(".condition-options").value,
-      ifAmount: Number(document.querySelector("input[placeholder='0.0']").value) || 0,
-      updateCompensation: document.querySelector("select[required]").value
+      employeeRate: "7.75% of Gross Pay"
     };
-
+  
     try {
       if (editData) {
         const response = await axios.put(`http://localhost:5000/api/deductions/${editData._id}`, formData);
@@ -130,13 +178,13 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
         alert("Deduction updated successfully!");
       } else {
         const response = await axios.post('http://localhost:5000/api/deductions', formData);
-        console.log("Form Data saved:", response.data);
-        alert("Form data saved successfully!");
+        console.log("Deduction created:", response.data);
+        alert("Deduction created successfully!");
       }
       onClose();
     } catch (error) {
       console.error("Error:", error);
-      alert(editData ? "Failed to update deduction" : "Failed to save deduction data");
+      alert("Please fill all required fields");
     }
   };
 
@@ -146,8 +194,6 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
       <div className="create-allowance-container">
         <div className="deduction-row">
           <h2 className="deduction-heading">{editData ? 'Edit Deduction' : 'Create Deduction'}</h2>
-
-
         </div>
         <hr />
         <form>

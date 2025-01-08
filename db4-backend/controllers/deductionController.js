@@ -1,12 +1,60 @@
 import Deduction from '../models/deductionModel.js';
 
+// export const createDeduction = async (req, res) => {
+//   try {
+//     const deduction = new Deduction(req.body);
+//     await deduction.save();
+//     res.status(201).json({ success: true, data: deduction });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+
 export const createDeduction = async (req, res) => {
   try {
-    const deduction = new Deduction(req.body);
-    await deduction.save();
-    res.status(201).json({ success: true, data: deduction });
+    const {
+      code,
+      name,
+      amount,
+      taxable,
+      fixed,
+      oneTimeDeduction,
+      specificEmployees,
+      employerRate,
+      employeeRate
+    } = req.body;
+
+    // Validate required fields
+    if (!code || !name || !amount || !taxable) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please provide all required fields' 
+      });
+    }
+
+    const deduction = await Deduction.create({
+      code,
+      name,
+      amount,
+      taxable,
+      fixed,
+      oneTimeDeduction,
+      specificEmployees,
+      employerRate,
+      employeeRate
+    });
+
+    res.status(201).json({
+      success: true,
+      data: deduction
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create deduction',
+      error: error.message
+    });
   }
 };
 

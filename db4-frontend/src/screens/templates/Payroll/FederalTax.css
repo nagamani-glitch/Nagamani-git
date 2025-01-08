@@ -76,7 +76,7 @@
     border: none;
     cursor: pointer;
     font-size: 16px;
-    color: #333;
+    color: #030303;
 }
 
 .edit-button:hover {
@@ -84,7 +84,7 @@
 }
 
 .delete-button:hover {
-    color: #f44336;
+    color: #0a0a0a;
 }
 
 @media (max-width: 768px) {
@@ -193,7 +193,7 @@
 }
 
 .delete-btn {
-    color: #f44336;
+    color: #100f0f;
 }
 
 /* Update the existing table styles */

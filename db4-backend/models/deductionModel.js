@@ -3,16 +3,13 @@ import mongoose from 'mongoose';
 const deductionSchema = new mongoose.Schema({
   code: { type: String, required: true },
   name: { type: String, required: true },
-  amount: { type: Number, default: 0 },
-  employerRate: { type: String },
-  employeeRate: { type: String },
-  oneTimeDeduction: { type: String, default: 'No' },
-  taxable: { type: String, default: 'No' },
+  amount: { type: Number, required: true },
+  taxable: { type: String, enum: ['Yes', 'No'], required: true },
   fixed: { type: Boolean, default: false },
-  pretax: { type: String, default: 'No' },
-  basedOn: { type: String },
-  specificEmployees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }],
-  excludedEmployees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Employee' }]
+  oneTimeDeduction: { type: String, enum: ['Yes', 'No'], default: 'No' },
+  specificEmployees: [{ type: String }],
+  employerRate: { type: String },
+  employeeRate: { type: String }
 }, {
   timestamps: true
 });

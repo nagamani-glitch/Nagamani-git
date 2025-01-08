@@ -1,67 +1,60 @@
-import PayrollContract from '../models/payrollContract.js';
+import Contract from '../models/payrollContractModel.js';;
 
-
-/// Create a contract
-export const createContract = async (req, res) => {
-  try {
-    const contract = new PayrollContract(req.body);
-    await contract.save();
-    res.status(201).json({ success: true, data: contract });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// Fetch the routes
 export const getContracts = async (req, res) => {
   try {
-    const contracts = await PayrollContract.find();
+    const contracts = await Contract.find();
     res.status(200).json({ success: true, data: contracts });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
+export const createContract = async (req, res) => {
+  try {
+    const newContract = new Contract(req.body);
+    const savedContract = await newContract.save();
+    res.status(201).json({ success: true, data: savedContract });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
 
-
-// update the routes
 export const updateContract = async (req, res) => {
-    try {
-      const contract = await PayrollContract.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
-      if (!contract) {
-        return res.status(404).json({ success: false, message: 'Contract not found' });
-      }
-      res.json({ success: true, data: contract });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  };
-  
-  
+  try {
+    const updatedContract = await Contract.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.status(200).json({ success: true, data: updatedContract });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
 
-// delete the routes
 export const deleteContract = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deletedContract = await PayrollContract.findByIdAndDelete(id);
-      
-      if (!deletedContract) {
-        return res.status(404).json({ message: 'Contract not found' });
-      }
-      
-      res.status(200).json({ 
-        success: true, 
-        message: 'Contract deleted successfully' 
-      });
-    } catch (error) {
-      res.status(500).json({ 
-        success: false, 
-        message: error.message 
-      });
-    }
-  };
-  
+  try {
+    await Contract.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Contract deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+export const filterContracts = async (req, res) => {
+  try {
+    const { contractStatus, employeeName, startDate, endDate, wageType } = req.query;
+    const filter = {};
+
+    if (contractStatus) filter.contractStatus = contractStatus;
+    if (employeeName) filter.employee = { $regex: employeeName, $options: 'i' };
+    if (startDate) filter.startDate = { $gte: startDate };
+    if (endDate) filter.endDate = { $lte: endDate };
+    if (wageType) filter.wageType = wageType;
+
+    const contracts = await Contract.find(filter);
+    res.status(200).json({ success: true, data: contracts });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};

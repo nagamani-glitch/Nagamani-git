@@ -12,48 +12,44 @@ import {
   FaTrash,
 } from "react-icons/fa";
 
-const initialAllowancesData = [
-  {
-    _id: 1,
-    code: "TA",
-    name: "Travel Allowance",
-    amount: 200.0,
-    oneTime: "No",
-    taxable: "Yes",
-    fixed: false,
-  },
-  {
-    _id: 2,
-    code: "HA",
-    name: "House Rent Allowance",
-    amount: 1000.0,
-    oneTime: "No",
-    taxable: "Yes",
-    fixed: true,
-  },
-  {
-    _id: 3,
-    code: "DA",
-    name: "Dearness Allowance",
-    amount: 1500.0,
-    oneTime: "No",
-    taxable: "Yes",
-    fixed: true,
-  },
-  // Add more allowance data here
-];
+
+//   {
+//     _id: 1,
+//     code: "TA",
+//     name: "Travel Allowance",
+//     amount: 200.0,
+//     oneTime: "No",
+//     taxable: "Yes",
+//     fixed: false,
+//   },
+//   {
+//     _id: 2,
+//     code: "HA",
+//     name: "House Rent Allowance",
+//     amount: 1000.0,
+//     oneTime: "No",
+//     taxable: "Yes",
+//     fixed: true,
+//   },
+//   {
+//     _id: 3,
+//     code: "DA",
+//     name: "Dearness Allowance",
+//     amount: 1500.0,
+//     oneTime: "No",
+//     taxable: "Yes",
+//     fixed: true,
+//   },
+//   // Add more allowance data here
+// ];
 
 const Allowances = () => {
   const [allowancesData, setAllowancesData] = useState([]);
-  const [filteredData, setFilteredData] = useState(initialAllowancesData);
+  const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("card");
   const [isFilterVisible, setIsFilterVisible] = useState(false);
-  const [filterOptions, setFilterOptions] = useState({
-    taxable: "",
-    condition: "",
-    base: "",
-  });
+
 
 
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500); // Delay of 500ms
@@ -70,6 +66,17 @@ const Allowances = () => {
     taxable: "No",
     fixed: false,
   });
+
+  const [filterOptions, setFilterOptions] = useState({
+    taxable: "",
+    fixed: "",
+    oneTime: "",
+    amount: ""
+  });
+
+  const [filtersApplied, setFiltersApplied] = useState(false);
+
+
 
   useEffect(() => {
     if (debouncedSearchTerm === "") {
@@ -92,13 +99,10 @@ const Allowances = () => {
       } catch (error) {
         console.error("Error fetching allowances:", error);
       }
-    }
-
-    fetchAllowances()   // for showing the data in the frontend 
+    };
+    fetchAllowances();
   }, []);
 
-  const areFiltersApplied =
-    filterOptions.taxable || filterOptions.condition || filterOptions.base;
 
   const handleSearch = (e) => {
     const term = e.target.value;
@@ -164,26 +168,61 @@ const Allowances = () => {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilterOptions((prev) => ({
+    setFilterOptions(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
   };
 
-  const applyFilter = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/allowances", {
-        params: filterOptions,
-      });
-      setFilteredData(response.data);
+  // New function to apply filters locally
+  const applyFilter = () => {
+    let filtered = [...allowancesData];
 
-      if (response.data.length === 0) {
-        alert("No allowances found for the selected filter options.");
-      }
-    } catch (error) {
-      console.error("Error applying filter:", error);
-      alert("Failed to apply filters.");
+    if (filterOptions.taxable) {
+      filtered = filtered.filter(item => item.taxable === filterOptions.taxable);
     }
+
+    if (filterOptions.fixed) {
+      filtered = filtered.filter(item =>
+        filterOptions.fixed === "Yes" ? item.fixed : !item.fixed
+      );
+    }
+
+    if (filterOptions.oneTime) {
+      filtered = filtered.filter(item => item.oneTime === filterOptions.oneTime);
+    }
+
+    if (filterOptions.amount) {
+      filtered = filtered.filter(item => {
+        switch (filterOptions.amount) {
+          case "lessThan1000":
+            return item.amount < 1000;
+          case "1000to5000":
+            return item.amount >= 1000 && item.amount <= 5000;
+          case "moreThan5000":
+            return item.amount > 5000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    setFilteredData(filtered);
+    setIsFilterVisible(false);
+    setFiltersApplied(true);
+  };
+
+
+  const resetFilters = () => {
+    setFilterOptions({
+      taxable: "",
+      fixed: "",
+      oneTime: "",
+      amount: ""
+    });
+    setFilteredData(allowancesData);
+    setFiltersApplied(false);
+    setIsFilterVisible(false);
   };
 
   const getActiveFilters = () => {
@@ -223,20 +262,22 @@ const Allowances = () => {
             onChange={handleSearch}
             className="search-input"
           />
-          <button
-            className={`view-toggle ${view === "list" ? "active" : ""}`}
-            onClick={() => setView("list")}
-          >
+          <button className={`view-toggle ${view === "list" ? "active" : ""}`}
+            onClick={() => setView("list")}>
             <FaList />
           </button>
-          <button
-            className={`view-toggle ${view === "card" ? "active" : ""}`}
-            onClick={() => setView("card")}
-          >
+          <button className={`view-toggle ${view === "card" ? "active" : ""}`}
+            onClick={() => setView("card")}>
+
+
             <FaTh />
           </button>
-          <button className="filter-btn" onClick={toggleFilterVisibility}>
-            <FaFilter /> Filter
+
+          <button
+            className="filter-btn"
+            onClick={() => filtersApplied ? resetFilters() : toggleFilterVisibility()}
+          >
+            <FaFilter /> {filtersApplied ? "Reset" : "Filter"}
           </button>
           <button className="create-btn" onClick={() => setIsCreateModalOpen(true)}>
             <FaPlus /> Create
@@ -247,9 +288,6 @@ const Allowances = () => {
               <div className="modal-content">
                 <button className="close-btn" onClick={() => setIsCreateModalOpen(false)}>×</button>
                 {/* Render the CreateAllowance component here */}
-
-
-
                 <CreateAllowance
                   addAllowance={(newAllowance) => {
                     setAllowancesData(prev => [...prev, newAllowance]);
@@ -257,15 +295,11 @@ const Allowances = () => {
                     setIsCreateModalOpen(false);
                   }}
                 />
-
-
               </div>
             </div>
-          )}
-
-
+          )
+          }
           {/* // Add your edit modal JSX here */}
-
 
           {isEditModalOpen && (
             <div className="modal-overlay">
@@ -348,8 +382,6 @@ const Allowances = () => {
               </div>
             </div>
           )}
-
-
         </div>
       </header>
 
@@ -361,54 +393,57 @@ const Allowances = () => {
           </span>
         ))}
       </div>
-
       {/* Render Filters */}
+
       {isFilterVisible && (
         <div className="filter-popup">
           <div className="filter-form">
             <div className="filter-row">
               <label>Taxable</label>
-              <select
-                name="taxable"
-                onChange={handleFilterChange}
-                value={filterOptions.taxable}
-              >
-                <option value="">Select Taxable</option>
+              <select name="taxable" value={filterOptions.taxable} onChange={handleFilterChange}>
+                <option value="">All</option>
                 <option value="Yes">Yes</option>
                 <option value="No">No</option>
               </select>
             </div>
+
             <div className="filter-row">
-              <label>Condition</label>
-              <select
-                name="condition"
-                onChange={handleFilterChange}
-                value={filterOptions.condition}
-              >
-                <option value="">Select Condition</option>
-                <option value="Fixed">Fixed</option>
-                <option value="Non-Fixed">Non-Fixed</option>
+              <label>Fixed/Variable</label>
+              <select name="fixed" value={filterOptions.fixed} onChange={handleFilterChange}>
+                <option value="">All</option>
+                <option value="Yes">Fixed</option>
+                <option value="No">Variable</option>
               </select>
             </div>
+
             <div className="filter-row">
-              <label>Base</label>
-              <select
-                name="base"
-                onChange={handleFilterChange}
-                value={filterOptions.base}
-              >
-                <option value="">Select Base</option>
-                <option value="Monthly">Monthly</option>
-                <option value="Hourly">Hourly</option>
+              <label>One Time</label>
+              <select name="oneTime" value={filterOptions.oneTime} onChange={handleFilterChange}>
+                <option value="">All</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
               </select>
             </div>
-            <button onClick={applyFilter} disabled={!areFiltersApplied}>
+
+            <div className="filter-row">
+              <label>Amount Range</label>
+              <select name="amount" value={filterOptions.amount} onChange={handleFilterChange}>
+                <option value="">All</option>
+                <option value="lessThan1000">Less than 1000</option>
+                <option value="1000to5000">1000 to 5000</option>
+                <option value="moreThan5000">More than 5000</option>
+              </select>
+            </div>
+
+            <button
+              onClick={applyFilter}
+              disabled={!Object.values(filterOptions).some(value => value !== "")}
+            >
               Apply Filter
             </button>
           </div>
         </div>
       )}
-
       {/* Allowances View */}
       {view === "card" ? (
         <div className="card-view">
@@ -416,7 +451,7 @@ const Allowances = () => {
             filteredData.map((allowance) => (
               <div
                 className="allowance-card"
-                key={allowance.id || allowance._id}
+                key={allowance._id || allowance._id}   //;lk;
               >
                 <div className="card-icon">
                   {allowance.name.split(" ")[0][0]}{" "}
@@ -474,7 +509,7 @@ const Allowances = () => {
               </thead>
               <tbody>
                 {filteredData.map((allowance) => (
-                  <tr key={allowance.id || allowance._id}>
+                  <tr key={allowance._id || allowance._id}>
                     <td className="sticky-column">{allowance.name}</td>
                     <td>-</td>
                     <td>-</td>
@@ -502,11 +537,6 @@ const Allowances = () => {
                   </tr>
                 ))}
               </tbody>
-
-
-
-
-
             </table>
           </div>
         </div>
