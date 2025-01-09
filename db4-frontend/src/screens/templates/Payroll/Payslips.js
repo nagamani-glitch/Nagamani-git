@@ -526,30 +526,21 @@ const handleEdit = (payslip) => {
                 </span>
               </td>
 
-<td>
-            <div className="action-buttons">
-              {editingId === payslip._id ? (
-                <button 
-                  className="table-action-save-button"
-                  onClick={() => handleSave(payslip._id)}
-                >
-                  <FaSave /> 
-                </button>
-              ) : (
-                <button 
-                  className="table-action-edit-button"
-                  onClick={() => handleEdit(payslip)}
-                >
-                  <FaEdit /> 
-                </button>
-              )}
-              <button 
-                className="table-action-del-button"
-                onClick={() => handleDelete(payslip._id)}
-              >
-                <FaTrash />  
-              </button>
-            </div>
+          <td>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+    <FaEdit
+      style={{ cursor: 'pointer', color: '#4CAF50' }}
+      onClick={() => handleEdit(payslip)}
+    />
+    <FaTrash 
+      style={{ cursor: 'pointer', color: '#f44336' }}
+      onClick={() => handleDelete(payslip._id)}
+    />
+    <FaEnvelope
+      style={{ cursor: 'pointer', color: '#2196F3' }}
+      onClick={() => handleUpdateMailStatus(payslip._id)}
+    />
+  </div>
           </td>
 
 

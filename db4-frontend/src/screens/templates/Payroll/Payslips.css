@@ -210,34 +210,36 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
 .action-buttons {
     display: flex;
     gap: 8px;
-    border: 1px solid red;
     justify-content: center;
   }
   
-  .table-action-edit-button,
-  .table-action-save-button,
-  .table-action-del-button {
-    padding: 6px;
+  .action-btn {
+    background: none;
     border: none;
-    border-radius: 4px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s;
   }
   
-  .table-action-edit-button {
-    background-color: #4CAF50;
-    color: white;
+  .edit-btn {
+    color: #4CAF50;
   }
   
-  .table-action-save-button {
-    background-color: #2196F3;
-    color: white;
+  .save-btn {
+    color: #2196F3;
   }
   
-  .table-action-del-button {
-    background-color: #f44336;
-    color: white;
+  .delete-btn {
+    color: #f44336;
+  }
+  
+  .mail-btn {
+    color: #9C27B0;
+  }
+  
+  .action-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
   }
   
