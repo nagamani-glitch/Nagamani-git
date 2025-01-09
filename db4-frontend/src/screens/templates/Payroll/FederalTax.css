@@ -28,16 +28,15 @@
     border-radius: 4px;
 }
 
-.create-button {
+.federal-tax-create-button {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
-    color: #fff;
+    padding: 10px 20px;
     background-color: #ff5722;
-    border: none;
+    color: white;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-weight: 500;
 }
 
 .create-button svg {

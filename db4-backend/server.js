@@ -21,6 +21,8 @@ import faqRoutes from './routes/faqRoutes.js';
 import companyHolidaysRoute from './routes/companyHolidays.js';
 import restrictLeaveRoutes from './routes/restrictLeaveRoutes.js';
 import holidayRoutes from './routes/holidays.js';
+import shiftRequestRoutes from './routes/shiftRequestRoutes.js';
+import workTypeRequestRoutes from './routes/workTypeRequestRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 
 // Sangeeta 
@@ -33,7 +35,6 @@ import offboardingRoutes from './routes/offboardingRoutes.js';
 import resignationRoutes from './routes/resignationRoutes.js';
 import Feedback from './routes/feedbackRoutes.js';
 import payrollContractRoutes from './routes/payrollContractRoutes.js';
- 
  
  
 dotenv.config()
@@ -75,6 +76,10 @@ app.use('/api/companyHolidays', companyHolidaysRoute);
 app.use('/api/restrictLeaves', restrictLeaveRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/faqCategories', faqCategoryRoutes);
+
+app.use('/api/shift-requests', shiftRequestRoutes);
+app.use('/api/work-type-requests', workTypeRequestRoutes);
+
  
  
 

@@ -46,11 +46,11 @@ form{
   margin: 20px 0;
 }
 
-/* .form-grid {
+ .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-} */
+} 
 
 /*
 .joiningFormElement{

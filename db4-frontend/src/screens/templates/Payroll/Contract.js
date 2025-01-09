@@ -279,7 +279,7 @@ const Contract = () => {
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`http://localhost:5000/api/payroll-contracts/${id}`); //update api
+    await axios.delete(`http://localhost:5000/api/payroll-contracts/${id}`); 
     setContracts((prev) => prev.filter((contract) => contract._id !== id));
     setFilteredContracts((prev) =>
       prev.filter((contract) => contract._id !== id)
@@ -581,7 +581,17 @@ const Contract = () => {
   }
 
   const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+    const searchValue = e.target.value.toLowerCase();
+    setSearchTerm(searchValue);
+    
+    const searchResults = contracts.filter((contract) => 
+      contract.employee.toLowerCase().includes(searchValue) ||
+      contract.contract.toLowerCase().includes(searchValue) ||
+      contract.wageType.toLowerCase().includes(searchValue) ||
+      contract.filingStatus.toLowerCase().includes(searchValue)
+    );
+    
+    setFilteredContracts(searchResults);
   };
 
   const handleFilterIconClick = () => {
@@ -687,12 +697,10 @@ const Contract = () => {
             className="search-input"
           />
 
-          <button className="filter-button" onClick={handleFilterIconClick}>
+          <button className="contract-filter-button" onClick={handleFilterIconClick}>
             <FaFilter /> Filter
           </button>
-          <IoIosOptions className="header-icon" title="Group by" />
-          <button className="action-button">Actions</button>
-          <button className="create-button" onClick={handleCreateClick}>
+          <button className="contract-create-button" onClick={handleCreateClick}>
             Create
           </button>
         </div>
@@ -955,21 +963,21 @@ const Contract = () => {
                 <td>
                   {editingId === contract._id ? (
                     <button
-                      className="table-action-save-button"
+                      className="contract-table-action-save-button"
                       onClick={handleSave}
                     >
                       <FaSave size={20} />
                     </button>
                   ) : (
                     <button
-                      className="table-action-edit-button"
+                      className="contract-table-action-edit-button"
                       onClick={() => handleEdit(contract)}
                     >
                       <FaEdit size={20} />
                     </button>
                   )}
                   <button
-                    className="table-action-del-button"
+                    className="contract-table-action-del-button"
                     onClick={() => handleDelete(contract._id)}
                   >
                     <FaTrash size={18} />

@@ -157,24 +157,6 @@ const Deductions = () => {
     }));
   };
 
-  // const applyFilter = () => {
-  //   let filtered = deductionsData;
-
-  //   // Filter based on taxable
-  //   if (filterOptions.taxable) {
-  //     filtered = filtered.filter((deduction) => deduction.taxable === filterOptions.taxable);
-  //   }
-
-  //   // Filter based on condition (Fixed/Non-Fixed)
-
-  //   if (filterOptions.condition) {
-  //     filtered = filtered.filter((deduction) => (filterOptions.condition === "Fixed" ? deduction.fixed : !deduction.fixed));
-  //   }
-
-  //   // Apply the filtered data
-  //   setFilteredData(filtered);
-  // };
-
   const applyFilter = () => {
     let filtered = [...deductions]; // Use the fetched deductions instead of static data
 

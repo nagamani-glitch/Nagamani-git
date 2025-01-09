@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Button, Dropdown, InputGroup, Row, Col } from 'react-bootstrap';
-import { FaSearch, FaFilter, FaThList, FaThLarge, FaEllipsisV } from 'react-icons/fa';
+// import { Card, Form, Button, Dropdown, InputGroup, Row, Col } from 'react-bootstrap';
+// import { FaSearch, FaFilter, FaThList, FaThLarge, FaEllipsisV } from 'react-icons/fa';
+import { Card, Button, TextField, IconButton, MenuItem, Select, InputLabel, FormControl, Pagination, Grid, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Search, FilterList, ViewModule, ViewList, MoreVert } from '@mui/icons-material';
+
 import axios from 'axios'
 import './EmployeeListing.css';
 
@@ -109,14 +112,28 @@ import './EmployeeListing.css';
 
 
 
-const EmployeeListing = ({onEmployeeClick }) => {
+const EmployeeListing = ({ onEmployeeClick }) => {
   const [viewMode, setViewMode] = useState('grid');
   const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('All');
-  const [profiles, setProfiles] = useState([])
-  const [filteredEmployeesList, setFilteredEmployeesList] = useState(profiles);
+  const [profiles, setProfiles] = useState([]);
+  const [filteredEmployeesList, setFilteredEmployeesList] = useState([]);
   const itemsPerPage = 30;
+
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        const response = await axios.get('/api/profiles/all');
+        setProfiles(response.data);
+        setFilteredEmployeesList(response.data);
+      } catch (error) {
+        console.error('Error fetching all profiles', error);
+      }
+    };
+
+    fetchProfiles();
+  }, []);
 
   const handleFilter = (status) => {
     setStatusFilter(status);
@@ -125,9 +142,8 @@ const EmployeeListing = ({onEmployeeClick }) => {
     } else if (status === 'Offline') {
       setFilteredEmployeesList(profiles.filter(employee => employee.status === 'Offline'));
     } else {
-      setFilteredEmployeesList(profiles); // Reset to all employees
+      setFilteredEmployeesList(profiles);
     }
-    console.log(filteredEmployeesList)
   };
 
   const handleSearch = (e) => {
@@ -138,195 +154,104 @@ const EmployeeListing = ({onEmployeeClick }) => {
     setViewMode(mode);
   };
 
-  // Filtered and paginated employees
-  const filteredEmployees = profiles.filter((employee) =>
+  const filteredEmployees = filteredEmployeesList.filter((employee) =>
     employee.name.toLowerCase().includes(searchText.toLowerCase())
   );
+
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const paginatedEmployees = filteredEmployees.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const handlePrevious = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
   };
-
-  const handleNext = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
-  useEffect(()=>{
-    const fetchProfiles=async()=>{
-      try{
-      const response = await axios.get('/api/profiles/all')
-      setProfiles(response.data)
-      console.log(response.data)
-    }catch(error){
-      console.log("Error fetching all profiles", error)
-    }
-    }
-
-    fetchProfiles()
-
-  }, [])
-
 
   return (
-    <div className="employee-listing-container p-3">
-      <Row className="align-items-center mb-3">
-        <Col md={6} className="d-flex align-items-center">
-          <h3 className="employee-header me-3">Employees</h3>
-          <InputGroup className="search-bar">
-            <InputGroup.Text><FaSearch /></InputGroup.Text>
-            <Form.Control type="text" placeholder="Search" value={searchText} onChange={handleSearch} />
-          </InputGroup>
-        </Col>
-
-        <Col md={6} className="d-flex justify-content-end align-items-center">
-          <Button variant="outline-secondary" className="view-toggle me-2" onClick={() => toggleView('list')}>
-            <FaThList />
-          </Button>
-          <Button variant="outline-secondary" className="view-toggle me-2" onClick={() => toggleView('grid')}>
-            <FaThLarge />
-          </Button>
-          <Button variant="outline-secondary" className="view-toggle me-2">
-            <div className="filter-container d-flex align-items-center me-2">
-              <FaFilter className="filter-icon me-1" />
-              <span>Filter(1)</span>
-            </div>
-          </Button>
-
-          <Dropdown className="d-inline me-2">
-            <Dropdown.Toggle variant="outline-secondary" className="group-by-dropdown">Group By</Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item>Job Position</Dropdown.Item>
-              <Dropdown.Item>Department</Dropdown.Item>
-              <Dropdown.Item>Shift</Dropdown.Item>
-              <Dropdown.Item>Work Type</Dropdown.Item>
-              <Dropdown.Item>Job Role</Dropdown.Item>
-              <Dropdown.Item>Reporting Manager</Dropdown.Item>
-              <Dropdown.Item>Company</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-
-          <Dropdown className="d-inline me-2">
-            <Dropdown.Toggle variant="outline-secondary" className="actions-dropdown">Actions</Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item>Import</Dropdown.Item>
-              <Dropdown.Item>Export</Dropdown.Item>
-              <Dropdown.Item>Archive</Dropdown.Item>
-              <Dropdown.Item>Un-archive</Dropdown.Item>
-              <Dropdown.Item>Bulk Email</Dropdown.Item>
-              <Dropdown.Item>Bulk Update</Dropdown.Item>
-              <Dropdown.Item>Delete</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-        </Col>
-      </Row>
-      <Row style={{position:"relative", left:"600px"}}>
-      <div className="filter-buttons">
-            <Button
-              variant={statusFilter === 'Online' ? 'primary' : 'outline-primary'}
-              onClick={() => handleFilter('Online')}
-              className='me-2'
-              style={{border:"none"}}
+    <Box padding={3}>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={6}>
+          <Typography variant="h4">Employees</Typography>
+          <TextField
+            variant="outlined"
+            placeholder="Search"
+            value={searchText}
+            onChange={handleSearch}
+            InputProps={{
+              startAdornment: <Search />
+            }}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={6} display="flex" justifyContent="flex-end">
+          <IconButton onClick={() => toggleView('list')}><ViewList /></IconButton>
+          <IconButton onClick={() => toggleView('grid')}><ViewModule /></IconButton>
+          <Button startIcon={<FilterList />} variant="outlined">Filter</Button>
+          <FormControl variant="outlined" style={{ minWidth: 120, marginLeft: 10 }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={statusFilter}
+              onChange={(e) => handleFilter(e.target.value)}
+              label="Status"
             >
-              Online
-            </Button>
-            <Button
-              variant={statusFilter === 'Offline' ? 'primary' : 'outline-primary'}
-              onClick={() => handleFilter('Offline')}
-              className='me-2'
-              style={{border:"none"}}
-            >
-              Offline
-            </Button>
-          </div>
-      </Row>
+              <MenuItem value="All">All</MenuItem>
+              <MenuItem value="Online">Online</MenuItem>
+              <MenuItem value="Offline">Offline</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+      </Grid>
 
-      <Row>
-        {viewMode === 'grid' ? (
-          paginatedEmployees.map((employee) => (
-            <Col md={6} key={employee._id} onClick={()=>onEmployeeClick(employee._id)} >
-              <Card className="employee-card mb-3">
-                <Card.Body className="d-flex align-items-center">
-                  <div className="avatar rounded-circle me-3">
-                    {employee.name[0]}
-                  </div>
-                  <div>
-                    <Card.Title className="employee-name">{employee.name}</Card.Title>
-                    <Card.Text className="employee-email">{employee.email}</Card.Text>
-                    <small className="employee-position">{employee.phone}</small>
-                  </div>
-                  <Dropdown className="ms-auto">
-                    <Dropdown.Toggle variant="link" className="employee-options p-0">
-                      <FaEllipsisV />
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      <Dropdown.Item>Edit</Dropdown.Item>
-                      <Dropdown.Item>Archive</Dropdown.Item>
-                      <Dropdown.Item>Delete</Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </Card.Body>
+      {viewMode === 'grid' ? (
+        <Grid container spacing={2} marginTop={3}>
+          {paginatedEmployees.map((employee) => (
+            <Grid item xs={12} sm={6} md={4} key={employee._id}>
+              <Card onClick={() => onEmployeeClick(employee._id)}>
+                <Box padding={2} display="flex" alignItems="center">
+                  <Box marginRight={2}>
+                    <Typography variant="h6">{employee.name}</Typography>
+                    <Typography color="textSecondary">{employee.email}</Typography>
+                    <Typography color="textSecondary">{employee.phone}</Typography>
+                  </Box>
+                  <IconButton><MoreVert /></IconButton>
+                </Box>
               </Card>
-            </Col>
-          ))
-        ) : (
-          <TableView employees={paginatedEmployees} onEmployeeClick={onEmployeeClick} />
-        )}
-      </Row>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <TableContainer component={Paper} style={{ marginTop: 20 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Phone</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {paginatedEmployees.map((employee) => (
+                <TableRow key={employee._id} onClick={() => onEmployeeClick(employee._id)}>
+                  <TableCell>{employee.name}</TableCell>
+                  <TableCell>{employee.email}</TableCell>
+                  <TableCell>{employee.phone}</TableCell>
+                  <TableCell>
+                    <IconButton><MoreVert /></IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
-      <div className="pagination d-flex justify-content-center align-items-center mt-3">
-        <Button variant="outline-secondary" onClick={handlePrevious} disabled={currentPage === 1}>
-          Previous
-        </Button>
-        <span className="mx-3">Page {currentPage} of {totalPages}</span>
-        <Button variant="outline-secondary" onClick={handleNext} disabled={currentPage === totalPages}>
-          Next
-        </Button>
-      </div>
-    </div>
+      <Box display="flex" justifyContent="center" marginTop={3}>
+        <Pagination count={totalPages} page={currentPage} onChange={handlePageChange} color="primary" />
+      </Box>
+    </Box>
   );
 };
-
-function TableView({ employees, onEmployeeClick }) {
-  return (
-    <table className="table table-striped employee-table">
-      <thead>
-        <tr>
-          <th><Form.Check /></th>
-          <th>Employee</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {employees.map((employee) => (
-          <tr key={employee.id} onClick={()=>onEmployeeClick(employee._id)}>
-            <td><Form.Check /></td>
-            <td>{employee.name}</td>
-            <td>{employee.email}</td>
-            <td>{employee.phone}</td>
-            <td>
-              <Dropdown>
-                <Dropdown.Toggle variant="link" className="employee-options p-0">
-                  <FaEllipsisV />
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item>Edit</Dropdown.Item>
-                  <Dropdown.Item>Archive</Dropdown.Item>
-                  <Dropdown.Item>Delete</Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
 
 export default EmployeeListing;

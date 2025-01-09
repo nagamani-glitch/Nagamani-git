@@ -194,7 +194,7 @@
 /* Filter Popup */
 .filter-popup {
   position: absolute;
-  top: 100px;
+  top: 30%; /* Adjust based on your header */
   right: 24px;
   background: white;
   padding: 16px;
