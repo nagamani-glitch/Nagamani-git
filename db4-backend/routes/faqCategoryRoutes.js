@@ -1,8 +1,7 @@
 import express from 'express';
 import FaqCategory from '../models/FaqCategory.js';
+
 const router = express.Router();
-
-
 
 // Get all FAQ categories
 router.get('/', async (req, res) => {
@@ -27,6 +26,24 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+router.put('/:id', async (req, res) => {
+    try {
+        const updatedCategory = await FaqCategory.findByIdAndUpdate(
+            req.params.id,
+            {
+                title: req.body.title,
+                description: req.body.description
+            },
+            { new: true }
+        );
+        res.json(updatedCategory);
+    } catch (error) {
+        res.status(400).json({ error: 'Error updating category' });
+    }
+});
+
+
 
 // Delete an FAQ category
 router.delete('/:id', async (req, res) => {

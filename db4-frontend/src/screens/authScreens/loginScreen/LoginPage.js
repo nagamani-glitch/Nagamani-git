@@ -28,20 +28,14 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', formData);
-      alert('User logged in successfully');
-      
-      localStorage.setItem('token', response.data.token);
-      navigate('/Dashboards');
-      
+        const response = await axios.post('http://localhost:5000/api/auth/login', formData);
+        localStorage.setItem('token', response.data.token);
+        navigate('/Dashboards');
     } catch (error) {
-      if (error.response) {
-        setError('Invalid email or password. Please try again.');
-      } else {
-        setError('An error occurred. Please try again later.');
-      }
+        setError('Invalid credentials');
     }
-  };
+};
+
 
   return (
     <motion.div

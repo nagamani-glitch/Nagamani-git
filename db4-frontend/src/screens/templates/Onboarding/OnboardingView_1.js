@@ -1,21 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './OnboardingView.css';
 
 function OnboardingView() {
-  // Sample data for candidates
-  const initialCandidates = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', jobPosition: 'Developer', mobile: '123-456-7890', joiningDate: '2024-01-01', portalStatus: 'Active', taskStatus: 'Pending', stage: 'Test' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', jobPosition: 'Designer', mobile: '987-654-3210', joiningDate: '2024-02-01', portalStatus: 'Active', taskStatus: 'Completed', stage: 'Interview' },
-    { id: 3, name: 'Alice Johnson', email: 'alice@example.com', jobPosition: 'Product Manager', mobile: '555-123-4567', joiningDate: '2024-03-01', portalStatus: 'Inactive', taskStatus: 'Pending', stage: 'Test' },
-    { id: 4, name: 'Bob Brown', email: 'bob@example.com', jobPosition: 'Developer', mobile: '444-555-6666', joiningDate: '2024-04-01', portalStatus: 'Active', taskStatus: 'Pending', stage: 'Offer' },
-    { id: 5, name: 'Carol White', email: 'carol@example.com', jobPosition: 'QA Engineer', mobile: '222-333-4444', joiningDate: '2024-05-01', portalStatus: 'Active', taskStatus: 'Completed', stage: 'Test' },
-  ];
-
-  const [candidates, setCandidates] = useState(initialCandidates);
+  const [candidates, setCandidates] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [stageFilter, setStageFilter] = useState('All');
-  const [currentPage, setCurrentPage] = useState(1);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [newCandidate, setNewCandidate] = useState({
     name: '',
     email: '',
@@ -23,74 +15,99 @@ function OnboardingView() {
     mobile: '',
     joiningDate: '',
     stage: 'Test',
+    portalStatus: 'Active',
+    taskStatus: 'Pending'
   });
-  const [selectedCandidates, setSelectedCandidates] = useState([]);
 
-  const itemsPerPage = 10;
   const uniqueStages = ['All', 'Test', 'Interview', 'Offer'];
 
-  const filteredCandidates = candidates.filter((candidate) => {
-    return (
-      candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (stageFilter === 'All' || candidate.stage === stageFilter)
-    );
-  });
+  useEffect(() => {
+    fetchCandidates();
+  }, [stageFilter]);
 
-  const paginatedCandidates = filteredCandidates.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const fetchCandidates = async () => {
+    try {
+      const url = stageFilter === 'All' 
+        ? 'http://localhost:5000/api/onboarding'
+        : `http://localhost:5000/api/onboarding/filter?stage=${stageFilter}`;
+      const response = await axios.get(url);
+      setCandidates(response.data);
+    } catch (error) {
+      console.error('Error fetching candidates:', error);
+    }
+  };
+
+  const handleCreateCandidate = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('http://localhost:5000/api/onboarding', newCandidate);
+      setCandidates([...candidates, response.data]);
+      setNewCandidate({
+        name: '',
+        email: '',
+        jobPosition: '',
+        mobile: '',
+        joiningDate: '',
+        stage: 'Test',
+        portalStatus: 'Active',
+        taskStatus: 'Pending'
+      });
+      setShowCreateForm(false);
+    } catch (error) {
+      console.error('Error creating candidate:', error);
+    }
+  };
+  
+  const handleDeleteCandidate = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/onboarding/${id}`);
+      setCandidates(candidates.filter(candidate => candidate._id !== id));
+    } catch (error) {
+      console.error('Error deleting candidate:', error);
+    }
+  };
+
+  const sendMailToCandidate = async (candidate) => {
+    try {
+      await axios.post('http://localhost:5000/api/onboarding/send-email', {
+        email: candidate.email,
+        name: candidate.name,
+        jobPosition: candidate.jobPosition,
+        joiningDate: candidate.joiningDate
+      });
+      alert('Onboarding email sent successfully!');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Failed to send email. Please try again.');
+    }
+  };
+
+  const filteredCandidates = candidates.filter((candidate) => 
+    candidate.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(1);
   };
 
   const handleStageFilterChange = (event) => {
     setStageFilter(event.target.value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
   };
 
   const toggleSelectCandidate = (id) => {
-    setSelectedCandidates((prevSelected) =>
+    setSelectedCandidates(prevSelected =>
       prevSelected.includes(id)
-        ? prevSelected.filter((candidateId) => candidateId !== id)
+        ? prevSelected.filter(candidateId => candidateId !== id)
         : [...prevSelected, id]
     );
   };
 
   const handleSelectAll = () => {
-    if (selectedCandidates.length === paginatedCandidates.length) {
-      setSelectedCandidates([]);
-    } else {
-      setSelectedCandidates(paginatedCandidates.map((candidate) => candidate.id));
-    }
-  };
-
-  const handleCreateCandidate = (e) => {
-    e.preventDefault();
-    const newId = candidates.length + 1;
-    const candidateWithId = { id: newId, ...newCandidate };
-    setCandidates([...candidates, candidateWithId]);
-    setNewCandidate({
-      name: '',
-      email: '',
-      jobPosition: '',
-      mobile: '',
-      joiningDate: '',
-      stage: 'Test',
-    });
-    setShowCreateForm(false);
-  };
-
-  const sendMailToCandidate = (email) => {
-    alert(`Email sent to ${email}`);
+    setSelectedCandidates(
+      selectedCandidates.length === filteredCandidates.length
+        ? []
+        : filteredCandidates.map(candidate => candidate._id)
+    );
   };
 
   return (
@@ -106,15 +123,20 @@ function OnboardingView() {
             className="search-input"
           />
 
-          <select value={stageFilter} onChange={handleStageFilterChange} className="filter-select">
+          <select 
+            value={stageFilter} 
+            onChange={handleStageFilterChange} 
+            className="filter-select"
+          >
             {uniqueStages.map((stage) => (
-              <option key={stage} value={stage}>
-                {stage}
-              </option>
+              <option key={stage} value={stage}>{stage}</option>
             ))}
           </select>
 
-          <button className="create-button" onClick={() => setShowCreateForm(!showCreateForm)}>
+          <button 
+            className="create-button" 
+            onClick={() => setShowCreateForm(!showCreateForm)}
+          >
             + Create
           </button>
         </div>
@@ -170,14 +192,10 @@ function OnboardingView() {
                   className="modal-input"
                 >
                   {uniqueStages.slice(1).map((stage) => (
-                    <option key={stage} value={stage}>
-                      {stage}
-                    </option>
+                    <option key={stage} value={stage}>{stage}</option>
                   ))}
                 </select>
-                <button type="submit" className="modal-btn">
-                  Add Candidate
-                </button>
+                <button type="submit" className="modal-btn">Add Candidate</button>
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
@@ -197,10 +215,7 @@ function OnboardingView() {
                 <input
                   type="checkbox"
                   onChange={handleSelectAll}
-                  checked={
-                    selectedCandidates.length === paginatedCandidates.length &&
-                    paginatedCandidates.length > 0
-                  }
+                  checked={selectedCandidates.length === filteredCandidates.length && filteredCandidates.length > 0}
                 />
               </th>
               <th>Candidate</th>
@@ -213,50 +228,39 @@ function OnboardingView() {
             </tr>
           </thead>
           <tbody>
-            {paginatedCandidates.map((candidate) => (
-              <tr key={candidate.id}>
+            {filteredCandidates.map((candidate) => (
+              <tr key={candidate._id}>
                 <td>
                   <input
                     type="checkbox"
-                    checked={selectedCandidates.includes(candidate.id)}
-                    onChange={() => toggleSelectCandidate(candidate.id)}
+                    checked={selectedCandidates.includes(candidate._id)}
+                    onChange={() => toggleSelectCandidate(candidate._id)}
                   />
                 </td>
                 <td>{candidate.name}</td>
                 <td>{candidate.email}</td>
                 <td>{candidate.jobPosition}</td>
                 <td>{candidate.mobile}</td>
-                <td>{candidate.joiningDate}</td>
+                <td>{new Date(candidate.joiningDate).toLocaleDateString()}</td>
                 <td>{candidate.stage}</td>
                 <td>
-                  <button onClick={() => sendMailToCandidate(candidate.email)} className="send-mail-btn">
+                  <button 
+                    onClick={() => sendMailToCandidate(candidate)} 
+                    className="send-mail-btn"
+                  >
                     Send Mail
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteCandidate(candidate._id)}
+                    className="delete-btn"
+                  >
+                    Delete
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-
-        <div className="pagination">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => handlePageChange(currentPage - 1)}
-            className="pagination-btn"
-          >
-            Previous
-          </button>
-          <span className="pagination-text">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => handlePageChange(currentPage + 1)}
-            className="pagination-btn"
-          >
-            Next
-          </button>
-        </div>
       </div>
     </div>
   );

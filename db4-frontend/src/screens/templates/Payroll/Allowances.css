@@ -225,7 +225,7 @@ table th, table td {
 /* Updated scrollable column style */
 .scrollable-column {
   min-width: 120px; /* Minimum width for scrollable columns */
-  border: 1px solid red;
+  border: 1px solid green;
   
 }
 
@@ -360,8 +360,8 @@ td.sticky-column {
 }
 
 
-.card-actions button {
-  position: relative;
+.card-actions {
+  position: relative; 
   z-index: 10;
   padding: 10px;
   padding-right: 20px;
@@ -369,7 +369,77 @@ td.sticky-column {
   font-size: 17px;
 }
 
+.allowance-card-edit-button{
+  color: #4CAF50;
+  background-color: transparent;
+  border: none;
+}
+
+.allowance-card-delete-button{
+  color: #e51212;
+  background-color: transparent;
+  border: none;
+}
+
+.all-list-edit-btn{
+  color: #4CAF50;
+  background-color: transparent;
+  border: none;
+}
+
+.all-list-delete-btn{
+  color: #e51212;
+  background-color: transparent;
+  border: none;
+}
+
 button {
   pointer-events: auto;
   cursor: pointer;
 }
+
+
+/*  create button popup */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.close-btn {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+
+ 

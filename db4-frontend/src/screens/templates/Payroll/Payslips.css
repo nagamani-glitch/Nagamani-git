@@ -144,7 +144,7 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     gap: 5px;
     padding: 5px 10px;
     background-color: #007bff;
-    color: white;
+    /* color: white; */
     border: none;
     border-radius: 3px;
     font-size: 0.9em;
@@ -153,7 +153,7 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
 
 .unselect-all { background-color: #6c757d; } /* Gray */
 .export-btn { background-color: #28a745; } /* Green */
-.delete-btn { background-color: #dc3545; } /* Red */
+.delete-btn { background-color: transparent; } 
 
 .unselect-all:hover,
 .export-btn:hover,
@@ -203,3 +203,41 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     cursor: pointer;
     width: 100%;
 }
+
+
+/* action column buttons */
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    border: 1px solid red;
+    justify-content: center;
+  }
+  
+  .table-action-edit-button,
+  .table-action-save-button,
+  .table-action-del-button {
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .table-action-edit-button {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .table-action-save-button {
+    background-color: #2196F3;
+    color: white;
+  }
+  
+  .table-action-del-button {
+    background-color: #f44336;
+    color: white;
+  }
+  

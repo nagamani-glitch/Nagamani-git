@@ -36,21 +36,22 @@ export const updateSkillZoneCandidate = async (req, res) => {
       return res.status(404).json({ message: 'SkillZone not found' });
     }
 
-    const candidateIndex = skillZone.candidates.findIndex(
-      (candidate) => candidate._id.toString() === candidateId
-    );
-    if (candidateIndex === -1) {
+    const candidate = skillZone.candidates.id(candidateId);
+    if (!candidate) {
       return res.status(404).json({ message: 'Candidate not found' });
     }
 
-    skillZone.candidates[candidateIndex] = { ...skillZone.candidates[candidateIndex], name, reason };
+    candidate.name = name;
+    candidate.reason = reason;
+
     await skillZone.save();
     res.json(skillZone);
   } catch (error) {
     console.error('Error updating SkillZone candidate:', error);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };
+
 
 // Delete candidate from a SkillZone
 export const deleteSkillZoneCandidate = async (req, res) => {

@@ -76,30 +76,47 @@ const SkillZone = () => {
   const handleEditCandidate = (skillId, candidateId) => {
     const skill = skills.find((s) => s._id === skillId);
     const candidate = skill.candidates.find((c) => c._id === candidateId);
-
-    setNewSkillName(skill.name);
-    setNewCandidateName(candidate.name);
-    setNewReason(candidate.reason);
+    
     setCurrentSkillId(skillId);
     setCurrentCandidateId(candidateId);
+    setNewCandidateName(candidate.name);
+    setNewReason(candidate.reason);
+    setNewSkillName(skill.name);
     setEditing(true);
     setOpen(true);
   };
+  
 
   const handleSaveEdit = () => {
+    const updatedData = {
+      name: newCandidateName,
+      reason: newReason
+    };
+  
     axios
-      .put(`http://localhost:5000/api/skill-zone/${currentSkillId}/candidates/${currentCandidateId}`, {
-        name: newCandidateName,
-        reason: newReason,
-      })
+      .put(
+        `http://localhost:5000/api/skill-zone/${currentSkillId}/candidates/${currentCandidateId}`,
+        updatedData,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      )
       .then((response) => {
-        setSkills((prevSkills) =>
-          prevSkills.map((skill) => (skill._id === currentSkillId ? response.data : skill))
+        setSkills(prevSkills => 
+          prevSkills.map(skill => 
+            skill._id === currentSkillId ? response.data : skill
+          )
         );
         handleClose();
       })
-      .catch((error) => console.error('Error updating candidate:', error));
+      .catch((error) => {
+        console.error('Error updating candidate:', error.response?.data || error.message);
+      });
   };
+  
+  
 
   const handleDeleteCandidate = (skillId, candidateId) => {
     axios
@@ -219,44 +236,43 @@ const SkillZone = () => {
       </Paper>
 
       {/* Dialog for adding/editing Skill */}
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editing ? 'Edit Candidate' : 'Add New Skill'}</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Skill Name"
-            variant="outlined"
-            fullWidth
-            value={newSkillName}
-            onChange={(e) => setNewSkillName(e.target.value)}
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            label="Candidate Name"
-            variant="outlined"
-            fullWidth
-            value={newCandidateName}
-            onChange={(e) => setNewCandidateName(e.target.value)}
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            label="Reason"
-            variant="outlined"
-            fullWidth
-            value={newReason}
-            onChange={(e) => setNewReason(e.target.value)}
-            sx={{ marginBottom: 2 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={editing ? handleSaveEdit : handleAddSkill} color="primary">
-            {editing ? 'Save Changes' : 'Add Skill'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+    <Dialog open={open} onClose={handleClose}>
+      <DialogTitle>{editing ? 'Edit Candidate' : 'Add New Skill'}</DialogTitle>
+      <DialogContent>
+      <TextField
+      label="Skill Name"
+      variant="outlined"
+      fullWidth
+      value={newSkillName}
+      onChange={(e) => setNewSkillName(e.target.value)}
+      disabled={editing}
+      sx={{ marginBottom: 2, mt: 2 }}
+    />
+    <TextField
+      label="Candidate Name"
+      variant="outlined"
+      fullWidth
+      value={newCandidateName}
+      onChange={(e) => setNewCandidateName(e.target.value)}
+      sx={{ marginBottom: 2 }}
+    />
+    <TextField
+      label="Reason"
+      variant="outlined"
+      fullWidth
+      value={newReason}
+      onChange={(e) => setNewReason(e.target.value)}
+      sx={{ marginBottom: 2 }}
+    />
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleClose}>Cancel</Button>
+    <Button onClick={editing ? handleSaveEdit : handleAddSkill} color="primary">
+      {editing ? 'Save Changes' : 'Add Skill'}
+    </Button>
+  </DialogActions>
+</Dialog>
+</Box>
   );
 };
 
