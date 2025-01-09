@@ -281,9 +281,9 @@ import Footer from '../components/Footer';
 import { TextField, RadioGroup, FormControlLabel, Radio, Paper, FormControl, Button, Typography, Grid, InputLabel, FormHelperText } from '@mui/material';
 import { motion } from 'framer-motion';
 
-const PersonalInformationForm = ({ nextStep, handleFormDataChange }) => {
+const PersonalInformationForm = ({ nextStep, handleFormDataChange, savedPersonalInfo, savedAddressinfo }) => {
   // State for Personal Info
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(savedPersonalInfo || {
     firstName: '',
     lastName: '',
     dob: '',
@@ -298,7 +298,7 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange }) => {
   });
 
   // State for Address Info
-  const [addressData, setAddressData] = useState({
+  const [addressData, setAddressData] = useState(savedAddressinfo ||{
     presentAddress: '',
     block: '',
     panchayat: '',

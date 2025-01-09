@@ -3,8 +3,8 @@ import { TextField, Button, MenuItem, Table, TableBody, TableCell, TableContaine
 import { motion } from 'framer-motion';
 import Footer from '../components/Footer';
 
-const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange }) => {
-  const [familyMembers, setFamilyMembers] = useState([
+const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFamilyDetails }) => {
+  const [familyMembers, setFamilyMembers] = useState(savedFamilyDetails || [
     { name: '', relation: '', dob: '', dependent: 'No', employed: 'unemployed', sameDept: 'No', empCode: '', department: '', eSalaryCode: '' },
   ]);
   const [errors, setErrors] = useState([]);

@@ -64,6 +64,7 @@ function Sidebar({ setActiveScreen }) {
           <ul className="sub-menu">
             <li onClick={() => handleSubClick('onboardingView')}>Onboarding View </li>
             <li onClick={() => handleSubClick('candidatesView')}>Candidates View</li>
+            <li onClick={() => handleSubClick('onboardingForm')}>Onboarding Form </li>
           </ul>
         )}
 

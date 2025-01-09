@@ -533,21 +533,21 @@ const handleEdit = (payslip) => {
                   className="table-action-save-button"
                   onClick={() => handleSave(payslip._id)}
                 >
-                  <FaSave />
+                  <FaSave /> 
                 </button>
               ) : (
                 <button 
                   className="table-action-edit-button"
                   onClick={() => handleEdit(payslip)}
                 >
-                  <FaEdit />
+                  <FaEdit /> 
                 </button>
               )}
               <button 
                 className="table-action-del-button"
                 onClick={() => handleDelete(payslip._id)}
               >
-                <FaTrash />
+                <FaTrash />  
               </button>
             </div>
           </td>

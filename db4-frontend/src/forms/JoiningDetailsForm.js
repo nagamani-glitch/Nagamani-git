@@ -3,10 +3,10 @@ import { TextField, Button, Box, Typography, Divider, Grid } from '@mui/material
 import { motion } from 'framer-motion';
 import Footer from "../components/Footer";
 
-const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange }) => {
+const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoiningDetails }) => {
   // State to track errors for each field
   const [errors, setErrors] = useState({});
-  const [joiningDetails, setJoiningDetails] = useState({
+  const [joiningDetails, setJoiningDetails] = useState(savedJoiningDetails ||{
     dateOfAppointment:"",
     officeName:"",
     dateOfJoining:"",

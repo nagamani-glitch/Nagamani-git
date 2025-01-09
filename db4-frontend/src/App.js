@@ -47,8 +47,8 @@ function App() {
             <Route path='/login' element={<LoginPage />} />
             <Route path='/register' element={<RegisterPage />} />
             <Route path='/verifyOtp' element={<VerifyOtpPage />} />
-            <Route path='/home' element={<HomeScreen />} />
             <Route element={<PrivateRoute />}>
+              <Route path='/home' element={<HomeScreen />} />
               <Route path='/My Team' element={<EmployeesScreen />} />
               <Route path='/My Workspace' element={<MyWorkspace />} />
               <Route path='/Dashboards' element={<Dashboard />} />
