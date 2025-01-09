@@ -39,6 +39,7 @@
 
 .search-field {
     flex: 1;
+    border: 1px solid #ec0505;
     min-width: 280px;
 }
 

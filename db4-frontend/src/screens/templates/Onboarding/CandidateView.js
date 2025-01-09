@@ -208,7 +208,7 @@ const CandidatesView = () => {
 
             <Box className="filters-section">
                 <TextField
-                    placeholder="Search candidates..."
+                    placeholder=""
                     variant="outlined"
                     size="small"
                     value={searchTerm}

@@ -89,11 +89,12 @@
   select {
     width: 100%;
     padding: 8px;
-    border: 1px solid #ddd;
+    border: none;
     border-radius: 4px;
     font-size: 1rem;
     font-size: 14px;
     color: rgb(199, 108, 137);
+    text-align: center;
 
   }
   
