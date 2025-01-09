@@ -12,37 +12,6 @@ import {
   FaTrash,
 } from "react-icons/fa";
 
-
-//   {
-//     _id: 1,
-//     code: "TA",
-//     name: "Travel Allowance",
-//     amount: 200.0,
-//     oneTime: "No",
-//     taxable: "Yes",
-//     fixed: false,
-//   },
-//   {
-//     _id: 2,
-//     code: "HA",
-//     name: "House Rent Allowance",
-//     amount: 1000.0,
-//     oneTime: "No",
-//     taxable: "Yes",
-//     fixed: true,
-//   },
-//   {
-//     _id: 3,
-//     code: "DA",
-//     name: "Dearness Allowance",
-//     amount: 1500.0,
-//     oneTime: "No",
-//     taxable: "Yes",
-//     fixed: true,
-//   },
-//   // Add more allowance data here
-// ];
-
 const Allowances = () => {
   const [allowancesData, setAllowancesData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
