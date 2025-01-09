@@ -526,31 +526,31 @@ const handleEdit = (payslip) => {
                 </span>
               </td>
 
-
-{/* // Then replace your existing action column JSX with: */}
-<td className="action-buttons">
-  {editingId === payslip._id ? (
-    <button 
-      className="table-action-save-button"
-      onClick={() => handleSave(payslip._id)}
-    >
-      <FaSave size={20} />
-    </button>
-  ) : (
-    <button 
-      className="table-action-edit-button"
-      onClick={() => handleEdit(payslip)}
-    >
-      <FaEdit size={20} />
-    </button>
-  )}
-  <button 
-    className="table-action-del-button"
-    onClick={() => handleDelete(payslip._id)}
-  >
-    <FaTrash size={18} />
-  </button>
-</td>
+<td>
+            <div className="action-buttons">
+              {editingId === payslip._id ? (
+                <button 
+                  className="table-action-save-button"
+                  onClick={() => handleSave(payslip._id)}
+                >
+                  <FaSave />
+                </button>
+              ) : (
+                <button 
+                  className="table-action-edit-button"
+                  onClick={() => handleEdit(payslip)}
+                >
+                  <FaEdit />
+                </button>
+              )}
+              <button 
+                className="table-action-del-button"
+                onClick={() => handleDelete(payslip._id)}
+              >
+                <FaTrash />
+              </button>
+            </div>
+          </td>
 
 
             </tr>

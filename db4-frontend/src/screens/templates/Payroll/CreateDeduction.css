@@ -319,8 +319,8 @@
     flex: 0.5;
   }
   
-  .save-btn {
-    padding: 12px 20px;
+  .create-deduction-save-btn {
+    padding: 12px 24px;
     background-color: #1bc429;
     color: #ffffff;
     border: none;
@@ -328,7 +328,8 @@
     font-size: 1.2rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
   }
   
   .save-btn:hover {

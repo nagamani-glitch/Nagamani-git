@@ -82,7 +82,6 @@ app.use('/api/faqCategories', faqCategoryRoutes);
 
 app.use('/api/deductions', deductionRoutes);
 app.use('/api/allowances', allowanceRoutes);
-// app.use('/api/contracts', payrollContractRoutes);
 app.use('/api/payroll-contracts', payrollContractRoutes);
 app.use('/api/payslips', payslipRoutes);
 app.use('/api/federal-tax', federalTaxRoutes);

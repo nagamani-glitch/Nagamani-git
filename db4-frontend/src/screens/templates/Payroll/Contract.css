@@ -46,7 +46,7 @@
 
   }
 
-  .filter-btn{
+  .contract-filter-button{
     background-color: #007bff;
     color: white;
     padding: 8px 12px;
@@ -57,22 +57,37 @@
     align-items: center;
     gap: 5px;
   }
+
+  .contract-filter-button:hover{
+    background-color: #0056b3;
+  }
   
   .action-button,
-  .create-button {
+  .contract-create-button {
     padding: 5px 15px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    
   }
   
   .action-button {
     background-color: #f0f0f0;
   }
   
-  .create-button {
-    background-color: #007bff;
+  .contract-create-button {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #ff5722;
     color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+
+  .contract-create-button:hover {
+    background-color: orange;
   }
   
   .contract-table {
@@ -100,7 +115,7 @@
   box-sizing: border-box;
 }
 
-.table-action-edit-button {
+.contract-table-action-edit-button {
   padding: 4px 10px;
   margin-right: 5px;
   background-color: transparent;
@@ -110,7 +125,7 @@
   cursor: pointer;
 }
 
-.table-action-del-button {
+.contract-table-action-del-button {
   padding: 4px 10px;
   margin-right: 5px;
   background-color: transparent;
@@ -119,7 +134,7 @@
   border-radius: 4px;
   cursor: pointer;
 }
-.table-action-save-button {
+.contract-table-action-save-button {
   padding: 4px 10px;
   margin-right: 5px;
   background-color: transparent;

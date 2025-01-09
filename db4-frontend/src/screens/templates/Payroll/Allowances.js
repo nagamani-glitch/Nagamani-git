@@ -12,7 +12,6 @@ import {
   FaTrash,
 } from "react-icons/fa";
 
-
 //   {
 //     _id: 1,
 //     code: "TA",
@@ -50,8 +49,6 @@ const Allowances = () => {
   const [view, setView] = useState("card");
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-
-
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500); // Delay of 500ms
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -71,12 +68,10 @@ const Allowances = () => {
     taxable: "",
     fixed: "",
     oneTime: "",
-    amount: ""
+    amount: "",
   });
 
   const [filtersApplied, setFiltersApplied] = useState(false);
-
-
 
   useEffect(() => {
     if (debouncedSearchTerm === "") {
@@ -93,7 +88,9 @@ const Allowances = () => {
   useEffect(() => {
     const fetchAllowances = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/allowances");
+        const response = await axios.get(
+          "http://localhost:5000/api/allowances"
+        );
         setAllowancesData(response.data);
         setFilteredData(response.data);
       } catch (error) {
@@ -102,7 +99,6 @@ const Allowances = () => {
     };
     fetchAllowances();
   }, []);
-
 
   const handleSearch = (e) => {
     const term = e.target.value;
@@ -117,9 +113,10 @@ const Allowances = () => {
     }
   };
 
-
   const handleEdit = async (id) => {
-    const allowanceToEdit = allowancesData.find(allowance => allowance._id === id);
+    const allowanceToEdit = allowancesData.find(
+      (allowance) => allowance._id === id
+    );
     if (!allowanceToEdit) return;
 
     setEditFormData(allowanceToEdit);
@@ -134,11 +131,15 @@ const Allowances = () => {
         `http://localhost:5000/api/allowances/${editFormData._id}`,
         editFormData
       );
-      setAllowancesData(prev =>
-        prev.map(allowance => allowance._id === editFormData._id ? response.data : allowance)
+      setAllowancesData((prev) =>
+        prev.map((allowance) =>
+          allowance._id === editFormData._id ? response.data : allowance
+        )
       );
-      setFilteredData(prev =>
-        prev.map(allowance => allowance._id === editFormData._id ? response.data : allowance)
+      setFilteredData((prev) =>
+        prev.map((allowance) =>
+          allowance._id === editFormData._id ? response.data : allowance
+        )
       );
       setIsEditModalOpen(false);
     } catch (error) {
@@ -146,15 +147,19 @@ const Allowances = () => {
     }
   };
 
-
   const handleDelete = async (id) => {
-    if (!id || !window.confirm("Are you sure you want to delete this allowance?")) {
+    if (
+      !id ||
+      !window.confirm("Are you sure you want to delete this allowance?")
+    ) {
       return;
     }
 
     try {
       await axios.delete(`http://localhost:5000/api/allowances/${id}`);
-      const updatedData = allowancesData.filter(allowance => allowance._id !== id);
+      const updatedData = allowancesData.filter(
+        (allowance) => allowance._id !== id
+      );
       setAllowancesData(updatedData);
       setFilteredData(updatedData);
     } catch (error) {
@@ -168,9 +173,9 @@ const Allowances = () => {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilterOptions(prev => ({
+    setFilterOptions((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -179,21 +184,25 @@ const Allowances = () => {
     let filtered = [...allowancesData];
 
     if (filterOptions.taxable) {
-      filtered = filtered.filter(item => item.taxable === filterOptions.taxable);
+      filtered = filtered.filter(
+        (item) => item.taxable === filterOptions.taxable
+      );
     }
 
     if (filterOptions.fixed) {
-      filtered = filtered.filter(item =>
+      filtered = filtered.filter((item) =>
         filterOptions.fixed === "Yes" ? item.fixed : !item.fixed
       );
     }
 
     if (filterOptions.oneTime) {
-      filtered = filtered.filter(item => item.oneTime === filterOptions.oneTime);
+      filtered = filtered.filter(
+        (item) => item.oneTime === filterOptions.oneTime
+      );
     }
 
     if (filterOptions.amount) {
-      filtered = filtered.filter(item => {
+      filtered = filtered.filter((item) => {
         switch (filterOptions.amount) {
           case "lessThan1000":
             return item.amount < 1000;
@@ -212,13 +221,12 @@ const Allowances = () => {
     setFiltersApplied(true);
   };
 
-
   const resetFilters = () => {
     setFilterOptions({
       taxable: "",
       fixed: "",
       oneTime: "",
-      amount: ""
+      amount: "",
     });
     setFilteredData(allowancesData);
     setFiltersApplied(false);
@@ -262,49 +270,65 @@ const Allowances = () => {
             onChange={handleSearch}
             className="search-input"
           />
-          <button className={`view-toggle ${view === "list" ? "active" : ""}`}
-            onClick={() => setView("list")}>
+          <button
+            className={`view-toggle ${view === "list" ? "active" : ""}`}
+            onClick={() => setView("list")}
+          >
             <FaList />
           </button>
-          <button className={`view-toggle ${view === "card" ? "active" : ""}`}
-            onClick={() => setView("card")}>
-
-
+          <button
+            className={`view-toggle ${view === "card" ? "active" : ""}`}
+            onClick={() => setView("card")}
+          >
             <FaTh />
           </button>
 
           <button
-            className="filter-btn"
-            onClick={() => filtersApplied ? resetFilters() : toggleFilterVisibility()}
+            className="allowance-filter-btn"
+            onClick={() =>
+              filtersApplied ? resetFilters() : toggleFilterVisibility()
+            }
           >
             <FaFilter /> {filtersApplied ? "Reset" : "Filter"}
           </button>
-          <button className="create-btn" onClick={() => setIsCreateModalOpen(true)}>
-            <FaPlus /> Create
+          <button
+            className="allowance-create-btn"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            <FaPlus size={10}/> Create
           </button>
 
           {isCreateModalOpen && (
             <div className="modal-overlay">
               <div className="modal-content">
-                <button className="close-btn" onClick={() => setIsCreateModalOpen(false)}>×</button>
+                <button
+                  className="close-btn"
+                  onClick={() => setIsCreateModalOpen(false)}
+                >
+                  ×
+                </button>
                 {/* Render the CreateAllowance component here */}
                 <CreateAllowance
                   addAllowance={(newAllowance) => {
-                    setAllowancesData(prev => [...prev, newAllowance]);
-                    setFilteredData(prev => [...prev, newAllowance]);
+                    setAllowancesData((prev) => [...prev, newAllowance]);
+                    setFilteredData((prev) => [...prev, newAllowance]);
                     setIsCreateModalOpen(false);
                   }}
                 />
               </div>
             </div>
-          )
-          }
+          )}
           {/* // Add your edit modal JSX here */}
 
           {isEditModalOpen && (
             <div className="modal-overlay">
               <div className="modal-content">
-                <button className="close-btn" onClick={() => setIsEditModalOpen(false)}>×</button>
+                <button
+                  className="close-btn"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  ×
+                </button>
                 <h3>Edit Allowance</h3>
                 <form onSubmit={handleEditSubmit}>
                   <div className="group">
@@ -314,7 +338,12 @@ const Allowances = () => {
                         type="text"
                         name="code"
                         value={editFormData.code}
-                        onChange={(e) => setEditFormData({ ...editFormData, code: e.target.value })}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            code: e.target.value,
+                          })
+                        }
                       />
                     </label>
                     <label>
@@ -323,7 +352,12 @@ const Allowances = () => {
                         type="text"
                         name="name"
                         value={editFormData.name}
-                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            name: e.target.value,
+                          })
+                        }
                       />
                     </label>
                   </div>
@@ -335,7 +369,12 @@ const Allowances = () => {
                         type="number"
                         name="amount"
                         value={editFormData.amount}
-                        onChange={(e) => setEditFormData({ ...editFormData, amount: Number(e.target.value) })}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            amount: Number(e.target.value),
+                          })
+                        }
                       />
                     </label>
                     <label>
@@ -343,7 +382,12 @@ const Allowances = () => {
                       <select
                         name="oneTime"
                         value={editFormData.oneTime}
-                        onChange={(e) => setEditFormData({ ...editFormData, oneTime: e.target.value })}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            oneTime: e.target.value,
+                          })
+                        }
                       >
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
@@ -357,7 +401,12 @@ const Allowances = () => {
                       <select
                         name="taxable"
                         value={editFormData.taxable}
-                        onChange={(e) => setEditFormData({ ...editFormData, taxable: e.target.value })}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            taxable: e.target.value,
+                          })
+                        }
                       >
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
@@ -369,14 +418,24 @@ const Allowances = () => {
                         type="checkbox"
                         name="fixed"
                         checked={editFormData.fixed}
-                        onChange={(e) => setEditFormData({ ...editFormData, fixed: e.target.checked })}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            fixed: e.target.checked,
+                          })
+                        }
                       />
                     </label>
                   </div>
 
                   <div style={{ display: "flex", gap: "10px" }}>
                     <button type="submit">Save Changes</button>
-                    <button type="button" onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditModalOpen(false)}
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </form>
               </div>
@@ -398,9 +457,14 @@ const Allowances = () => {
       {isFilterVisible && (
         <div className="filter-popup">
           <div className="filter-form">
+            <h2>Filter Allowances</h2>
             <div className="filter-row">
               <label>Taxable</label>
-              <select name="taxable" value={filterOptions.taxable} onChange={handleFilterChange}>
+              <select
+                name="taxable"
+                value={filterOptions.taxable}
+                onChange={handleFilterChange}
+              >
                 <option value="">All</option>
                 <option value="Yes">Yes</option>
                 <option value="No">No</option>
@@ -409,7 +473,11 @@ const Allowances = () => {
 
             <div className="filter-row">
               <label>Fixed/Variable</label>
-              <select name="fixed" value={filterOptions.fixed} onChange={handleFilterChange}>
+              <select
+                name="fixed"
+                value={filterOptions.fixed}
+                onChange={handleFilterChange}
+              >
                 <option value="">All</option>
                 <option value="Yes">Fixed</option>
                 <option value="No">Variable</option>
@@ -418,7 +486,11 @@ const Allowances = () => {
 
             <div className="filter-row">
               <label>One Time</label>
-              <select name="oneTime" value={filterOptions.oneTime} onChange={handleFilterChange}>
+              <select
+                name="oneTime"
+                value={filterOptions.oneTime}
+                onChange={handleFilterChange}
+              >
                 <option value="">All</option>
                 <option value="Yes">Yes</option>
                 <option value="No">No</option>
@@ -427,7 +499,11 @@ const Allowances = () => {
 
             <div className="filter-row">
               <label>Amount Range</label>
-              <select name="amount" value={filterOptions.amount} onChange={handleFilterChange}>
+              <select
+                name="amount"
+                value={filterOptions.amount}
+                onChange={handleFilterChange}
+              >
                 <option value="">All</option>
                 <option value="lessThan1000">Less than 1000</option>
                 <option value="1000to5000">1000 to 5000</option>
@@ -437,7 +513,9 @@ const Allowances = () => {
 
             <button
               onClick={applyFilter}
-              disabled={!Object.values(filterOptions).some(value => value !== "")}
+              disabled={
+                !Object.values(filterOptions).some((value) => value !== "")
+              }
             >
               Apply Filter
             </button>
@@ -451,7 +529,7 @@ const Allowances = () => {
             filteredData.map((allowance) => (
               <div
                 className="allowance-card"
-                key={allowance._id || allowance._id}   //;lk;
+                key={allowance._id || allowance._id} //;lk;
               >
                 <div className="card-icon">
                   {allowance.name.split(" ")[0][0]}{" "}
@@ -464,24 +542,24 @@ const Allowances = () => {
                 </div>
                 <div className="card-actions">
                   <button
-                  className="allowance-card-edit-button"
+                    className="allowance-card-edit-button"
                     onClick={(e) => {
                       e.stopPropagation();
                       console.log("Edit clicked for ID:", allowance._id);
-                      handleEdit(allowance._id);  
+                      handleEdit(allowance._id);
                     }}
                   >
-                    <FaEdit size={25}/>
+                    <FaEdit size={25} />
                   </button>
                   <button
-                  className="allowance-card-delete-button"
+                    className="allowance-card-delete-button"
                     onClick={(e) => {
                       e.stopPropagation();
                       console.log("Delete clicked for ID:", allowance._id);
                       handleDelete(allowance.id || allowance._id);
                     }}
                   >
-                    <FaTrash size={20}/>
+                    <FaTrash size={20} />
                   </button>
                 </div>
               </div>

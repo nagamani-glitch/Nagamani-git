@@ -103,46 +103,6 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
     }
   };
 
-
-
-  // Update handleSubmit to include all form fields
-  // const handleSubmit = async (event) => {
-  //   event.preventDefault();
-  //   const formData = {
-  //     code: document.querySelector("input[placeholder='Enter title']").value,
-  //     name: document.querySelector("input[placeholder='Enter title']").value,
-  //     amount: Number(document.querySelector("input[placeholder='Enter amount']").value) || 0,
-  //     oneTimeDeduction: document.querySelector("input[type='date']").value ? 'Yes' : 'No',
-  //     taxable: isTaxable ? 'Yes' : 'No',
-  //     fixed: isFixed,
-  //     pretax: isTaxable ? 'Yes' : 'No',
-  //     specificEmployees: selectedEmployee,
-  //     employerRate: "6.25% of Gross Pay",
-  //     employeeRate: "7.75% of Gross Pay",
-  //     isConditionBased: isConditionBased,
-  //     ifChoice: document.querySelector("select[required]").value,
-  //     ifCondition: document.querySelector(".condition-options").value,
-  //     ifAmount: Number(document.querySelector("input[placeholder='0.0']").value) || 0,
-  //     updateCompensation: document.querySelector("select[required]").value
-  //   };
-
-  //   try {
-  //     if (editData) {
-  //       const response = await axios.put(`http://localhost:5000/api/deductions/${editData._id}`, formData);
-  //       console.log("Deduction updated:", response.data);
-  //       alert("Deduction updated successfully!");
-  //     } else {
-  //       const response = await axios.post('http://localhost:5000/api/deductions', formData);
-  //       console.log("Form Data saved:", response.data);
-  //       alert("Form data saved successfully!");
-  //     }
-  //     onClose();
-  //   } catch (error) {
-  //     console.error("Error:", error);
-  //     alert(editData ? "Failed to update deduction" : "Failed to save deduction data");
-  //   }
-  // };
-
   const validateForm = () => {
     const title = document.querySelector("input[placeholder='Enter title']").value;
     const amount = document.querySelector("input[type='number']").value;
@@ -461,7 +421,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
           <div className="form-group save-btn-container" style={{ display: "flex", alignItems: "end" }}>
 
 
-            <button onClick={handleSubmit} className="save-btn">
+            <button onClick={handleSubmit} className="create-deduction-save-btn">
               {editData ? 'Update' : 'Save'}
             </button>
           </div>
