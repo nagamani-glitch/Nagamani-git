@@ -1,15 +1,7 @@
-
-
-
-
-
-
-
-
-import cors from 'cors'
 import express from "express"
-import connectDB from './config/db.js'
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
+import cors from 'cors';
+import connectDB from './config/db.js';// Ensure User schema is defined correctly
 import employeesRouter from './routes/employeesRouter.js'
 import authRouter from './routes/authRouter.js'
 import profileRouter from './routes/profileRouter.js'
@@ -20,7 +12,6 @@ import employeeRoutes from './routes/employeeRoutes.js'
 import interviewRoutes from './routes/interviewRoutes.js'
 import skillZoneRoutes from './routes/skillZoneRoutes.js'
 import surveyRoutes from './routes/surveyRoutes.js'
- 
 import assetRoutes from './routes/assets.js';
 import assetDashboardRoutes from './routes/assetDashboardRoutes.js';
 import faqCategoryRoutes from './routes/faqCategoryRoutes.js';
@@ -29,7 +20,6 @@ import companyHolidaysRoute from './routes/companyHolidays.js';
 import restrictLeaveRoutes from './routes/restrictLeaveRoutes.js';
 import holidayRoutes from './routes/holidays.js';
  
-
 
  
 dotenv.config()
@@ -41,6 +31,7 @@ app.use(cors({
     methods:["GET", "POST", "PUT", "DELETE"],
     credentials:true,
 }))
+
  
 app.use(express.json())
  
@@ -67,10 +58,4 @@ app.use('/api/faqCategories', faqCategoryRoutes);
 const PORT = process.env.PORT || 5000
  
 app.listen(PORT, console.log(`Server running on port ${PORT}`.yellow.bold))
-
-
-
-
-
-
 

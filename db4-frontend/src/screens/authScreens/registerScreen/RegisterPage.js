@@ -13,12 +13,11 @@ const RegisterPage = () => {
     password: '',
   });
   const [error, setError] = useState('');
-  const [otpSent, setOtpSent] = useState(false); // State to track if OTP has been sent
+  const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   const [errorOtp, setErrorOtp] = useState('');
-  const [showOtpModal, setShowOtpModal] = useState(false); // State to control the OTP modal visibility
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
-  
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -30,13 +29,10 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Show the OTP modal immediately after clicking Register
-      setShowOtpModal(true);
-
-      // Send the registration data to the backend
-      await axios.post('/api/auth/register', formData);
-      setOtpSent(true); // OTP has been sent
-      navigate('/verifyOtp')
+       await axios.post('http://localhost:5000/api/auth/register', formData);
+      alert('OTP sent to email. Please verify.');
+      setOtpSent(true);
+      navigate('/verifyOtp', { state: { email: formData.email } });
     } catch (error) {
       if (error.response && error.response.status === 409) {
         setError('User already exists. Please try login!');
@@ -46,37 +42,17 @@ const RegisterPage = () => {
     }
   };
 
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('/api/auth/verify-otp', { email: formData.email, otp });
-      alert('Email verified successfully');
-      navigate('/login');
-      setShowOtpModal(false); // Close the modal after successful OTP verification
-    } catch (error) {
-      setErrorOtp('Invalid OTP. Please try again.');
-    }
-  };
-
   return (
-    <>
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      style={{marginTop:"120px"}}
+      style={{ marginTop: '120px' }}
     >
       <Container
         component="main"
         maxWidth="xs"
-        sx={{
-          mt: 8,
-          p: 4,
-          boxShadow: 3,
-          borderRadius: 2,
-          backgroundColor: 'white',
-          
-        }}
+        sx={{ mt: 8, p: 4, boxShadow: 3, borderRadius: 2, backgroundColor: 'white' }}
       >
         <Typography variant="h4" component="h1" sx={{ mb: 2, textAlign: 'center' }}>
           Register
@@ -119,12 +95,7 @@ const RegisterPage = () => {
             </Typography>
           )}
           <motion.div whileHover={{ scale: 1.05 }}>
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
+            <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
               Register
             </Button>
           </motion.div>
@@ -134,7 +105,6 @@ const RegisterPage = () => {
         </Box>
       </Container>
     </motion.div>
-    </>
   );
 };
 

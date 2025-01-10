@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Box, Button, TextField, Typography, Container } from '@mui/material';
+import { Box, Button, TextField, Typography, Container, IconButton } from '@mui/material';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -12,43 +12,30 @@ const LoginPage = () => {
     password: '',
   });
   const [error, setError] = useState('');
-  // Handle input changes
+  const [showPassword, setShowPassword] = useState(false);
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(''); // Clear the error message when the user starts typing
+    setError('');
   };
 
-  // Handle form submission
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Send login request to backend
       const response = await axios.post('http://localhost:5000/api/auth/login', formData);
       alert('User logged in successfully');
       
-// <<<<<<< HEAD
-      // Store the token in localStorage
       localStorage.setItem('token', response.data.token);
-
-      // Redirect to home page after successful login
-      navigate('/home');
-      
-      localStorage.setItem('token', response.data.token);
-      navigate('/home');
-// =======
-      
-      localStorage.setItem('token', response.data.token);
-// <<<<<<< HEAD
       navigate('/Dashboards');
-      navigate('/home');
-
-// >>>>>>> 1db990a3128176f87a28635846e59738514912c0
-// >>>>>>> 4983c096eb5c91a70e442a5ab2ba9ef1fd7d1655
-
+      
     } catch (error) {
-      if (error.response && error.response.status === 401) {
+      if (error.response) {
         setError('Invalid email or password. Please try again.');
       } else {
         setError('An error occurred. Please try again later.');
@@ -57,9 +44,7 @@ const LoginPage = () => {
   };
 
   return (
-    <>
     <motion.div
-      className="login-container"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -96,11 +81,27 @@ const LoginPage = () => {
             fullWidth
             label="Password"
             name="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             onChange={handleChange}
             required
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={togglePasswordVisibility}
+                  edge="end"
+                  aria-label="toggle password visibility"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </IconButton>
+              ),
+            }}
           />
+          {error && (
+            <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+              {error}
+            </Typography>
+          )}
           <motion.div whileHover={{ scale: 1.05 }}>
             <Button
               type="submit"
@@ -111,13 +112,13 @@ const LoginPage = () => {
               Login
             </Button>
           </motion.div>
+          {error && <Typography color="error">{error}</Typography>}
           <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
             New user? <Link to='/register'>Register here</Link>
           </Typography>
         </Box>
       </Container>
     </motion.div>
-    </>
   );
 };
 
