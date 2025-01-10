@@ -31,11 +31,14 @@ import PrivateRoute from './screens/PrivateRoute';
 import { Container } from 'react-bootstrap';
 import { SidebarProvider } from './Context';
 import VerifyOtpPage from './screens/authScreens/registerScreen/VerifyOtpPage';
+import FaqPage from './screens/templates/faqs/FaqPage';
+
+
 
 function App() {
   return (
     <div >
-      <Router>
+      <Router> 
       <SidebarProvider>
         <Header />
         <Container fluid style={{ padding: "0", margin: "0", width: "100%" }}>
@@ -44,8 +47,8 @@ function App() {
             <Route path='/login' element={<LoginPage />} />
             <Route path='/register' element={<RegisterPage />} />
             <Route path='/verifyOtp' element={<VerifyOtpPage />} />
-            <Route path='/home' element={<HomeScreen />} />
             <Route element={<PrivateRoute />}>
+              <Route path='/home' element={<HomeScreen />} />
               <Route path='/My Team' element={<EmployeesScreen />} />
               <Route path='/My Workspace' element={<MyWorkspace />} />
               <Route path='/Dashboards' element={<Dashboard />} />
@@ -62,6 +65,7 @@ function App() {
               <Route path='/Birthdays' element={<Birthdays />} />
               <Route path='/Anniversaries' element={<Anniversaries />} />
               <Route path='/Personal Information' element={<RegisterScreen />} />
+              <Route path="/faq/:categoryId" element={<FaqPage />} />
             </Route>
             <Route path='/hr' element={<Dashboards />} />
           </Routes>

@@ -1,4 +1,4 @@
-.home-screen{
+/* .home-screen{
   background-image: url("https://res.cloudinary.com/djestqza3/image/upload/v1728468030/download_fwy1ve.jpg");
   background-size: 50%;
   background-position: center center;
@@ -46,13 +46,13 @@ form{
   margin: 20px 0;
 }
 
-/* .form-grid {
+ .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-} */
+} 
 
-
+/*
 .joiningFormElement{
   display: flex;
   flex-direction: row;
@@ -81,14 +81,14 @@ input[type="date"],
 input[type="tel"] {
   width: 50% !important;
   height: 12px !important;
-  border-top: none !important;
+  /* border-top: none !important;
   border-left: none !important;
   border-right: none !important;
-  border-bottom: none !important;
+  border-bottom: none !important; 
   margin: 5px !important;
   border-radius: 5px !important;
 }
-
+/*
 .file-input{
   height: 40px !important;
   border: none !important;
@@ -329,4 +329,4 @@ button:hover {
 .down{
   position: relative;
   
-}
+} */

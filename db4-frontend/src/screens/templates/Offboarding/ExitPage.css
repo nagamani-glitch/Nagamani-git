@@ -52,8 +52,8 @@
 
 .create-popup, .filter-popup {
   position: fixed;
-  top: 20%;
-  left: 50%;
+  top: 30%;
+  left: 60%;
   transform: translate(-50%, -20%);
   background-color: #fff;
   padding: 20px;

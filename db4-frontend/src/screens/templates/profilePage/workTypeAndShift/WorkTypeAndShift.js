@@ -74,7 +74,7 @@ const WorkTypeAndShift = () => {
             </Modal>
 
             {/* Sub-tabs for Work Type & Shift section */}
-            <Card className="mt-3">
+            <Card className="mt-3" style={{borderRadius: "10px", width:"100%"}}>
                 <Tab.Container activeKey={subTabKey} onSelect={(k) => setSubTabKey(k)} >
                     <Nav variant="tabs">
                         <Nav.Item>

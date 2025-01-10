@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import icons from react-icons
+//import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import icons from react-icons
 import './RegisterPage.css';
 import { motion } from 'framer-motion';
 import { Box, Button, TextField, Typography, Container } from '@mui/material';
@@ -14,10 +14,6 @@ const RegisterPage = () => {
   });
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [errorOtp, setErrorOtp] = useState('');
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -28,6 +24,7 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log(otpSent);
     try {
        await axios.post('http://localhost:5000/api/auth/register', formData);
       alert('OTP sent to email. Please verify.');

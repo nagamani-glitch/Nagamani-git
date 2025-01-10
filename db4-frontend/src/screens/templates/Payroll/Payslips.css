@@ -144,7 +144,7 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     gap: 5px;
     padding: 5px 10px;
     background-color: #007bff;
-    color: white;
+    /* color: white; */
     border: none;
     border-radius: 3px;
     font-size: 0.9em;
@@ -153,7 +153,7 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
 
 .unselect-all { background-color: #6c757d; } /* Gray */
 .export-btn { background-color: #28a745; } /* Green */
-.delete-btn { background-color: #dc3545; } /* Red */
+.delete-btn { background-color: transparent; } 
 
 .unselect-all:hover,
 .export-btn:hover,
@@ -203,3 +203,43 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     cursor: pointer;
     width: 100%;
 }
+
+
+/* action column buttons */
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  
+  .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  
+  .edit-btn {
+    color: #4CAF50;
+  }
+  
+  .save-btn {
+    color: #2196F3;
+  }
+  
+  .delete-btn {
+    color: #f44336;
+  }
+  
+  .mail-btn {
+    color: #9C27B0;
+  }
+  
+  .action-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+  }
+  

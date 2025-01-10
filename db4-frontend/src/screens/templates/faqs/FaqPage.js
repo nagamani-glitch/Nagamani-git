@@ -28,7 +28,7 @@ export default function FaqPage() {
             setFilteredFaqs(data); // Set filteredFAQs to initial data
             setError(null);
         } catch (err) {
-            console.error('Error fetching FAQs:', err);
+            console.error('Error fetching FAQs:', err.response?.data || err.message);
             setError('Failed to fetch FAQs.');
         } finally {
             setLoading(false);
@@ -62,7 +62,19 @@ export default function FaqPage() {
 
     const handleAddSubmit = async (e) => {
         e.preventDefault();
+
+        // Validation for categoryId and input fields
+        if (!categoryId) {
+            setError('Category ID is missing.');
+            return;
+        }
+        if (!formData.question || !formData.answer) {
+            setError('Both question and answer are required.');
+            return;
+        }
+
         try {
+            console.log('Adding FAQ:', { ...formData, categoryId }); // Debugging payload
             const { data: newFaq } = await axios.post(`${apiBaseURL}/api/faqs/category/${categoryId}`, formData);
             setFaqs([...faqs, newFaq]);
             setFilteredFaqs([...faqs, newFaq]);
@@ -70,14 +82,18 @@ export default function FaqPage() {
             setFormData({ question: '', answer: '' });
             setError(null);
         } catch (err) {
-            console.error('Error adding FAQ:', err);
+            console.error('Error adding FAQ:', err.response?.data || err.message);
             setError('Failed to add FAQ.');
         }
     };
 
     const handleEditSubmit = async (e) => {
         e.preventDefault();
+
+        if (!editingFaq) return;
+
         try {
+            console.log('Editing FAQ:', editingFaq); // Debugging payload
             const { data: updatedFaq } = await axios.put(`${apiBaseURL}/api/faqs/${editingFaq._id}`, editingFaq);
             const updatedFaqs = faqs.map((faq) => (faq._id === editingFaq._id ? updatedFaq : faq));
             setFaqs(updatedFaqs);
@@ -86,20 +102,21 @@ export default function FaqPage() {
             setEditingFaq(null);
             setError(null);
         } catch (err) {
-            console.error('Error editing FAQ:', err);
+            console.error('Error editing FAQ:', err.response?.data || err.message);
             setError('Failed to edit FAQ.');
         }
     };
 
     const handleDelete = async (faqId) => {
         try {
+            console.log('Deleting FAQ ID:', faqId); // Debugging payload
             await axios.delete(`${apiBaseURL}/api/faqs/${faqId}`);
             const updatedFaqs = faqs.filter((faq) => faq._id !== faqId);
             setFaqs(updatedFaqs);
             setFilteredFaqs(updatedFaqs);
             setError(null);
         } catch (err) {
-            console.error('Error deleting FAQ:', err);
+            console.error('Error deleting FAQ:', err.response?.data || err.message);
             setError('Failed to delete FAQ.');
         }
     };
