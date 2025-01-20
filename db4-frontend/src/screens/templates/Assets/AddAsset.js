@@ -1,9 +1,27 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import gsap from 'gsap';
-import { motion } from 'framer-motion';
 import axios from 'axios';
+import { 
+  Paper, 
+  TextField, 
+  Button, 
+  Typography,
+  IconButton,
+  Box,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+
+const STATUS_OPTIONS = [
+  'IN USE',
+  'AVAILABLE', 
+  'UNDER SERVICE',
+  'RETURNED'
+];
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required('Asset name is required'),
@@ -13,24 +31,30 @@ const validationSchema = Yup.object().shape({
   previousEmployees: Yup.string()
 });
 
-const AddAsset = ({ onClose, refreshAssets, editAsset }) => {
-  useEffect(() => {
-    // GSAP animation for modal entry
-    gsap.from('.modal-container', {
-      duration: 0.5,
-      y: -50,
-      opacity: 0,
-      ease: 'power3.out'
-    });
-  }, []);
+const toUpperCase = (str) => {
+  return str.trim().toUpperCase();
+};
 
+const AddAsset = ({ onClose, refreshAssets, editAsset }) => {
   const handleSubmit = async (values, { setSubmitting }) => {
+    const normalizedValues = Object.keys(values).reduce((acc, key) => {
+      if (typeof values[key] === 'string') {
+        acc[key] = toUpperCase(values[key]);
+      } else {
+        acc[key] = values[key];
+      }
+      return acc;
+    }, {});
+
     const assetData = {
-      ...values,
-      previousEmployees: values.previousEmployees.split(',').map(emp => emp.trim())
+      ...normalizedValues,
+      previousEmployees: normalizedValues.previousEmployees
+        .split(',')
+        .map(emp => toUpperCase(emp.trim()))
+        .filter(emp => emp)
     };
 
-    const API_URL= process.env.REACT_APP_API_URL;
+    const API_URL = process.env.REACT_APP_API_URL;
 
     try {
       if (editAsset) {
@@ -47,23 +71,18 @@ const AddAsset = ({ onClose, refreshAssets, editAsset }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      style={styles.overlay}
-    >
-      <div style={styles.modalContainer}>
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          style={styles.closeButton}
+    <div style={styles.overlay}>
+      <Paper elevation={24} sx={styles.modalContainer}>
+        <IconButton
+          sx={styles.closeButton}
           onClick={onClose}
         >
-          ×
-        </motion.button>
+          <CloseIcon />
+        </IconButton>
 
-        <h2 style={styles.title}>{editAsset ? 'Edit Asset' : 'Add Asset'}</h2>
+        <Typography variant="h4" sx={styles.title}>
+          {editAsset ? 'Edit Asset' : 'Add Asset'}
+        </Typography>
 
         <Formik
           initialValues={{
@@ -78,36 +97,61 @@ const AddAsset = ({ onClose, refreshAssets, editAsset }) => {
         >
           {({ errors, touched, isSubmitting }) => (
             <Form style={styles.form}>
-              {['name', 'category', 'status', 'currentEmployee', 'previousEmployees'].map((fieldName) => (
-                <div key={fieldName} style={styles.formGroup}>
-                  <label style={styles.label}>
-                    {fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, ' $1')}
-                  </label>
-                  <Field
-                    name={fieldName}
-                    style={styles.input}
-                    placeholder={`Enter ${fieldName.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
-                  />
-                  {errors[fieldName] && touched[fieldName] && (
-                    <div style={styles.error}>{errors[fieldName]}</div>
-                  )}
-                </div>
+              {['name', 'category', 'currentEmployee', 'previousEmployees'].map((fieldName) => (
+                <Box key={fieldName} sx={styles.formGroup}>
+                  <Field name={fieldName}>
+                    {({ field }) => (
+                      <TextField
+                        {...field}
+                        label={fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, ' $1')}
+                        variant="outlined"
+                        fullWidth
+                        error={touched[fieldName] && errors[fieldName]}
+                        helperText={touched[fieldName] && errors[fieldName]}
+                        sx={styles.input}
+                      />
+                    )}
+                  </Field>
+                </Box>
               ))}
 
-              <motion.button
+              <Box sx={styles.formGroup}>
+                <Field name="status">
+                  {({ field }) => (
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel id="status-label">Status</InputLabel>
+                      <Select
+                        {...field}
+                        labelId="status-label"
+                        label="Status"
+                        error={touched.status && errors.status}
+                        sx={styles.input}
+                      >
+                        {STATUS_OPTIONS.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                </Field>
+              </Box>
+
+              <Button
                 type="submit"
+                variant="contained"
                 disabled={isSubmitting}
-                style={styles.submitButton}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                sx={styles.submitButton}
+                fullWidth
               >
                 {isSubmitting ? 'Saving...' : 'Save Asset'}
-              </motion.button>
+              </Button>
             </Form>
           )}
         </Formik>
-      </div>
-    </motion.div>
+      </Paper>
+    </div>
   );
 };
 
@@ -122,74 +166,69 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000
+    zIndex: 1000,
+    padding: '20px'
   },
   modalContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    padding: '2rem',
-    width: '90%',
-    maxWidth: '500px',
+    width: '80%',
+    maxWidth: '1200px',
+    p: 4,
     position: 'relative',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    borderRadius: '8px',
+    background: '#ffffff',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
   },
   closeButton: {
     position: 'absolute',
-    top: '1rem',
-    right: '1rem',
-    background: 'none',
-    border: 'none',
-    fontSize: '1.5rem',
-    cursor: 'pointer',
-    color: '#666',
+    top: 8,
+    right: 8,
+    color: 'grey.600',
   },
   title: {
     textAlign: 'center',
-    color: '#333',
-    marginBottom: '2rem',
-    fontSize: '1.8rem'
+    color: 'primary.main',
+    mb: 4,
+    fontWeight: 600,
+    letterSpacing: '0.5px',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.2rem'
+    gap: 3
   },
   formGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem'
-  },
-  label: {
-    fontSize: '0.9rem',
-    color: '#555',
-    fontWeight: '500'
+    mb: 2,
+    '& .MuiInputLabel-root': {
+      fontSize: '1rem',
+      fontWeight: 500,
+      color: 'primary.main',
+    },
+    '& .MuiInputLabel-shrink': {
+      transform: 'translate(14px, -9px) scale(0.85)',
+    }
   },
   input: {
-    padding: '0.8rem',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-    fontSize: '1rem',
-    transition: 'border-color 0.3s ease',
-    ':focus': {
-      borderColor: '#007bff',
-      outline: 'none'
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 1,
+      backgroundColor: '#f8f9fa',
+      '&:hover': {
+        backgroundColor: '#fff',
+      },
+      '&.Mui-focused': {
+        backgroundColor: '#fff',
+        boxShadow: '0 0 0 2px rgba(33, 150, 243, 0.1)'
+      }
+    },
+    '& .MuiSelect-select': {
+      padding: '14px'
     }
   },
   submitButton: {
-    backgroundColor: '#007bff',
-    color: 'white',
-    padding: '1rem',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    marginTop: '1rem',
-    transition: 'background-color 0.3s ease'
-  },
-  error: {
-    color: '#dc3545',
-    fontSize: '0.8rem',
-    marginTop: '0.2rem'
+    py: 1.5,
+    mt: 2,
+    borderRadius: 1,
+    fontSize: '1.1rem',
+    fontWeight: 500,
   }
 };
 
