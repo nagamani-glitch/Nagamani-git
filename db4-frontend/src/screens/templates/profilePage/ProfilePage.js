@@ -141,6 +141,17 @@ const ProfilePage = ({employeeId}) => {
 
   return (
     <Container fluid className="profile-page-container">
+<<<<<<< HEAD
+      <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+        <Row>
+          <Col md={12} className="profile-card">
+            <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+              <Card.Body>
+                <Row>
+                  <Col>
+=======
       <Card style={{borderRadius: "10px", width:"100%"}} >
         <Row>
           <Col md={12} className="profile-card" >
@@ -148,6 +159,7 @@ const ProfilePage = ({employeeId}) => {
               <Card.Body >
                 <Row >
                   <Col >
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                     <div className="profile-avatar">
                       {personalInfo?.name ? (
                         `${personalInfo.name[0]}${personalInfo.name.split(" ")[1]?.[0] || ''}`
@@ -248,7 +260,12 @@ const ProfilePage = ({employeeId}) => {
                 </Col>
 
                 <Col md={8} className="details-card">
+<<<<<<< HEAD
+                  <Card style={{ borderRadius: "10px", width:"100%"}}
+>
+=======
                   <Card style={{ borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                     <Card.Body>
                       <Tab.Container activeKey={subTabKey} onSelect={(k) => setSubTabKey(k)}>
                         <Nav variant="tabs" className="mb-3 sub-tabs">
@@ -425,7 +442,12 @@ const ProfilePage = ({employeeId}) => {
                       </Tab.Container>
                     </Card.Body>
                   </Card>
+<<<<<<< HEAD
+                  <Card className='mt-3' style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
                   <Card className='mt-3' style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                     <Card.Body>
                       <Row >
                         <Col md={12}>
@@ -456,8 +478,14 @@ const ProfilePage = ({employeeId}) => {
             </Tab.Pane>
 
             <Tab.Pane eventKey="workTypeShift">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+                <Card.Body>
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
                 <Card.Body >
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                   <WorkTypeAndShift />
                 </Card.Body>
               </Card>
@@ -465,7 +493,12 @@ const ProfilePage = ({employeeId}) => {
             </Tab.Pane>
 
             <Tab.Pane eventKey="attendance">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Attendance />
                 </Card.Body>
@@ -473,7 +506,12 @@ const ProfilePage = ({employeeId}) => {
             </Tab.Pane>
 
             <Tab.Pane eventKey="leave">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Leave />
                 </Card.Body>
@@ -489,7 +527,12 @@ const ProfilePage = ({employeeId}) => {
 
             </Tab.Pane>
             <Tab.Pane eventKey="allowanceDeduction">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <AllowanceAndDeduction />
                 </Card.Body>
@@ -497,7 +540,12 @@ const ProfilePage = ({employeeId}) => {
 
             </Tab.Pane>
             <Tab.Pane eventKey="penaltyAccount">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <PenaltyAccount />
                 </Card.Body>
@@ -505,7 +553,12 @@ const ProfilePage = ({employeeId}) => {
 
             </Tab.Pane>
             <Tab.Pane eventKey="assets">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Assets />
                 </Card.Body>
@@ -513,7 +566,12 @@ const ProfilePage = ({employeeId}) => {
 
             </Tab.Pane>
             <Tab.Pane eventKey="performance">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Performance />
                 </Card.Body>
@@ -521,7 +579,12 @@ const ProfilePage = ({employeeId}) => {
 
             </Tab.Pane>
             <Tab.Pane eventKey="documents">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Documents />
                 </Card.Body>
@@ -529,7 +592,12 @@ const ProfilePage = ({employeeId}) => {
 
             </Tab.Pane>
             <Tab.Pane eventKey="bonusPoints">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <BonusPoints />
                 </Card.Body>
@@ -537,7 +605,12 @@ const ProfilePage = ({employeeId}) => {
 
             </Tab.Pane>
             <Tab.Pane eventKey="scheduledInterview">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <ScheduledInterview />
                 </Card.Body>
@@ -545,7 +618,12 @@ const ProfilePage = ({employeeId}) => {
 
             </Tab.Pane>
             <Tab.Pane eventKey="resignation">
+<<<<<<< HEAD
+              <Card style={{ borderRadius: "10px", width:"100%"}}
+ >
+=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
+>>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Resignation />
                 </Card.Body>
