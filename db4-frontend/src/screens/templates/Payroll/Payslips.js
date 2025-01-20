@@ -1,565 +1,400 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import {
-  FaTrash,
-  FaEnvelope,
-  FaFilter,
-  FaPlus,
-  FaTimes,
-  FaEdit,
- FaSave
-} from "react-icons/fa";
- import "./Payslips.css";
-import DatePicker from "react-datepicker";
+import React, { useState, useEffect, useMemo } from 'react';
+import { FaTrash, FaEnvelope, FaFilter, FaPlus, FaDownload, FaTimes, FaEdit } from 'react-icons/fa';
+import DatePicker from 'react-datepicker';
+import * as Yup from 'yup';
+import { Formik, Form, Field } from 'formik';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { format } from 'date-fns';
+import './Payslips.css';
 import "react-datepicker/dist/react-datepicker.css";
-import { toast } from "react-toastify";
-import { payslipAPI } from "../api/payslip";
-import { useNavigate } from "react-router-dom";
 
-const API_URL = "http://localhost:5000/api/payslips";
-
-const Payslips = () => {
-  const navigate = useNavigate();
-  const [payslips, setPayslips] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [filterText, setFilterText] = useState("");
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [isAllSelected, setIsAllSelected] = useState(false);
-  const [isCreatePopupOpen, setIsCreatePopupOpen] = useState(false);
-  const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
-  const [filteredPayslips, setFilteredPayslips] = useState([]);
-  const [editingPayslip, setEditingPayslip] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [editingId, setEditingId] = useState(null);
-const [editedData, setEditedData] = useState({});
-
-
-
-  const [newPayslip, setNewPayslip] = useState({
-    employee: "",
-    startDate: "",
-    endDate: "",
-    grossPay: "",
-    deduction: "0",
-    batch: "None",
-    status: "pending",
-    mailSent: false,
-  });
-
-  const [filterCriteria, setFilterCriteria] = useState({
-    startDate: "",
-    endDate: "",
-    status: "",
-    batch: "",
-    mailSent: "",
-    grossPayLessThan: "",
-    grossPayGreaterOrEqual: "",
-    deductionLessThan: "",
-    deductionGreaterOrEqual: "",
-    netPayLessThan: "",
-    netPayGreaterOrEqual: "",
-    searchText: "",
-  });
-
-  useEffect(() => {
-    fetchPayslips();
-  }, []);
-
-  const fetchPayslips = async () => {
-    try {
-      setLoading(true);
-      const response = await payslipAPI.getAllPayslips(
-        currentPage,
-        itemsPerPage
-      );
-      // Direct access to data since backend sends array of payslips
-      setPayslips(response);
-      setFilteredPayslips(response);
-      setTotalPages(Math.ceil(response.length / itemsPerPage));
-    } catch (error) {
-      if (error.response?.status === 401) {
-        navigate("/login");
-        toast.error("Session expired. Please login again");
-      } else {
-        toast.error("Failed to fetch payslips");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Update the saveNewPayslip function
-  const saveNewPayslip = async () => {
-    try {
-      const payslipData = {
-        ...newPayslip,
-        grossPay: parseFloat(newPayslip.grossPay),
-        deduction: parseFloat(newPayslip.deduction),
-        netPay:
-          parseFloat(newPayslip.grossPay) - parseFloat(newPayslip.deduction),
-      };
-
-      const result = await payslipAPI.createPayslip(payslipData);
-      toast.success("Payslip created successfully");
-      fetchPayslips();
-      toggleCreatePopup();
-    } catch (error) {
-      if (error.response?.status === 401) {
-        navigate("/login");
-        toast.error("Please login again");
-      } else {
-        toast.error("Failed to create payslip");
-      }
-    }
-  };
-
-  // const updatePayslip = async (id, data) => {
-  //     try {
-  //         const token = localStorage.getItem('token');
-  //         await axios.put(`${API_URL}/${id}`, data, {
-  //             headers: { Authorization: `Bearer ${token}` }
-  //         });
-  //         toast.success('Payslip updated successfully');
-  //         fetchPayslips();
-  //         setEditingPayslip(null);
-  //     } catch (err) {
-  //         toast.error('Failed to update payslip');
-  //     }
-  // };
-
-  const handleDeletePayslip = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`${API_URL}/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success("Payslip deleted successfully");
-      fetchPayslips();
-    } catch (err) {
-      toast.error("Failed to delete payslip");
-    }
-  };
-
-  const handleUpdateMailStatus = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${API_URL}/${id}/mail-status`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      toast.success("Mail status updated successfully");
-      fetchPayslips();
-    } catch (err) {
-      toast.error("Failed to update mail status");
-    }
-  };
-
-  const handleFilter = (e) => {
-    const text = e.target.value.toLowerCase();
-    setFilterText(text);
-    setFilterCriteria((prev) => ({ ...prev, searchText: text }));
-    applyFilters();
-  };
-
-  const handleFilterChange = (field, value) => {
-    setFilterCriteria((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const applyFilters = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const queryParams = new URLSearchParams();
-
-      Object.entries(filterCriteria).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const response = await axios.get(`${API_URL}?${queryParams.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setFilteredPayslips(response.data);
-      setIsFilterPopupOpen(false);
-    } catch (err) {
-      toast.error("Failed to apply filters");
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${API_URL}/bulk-delete`,
-        { ids: selectedRows },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      toast.success("Selected payslips deleted successfully");
-      fetchPayslips();
-      setSelectedRows([]);
-      setIsAllSelected(false);
-    } catch (err) {
-      toast.error("Failed to delete selected payslips");
-    }
-  };
-
-  const handleRowSelect = (id) => {
-    setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
-    );
-  };
-
-  const handleSelectAll = () => {
-    setIsAllSelected(!isAllSelected);
-    setSelectedRows(isAllSelected ? [] : filteredPayslips.map((p) => p._id));
-  };
-
-  const toggleCreatePopup = () => {
-    setIsCreatePopupOpen(!isCreatePopupOpen);
-    setNewPayslip({
-      employee: "",
-      startDate: "",
-      endDate: "",
-      grossPay: "",
-      deduction: "0",
-      batch: "None",
-      status: "pending",
-      mailSent: false,
-    });
-  };
-
-  const toggleFilterModal = () => setIsFilterPopupOpen(!isFilterPopupOpen);
-
-  const handleNewPayslipChange = (field, value) => {
-    setNewPayslip((prev) => ({ ...prev, [field]: value }));
-  };
-
-  if (loading) return <div className="loading-spinner">Loading...</div>;
-  if (error) return <div className="error-message">Error: {error}</div>;
-
-
-  
-// Add these functions to handle edit, save and delete operations
-const handleEdit = (payslip) => {
-    setEditingId(payslip._id);
-    setEditedData({
-      _id: payslip._id,
-      employee: payslip.employee,
-      startDate: payslip.startDate,
-      endDate: payslip.endDate,
-      batch: payslip.batch,
-      grossPay: payslip.grossPay,
-      deduction: payslip.deduction,
-      status: payslip.status
-    });
-  };
-  
-  const handleSave = async (id) => {
-    try {
-      const response = await axios.put(`${API_URL}/${id}`, editedData);
-      if (response.data.success) {
-        setPayslips(prevPayslips => 
-          prevPayslips.map(payslip => 
-            payslip._id === id ? response.data.data : payslip
-          )
-        );
-        setFilteredPayslips(prevFiltered => 
-          prevFiltered.map(payslip => 
-            payslip._id === id ? response.data.data : payslip
-          )
-        );
-        setEditingId(null);
-      }
-    } catch (error) {
-      console.error("Save failed:", error);
-    }
-  };
-  
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/${id}`);
-      setPayslips(prev => prev.filter(payslip => payslip._id !== id));
-      setFilteredPayslips(prev => prev.filter(payslip => payslip._id !== id));
-    } catch (error) {
-      console.error("Delete failed:", error);
-    }
-  };
-
+const validationSchema = Yup.object().shape({
+    employee: Yup.string().required('Employee name is required'),
+    startDate: Yup.date().required('Start date is required'),
+    endDate: Yup.date()
+        .required('End date is required')
+        .min(Yup.ref('startDate'), 'End date must be after start date'),
+    grossPay: Yup.number()
+        .positive('Must be positive')
+        .required('Gross pay is required'),
+    deduction: Yup.number()
+        .min(0, 'Must be non-negative')
+        .required('Deduction is required')
+});
+const CreatePayslipModal = ({ isOpen, onClose, onSubmit }) => {
+  if (!isOpen) return null;
 
   return (
-    <div className="payslip-dashboard">
-      <div className="header">
-        <h2>Payslip Management</h2>
-        <div className="actions">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={filterText}
-            onChange={handleFilter}
-            className="search-bar"
-          />
-          <button className="filter-btn" onClick={toggleFilterModal}>
-            <FaFilter /> Filter
-          </button>
-          <button className="create-btn" onClick={toggleCreatePopup}>
-            <FaPlus /> Create New
-          </button>
-        </div>
-      </div>
+      <div className="modal">
+          <div className="modal-content">
+              <h2>Create New Payslip</h2>
+              <Formik
+                  initialValues={{
+                      employee: '',
+                      startDate: new Date(),
+                      endDate: new Date(),
+                      grossPay: '',
+                      deduction: '0'
+                  }}
+                  validationSchema={validationSchema}
+                  onSubmit={onSubmit}
+              >
+                  {({ values, setFieldValue, errors, touched }) => (
+                      <Form>
+                          <div className="form-group">
+                              <label>Employee Name</label>
+                              <Field name="employee" type="text" />
+                              {errors.employee && touched.employee && 
+                                  <div className="error">{errors.employee}</div>}
+                          </div>
 
-      {selectedRows.length > 0 && (
-        <div className="selected-actions-row">
-          <button onClick={() => setSelectedRows([])}>
-            <FaTimes /> Unselect All
-          </button>
-          <button onClick={handleDeleteSelected}>
-            <FaTrash /> Delete Selected
-          </button>
-        </div>
-      )}
+                          <div className="form-group">
+                              <label>Start Date</label>
+                              <DatePicker
+                                  selected={values.startDate}
+                                  onChange={date => setFieldValue('startDate', date)}
+                                  dateFormat="dd/MM/yyyy"
+                              />
+                          </div>
 
-      {isCreatePopupOpen && (
-        <div className="modal-overlay">
-          <div className="create-popup">
-            <div className="create-popup-content">
-              <h3>Create New Payslip</h3>
-              <div className="form-row">
-                <label>Employee Name</label>
-                <input
-                  type="text"
-                  value={newPayslip.employee}
-                  onChange={(e) =>
-                    handleNewPayslipChange("employee", e.target.value)
-                  }
-                  required
-                />
-              </div>
-              <div className="form-row">
-                <label>Start Date</label>
-                <DatePicker
-                  selected={newPayslip.startDate}
-                  onChange={(date) => handleNewPayslipChange("startDate", date)}
-                  dateFormat="dd/MM/yyyy"
-                  required
-                />
-              </div>
-              <div className="form-row">
-                <label>End Date</label>
-                <DatePicker
-                  selected={newPayslip.endDate}
-                  onChange={(date) => handleNewPayslipChange("endDate", date)}
-                  dateFormat="dd/MM/yyyy"
-                  required
-                />
-              </div>
-              <div className="form-row">
-                <label>Gross Pay</label>
-                <input
-                  type="number"
-                  value={newPayslip.grossPay}
-                  onChange={(e) =>
-                    handleNewPayslipChange("grossPay", e.target.value)
-                  }
-                  required
-                />
-              </div>
-              <div className="form-row">
-                <label>Deduction</label>
-                <input
-                  type="number"
-                  value={newPayslip.deduction}
-                  onChange={(e) =>
-                    handleNewPayslipChange("deduction", e.target.value)
-                  }
-                />
-              </div>
-              <div className="form-row">
-                <label>Batch</label>
-                <input
-                  type="text"
-                  value={newPayslip.batch}
-                  onChange={(e) =>
-                    handleNewPayslipChange("batch", e.target.value)
-                  }
-                />
-              </div>
-              <div className="form-row">
-                <label>Status</label>
-                <select
-                  value={newPayslip.status}
-                  onChange={(e) =>
-                    handleNewPayslipChange("status", e.target.value)
-                  }
-                >
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="paid">Paid</option>
-                </select>
-              </div>
-              <div className="form-actions" >
-                <button onClick={saveNewPayslip}>Save</button>
-                <button onClick={toggleCreatePopup}>Cancel</button>
-              </div>
-            </div>
+                          <div className="form-group">
+                              <label>End Date</label>
+                              <DatePicker
+                                  selected={values.endDate}
+                                  onChange={date => setFieldValue('endDate', date)}
+                                  minDate={values.startDate}
+                                  dateFormat="dd/MM/yyyy"
+                              />
+                          </div>
+
+                          <div className="form-group">
+                              <label>Gross Pay</label>
+                              <Field name="grossPay" type="number" />
+                              {errors.grossPay && touched.grossPay && 
+                                  <div className="error">{errors.grossPay}</div>}
+                          </div>
+
+                          <div className="form-group">
+                              <label>Deduction</label>
+                              <Field name="deduction" type="number" />
+                              {errors.deduction && touched.deduction && 
+                                  <div className="error">{errors.deduction}</div>}
+                          </div>
+
+                          <div className="modal-actions">
+                              <button type="submit" className="btn-primary">Create</button>
+                              <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+                          </div>
+                      </Form>
+                  )}
+              </Formik>
           </div>
-        </div>
-      )}
-
-      {isFilterPopupOpen && (
-        <div className="modal-overlay">
-          <div className="filter-modal">
-            <div className="filter-modal-content">
-              <h3>Filter Payslips</h3>
-              <div className="filter-section">
-                <div className="form-row">
-                  <label>Start Date Range</label>
-                  <DatePicker
-                    selected={filterCriteria.startDate}
-                    onChange={(date) => handleFilterChange("startDate", date)}
-                    dateFormat="dd/MM/yyyy"
-                  />
-                </div>
-                <div className="form-row">
-                  <label>End Date Range</label>
-                  <DatePicker
-                    selected={filterCriteria.endDate}
-                    onChange={(date) => handleFilterChange("endDate", date)}
-                    dateFormat="dd/MM/yyyy"
-                  />
-                </div>
-                <div className="form-row">
-                  <label>Status</label>
-                  <select
-                    value={filterCriteria.status}
-                    onChange={(e) =>
-                      handleFilterChange("status", e.target.value)
-                    }
-                  >
-                    <option value="">All</option>
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="paid">Paid</option>
-                  </select>
-                </div>
-                <div className="form-row">
-                  <label>Gross Pay Range</label>
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={filterCriteria.grossPayGreaterOrEqual}
-                    onChange={(e) =>
-                      handleFilterChange(
-                        "grossPayGreaterOrEqual",
-                        e.target.value
-                      )
-                    }
-                  />
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={filterCriteria.grossPayLessThan}
-                    onChange={(e) =>
-                      handleFilterChange("grossPayLessThan", e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-              <div className="filter-actions">
-                <button onClick={applyFilters}>Apply Filters</button>
-                <button onClick={toggleFilterModal}>Cancel</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <table className="payslip-table">
-        <thead>
-          <tr>
-            <th>
-              <input
-                type="checkbox"
-                checked={isAllSelected}
-                onChange={handleSelectAll}
-              />
-            </th>
-            <th>Employee</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Batch</th>
-            <th>Gross Pay</th>
-            <th>Deduction</th>
-            <th>Net Pay</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredPayslips.map((payslip) => (
-            <tr key={payslip._id}>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={selectedRows.includes(payslip._id)}
-                  onChange={() => handleRowSelect(payslip._id)}
-                />
-              </td>
-              <td>{payslip.employee}</td>
-              <td>{new Date(payslip.startDate).toLocaleDateString()}</td>
-              <td>{new Date(payslip.endDate).toLocaleDateString()}</td>
-              <td>{payslip.batch}</td>
-              <td>ETB {payslip.grossPay.toFixed(2)}</td>
-              <td>ETB {payslip.deduction.toFixed(2)}</td>
-              <td>ETB {payslip.netPay.toFixed(2)}</td>
-              <td>
-                <span className={`status-badge ${payslip.status}`}>
-                  {payslip.status}
-                </span>
-              </td>
-
-          <td>
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-    <FaEdit
-      style={{ cursor: 'pointer', color: '#4CAF50' }}
-      onClick={() => handleEdit(payslip)}
-    />
-    <FaTrash 
-      style={{ cursor: 'pointer', color: '#f44336' }}
-      onClick={() => handleDelete(payslip._id)}
-    />
-    <FaEnvelope
-      style={{ cursor: 'pointer', color: '#2196F3' }}
-      onClick={() => handleUpdateMailStatus(payslip._id)}
-    />
-  </div>
-          </td>
-
-
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {filteredPayslips.length === 0 && (
-        <div className="no-data">
-          <p>No payslips found</p>
-        </div>
-      )}
-
-      <div className="pagination">
-        {/* Pagination implementation can be added here */}
       </div>
-    </div>
   );
+};
+
+const EditPayslipModal = ({ isOpen, onClose, onSubmit, payslip }) => {
+  if (!isOpen) return null;
+
+  return (
+      <div className="modal">
+          <div className="modal-content">
+              <h2>Edit Payslip</h2>
+              <Formik
+                  initialValues={{
+                      employee: payslip.employee,
+                      startDate: new Date(payslip.startDate),
+                      endDate: new Date(payslip.endDate),
+                      grossPay: payslip.grossPay,
+                      deduction: payslip.deduction
+                  }}
+                  validationSchema={validationSchema}
+                  onSubmit={onSubmit}
+              >
+                  {({ values, setFieldValue, errors, touched }) => (
+                      <Form>
+                          <div className="form-group">
+                              <label>Employee Name</label>
+                              <Field name="employee" type="text" />
+                              {errors.employee && touched.employee && 
+                                  <div className="error">{errors.employee}</div>}
+                          </div>
+
+                          <div className="form-group">
+                              <label>Start Date</label>
+                              <DatePicker
+                                  selected={values.startDate}
+                                  onChange={date => setFieldValue('startDate', date)}
+                                  dateFormat="dd/MM/yyyy"
+                              />
+                          </div>
+
+                          <div className="form-group">
+                              <label>End Date</label>
+                              <DatePicker
+                                  selected={values.endDate}
+                                  onChange={date => setFieldValue('endDate', date)}
+                                  minDate={values.startDate}
+                                  dateFormat="dd/MM/yyyy"
+                              />
+                          </div>
+
+                          <div className="form-group">
+                              <label>Gross Pay</label>
+                              <Field name="grossPay" type="number" />
+                              {errors.grossPay && touched.grossPay && 
+                                  <div className="error">{errors.grossPay}</div>}
+                          </div>
+
+                          <div className="form-group">
+                              <label>Deduction</label>
+                              <Field name="deduction" type="number" />
+                              {errors.deduction && touched.deduction && 
+                                  <div className="error">{errors.deduction}</div>}
+                          </div>
+
+                          <div className="modal-actions">
+                              <button type="submit" className="btn-primary">Update</button>
+                              <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+                          </div>
+                      </Form>
+                  )}
+              </Formik>
+          </div>
+      </div>
+  );
+};
+const Payslips = () => {
+  const [payslips, setPayslips] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingPayslip, setEditingPayslip] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const fetchPayslips = async () => {
+      setLoading(true);
+      try {
+          const response = await axios.get('/api/payslips');
+          setPayslips(response.data);
+      } catch (error) {
+          toast.error('Failed to fetch payslips');
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  useEffect(() => {
+      fetchPayslips();
+  }, []);
+
+  const handleCreatePayslip = async (values, { resetForm }) => {
+      try {
+          const payslipData = {
+              ...values,
+              netPay: parseFloat(values.grossPay) - parseFloat(values.deduction)
+          };
+          const response = await axios.post('/api/payslips', payslipData);
+          setPayslips(prev => [...prev, response.data]);
+          toast.success('Payslip created successfully');
+          setIsCreateModalOpen(false);
+          resetForm();
+      } catch (error) {
+          toast.error('Failed to create payslip');
+      }
+  };
+
+  const handleEditPayslip = async (values) => {
+      try {
+          const response = await axios.put(`/api/payslips/${editingPayslip._id}`, {
+              ...values,
+              netPay: parseFloat(values.grossPay) - parseFloat(values.deduction)
+          });
+          
+          setPayslips(prev => prev.map(p => 
+              p._id === editingPayslip._id ? response.data : p
+          ));
+          
+          toast.success('Payslip updated successfully');
+          setIsEditModalOpen(false);
+          setEditingPayslip(null);
+      } catch (error) {
+          toast.error('Failed to update payslip');
+      }
+  };
+
+  const handleDeletePayslip = async (id) => {
+      if (window.confirm('Are you sure you want to delete this payslip?')) {
+          try {
+              await axios.delete(`/api/payslips/${id}`);
+              setPayslips(prev => prev.filter(p => p._id !== id));
+              toast.success('Payslip deleted successfully');
+          } catch (error) {
+              toast.error('Failed to delete payslip');
+          }
+      }
+  };
+
+  const handleBulkDelete = async () => {
+      if (selectedRows.length === 0) return;
+      
+      if (window.confirm('Are you sure you want to delete selected payslips?')) {
+          try {
+              await axios.post('/api/payslips/bulk-delete', { ids: selectedRows });
+              setPayslips(prev => prev.filter(p => !selectedRows.includes(p._id)));
+              setSelectedRows([]);
+              toast.success('Selected payslips deleted successfully');
+          } catch (error) {
+              toast.error('Failed to delete payslips');
+          }
+      }
+  };
+
+  const handleExport = async () => {
+      try {
+          const response = await axios.post('/api/payslips/export', 
+              { ids: selectedRows },
+              { responseType: 'blob' }
+          );
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', 'payslips.pdf');
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+      } catch (error) {
+          toast.error('Failed to export payslips');
+      }
+  };
+
+  const filteredPayslips = useMemo(() => {
+      return payslips.filter(payslip => 
+          payslip.employee.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+  }, [payslips, searchQuery]);
+  return (
+    <div className="payslips-container">
+        <div className="header">
+            <h1>Payslips Management</h1>
+            <div className="actions">
+                <input
+                    type="text"
+                    placeholder="Search employees..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="search-input"
+                />
+                <button onClick={() => setIsCreateModalOpen(true)} className="btn-primary">
+                    <FaPlus /> New Payslip
+                </button>
+                {selectedRows.length > 0 && (
+                    <>
+                        <button onClick={handleExport} className="btn-secondary">
+                            <FaDownload /> Export Selected
+                        </button>
+                        <button onClick={handleBulkDelete} className="btn-danger">
+                            <FaTrash /> Delete Selected
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+
+        {loading ? (
+            <div className="loading">Loading...</div>
+        ) : (
+            <table className="payslips-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <input
+                                type="checkbox"
+                                checked={selectedRows.length === filteredPayslips.length}
+                                onChange={() => {
+                                    if (selectedRows.length === filteredPayslips.length) {
+                                        setSelectedRows([]);
+                                    } else {
+                                        setSelectedRows(filteredPayslips.map(p => p._id));
+                                    }
+                                }}
+                            />
+                        </th>
+                        <th>Employee</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Gross Pay</th>
+                        <th>Deduction</th>
+                        <th>Net Pay</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {filteredPayslips.map(payslip => (
+                        <tr key={payslip._id}>
+                            <td>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedRows.includes(payslip._id)}
+                                    onChange={() => {
+                                        setSelectedRows(prev =>
+                                            prev.includes(payslip._id)
+                                                ? prev.filter(id => id !== payslip._id)
+                                                : [...prev, payslip._id]
+                                        );
+                                    }}
+                                />
+                            </td>
+                            <td>{payslip.employee}</td>
+                            <td>{format(new Date(payslip.startDate), 'dd/MM/yyyy')}</td>
+                            <td>{format(new Date(payslip.endDate), 'dd/MM/yyyy')}</td>
+                            <td>{payslip.grossPay}</td>
+                            <td>{payslip.deduction}</td>
+                            <td>{payslip.netPay}</td>
+                            <td>
+                                <button 
+                                    onClick={() => {
+                                        setEditingPayslip(payslip);
+                                        setIsEditModalOpen(true);
+                                    }}
+                                    className="btn-icon"
+                                >
+                                    <FaEdit />
+                                </button>
+                                <button 
+                                    onClick={() => handleDeletePayslip(payslip._id)}
+                                    className="btn-icon"
+                                >
+                                    <FaTrash />
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        )}
+
+        <CreatePayslipModal
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            onSubmit={handleCreatePayslip}
+        />
+
+        {editingPayslip && (
+            <EditPayslipModal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setEditingPayslip(null);
+                }}
+                onSubmit={handleEditPayslip}
+                payslip={editingPayslip}
+            />
+        )}
+    </div>
+);
 };
 
 export default Payslips;
