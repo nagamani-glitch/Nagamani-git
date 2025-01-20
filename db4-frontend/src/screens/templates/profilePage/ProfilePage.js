@@ -15,13 +15,13 @@ import ScheduledInterview from './scheduledInterview/ScheduledInterview';
 import Resignation from './resignation/Resignation';
 import { updateContract, getContractsByEmployeeId, deleteContract } from '../../../services/contractServices';
 import './ProfilePage.css';
-
+ 
 const ProfilePage = ({employeeId}) => {
   const [editMode, setEditMode] = useState(false);
   const [tabKey, setTabKey] = useState('about');
   const [subTabKey, setSubTabKey] = useState('workInfo');
   const [loading, setLoading] = useState(false);
-
+ 
   const [personalInfo, setPersonalInfo] = useState({});
   const [bankInfo, setBankInfo] = useState({});
   const [workInfo, setWorkInfo] = useState({});
@@ -37,11 +37,11 @@ const ProfilePage = ({employeeId}) => {
     filingStatus: '',
     status: ''
   });
-
+ 
   const userId = employeeId; // Replace with dynamic user ID as needed
-
+ 
   // Fetch user data from the backend
-
+ 
   const fetchProfileData = useCallback(async () => {
     setLoading(true);
     try {
@@ -56,20 +56,20 @@ const ProfilePage = ({employeeId}) => {
       setLoading(false);
     }
   }, [userId]);
-
+ 
   const fetchContracts = useCallback(async () => {
     const data = await getContractsByEmployeeId(userId);
     setContracts(data);
     console.log(data)
   }, [userId]);
-
+ 
   const handleDelete = async (contractId) => {
     if (window.confirm('Are you sure you want to delete this contract?')) {
       await deleteContract(contractId);
       fetchContracts();
     }
   };
-
+ 
   const handleUpdate = (contract) => {
     setSelectedContract(contract);
     setFormData({
@@ -83,7 +83,7 @@ const ProfilePage = ({employeeId}) => {
     });
     setShowModal(true);
   };
-
+ 
   // Update user data
   const updateProfileData = async () => {
     const payload = { personalInfo, bankInfo, workInfo };
@@ -96,7 +96,7 @@ const ProfilePage = ({employeeId}) => {
       alert('Failed to update profile');
     }
   };
-
+ 
   // Handle edit toggle
   const handleEditToggle = () => {
     if (editMode) {
@@ -104,7 +104,7 @@ const ProfilePage = ({employeeId}) => {
     }
     setEditMode(!editMode);
   };
-
+ 
   // Handle input changes
   const handleInputChange = (e, section) => {
     const { name, value } = e.target;
@@ -116,7 +116,7 @@ const ProfilePage = ({employeeId}) => {
       setBankInfo({ ...bankInfo, [name]: value });
     }
   };
-
+ 
   const handleSaveChanges = async () => {
     if (selectedContract) {
       await updateContract(selectedContract._id, formData);
@@ -124,34 +124,23 @@ const ProfilePage = ({employeeId}) => {
       setShowModal(false);
     }
   };
-
+ 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
+ 
   useEffect(() => {
     fetchProfileData();
     fetchContracts()
   }, [fetchProfileData, fetchContracts]);
-
+ 
   if (loading) {
     return <div>Loading...</div>;
   }
-
+ 
   return (
     <Container fluid className="profile-page-container">
-<<<<<<< HEAD
-      <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-        <Row>
-          <Col md={12} className="profile-card">
-            <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-              <Card.Body>
-                <Row>
-                  <Col>
-=======
       <Card style={{borderRadius: "10px", width:"100%"}} >
         <Row>
           <Col md={12} className="profile-card" >
@@ -159,7 +148,6 @@ const ProfilePage = ({employeeId}) => {
               <Card.Body >
                 <Row >
                   <Col >
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                     <div className="profile-avatar">
                       {personalInfo?.name ? (
                         `${personalInfo.name[0]}${personalInfo.name.split(" ")[1]?.[0] || ''}`
@@ -187,7 +175,7 @@ const ProfilePage = ({employeeId}) => {
             </Card>
           </Col>
         </Row>
-
+ 
         <Tab.Container activeKey={tabKey} onSelect={(k) => setTabKey(k)}>
           <Nav variant="pills" className="custom-nav mb-3">
             <Nav.Item>
@@ -230,7 +218,7 @@ const ProfilePage = ({employeeId}) => {
               <Nav.Link eventKey="resignation">Resignation</Nav.Link>
             </Nav.Item>
           </Nav>
-
+ 
           <Tab.Content>
             <Tab.Pane eventKey="about">
               <Row className="profile-section">
@@ -258,14 +246,9 @@ const ProfilePage = ({employeeId}) => {
                     </Card.Body>
                   </Card>
                 </Col>
-
+ 
                 <Col md={8} className="details-card">
-<<<<<<< HEAD
-                  <Card style={{ borderRadius: "10px", width:"100%"}}
->
-=======
                   <Card style={{ borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                     <Card.Body>
                       <Tab.Container activeKey={subTabKey} onSelect={(k) => setSubTabKey(k)}>
                         <Nav variant="tabs" className="mb-3 sub-tabs">
@@ -276,7 +259,7 @@ const ProfilePage = ({employeeId}) => {
                             <Nav.Link eventKey="contractDetails">Contract Details</Nav.Link>
                           </Nav.Item>
                         </Nav>
-
+ 
                         <Tab.Content>
                           {/* Work Information Tab */}
                           <Tab.Pane eventKey="workInfo">
@@ -303,7 +286,7 @@ const ProfilePage = ({employeeId}) => {
                               </Col>
                             </Row>
                           </Tab.Pane>
-
+ 
                           {/* Contract Details Tab */}
                           <Tab.Pane eventKey="contractDetails">
                             <Row>
@@ -360,7 +343,7 @@ const ProfilePage = ({employeeId}) => {
                                     onChange={handleFormChange}
                                   />
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="startDate">
                                   <Form.Label>Start Date</Form.Label>
                                   <Form.Control
@@ -370,7 +353,7 @@ const ProfilePage = ({employeeId}) => {
                                     onChange={handleFormChange}
                                   />
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="endDate">
                                   <Form.Label>End Date</Form.Label>
                                   <Form.Control
@@ -380,7 +363,7 @@ const ProfilePage = ({employeeId}) => {
                                     onChange={handleFormChange}
                                   />
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="wageType">
                                   <Form.Label>Wage Type</Form.Label>
                                   <Form.Control
@@ -394,7 +377,7 @@ const ProfilePage = ({employeeId}) => {
                                     <option value="Annually">Annually</option>
                                   </Form.Control>
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="basicSalary">
                                   <Form.Label>Basic Salary</Form.Label>
                                   <Form.Control
@@ -404,7 +387,7 @@ const ProfilePage = ({employeeId}) => {
                                     onChange={handleFormChange}
                                   />
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="filingStatus">
                                   <Form.Label>Filing Status</Form.Label>
                                   <Form.Control
@@ -414,7 +397,7 @@ const ProfilePage = ({employeeId}) => {
                                     onChange={handleFormChange}
                                   />
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="status">
                                   <Form.Label>Status</Form.Label>
                                   <Form.Control
@@ -442,12 +425,7 @@ const ProfilePage = ({employeeId}) => {
                       </Tab.Container>
                     </Card.Body>
                   </Card>
-<<<<<<< HEAD
-                  <Card className='mt-3' style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
                   <Card className='mt-3' style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                     <Card.Body>
                       <Row >
                         <Col md={12}>
@@ -476,47 +454,31 @@ const ProfilePage = ({employeeId}) => {
                 </Col>
               </Row>
             </Tab.Pane>
-
+ 
             <Tab.Pane eventKey="workTypeShift">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-                <Card.Body>
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
                 <Card.Body >
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                   <WorkTypeAndShift />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
-
+ 
             <Tab.Pane eventKey="attendance">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Attendance />
                 </Card.Body>
               </Card>
             </Tab.Pane>
-
+ 
             <Tab.Pane eventKey="leave">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Leave />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="payroll">
               <Card style={{borderRadius: "10px", width:"100%"}}>
@@ -524,118 +486,78 @@ const ProfilePage = ({employeeId}) => {
                   <Payroll />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="allowanceDeduction">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <AllowanceAndDeduction />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="penaltyAccount">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <PenaltyAccount />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="assets">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Assets />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="performance">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Performance />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="documents">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Documents />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="bonusPoints">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <BonusPoints />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="scheduledInterview">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <ScheduledInterview />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="resignation">
-<<<<<<< HEAD
-              <Card style={{ borderRadius: "10px", width:"100%"}}
- >
-=======
               <Card style={{borderRadius: "10px", width:"100%"}}>
->>>>>>> a41524df468ccdb8056e84833ed5417e39492482
                 <Card.Body>
                   <Resignation />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
-
+ 
           </Tab.Content>
         </Tab.Container>
       </Card>
     </Container>
   );
 };
-
+ 
 export default ProfilePage;
