@@ -15,13 +15,13 @@ import ScheduledInterview from './scheduledInterview/ScheduledInterview';
 import Resignation from './resignation/Resignation';
 import { updateContract, getContractsByEmployeeId, deleteContract } from '../../../services/contractServices';
 import './ProfilePage.css';
-
+ 
 const ProfilePage = ({employeeId}) => {
   const [editMode, setEditMode] = useState(false);
   const [tabKey, setTabKey] = useState('about');
   const [subTabKey, setSubTabKey] = useState('workInfo');
   const [loading, setLoading] = useState(false);
-
+ 
   const [personalInfo, setPersonalInfo] = useState({});
   const [bankInfo, setBankInfo] = useState({});
   const [workInfo, setWorkInfo] = useState({});
@@ -37,11 +37,11 @@ const ProfilePage = ({employeeId}) => {
     filingStatus: '',
     status: ''
   });
-
+ 
   const userId = employeeId; // Replace with dynamic user ID as needed
-
+ 
   // Fetch user data from the backend
-
+ 
   const fetchProfileData = useCallback(async () => {
     setLoading(true);
     try {
@@ -56,20 +56,20 @@ const ProfilePage = ({employeeId}) => {
       setLoading(false);
     }
   }, [userId]);
-
+ 
   const fetchContracts = useCallback(async () => {
     const data = await getContractsByEmployeeId(userId);
     setContracts(data);
     console.log(data)
   }, [userId]);
-
+ 
   const handleDelete = async (contractId) => {
     if (window.confirm('Are you sure you want to delete this contract?')) {
       await deleteContract(contractId);
       fetchContracts();
     }
   };
-
+ 
   const handleUpdate = (contract) => {
     setSelectedContract(contract);
     setFormData({
@@ -83,7 +83,7 @@ const ProfilePage = ({employeeId}) => {
     });
     setShowModal(true);
   };
-
+ 
   // Update user data
   const updateProfileData = async () => {
     const payload = { personalInfo, bankInfo, workInfo };
@@ -96,7 +96,7 @@ const ProfilePage = ({employeeId}) => {
       alert('Failed to update profile');
     }
   };
-
+ 
   // Handle edit toggle
   const handleEditToggle = () => {
     if (editMode) {
@@ -104,7 +104,7 @@ const ProfilePage = ({employeeId}) => {
     }
     setEditMode(!editMode);
   };
-
+ 
   // Handle input changes
   const handleInputChange = (e, section) => {
     const { name, value } = e.target;
@@ -116,7 +116,7 @@ const ProfilePage = ({employeeId}) => {
       setBankInfo({ ...bankInfo, [name]: value });
     }
   };
-
+ 
   const handleSaveChanges = async () => {
     if (selectedContract) {
       await updateContract(selectedContract._id, formData);
@@ -124,21 +124,21 @@ const ProfilePage = ({employeeId}) => {
       setShowModal(false);
     }
   };
-
+ 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
+ 
   useEffect(() => {
     fetchProfileData();
     fetchContracts()
   }, [fetchProfileData, fetchContracts]);
-
+ 
   if (loading) {
     return <div>Loading...</div>;
   }
-
+ 
   return (
     <Container fluid className="profile-page-container">
       <Card style={{borderRadius: "10px", width:"100%"}} >
@@ -175,7 +175,7 @@ const ProfilePage = ({employeeId}) => {
             </Card>
           </Col>
         </Row>
-
+ 
         <Tab.Container activeKey={tabKey} onSelect={(k) => setTabKey(k)}>
           <Nav variant="pills" className="custom-nav mb-3">
             <Nav.Item>
@@ -218,7 +218,7 @@ const ProfilePage = ({employeeId}) => {
               <Nav.Link eventKey="resignation">Resignation</Nav.Link>
             </Nav.Item>
           </Nav>
-
+ 
           <Tab.Content>
             <Tab.Pane eventKey="about">
               <Row className="profile-section">
@@ -246,7 +246,7 @@ const ProfilePage = ({employeeId}) => {
                     </Card.Body>
                   </Card>
                 </Col>
-
+ 
                 <Col md={8} className="details-card">
                   <Card style={{ borderRadius: "10px", width:"100%"}}>
                     <Card.Body>
@@ -259,7 +259,7 @@ const ProfilePage = ({employeeId}) => {
                             <Nav.Link eventKey="contractDetails">Contract Details</Nav.Link>
                           </Nav.Item>
                         </Nav>
-
+ 
                         <Tab.Content>
                           {/* Work Information Tab */}
                           <Tab.Pane eventKey="workInfo">
@@ -286,7 +286,7 @@ const ProfilePage = ({employeeId}) => {
                               </Col>
                             </Row>
                           </Tab.Pane>
-
+ 
                           {/* Contract Details Tab */}
                           <Tab.Pane eventKey="contractDetails">
                             <Row>
@@ -343,7 +343,7 @@ const ProfilePage = ({employeeId}) => {
                                     onChange={handleFormChange}
                                   />
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="startDate">
                                   <Form.Label>Start Date</Form.Label>
                                   <Form.Control
@@ -353,7 +353,7 @@ const ProfilePage = ({employeeId}) => {
                                     onChange={handleFormChange}
                                   />
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="endDate">
                                   <Form.Label>End Date</Form.Label>
                                   <Form.Control
@@ -363,7 +363,7 @@ const ProfilePage = ({employeeId}) => {
                                     onChange={handleFormChange}
                                   />
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="wageType">
                                   <Form.Label>Wage Type</Form.Label>
                                   <Form.Control
@@ -377,7 +377,7 @@ const ProfilePage = ({employeeId}) => {
                                     <option value="Annually">Annually</option>
                                   </Form.Control>
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="basicSalary">
                                   <Form.Label>Basic Salary</Form.Label>
                                   <Form.Control
@@ -387,7 +387,7 @@ const ProfilePage = ({employeeId}) => {
                                     onChange={handleFormChange}
                                   />
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="filingStatus">
                                   <Form.Label>Filing Status</Form.Label>
                                   <Form.Control
@@ -397,7 +397,7 @@ const ProfilePage = ({employeeId}) => {
                                     onChange={handleFormChange}
                                   />
                                 </Form.Group>
-
+ 
                                 <Form.Group controlId="status">
                                   <Form.Label>Status</Form.Label>
                                   <Form.Control
@@ -454,16 +454,16 @@ const ProfilePage = ({employeeId}) => {
                 </Col>
               </Row>
             </Tab.Pane>
-
+ 
             <Tab.Pane eventKey="workTypeShift">
               <Card style={{borderRadius: "10px", width:"100%"}}>
                 <Card.Body >
                   <WorkTypeAndShift />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
-
+ 
             <Tab.Pane eventKey="attendance">
               <Card style={{borderRadius: "10px", width:"100%"}}>
                 <Card.Body>
@@ -471,14 +471,14 @@ const ProfilePage = ({employeeId}) => {
                 </Card.Body>
               </Card>
             </Tab.Pane>
-
+ 
             <Tab.Pane eventKey="leave">
               <Card style={{borderRadius: "10px", width:"100%"}}>
                 <Card.Body>
                   <Leave />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="payroll">
               <Card style={{borderRadius: "10px", width:"100%"}}>
@@ -486,7 +486,7 @@ const ProfilePage = ({employeeId}) => {
                   <Payroll />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="allowanceDeduction">
               <Card style={{borderRadius: "10px", width:"100%"}}>
@@ -494,7 +494,7 @@ const ProfilePage = ({employeeId}) => {
                   <AllowanceAndDeduction />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="penaltyAccount">
               <Card style={{borderRadius: "10px", width:"100%"}}>
@@ -502,7 +502,7 @@ const ProfilePage = ({employeeId}) => {
                   <PenaltyAccount />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="assets">
               <Card style={{borderRadius: "10px", width:"100%"}}>
@@ -510,7 +510,7 @@ const ProfilePage = ({employeeId}) => {
                   <Assets />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="performance">
               <Card style={{borderRadius: "10px", width:"100%"}}>
@@ -518,7 +518,7 @@ const ProfilePage = ({employeeId}) => {
                   <Performance />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="documents">
               <Card style={{borderRadius: "10px", width:"100%"}}>
@@ -526,7 +526,7 @@ const ProfilePage = ({employeeId}) => {
                   <Documents />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="bonusPoints">
               <Card style={{borderRadius: "10px", width:"100%"}}>
@@ -534,7 +534,7 @@ const ProfilePage = ({employeeId}) => {
                   <BonusPoints />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="scheduledInterview">
               <Card style={{borderRadius: "10px", width:"100%"}}>
@@ -542,7 +542,7 @@ const ProfilePage = ({employeeId}) => {
                   <ScheduledInterview />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
             <Tab.Pane eventKey="resignation">
               <Card style={{borderRadius: "10px", width:"100%"}}>
@@ -550,14 +550,14 @@ const ProfilePage = ({employeeId}) => {
                   <Resignation />
                 </Card.Body>
               </Card>
-
+ 
             </Tab.Pane>
-
+ 
           </Tab.Content>
         </Tab.Container>
       </Card>
     </Container>
   );
 };
-
+ 
 export default ProfilePage;

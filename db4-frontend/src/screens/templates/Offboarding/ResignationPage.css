@@ -187,15 +187,8 @@
   transition: background-color 0.3s;
 }
 
-.card {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  padding: 1rem;
-  border-radius: 5px;
-  /* width: 200px; */
 .email-btn:hover {
   background-color: #45a049;
-}
 }
 
 /* Filter Popup */
