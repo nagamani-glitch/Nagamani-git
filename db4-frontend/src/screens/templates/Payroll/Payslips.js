@@ -15,9 +15,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { toast } from "react-toastify";
 import { payslipAPI } from "../api/payslip";
 import { useNavigate } from "react-router-dom";
-
+ 
 const API_URL = "http://localhost:5000/api/payslips";
-
+ 
 const Payslips = () => {
   const navigate = useNavigate();
   const [payslips, setPayslips] = useState([]);
@@ -35,9 +35,9 @@ const Payslips = () => {
   const [itemsPerPage] = useState(10);
   const [editingId, setEditingId] = useState(null);
 const [editedData, setEditedData] = useState({});
-
-
-
+ 
+ 
+ 
   const [newPayslip, setNewPayslip] = useState({
     employee: "",
     startDate: "",
@@ -48,7 +48,7 @@ const [editedData, setEditedData] = useState({});
     status: "pending",
     mailSent: false,
   });
-
+ 
   const [filterCriteria, setFilterCriteria] = useState({
     startDate: "",
     endDate: "",
@@ -63,11 +63,11 @@ const [editedData, setEditedData] = useState({});
     netPayGreaterOrEqual: "",
     searchText: "",
   });
-
+ 
   useEffect(() => {
     fetchPayslips();
   }, []);
-
+ 
   const fetchPayslips = async () => {
     try {
       setLoading(true);
@@ -90,7 +90,7 @@ const [editedData, setEditedData] = useState({});
       setLoading(false);
     }
   };
-
+ 
   // Update the saveNewPayslip function
   const saveNewPayslip = async () => {
     try {
@@ -101,7 +101,7 @@ const [editedData, setEditedData] = useState({});
         netPay:
           parseFloat(newPayslip.grossPay) - parseFloat(newPayslip.deduction),
       };
-
+ 
       const result = await payslipAPI.createPayslip(payslipData);
       toast.success("Payslip created successfully");
       fetchPayslips();
@@ -115,7 +115,7 @@ const [editedData, setEditedData] = useState({});
       }
     }
   };
-
+ 
   // const updatePayslip = async (id, data) => {
   //     try {
   //         const token = localStorage.getItem('token');
@@ -129,7 +129,7 @@ const [editedData, setEditedData] = useState({});
   //         toast.error('Failed to update payslip');
   //     }
   // };
-
+ 
   const handleDeletePayslip = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -142,7 +142,7 @@ const [editedData, setEditedData] = useState({});
       toast.error("Failed to delete payslip");
     }
   };
-
+ 
   const handleUpdateMailStatus = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -159,30 +159,30 @@ const [editedData, setEditedData] = useState({});
       toast.error("Failed to update mail status");
     }
   };
-
+ 
   const handleFilter = (e) => {
     const text = e.target.value.toLowerCase();
     setFilterText(text);
     setFilterCriteria((prev) => ({ ...prev, searchText: text }));
     applyFilters();
   };
-
+ 
   const handleFilterChange = (field, value) => {
     setFilterCriteria((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
-
+ 
   const applyFilters = async () => {
     try {
       const token = localStorage.getItem("token");
       const queryParams = new URLSearchParams();
-
+ 
       Object.entries(filterCriteria).forEach(([key, value]) => {
         if (value) queryParams.append(key, value);
       });
-
+ 
       const response = await axios.get(`${API_URL}?${queryParams.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -192,7 +192,7 @@ const [editedData, setEditedData] = useState({});
       toast.error("Failed to apply filters");
     }
   };
-
+ 
   const handleDeleteSelected = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -211,18 +211,18 @@ const [editedData, setEditedData] = useState({});
       toast.error("Failed to delete selected payslips");
     }
   };
-
+ 
   const handleRowSelect = (id) => {
     setSelectedRows((prev) =>
       prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
     );
   };
-
+ 
   const handleSelectAll = () => {
     setIsAllSelected(!isAllSelected);
     setSelectedRows(isAllSelected ? [] : filteredPayslips.map((p) => p._id));
   };
-
+ 
   const toggleCreatePopup = () => {
     setIsCreatePopupOpen(!isCreatePopupOpen);
     setNewPayslip({
@@ -236,18 +236,18 @@ const [editedData, setEditedData] = useState({});
       mailSent: false,
     });
   };
-
+ 
   const toggleFilterModal = () => setIsFilterPopupOpen(!isFilterPopupOpen);
-
+ 
   const handleNewPayslipChange = (field, value) => {
     setNewPayslip((prev) => ({ ...prev, [field]: value }));
   };
-
+ 
   if (loading) return <div className="loading-spinner">Loading...</div>;
   if (error) return <div className="error-message">Error: {error}</div>;
-
-
-  
+ 
+ 
+ 
 // Add these functions to handle edit, save and delete operations
 const handleEdit = (payslip) => {
     setEditingId(payslip._id);
@@ -262,18 +262,18 @@ const handleEdit = (payslip) => {
       status: payslip.status
     });
   };
-  
+ 
   const handleSave = async (id) => {
     try {
       const response = await axios.put(`${API_URL}/${id}`, editedData);
       if (response.data.success) {
-        setPayslips(prevPayslips => 
-          prevPayslips.map(payslip => 
+        setPayslips(prevPayslips =>
+          prevPayslips.map(payslip =>
             payslip._id === id ? response.data.data : payslip
           )
         );
-        setFilteredPayslips(prevFiltered => 
-          prevFiltered.map(payslip => 
+        setFilteredPayslips(prevFiltered =>
+          prevFiltered.map(payslip =>
             payslip._id === id ? response.data.data : payslip
           )
         );
@@ -283,7 +283,7 @@ const handleEdit = (payslip) => {
       console.error("Save failed:", error);
     }
   };
-  
+ 
   const handleDelete = async (id) => {
     try {
       await axios.delete(`${API_URL}/${id}`);
@@ -293,8 +293,8 @@ const handleEdit = (payslip) => {
       console.error("Delete failed:", error);
     }
   };
-
-
+ 
+ 
   return (
     <div className="payslip-dashboard">
       <div className="header">
@@ -311,11 +311,11 @@ const handleEdit = (payslip) => {
             <FaFilter /> Filter
           </button>
           <button className="create-btn" onClick={toggleCreatePopup}>
-            <FaPlus /> Create New
+            <FaPlus /> Create
           </button>
         </div>
       </div>
-
+ 
       {selectedRows.length > 0 && (
         <div className="selected-actions-row">
           <button onClick={() => setSelectedRows([])}>
@@ -326,7 +326,7 @@ const handleEdit = (payslip) => {
           </button>
         </div>
       )}
-
+ 
       {isCreatePopupOpen && (
         <div className="modal-overlay">
           <div className="create-popup">
@@ -413,7 +413,7 @@ const handleEdit = (payslip) => {
           </div>
         </div>
       )}
-
+ 
       {isFilterPopupOpen && (
         <div className="modal-overlay">
           <div className="filter-modal">
@@ -481,7 +481,7 @@ const handleEdit = (payslip) => {
           </div>
         </div>
       )}
-
+ 
       <table className="payslip-table">
         <thead>
           <tr>
@@ -525,50 +525,41 @@ const handleEdit = (payslip) => {
                   {payslip.status}
                 </span>
               </td>
-
-<td>
-            <div className="action-buttons">
-              {editingId === payslip._id ? (
-                <button 
-                  className="table-action-save-button"
-                  onClick={() => handleSave(payslip._id)}
-                >
-                  <FaSave /> 
-                </button>
-              ) : (
-                <button 
-                  className="table-action-edit-button"
-                  onClick={() => handleEdit(payslip)}
-                >
-                  <FaEdit /> 
-                </button>
-              )}
-              <button 
-                className="table-action-del-button"
-                onClick={() => handleDelete(payslip._id)}
-              >
-                <FaTrash />  
-              </button>
-            </div>
+ 
+          <td>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+    <FaEdit
+      style={{ cursor: 'pointer', color: '#4CAF50' }}
+      onClick={() => handleEdit(payslip)}
+    />
+    <FaTrash
+      style={{ cursor: 'pointer', color: '#f44336' }}
+      onClick={() => handleDelete(payslip._id)}
+    />
+    <FaEnvelope
+      style={{ cursor: 'pointer', color: '#2196F3' }}
+      onClick={() => handleUpdateMailStatus(payslip._id)}
+    />
+  </div>
           </td>
-
-
+ 
+ 
             </tr>
           ))}
         </tbody>
       </table>
-
+ 
       {filteredPayslips.length === 0 && (
         <div className="no-data">
           <p>No payslips found</p>
         </div>
       )}
-
+ 
       <div className="pagination">
         {/* Pagination implementation can be added here */}
       </div>
     </div>
   );
 };
-
+ 
 export default Payslips;

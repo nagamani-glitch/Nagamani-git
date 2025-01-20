@@ -1,25 +1,25 @@
 .payslip-dashboard {
     padding: 20px;
 }
-
+ 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
 }
-
+ 
 .actions {
     display: flex;
     gap: 10px;
 }
-
+ 
 .search-bar {
     padding: 5px 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
-
+ 
 .filter-btn, .group-by-btn, .actions-btn, .create-btn {
     padding: 5px 10px;
     border: none;
@@ -27,7 +27,7 @@
     background-color: #f5f5f5;
     cursor: pointer;
 }
-
+ 
 .create-btn {
     background-color: #f44336;
     color: white;
@@ -35,40 +35,40 @@
     align-items: center;
     gap: 5px;
 }
-
+ 
 .payslip-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
 }
-
+ 
 .payslip-table th, .payslip-table td {
     padding: 10px;
     border: 1px solid #ddd;
     text-align: left;
 }
-
+ 
 .payslip-table th {
     background-color: #f5f5f5;
 }
-
+ 
 .payslip-table td {
     background-color: #fff;
 }
-
+ 
 .action-btn {
     background: none;
     border: none;
     cursor: pointer;
     color: #555;
 }
-
+ 
 .pagination {
     margin-top: 10px;
     text-align: center;
 }
-
-
+ 
+ 
 .filter-modal {
     position: fixed;
     top: 10%;
@@ -83,29 +83,29 @@
     padding: 20px;
     overflow-y: auto;
 }
-
+ 
 .filter-modal-content {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
-
+ 
 .filter-section, .filter-section-advanced {
     margin-bottom: 20px;
 }
-
+ 
 .filter-section h3, .filter-section-advanced h4 {
     margin-top: 0;
     margin-bottom: 10px;
 }
-
+ 
 label {
     display: block;
     font-size: 0.9em;
     margin-bottom: 5px;
     font-weight: 600;
 }
-
+ 
 input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     width: 100%;
     padding: 5px;
@@ -113,7 +113,7 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     border: 1px solid #ccc;
     border-radius: 5px;
 }
-
+ 
 .apply-btn {
     background-color: #f44336;
     color: #fff;
@@ -124,8 +124,8 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     border-radius: 5px;
     margin-top: 10px;
 }
-
-
+ 
+ 
 .selected-actions-row {
     display: flex;
     gap: 10px;
@@ -135,7 +135,7 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     margin-bottom: 10px;
     align-items: center;
 }
-
+ 
 .unselect-all,
 .export-btn,
 .delete-btn {
@@ -150,18 +150,18 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     font-size: 0.9em;
     cursor: pointer;
 }
-
+ 
 .unselect-all { background-color: #6c757d; } /* Gray */
 .export-btn { background-color: #28a745; } /* Green */
-.delete-btn { background-color: transparent; } 
-
+.delete-btn { background-color: transparent; }
+ 
 .unselect-all:hover,
 .export-btn:hover,
 .delete-btn:hover {
     opacity: 0.8;
 }
-
-
+ 
+ 
 .create-popup {
     position: fixed;
     top: 50%;
@@ -173,71 +173,73 @@ input[type="text"], input[type="number"], select, .react-datepicker-wrapper {
     z-index: 1000;
     width: 300px;
 }
-
+ 
 .create-popup-content h3 {
     margin-bottom: 15px;
     margin-top: 10px;
-    
+   
 }
-
+ 
 .create-popup .form-row {
     margin-bottom: 10px;
 }
-
+ 
 .create-popup .form-row label {
     display: block;
     font-weight: bold;
     margin-bottom: 5px;
     margin-top: 10px;
 }
-
+ 
 .create-popup .form-row input,
 .create-popup .form-row .react-datepicker-wrapper {
     width: 100%;
 }
-
-.create-popup .save-btn, 
+ 
+.create-popup .save-btn,
 .create-popup .cancel-btn {
     margin-top: 15px;
     padding: 8px 12px;
     cursor: pointer;
     width: 100%;
 }
-
-
+ 
+ 
 /* action column buttons */
-
+ 
 .action-buttons {
     display: flex;
     gap: 8px;
-    border: 1px solid red;
     justify-content: center;
   }
-  
-  .table-action-edit-button,
-  .table-action-save-button,
-  .table-action-del-button {
-    padding: 6px;
+ 
+  .action-btn {
+    background: none;
     border: none;
-    border-radius: 4px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s;
   }
-  
-  .table-action-edit-button {
-    background-color: #4CAF50;
-    color: white;
+ 
+  .edit-btn {
+    color: #4CAF50;
   }
-  
-  .table-action-save-button {
-    background-color: #2196F3;
-    color: white;
+ 
+  .save-btn {
+    color: #2196F3;
   }
-  
-  .table-action-del-button {
-    background-color: #f44336;
-    color: white;
+ 
+  .delete-btn {
+    color: #f44336;
   }
-  
+ 
+  .mail-btn {
+    color: #9C27B0;
+  }
+ 
+  .action-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+  }
+ 
