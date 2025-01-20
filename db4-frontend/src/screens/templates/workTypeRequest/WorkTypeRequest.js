@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import {
+
   Box,
+
   Button,
+
   IconButton,
+
   Table,
+
   TableBody,
+
   TableCell,
+
   TableContainer,
+
   TableHead,
+
   TableRow,
+
   Tabs,
   Menu,
   Tab,
+
   Checkbox,
+
   Typography,
   Paper,
+
   Divider,
   Dialog,
   DialogTitle,
@@ -48,16 +61,26 @@ import {
 
 // Add this sample data at the top of your component
 const employees = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
+id: i + 1,
+
   name: `Employee ${i + 1}`,
+
   employeeCode: `#EMP${i + 1}`,
+
   requestedShift: i % 2 === 0 ? 'First Shift' : 'Second Shift',
+
   currentShift: 'Regular Shift',
+
   requestedDate: 'Nov. 7, 2024',
+
   requestedTill: 'Nov. 9, 2024',
+
   status: i % 2 === 0 ? 'Approved' : 'Rejected',
+
   description: 'Request for shift adjustment',
+
   comment: 'Needs urgent consideration',
+
 }));
 
 
@@ -385,6 +408,59 @@ const WorkTypeRequest = () => {
           <Button sx={{ color: 'red' }} onClick={() => setFilterStatus('Rejected')}>
             ● Rejected
           </Button>
+
+
+
+          {showSelectionButtons && (
+
+            <>
+
+              <Button
+
+                variant="outlined"
+
+                sx={{ color: 'grey.500', borderColor: 'grey.500' }}
+
+                onClick={handleUnselectAll}
+
+              >
+
+                Unselect All
+
+              </Button>
+
+
+
+              <Button
+
+                variant="outlined"
+
+                sx={{ color: 'blue', borderColor: 'blue' }}
+
+              >
+
+                Export Shifts
+
+              </Button>
+
+
+
+              <Button
+
+                variant="outlined"
+
+                sx={{ color: 'maroon', borderColor: 'maroon' }}
+
+              >
+
+                {selectedAllocations.length} Selected
+
+              </Button>
+
+            </>
+
+          )}
+
         </Box>
       </Box>
 
@@ -392,6 +468,7 @@ const WorkTypeRequest = () => {
       <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} textColor="primary" indicatorColor="primary">
         <Tab label="Work Type Requests" />
       </Tabs>
+
       <Divider sx={{ mb: 2 }} />
       {/* Table */}
       {tabValue === 0 ? (
@@ -835,6 +912,8 @@ const WorkTypeRequest = () => {
         </DialogActions>
       </Dialog>
     </Box>
+
   );
+
 };
 export default WorkTypeRequest;
