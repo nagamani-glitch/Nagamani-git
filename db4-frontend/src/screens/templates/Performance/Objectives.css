@@ -16,7 +16,7 @@
     font-weight: 600;
   }
   
-  .toolbar {
+  .obj-toolbar {
     display: flex;
     gap: 10px;
   }
@@ -28,13 +28,23 @@
     border-radius: 4px;
   }
   
-  .toolbar button {
+  .toolbar-button {
     padding: 8px 12px;
     border: none;
     background-color: #1a8116c4;
     color: white;
     border-radius: 4px;
     cursor: pointer;
+  }
+
+  .obj-filter-button{
+    padding: 10px 20px;
+    margin: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
   }
   
   .tabs {

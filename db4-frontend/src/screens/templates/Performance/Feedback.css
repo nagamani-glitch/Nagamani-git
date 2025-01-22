@@ -30,12 +30,16 @@
   }
   
   .toolbar button {
+    background-color: #e1051a;
+    color: white;
     padding: 8px 12px;
     border: none;
-    background-color: #007bff;
-    color: white;
     border-radius: 4px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  
   }
   
   .create-btn {

@@ -204,12 +204,12 @@ const Objectives = () => {
   };
 
   return (
-    <div className="objectives">
+    <div className="objectives"> 
       <div className="header-row">
         <h2>Objectives</h2>
-        <div className="toolbar">
+        <div className="obj-toolbar">
           <input type="text" placeholder="Search" value={searchTerm} onChange={handleSearch} className='search-input' />
-          <button onClick={() => setIsFilterModalOpen(true)}>Filter</button>
+          <button className = "obj-filter-button" onClick={() => setIsFilterModalOpen(true)}>Filter</button>
           <button onClick={handleAdd} className="create-button">Create</button>
         </div>
       </div>
