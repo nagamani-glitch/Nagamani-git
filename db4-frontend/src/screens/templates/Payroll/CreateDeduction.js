@@ -429,7 +429,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
 
 
         {showFilterModal && (
-          <div className="modal">
+          <div className="modal"> 
             <div className="modal-content">
               <h3>Specific Employees</h3>
               <button className="close-modal" onClick={() => setShowFilterModal(false)}>&times;</button>
@@ -438,7 +438,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                 placeholder="Search..."
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
-                className="search-bar"
+                className="create-search-bar" 
               />
               <div className="employee-list">
                 {filteredEmployees.map((employee) => (

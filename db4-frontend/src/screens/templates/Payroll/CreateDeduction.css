@@ -212,6 +212,7 @@
 .avatar-container{
     display: flex;
   }
+
 .avatar {
     margin-top: 10px;
     display: flex;
@@ -265,7 +266,7 @@
     cursor: pointer;
   }
   
-  .search-bar {
+  .create-search-bar {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
