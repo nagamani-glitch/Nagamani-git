@@ -266,7 +266,7 @@ const Deductions = () => {
             <FaFilter /> Filter
           </button>
           <button className="create-btn" onClick={handleCreateAllowance}>
-            <FaPlus /> Create
+             Create
           </button>
 
           {/* Create modal popup */}

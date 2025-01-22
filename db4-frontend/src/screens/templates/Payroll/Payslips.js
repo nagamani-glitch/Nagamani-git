@@ -27,8 +27,8 @@ const CreatePayslipModal = ({ isOpen, onClose, onSubmit }) => {
 
   return (
       <div className="modal">
-          <div className="modal-content">
-              <h2>Create New Payslip</h2>
+          <div className="payslip-modal-content">
+              <h2 className='payslip-create'>Create New Payslip</h2>
               <Formik
                   initialValues={{
                       employee: '',
@@ -99,8 +99,8 @@ const EditPayslipModal = ({ isOpen, onClose, onSubmit, payslip }) => {
 
   return (
       <div className="modal">
-          <div className="modal-content">
-              <h2>Edit Payslip</h2>
+          <div className="edit-payslip-modal-content">
+              <h2 className='edit-payslip-heading'>Edit Payslip</h2>
               <Formik
                   initialValues={{
                       employee: payslip.employee,
@@ -287,8 +287,8 @@ const Payslips = () => {
                     onChange={e => setSearchQuery(e.target.value)}
                     className="search-input"
                 />
-                <button onClick={() => setIsCreateModalOpen(true)} className="btn-primary">
-                    <FaPlus /> New Payslip
+                <button onClick={() => setIsCreateModalOpen(true)} className="btn-primary create-payslip">
+                    New Payslip
                 </button>
                 {selectedRows.length > 0 && (
                     <>
