@@ -52,7 +52,7 @@ function Sidebar({ setActiveScreen }) {
             <li onClick={() => handleSubClick('recruitmentSurvey')}>Recruitment Survey</li>
             <li onClick={() => handleSubClick('candidates')}>Candidates</li>
             <li onClick={() => handleSubClick('interview')}>Interview</li>
-            <li onClick={() => handleSubClick('openJobs')}>Open Jobs</li>
+            {/* <li onClick={() => handleSubClick('openJobs')}>Open Jobs</li> */}
             <li onClick={() => handleSubClick('skillZone')}>Skill Zone</li>
           </ul>
         )}

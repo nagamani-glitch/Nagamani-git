@@ -154,9 +154,9 @@ const RecruitmentPipeline = () => {
               onChange={handleSearchChange}
             />
           </Paper>
-          <Button variant="outlined" startIcon={<FilterListIcon />} sx={{ mr: 1 }}>
+          {/* <Button variant="outlined" startIcon={<FilterListIcon />} sx={{ mr: 1 }}>
             Filter
-          </Button>
+          </Button> */}
           <Button variant="contained" color="error" startIcon={<AddIcon />} onClick={() => handleDialogOpen()}>
             Add Candidate
           </Button>

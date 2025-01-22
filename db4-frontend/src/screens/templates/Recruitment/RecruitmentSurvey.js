@@ -19,6 +19,7 @@ import {
   TableHead,
   TableRow,
   Pagination,
+  Paper,
 } from '@mui/material';
 import { ExpandMore, Add, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
@@ -33,7 +34,6 @@ const RecruitmentSurvey = () => {
   const [currentTemplateId, setCurrentTemplateId] = useState(null);
   const [currentQuestionId, setCurrentQuestionId] = useState(null);
 
-  // Fetch survey templates from backend
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
@@ -70,20 +70,17 @@ const RecruitmentSurvey = () => {
       };
       try {
         const { data } = await axios.post('http://localhost:5000/api/recruitment-survey/add', newTemplate);
-        setTemplates([...templates, data]); // Add the new template to state
+        setTemplates([...templates, data]);
         handleClose();
       } catch (error) {
         console.error('Error adding template:', error);
       }
-    } else {
-      console.error('Template name, question, and type are required.');
     }
   };
 
   const handleEditQuestion = (templateId, questionId) => {
     const template = templates.find((t) => t._id === templateId);
     const question = template.questions.find((q) => q._id === questionId);
-
     setNewTemplateName(template.name);
     setNewQuestion(question.question);
     setNewType(question.type);
@@ -92,13 +89,10 @@ const RecruitmentSurvey = () => {
     setEditing(true);
     setOpen(true);
   };
-
   const handleSaveEdit = async () => {
     const updatedTemplate = {
       name: newTemplateName,
-      questions: [
-        { _id: currentQuestionId, question: newQuestion, type: newType },
-      ],
+      questions: [{ _id: currentQuestionId, question: newQuestion, type: newType }],
     };
 
     try {
@@ -144,92 +138,152 @@ const RecruitmentSurvey = () => {
   };
 
   return (
-    <Box p={3} sx={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      <Typography variant="h4" gutterBottom>Survey Templates</Typography>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-        sx={{
-          backgroundColor: '#fff',
-          padding: '10px 20px',
-          borderRadius: 2,
-          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+    <Box p={4} sx={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+      <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+        <Typography variant="h4" gutterBottom sx={{ color: '#2c3e50', fontWeight: 600, mb: 3 }}>
+          Survey Templates
+        </Typography>
+        
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={3}
+          sx={{
+            backgroundColor: '#fff',
+            padding: '15px 25px',
+            borderRadius: 2,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+          }}
+        >
+          <Typography variant="h6" sx={{ color: '#34495e' }}>Templates</Typography>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleClickOpen}
+            sx={{
+              backgroundColor: '#3498db',
+              '&:hover': { backgroundColor: '#2980b9' },
+            }}
+          >
+            Add Template
+          </Button>
+        </Box>
+
+        {templates.map((template) => (
+          <Accordion 
+            key={template._id} 
+            defaultExpanded 
+            sx={{ 
+              mb: 2,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+              '&:before': { display: 'none' },
+              borderRadius: '8px !important',
+            }}
+          >
+            <AccordionSummary 
+              expandIcon={<ExpandMore />}
+              sx={{
+                backgroundColor: '#f8f9fa',
+                borderRadius: '8px 8px 0 0',
+              }}
+            >
+              <Box display="flex" alignItems="center" width="100%">
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2c3e50' }}>
+                  {template.name}
+                  <span style={{ 
+                    color: '#e74c3c',
+                    marginLeft: 12,
+                    backgroundColor: '#fff',
+                    padding: '2px 8px',
+                    borderRadius: 12,
+                    fontSize: '0.8rem'
+                  }}>
+                    {template.questions.length}
+                  </span>
+                </Typography>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleDeleteTemplate(template._id)}
+                  sx={{ ml: 'auto' }}
+                >
+                  <Delete />
+                </IconButton>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 0 }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                    <TableCell sx={{ fontWeight: 600, color: '#34495e' }}>Question</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#34495e' }}>Type</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#34495e' }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {template.questions.map((question) => (
+                    <TableRow 
+                      key={question._id}
+                      sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}
+                    >
+                      <TableCell>
+                        <Box display="flex" alignItems="center" gap={2}>
+                          <Avatar sx={{ 
+                            bgcolor: '#3498db',
+                            width: 35,
+                            height: 35,
+                            fontSize: '0.9rem'
+                          }}>
+                            {question.avatar}
+                          </Avatar>
+                          <Typography sx={{ color: '#2c3e50' }}>{question.question}</Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ color: '#7f8c8d' }}>{question.type}</TableCell>
+                      <TableCell>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEditQuestion(template._id, question._id)}
+                          sx={{ color: '#3498db', mr: 1 }}
+                        >
+                          <Edit />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteQuestion(template._id, question._id)}
+                          sx={{ color: '#e74c3c' }}
+                        >
+                          <Delete />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </AccordionDetails>
+          </Accordion>
+        ))}
+      </Paper>
+
+      <Dialog 
+        open={open} 
+        onClose={handleClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            minWidth: '400px'
+          }
         }}
       >
-        <Typography variant="h6">Templates</Typography>
-        <IconButton color="primary" onClick={handleClickOpen}>
-          <Add />
-        </IconButton>
-      </Box>
-
-      {templates.map((template) => (
-        <Accordion key={template._id} defaultExpanded sx={{ marginBottom: 2 }}>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle1" fontWeight="bold">
-              {template.name} <span style={{ color: '#F44336', marginLeft: 8 }}>{template.questions.length}</span>
-            </Typography>
-            {/* Delete button for whole template */}
-            <IconButton
-              size="small"
-              color="secondary"
-              onClick={() => handleDeleteTemplate(template._id)}
-              style={{ marginLeft: 'auto' }}
-            >
-              <Delete />
-            </IconButton>
-          </AccordionSummary>
-          <AccordionDetails sx={{ padding: 0 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Question</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {template.questions.map((question) => (
-                  <TableRow key={question._id}>
-                    <TableCell>
-                      <Box display="flex" alignItems="center">
-                        <Avatar style={{ marginRight: 8, backgroundColor: '#FFC107' }}>{question.avatar}</Avatar>
-                        <Typography>{question.question}</Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>{question.type}</TableCell>
-                    <TableCell>
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => handleEditQuestion(template._id, question._id)}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="secondary"
-                        onClick={() => handleDeleteQuestion(template._id, question._id)}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </AccordionDetails>
-        </Accordion>
-      ))}
-
-      <Box display="flex" justifyContent="center" mt={2}>
-        <Pagination count={1} page={1} />
-      </Box>
-
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editing ? 'Edit Question' : 'Add Recruitment'}</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ 
+          borderBottom: '1px solid #eee',
+          color: '#2c3e50',
+          fontWeight: 600
+        }}>
+          {editing ? 'Edit Question' : 'Add Recruitment'}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
           <TextField
             label="Template Name"
             value={newTemplateName}
@@ -237,6 +291,7 @@ const RecruitmentSurvey = () => {
             fullWidth
             margin="dense"
             disabled={editing}
+            sx={{ mb: 2 }}
           />
           <TextField
             label="Question"
@@ -244,6 +299,7 @@ const RecruitmentSurvey = () => {
             onChange={(e) => setNewQuestion(e.target.value)}
             fullWidth
             margin="dense"
+            sx={{ mb: 2 }}
           />
           <TextField
             label="Type"
@@ -253,11 +309,18 @@ const RecruitmentSurvey = () => {
             margin="dense"
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
+        <DialogActions sx={{ p: 2, borderTop: '1px solid #eee' }}>
+          <Button onClick={handleClose} sx={{ color: '#7f8c8d' }}>
             Cancel
           </Button>
-          <Button onClick={editing ? handleSaveEdit : handleAddTemplate} color="primary">
+          <Button 
+            onClick={editing ? handleSaveEdit : handleAddTemplate}
+            variant="contained"
+            sx={{
+              bgcolor: '#3498db',
+              '&:hover': { bgcolor: '#2980b9' }
+            }}
+          >
             {editing ? 'Save Changes' : 'Add'}
           </Button>
         </DialogActions>
