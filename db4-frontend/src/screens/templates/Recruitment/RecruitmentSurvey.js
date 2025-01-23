@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -20,16 +20,16 @@ import {
   TableRow,
   Pagination,
   Paper,
-} from '@mui/material';
-import { ExpandMore, Add, Edit, Delete } from '@mui/icons-material';
-import axios from 'axios';
+} from "@mui/material";
+import { ExpandMore, Add, Edit, Delete } from "@mui/icons-material";
+import axios from "axios";
 
 const RecruitmentSurvey = () => {
   const [templates, setTemplates] = useState([]);
   const [open, setOpen] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState('');
-  const [newQuestion, setNewQuestion] = useState('');
-  const [newType, setNewType] = useState('');
+  const [newTemplateName, setNewTemplateName] = useState("");
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newType, setNewType] = useState("");
   const [editing, setEditing] = useState(false);
   const [currentTemplateId, setCurrentTemplateId] = useState(null);
   const [currentQuestionId, setCurrentQuestionId] = useState(null);
@@ -37,10 +37,12 @@ const RecruitmentSurvey = () => {
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/recruitment-survey');
+        const response = await axios.get(
+          "http://localhost:5000/api/recruitment-survey"
+        );
         setTemplates(response.data);
       } catch (error) {
-        console.error('Error fetching templates:', error);
+        console.error("Error fetching templates:", error);
       }
     };
     fetchTemplates();
@@ -53,9 +55,9 @@ const RecruitmentSurvey = () => {
 
   const handleClose = () => {
     setOpen(false);
-    setNewTemplateName('');
-    setNewQuestion('');
-    setNewType('');
+    setNewTemplateName("");
+    setNewQuestion("");
+    setNewType("");
     setCurrentTemplateId(null);
     setCurrentQuestionId(null);
   };
@@ -65,15 +67,22 @@ const RecruitmentSurvey = () => {
       const newTemplate = {
         name: newTemplateName,
         questions: [
-          { avatar: newTemplateName.charAt(0).toUpperCase(), question: newQuestion, type: newType },
+          {
+            avatar: newTemplateName.charAt(0).toUpperCase(),
+            question: newQuestion,
+            type: newType,
+          },
         ],
       };
       try {
-        const { data } = await axios.post('http://localhost:5000/api/recruitment-survey/add', newTemplate);
+        const { data } = await axios.post(
+          "http://localhost:5000/api/recruitment-survey/add",
+          newTemplate
+        );
         setTemplates([...templates, data]);
         handleClose();
       } catch (error) {
-        console.error('Error adding template:', error);
+        console.error("Error adding template:", error);
       }
     }
   };
@@ -92,78 +101,97 @@ const RecruitmentSurvey = () => {
   const handleSaveEdit = async () => {
     const updatedTemplate = {
       name: newTemplateName,
-      questions: [{ _id: currentQuestionId, question: newQuestion, type: newType }],
+      questions: [
+        { _id: currentQuestionId, question: newQuestion, type: newType },
+      ],
     };
 
     try {
-      const { data } = await axios.put(`http://localhost:5000/api/recruitment-survey/${currentTemplateId}`, updatedTemplate);
+      const { data } = await axios.put(
+        `http://localhost:5000/api/recruitment-survey/${currentTemplateId}`,
+        updatedTemplate
+      );
       setTemplates((prevTemplates) =>
         prevTemplates.map((template) =>
-          template._id === currentTemplateId ? { ...template, questions: data.questions } : template
+          template._id === currentTemplateId
+            ? { ...template, questions: data.questions }
+            : template
         )
       );
       handleClose();
     } catch (error) {
-      console.error('Error saving edited question:', error);
+      console.error("Error saving edited question:", error);
     }
   };
 
   const handleDeleteQuestion = async (templateId, questionId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/recruitment-survey/${templateId}/questions/${questionId}`);
+      await axios.delete(
+        `http://localhost:5000/api/recruitment-survey/${templateId}/questions/${questionId}`
+      );
       setTemplates((prevTemplates) =>
         prevTemplates.map((template) =>
           template._id === templateId
             ? {
                 ...template,
-                questions: template.questions.filter((question) => question._id !== questionId),
+                questions: template.questions.filter(
+                  (question) => question._id !== questionId
+                ),
               }
             : template
         )
       );
     } catch (error) {
-      console.error('Error deleting question:', error);
+      console.error("Error deleting question:", error);
     }
   };
 
   const handleDeleteTemplate = async (templateId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/recruitment-survey/${templateId}`);
+      await axios.delete(
+        `http://localhost:5000/api/recruitment-survey/${templateId}`
+      );
       setTemplates((prevTemplates) =>
         prevTemplates.filter((template) => template._id !== templateId)
       );
     } catch (error) {
-      console.error('Error deleting template:', error);
+      console.error("Error deleting template:", error);
     }
   };
 
   return (
-    <Box p={4} sx={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+    <Box p={4} sx={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
       <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-        <Typography variant="h4" gutterBottom sx={{ color: '#2c3e50', fontWeight: 600, mb: 3 }}>
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{ color: "#2c3e50", fontWeight: 600, mb: 3 }}
+        >
           Survey Templates
         </Typography>
-        
+
         <Box
           display="flex"
           justifyContent="space-between"
           alignItems="center"
           mb={3}
           sx={{
-            backgroundColor: '#fff',
-            padding: '15px 25px',
+            backgroundColor: "#fff",
+            padding: "15px 25px",
             borderRadius: 2,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
           }}
         >
-          <Typography variant="h6" sx={{ color: '#34495e' }}>Templates</Typography>
+          <Typography variant="h6" sx={{ color: "#34495e" }}>
+            Templates
+          </Typography>
           <Button
             variant="contained"
             startIcon={<Add />}
             onClick={handleClickOpen}
             sx={{
-              backgroundColor: '#3498db',
-              '&:hover': { backgroundColor: '#2980b9' },
+              backgroundColor: "#3498db",
+              "&:hover": { backgroundColor: "#2980b9" },
             }}
           >
             Add Template
@@ -171,34 +199,39 @@ const RecruitmentSurvey = () => {
         </Box>
 
         {templates.map((template) => (
-          <Accordion 
-            key={template._id} 
-            defaultExpanded 
-            sx={{ 
+          <Accordion
+            key={template._id}
+            defaultExpanded
+            sx={{
               mb: 2,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              '&:before': { display: 'none' },
-              borderRadius: '8px !important',
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              "&:before": { display: "none" },
+              borderRadius: "8px !important",
             }}
           >
-            <AccordionSummary 
+            <AccordionSummary
               expandIcon={<ExpandMore />}
               sx={{
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px 8px 0 0',
+                backgroundColor: "#f8f9fa",
+                borderRadius: "8px 8px 0 0",
               }}
             >
               <Box display="flex" alignItems="center" width="100%">
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2c3e50' }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: 600, color: "#2c3e50" }}
+                >
                   {template.name}
-                  <span style={{ 
-                    color: '#e74c3c',
-                    marginLeft: 12,
-                    backgroundColor: '#fff',
-                    padding: '2px 8px',
-                    borderRadius: 12,
-                    fontSize: '0.8rem'
-                  }}>
+                  <span
+                    style={{
+                      color: "#e74c3c",
+                      marginLeft: 12,
+                      backgroundColor: "#fff",
+                      padding: "2px 8px",
+                      borderRadius: 12,
+                      fontSize: "0.8rem",
+                    }}
+                  >
                     {template.questions.length}
                   </span>
                 </Typography>
@@ -206,7 +239,7 @@ const RecruitmentSurvey = () => {
                   size="small"
                   color="error"
                   onClick={() => handleDeleteTemplate(template._id)}
-                  sx={{ ml: 'auto' }}
+                  sx={{ ml: "auto" }}
                 >
                   <Delete />
                 </IconButton>
@@ -215,44 +248,60 @@ const RecruitmentSurvey = () => {
             <AccordionDetails sx={{ p: 0 }}>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
-                    <TableCell sx={{ fontWeight: 600, color: '#34495e' }}>Question</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#34495e' }}>Type</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#34495e' }}>Actions</TableCell>
+                  <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
+                    <TableCell sx={{ fontWeight: 600, color: "#34495e" }}>
+                      Question
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: "#34495e" }}>
+                      Type
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: "#34495e" }}>
+                      Actions
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {template.questions.map((question) => (
-                    <TableRow 
+                    <TableRow
                       key={question._id}
-                      sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}
+                      sx={{ "&:hover": { backgroundColor: "#f8f9fa" } }}
                     >
                       <TableCell>
                         <Box display="flex" alignItems="center" gap={2}>
-                          <Avatar sx={{ 
-                            bgcolor: '#3498db',
-                            width: 35,
-                            height: 35,
-                            fontSize: '0.9rem'
-                          }}>
+                          <Avatar
+                            sx={{
+                              bgcolor: "#3498db",
+                              width: 35,
+                              height: 35,
+                              fontSize: "0.9rem",
+                            }}
+                          >
                             {question.avatar}
                           </Avatar>
-                          <Typography sx={{ color: '#2c3e50' }}>{question.question}</Typography>
+                          <Typography sx={{ color: "#2c3e50" }}>
+                            {question.question}
+                          </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ color: '#7f8c8d' }}>{question.type}</TableCell>
+                      <TableCell sx={{ color: "#7f8c8d" }}>
+                        {question.type}
+                      </TableCell>
                       <TableCell>
                         <IconButton
                           size="small"
-                          onClick={() => handleEditQuestion(template._id, question._id)}
-                          sx={{ color: '#3498db', mr: 1 }}
+                          onClick={() =>
+                            handleEditQuestion(template._id, question._id)
+                          }
+                          sx={{ color: "#3498db", mr: 1 }}
                         >
                           <Edit />
                         </IconButton>
                         <IconButton
                           size="small"
-                          onClick={() => handleDeleteQuestion(template._id, question._id)}
-                          sx={{ color: '#e74c3c' }}
+                          onClick={() =>
+                            handleDeleteQuestion(template._id, question._id)
+                          }
+                          sx={{ color: "#e74c3c" }}
                         >
                           <Delete />
                         </IconButton>
@@ -266,22 +315,24 @@ const RecruitmentSurvey = () => {
         ))}
       </Paper>
 
-      <Dialog 
-        open={open} 
+      <Dialog
+        open={open}
         onClose={handleClose}
         PaperProps={{
           sx: {
             borderRadius: 2,
-            minWidth: '400px'
-          }
+            minWidth: "400px",
+          },
         }}
       >
-        <DialogTitle sx={{ 
-          borderBottom: '1px solid #eee',
-          color: '#2c3e50',
-          fontWeight: 600
-        }}>
-          {editing ? 'Edit Question' : 'Add Recruitment'}
+        <DialogTitle
+          sx={{
+            borderBottom: "1px solid #eee",
+            color: "#2c3e50",
+            fontWeight: 600,
+          }}
+        >
+          {editing ? "Edit Question" : "Add Recruitment"}
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
           <TextField
@@ -309,19 +360,19 @@ const RecruitmentSurvey = () => {
             margin="dense"
           />
         </DialogContent>
-        <DialogActions sx={{ p: 2, borderTop: '1px solid #eee' }}>
-          <Button onClick={handleClose} sx={{ color: '#7f8c8d' }}>
+        <DialogActions sx={{ p: 2, borderTop: "1px solid #eee" }}>
+          <Button onClick={handleClose} sx={{ color: "#7f8c8d" }}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={editing ? handleSaveEdit : handleAddTemplate}
             variant="contained"
             sx={{
-              bgcolor: '#3498db',
-              '&:hover': { bgcolor: '#2980b9' }
+              bgcolor: "#3498db",
+              "&:hover": { bgcolor: "#2980b9" },
             }}
           >
-            {editing ? 'Save Changes' : 'Add'}
+            {editing ? "Save Changes" : "Add"}
           </Button>
         </DialogActions>
       </Dialog>
