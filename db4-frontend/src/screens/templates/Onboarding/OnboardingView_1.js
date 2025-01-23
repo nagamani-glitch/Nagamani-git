@@ -1,25 +1,294 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import './OnboardingView.css';
+// import React, { useState, useEffect } from 'react';
+// import axios from 'axios';
+// import './OnboardingView.css';
+
+// function OnboardingView() {
+//   const [candidates, setCandidates] = useState([]);
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [stageFilter, setStageFilter] = useState('All');
+//   const [showCreateForm, setShowCreateForm] = useState(false);
+//   const [selectedCandidates, setSelectedCandidates] = useState([]);
+//   const [newCandidate, setNewCandidate] = useState({
+//     name: '',
+//     email: '',
+//     jobPosition: '',
+//     mobile: '',
+//     joiningDate: '',
+//     stage: 'Test',
+//     portalStatus: 'Active',
+//     taskStatus: 'Pending'
+//   });
+
+//   const uniqueStages = ['All', 'Test', 'Interview', 'Offer'];
+
+//   useEffect(() => {
+//     fetchCandidates();
+//   }, [stageFilter]);
+
+//   const fetchCandidates = async () => {
+//     try {
+//       const url = stageFilter === 'All'
+//         ? 'http://localhost:5000/api/onboarding'
+//         : `http://localhost:5000/api/onboarding/filter?stage=${stageFilter}`;
+//       const response = await axios.get(url);
+//       setCandidates(response.data);
+//     } catch (error) {
+//       console.error('Error fetching candidates:', error);
+//     }
+//   };
+
+//   const handleCreateCandidate = async (e) => {
+//     e.preventDefault();
+//     try {
+//       const response = await axios.post('http://localhost:5000/api/onboarding', newCandidate);
+//       setCandidates([...candidates, response.data]);
+//       setNewCandidate({
+//         name: '',
+//         email: '',
+//         jobPosition: '',
+//         mobile: '',
+//         joiningDate: '',
+//         stage: 'Test',
+//         portalStatus: 'Active',
+//         taskStatus: 'Pending'
+//       });
+//       setShowCreateForm(false);
+//     } catch (error) {
+//       console.error('Error creating candidate:', error);
+//     }
+//   };
+
+//   const handleDeleteCandidate = async (id) => {
+//     try {
+//       await axios.delete(`http://localhost:5000/api/onboarding/${id}`);
+//       setCandidates(candidates.filter(candidate => candidate._id !== id));
+//     } catch (error) {
+//       console.error('Error deleting candidate:', error);
+//     }
+//   };
+
+//   const sendMailToCandidate = async (candidate) => {
+//     try {
+//       await axios.post('http://localhost:5000/api/onboarding/send-email', {
+//         email: candidate.email,
+//         name: candidate.name,
+//         jobPosition: candidate.jobPosition,
+//         joiningDate: candidate.joiningDate
+//       });
+//       alert('Onboarding email sent successfully!');
+//     } catch (error) {
+//       console.error('Error sending email:', error);
+//       alert('Failed to send email. Please try again.');
+//     }
+//   };
+
+//   const filteredCandidates = candidates.filter((candidate) =>
+//     candidate.name.toLowerCase().includes(searchTerm.toLowerCase())
+//   );
+
+//   const handleSearchChange = (event) => {
+//     setSearchTerm(event.target.value);
+//   };
+
+//   const handleStageFilterChange = (event) => {
+//     setStageFilter(event.target.value);
+//   };
+
+//   const toggleSelectCandidate = (id) => {
+//     setSelectedCandidates(prevSelected =>
+//       prevSelected.includes(id)
+//         ? prevSelected.filter(candidateId => candidateId !== id)
+//         : [...prevSelected, id]
+//     );
+//   };
+
+//   const handleSelectAll = () => {
+//     setSelectedCandidates(
+//       selectedCandidates.length === filteredCandidates.length
+//         ? []
+//         : filteredCandidates.map(candidate => candidate._id)
+//     );
+//   };
+
+//   return (
+//     <div className="onboarding-view">
+//       <h1 className="page-title">Onboarding</h1>
+//       <div className="content">
+//         <div className="filter-bar">
+//           <input
+//             type="text"
+//             placeholder="Search by name"
+//             value={searchTerm}
+//             onChange={handleSearchChange}
+//             className="search-input"
+//           />
+
+//           <select
+//             value={stageFilter}
+//             onChange={handleStageFilterChange}
+//             className="filter-select"
+//           >
+//             {uniqueStages.map((stage) => (
+//               <option key={stage} value={stage}>{stage}</option>
+//             ))}
+//           </select>
+
+//           <button
+//             className="create-button"
+//             onClick={() => setShowCreateForm(!showCreateForm)}
+//           >
+//             + Create
+//           </button>
+//         </div>
+
+//         {showCreateForm && (
+//           <div className="modal">
+//             <div className="modal-content">
+//               <form onSubmit={handleCreateCandidate}>
+//                 <input
+//                   type="text"
+//                   placeholder="Name"
+//                   value={newCandidate.name}
+//                   onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })}
+//                   required
+//                   className="modal-input"
+//                 />
+//                 <input
+//                   type="email"
+//                   placeholder="Email"
+//                   value={newCandidate.email}
+//                   onChange={(e) => setNewCandidate({ ...newCandidate, email: e.target.value })}
+//                   required
+//                   className="modal-input"
+//                 />
+//                 <input
+//                   type="text"
+//                   placeholder="Job Position"
+//                   value={newCandidate.jobPosition}
+//                   onChange={(e) => setNewCandidate({ ...newCandidate, jobPosition: e.target.value })}
+//                   required
+//                   className="modal-input"
+//                 />
+//                 <input
+//                   type="tel"
+//                   placeholder="Mobile"
+//                   value={newCandidate.mobile}
+//                   onChange={(e) => setNewCandidate({ ...newCandidate, mobile: e.target.value })}
+//                   required
+//                   className="modal-input"
+//                 />
+//                 <input
+//                   type="date"
+//                   placeholder="Joining Date"
+//                   value={newCandidate.joiningDate}
+//                   onChange={(e) => setNewCandidate({ ...newCandidate, joiningDate: e.target.value })}
+//                   required
+//                   className="modal-input"
+//                 />
+//                 <select
+//                   value={newCandidate.stage}
+//                   onChange={(e) => setNewCandidate({ ...newCandidate, stage: e.target.value })}
+//                   required
+//                   className="modal-input"
+//                 >
+//                   {uniqueStages.slice(1).map((stage) => (
+//                     <option key={stage} value={stage}>{stage}</option>
+//                   ))}
+//                 </select>
+//                 <button type="submit" className="modal-btn">Add Candidate</button>
+//                 <button
+//                   type="button"
+//                   onClick={() => setShowCreateForm(false)}
+//                   className="modal-btn cancel"
+//                 >
+//                   Cancel
+//                 </button>
+//               </form>
+//             </div>
+//           </div>
+//         )}
+
+//         <table className="candidate-table">
+//           <thead>
+//             <tr>
+//               <th>
+//                 <input
+//                   type="checkbox"
+//                   onChange={handleSelectAll}
+//                   checked={selectedCandidates.length === filteredCandidates.length && filteredCandidates.length > 0}
+//                 />
+//               </th>
+//               <th>Candidate</th>
+//               <th>Email</th>
+//               <th>Job Position</th>
+//               <th>Mobile</th>
+//               <th>Joining Date</th>
+//               <th>Stage</th>
+//               <th>Options</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {filteredCandidates.map((candidate) => (
+//               <tr key={candidate._id}>
+//                 <td>
+//                   <input
+//                     type="checkbox"
+//                     checked={selectedCandidates.includes(candidate._id)}
+//                     onChange={() => toggleSelectCandidate(candidate._id)}
+//                   />
+//                 </td>
+//                 <td>{candidate.name}</td>
+//                 <td>{candidate.email}</td>
+//                 <td>{candidate.jobPosition}</td>
+//                 <td>{candidate.mobile}</td>
+//                 <td>{new Date(candidate.joiningDate).toLocaleDateString()}</td>
+//                 <td>{candidate.stage}</td>
+//                 <td>
+//                   <button
+//                     onClick={() => sendMailToCandidate(candidate)}
+//                     className="send-mail-btn"
+//                   >
+//                     Send Mail
+//                   </button>
+//                   <button
+//                     onClick={() => handleDeleteCandidate(candidate._id)}
+//                     className="delete-btn"
+//                   >
+//                     Delete
+//                   </button>
+//                 </td>
+//               </tr>
+//             ))}
+//           </tbody>
+//         </table>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default OnboardingView;
+
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./OnboardingView.css";
 
 function OnboardingView() {
   const [candidates, setCandidates] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [stageFilter, setStageFilter] = useState('All');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stageFilter, setStageFilter] = useState("All");
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [newCandidate, setNewCandidate] = useState({
-    name: '',
-    email: '',
-    jobPosition: '',
-    mobile: '',
-    joiningDate: '',
-    stage: 'Test',
-    portalStatus: 'Active',
-    taskStatus: 'Pending'
+    name: "",
+    email: "",
+    jobPosition: "",
+    mobile: "",
+    joiningDate: "",
+    stage: "Test",
+    portalStatus: "Active",
+    taskStatus: "Pending",
   });
 
-  const uniqueStages = ['All', 'Test', 'Interview', 'Offer'];
+  const uniqueStages = ["All", "Test", "Interview", "Offer"];
 
   useEffect(() => {
     fetchCandidates();
@@ -27,235 +296,234 @@ function OnboardingView() {
 
   const fetchCandidates = async () => {
     try {
-      const url = stageFilter === 'All' 
-        ? 'http://localhost:5000/api/onboarding'
-        : `http://localhost:5000/api/onboarding/filter?stage=${stageFilter}`;
+      const url =
+        stageFilter === "All"
+          ? "http://localhost:5000/api/onboarding"
+          : `http://localhost:5000/api/onboarding/filter?stage=${stageFilter}`;
       const response = await axios.get(url);
       setCandidates(response.data);
     } catch (error) {
-      console.error('Error fetching candidates:', error);
+      console.error("Error fetching candidates:", error);
     }
   };
 
   const handleCreateCandidate = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/onboarding', newCandidate);
+      const response = await axios.post(
+        "http://localhost:5000/api/onboarding",
+        newCandidate
+      );
       setCandidates([...candidates, response.data]);
       setNewCandidate({
-        name: '',
-        email: '',
-        jobPosition: '',
-        mobile: '',
-        joiningDate: '',
-        stage: 'Test',
-        portalStatus: 'Active',
-        taskStatus: 'Pending'
+        name: "",
+        email: "",
+        jobPosition: "",
+        mobile: "",
+        joiningDate: "",
+        stage: "Test",
+        portalStatus: "Active",
+        taskStatus: "Pending",
       });
       setShowCreateForm(false);
     } catch (error) {
-      console.error('Error creating candidate:', error);
+      console.error("Error creating candidate:", error);
     }
   };
-  
+
   const handleDeleteCandidate = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/onboarding/${id}`);
-      setCandidates(candidates.filter(candidate => candidate._id !== id));
+      setCandidates(candidates.filter((candidate) => candidate._id !== id));
     } catch (error) {
-      console.error('Error deleting candidate:', error);
+      console.error("Error deleting candidate:", error);
     }
   };
 
   const sendMailToCandidate = async (candidate) => {
     try {
-      await axios.post('http://localhost:5000/api/onboarding/send-email', {
+      await axios.post("http://localhost:5000/api/onboarding/send-email", {
         email: candidate.email,
         name: candidate.name,
         jobPosition: candidate.jobPosition,
-        joiningDate: candidate.joiningDate
+        joiningDate: candidate.joiningDate,
       });
-      alert('Onboarding email sent successfully!');
+      alert("Onboarding email sent successfully!");
     } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Failed to send email. Please try again.');
+      console.error("Error sending email:", error);
+      alert("Failed to send email. Please try again.");
     }
   };
 
-  const filteredCandidates = candidates.filter((candidate) => 
+  const filteredCandidates = candidates.filter((candidate) =>
     candidate.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
-  const handleStageFilterChange = (event) => {
-    setStageFilter(event.target.value);
-  };
-
-  const toggleSelectCandidate = (id) => {
-    setSelectedCandidates(prevSelected =>
-      prevSelected.includes(id)
-        ? prevSelected.filter(candidateId => candidateId !== id)
-        : [...prevSelected, id]
-    );
-  };
-
-  const handleSelectAll = () => {
-    setSelectedCandidates(
-      selectedCandidates.length === filteredCandidates.length
-        ? []
-        : filteredCandidates.map(candidate => candidate._id)
-    );
-  };
-
   return (
-    <div className="onboarding-view">
-      <h1 className="page-title">Onboarding</h1>
-      <div className="content">
-        <div className="filter-bar">
+    <div className="onboarding-container">
+      <div className="onboarding-header">
+        <h1>Onboarding Dashboard</h1>
+        <div className="header-actions">
           <input
             type="text"
-            placeholder="Search by name"
+            placeholder="Search candidates..."
             value={searchTerm}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
-
-          <select 
-            value={stageFilter} 
-            onChange={handleStageFilterChange} 
-            className="filter-select"
+          <select
+            value={stageFilter}
+            onChange={(e) => setStageFilter(e.target.value)}
+            className="stage-select"
           >
             {uniqueStages.map((stage) => (
-              <option key={stage} value={stage}>{stage}</option>
+              <option key={stage} value={stage}>
+                {stage}
+              </option>
             ))}
           </select>
-
-          <button 
-            className="create-button" 
-            onClick={() => setShowCreateForm(!showCreateForm)}
+          <button
+            className="add-candidate-btn"
+            onClick={() => setShowCreateForm(true)}
           >
-            + Create
+            Add New Candidate
           </button>
         </div>
+      </div>
 
-        {showCreateForm && (
-          <div className="modal">
-            <div className="modal-content">
-              <form onSubmit={handleCreateCandidate}>
+      {showCreateForm && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Add New Candidate</h2>
+            <form onSubmit={handleCreateCandidate} className="candidate-form">
+              <div className="form-group">
                 <input
                   type="text"
-                  placeholder="Name"
+                  placeholder="Full Name"
                   value={newCandidate.name}
-                  onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })}
+                  onChange={(e) =>
+                    setNewCandidate({ ...newCandidate, name: e.target.value })
+                  }
                   required
-                  className="modal-input"
                 />
+              </div>
+              <div className="form-group">
                 <input
                   type="email"
-                  placeholder="Email"
+                  placeholder="Email Address"
                   value={newCandidate.email}
-                  onChange={(e) => setNewCandidate({ ...newCandidate, email: e.target.value })}
+                  onChange={(e) =>
+                    setNewCandidate({ ...newCandidate, email: e.target.value })
+                  }
                   required
-                  className="modal-input"
                 />
+              </div>
+              <div className="form-group">
                 <input
                   type="text"
                   placeholder="Job Position"
                   value={newCandidate.jobPosition}
-                  onChange={(e) => setNewCandidate({ ...newCandidate, jobPosition: e.target.value })}
+                  onChange={(e) =>
+                    setNewCandidate({
+                      ...newCandidate,
+                      jobPosition: e.target.value,
+                    })
+                  }
                   required
-                  className="modal-input"
                 />
+              </div>
+              <div className="form-group">
                 <input
                   type="tel"
-                  placeholder="Mobile"
+                  placeholder="Mobile Number"
                   value={newCandidate.mobile}
-                  onChange={(e) => setNewCandidate({ ...newCandidate, mobile: e.target.value })}
+                  onChange={(e) =>
+                    setNewCandidate({ ...newCandidate, mobile: e.target.value })
+                  }
                   required
-                  className="modal-input"
                 />
+              </div>
+              <div className="form-group">
                 <input
                   type="date"
-                  placeholder="Joining Date"
                   value={newCandidate.joiningDate}
-                  onChange={(e) => setNewCandidate({ ...newCandidate, joiningDate: e.target.value })}
+                  onChange={(e) =>
+                    setNewCandidate({
+                      ...newCandidate,
+                      joiningDate: e.target.value,
+                    })
+                  }
                   required
-                  className="modal-input"
                 />
-                <select
-                  value={newCandidate.stage}
-                  onChange={(e) => setNewCandidate({ ...newCandidate, stage: e.target.value })}
-                  required
-                  className="modal-input"
-                >
-                  {uniqueStages.slice(1).map((stage) => (
-                    <option key={stage} value={stage}>{stage}</option>
-                  ))}
-                </select>
-                <button type="submit" className="modal-btn">Add Candidate</button>
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="submit-btn">
+                  Add Candidate
+                </button>
                 <button
                   type="button"
+                  className="cancel-btn"
                   onClick={() => setShowCreateForm(false)}
-                  className="modal-btn cancel"
                 >
                   Cancel
                 </button>
-              </form>
-            </div>
+              </div>
+            </form>
           </div>
-        )}
+        </div>
+      )}
 
-        <table className="candidate-table">
+      <div className="candidates-table-container">
+        <table className="candidates-table">
           <thead>
             <tr>
-              <th>
-                <input
-                  type="checkbox"
-                  onChange={handleSelectAll}
-                  checked={selectedCandidates.length === filteredCandidates.length && filteredCandidates.length > 0}
-                />
-              </th>
-              <th>Candidate</th>
+              <th>Name</th>
               <th>Email</th>
-              <th>Job Position</th>
+              <th>Position</th>
               <th>Mobile</th>
               <th>Joining Date</th>
               <th>Stage</th>
-              <th>Options</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredCandidates.map((candidate) => (
               <tr key={candidate._id}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedCandidates.includes(candidate._id)}
-                    onChange={() => toggleSelectCandidate(candidate._id)}
-                  />
-                </td>
                 <td>{candidate.name}</td>
                 <td>{candidate.email}</td>
                 <td>{candidate.jobPosition}</td>
                 <td>{candidate.mobile}</td>
                 <td>{new Date(candidate.joiningDate).toLocaleDateString()}</td>
-                <td>{candidate.stage}</td>
                 <td>
-                  <button 
-                    onClick={() => sendMailToCandidate(candidate)} 
-                    className="send-mail-btn"
+                  <span
+                    className={`stage-badge ${candidate.stage.toLowerCase()}`}
                   >
-                    Send Mail
+                    {candidate.stage}
+                  </span>
+                </td>
+                {/* <td className="action-buttons">
+                  <button onClick={() => sendMailToCandidate(candidate)} className="mail-btn">
+                    Send Email
                   </button>
-                  <button 
-                    onClick={() => handleDeleteCandidate(candidate._id)}
-                    className="delete-btn"
-                  >
+                  <button onClick={() => handleDeleteCandidate(candidate._id)} className="delete-btn">
                     Delete
                   </button>
+                </td> */}
+                <td className="action-cell">
+                  <div className="action-buttons-wrapper">
+                    <button
+                      onClick={() => sendMailToCandidate(candidate)}
+                      className="action-btn mail-btn"
+                    >
+                      <i className="fas fa-envelope" size={18}></i>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCandidate(candidate._id)}
+                      className="action-btn onboarding-delete-btn"
+                    >
+                      <i className="fas fa-trash " size={18}></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
