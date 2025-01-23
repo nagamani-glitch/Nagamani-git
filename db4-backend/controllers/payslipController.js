@@ -89,34 +89,73 @@ export const exportPayslips = async (req, res) => {
     
     doc.pipe(res);
     
-    const pageWidth = doc.page.width - 100; // Adjusted width for margins
-    const leftMargin = 50;
-
     payslips.forEach((payslip, index) => {
       if (index > 0) doc.addPage();
 
-      // Header Section (Top of page)
-      doc.fontSize(24)
-         .fillColor('#1a237e')
+      // Decorative top border
+      doc.rect(50, 40, 495, 5)
+         .fillColor('#ff0000')
+         .fill();
+
+      // Company Header with enhanced styling
+      doc.fontSize(28)
+         .fillColor('#ff0000')
+         .font('Helvetica-Bold')
          .text('DB4CLOUD TECHNOLOGIES', { align: 'center' });
+
+      // Double underline effect
+      const headerWidth = 400;
+      const headerX = (doc.page.width - headerWidth) / 2;
       
-      // Company Details
-      doc.moveDown(0.5);
-      doc.fontSize(10)
-         .fillColor('#455a64')
+      // First line (thick)
+      doc.moveTo(headerX, doc.y + 2)
+         .lineTo(headerX + headerWidth, doc.y + 2)
+         .lineWidth(3)
+         .strokeColor('#ff0000')
+         .stroke();
+      
+      // Second line (thin)
+      doc.moveTo(headerX, doc.y + 5)
+         .lineTo(headerX + headerWidth, doc.y + 5)
+         .lineWidth(1)
+         .strokeColor('#ff0000')
+         .stroke();
+
+      // Company Details with enhanced styling
+      doc.moveDown(1);
+      doc.fontSize(12)
+         .font('Helvetica')
+         .fillColor('#333333')
          .text('123 Tech Street, Bangalore, India', { align: 'center' })
          .text('Phone: +91 1234567890 | Email: hr@db4cloud.com', { align: 'center' });
 
-      // Employee Details Grid (Starting at fixed position)
-      const gridStartY = 150;
-      const leftColX = 50;
-      const rightColX = 300;
-      const lineHeight = 25;
+      // Decorative separator
+      doc.moveDown(0.5);
+      doc.rect(150, doc.y, 300, 1)
+         .fillColor('#cccccc')
+         .fill();
 
-      // Employee Details
-      doc.fontSize(10)
-         .fillColor('#000000');
-      
+      // Payslip Title
+      doc.moveDown(1);
+      doc.fontSize(16)
+         .font('Helvetica-Bold')
+         .fillColor('#333333')
+         .text('SALARY SLIP', { align: 'center' });
+
+      // Employee Details with box styling
+      const gridStartY = doc.y + 20;
+      doc.rect(50, gridStartY, 495, 120)
+         .strokeColor('#cccccc')
+         .lineWidth(1)
+         .stroke();
+
+      // Employee Details Content
+      const leftColX = 70;
+      const rightColX = 300;
+      doc.fontSize(11)
+         .font('Helvetica')
+         .fillColor('#333333');
+
       const details = [
         ['Employee Name:', payslip.employee],
         ['Employee ID:', 'EMP001'],
@@ -125,23 +164,26 @@ export const exportPayslips = async (req, res) => {
       ];
 
       details.forEach((detail, i) => {
-        doc.text(detail[0], leftColX, gridStartY + (i * lineHeight))
-           .text(detail[1], rightColX, gridStartY + (i * lineHeight));
+        doc.text(detail[0], leftColX, gridStartY + 20 + (i * 25))
+           .font('Helvetica-Bold')
+           .text(detail[1], rightColX, gridStartY + 20 + (i * 25))
+           .font('Helvetica');
       });
 
-      // Earnings Table (Starting after employee details)
-      const tableY = gridStartY + (details.length * lineHeight) + 30;
+      // Earnings Table with enhanced styling
+      const tableY = gridStartY + 140;
       
-      // Table Headers
-      doc.fillColor('#2196f3')
-         .rect(leftColX, tableY, 500, 30)
+      // Table Header
+      doc.rect(50, tableY, 495, 30)
+         .fillColor('#ff0000')
          .fill();
 
       doc.fillColor('#ffffff')
-         .text('Description', leftColX + 10, tableY + 10)
-         .text('Amount (ETB)', rightColX + 10, tableY + 10);
+         .font('Helvetica-Bold')
+         .text('Description', leftColX, tableY + 10)
+         .text('Amount (ETB)', rightColX, tableY + 10);
 
-      // Table Content
+      // Table Content with alternating row colors
       let currentY = tableY + 30;
       const earnings = [
         ['Basic Salary', (payslip.grossPay * 0.5).toLocaleString()],
@@ -150,42 +192,60 @@ export const exportPayslips = async (req, res) => {
         ['Deductions', `-${payslip.deduction.toLocaleString()}`]
       ];
 
-      earnings.forEach(row => {
-        doc.fillColor('#000000')
-           .text(row[0], leftColX + 10, currentY + 10)
-           .text(row[1], rightColX + 10, currentY + 10);
+      earnings.forEach((row, i) => {
+        // Alternating row background
+        if (i % 2 === 0) {
+          doc.rect(50, currentY, 495, 30)
+             .fillColor('#f8f9fa')
+             .fill();
+        }
+
+        doc.fillColor('#333333')
+           .font('Helvetica')
+           .text(row[0], leftColX, currentY + 10)
+           .text(row[1], rightColX, currentY + 10);
         currentY += 30;
       });
 
-      // Net Pay Box with adjusted width and positioning
+      // Net Pay Box with proper containment
       const netPayY = currentY + 20;
-      const netPayWidth = pageWidth;
-      
-      // Background rectangle for net pay
-      doc.rect(leftMargin, netPayY, netPayWidth, 40)
-         .fillAndStroke('#f3f4f6', '#000000');
-      
-      // Net Pay text with proper alignment
-      doc.fontSize(14)
-         .fillColor('#000000')
-         .text(`Net Pay: ETB ${payslip.netPay.toLocaleString()}`, 
-           leftMargin, 
-           netPayY + 10, 
-           {
-             width: netPayWidth,
-             align: 'center',
-             lineGap: 0
-           }
-         );
+      const netPayBoxWidth = 495;
+      const netPayBoxHeight = 50;
+      const netPayBoxX = 50;
 
-      // Footer (Fixed at bottom of page)
+      // Draw the containing box
+      doc.rect(netPayBoxX, netPayY, netPayBoxWidth, netPayBoxHeight)
+         .fillColor('#f8f9fa')
+         .strokeColor('#ff0000')
+         .lineWidth(2)
+         .fillAndStroke();
+
+      // Center the text vertically and horizontally inside the box
+      doc.fontSize(16)
+         .font('Helvetica-Bold')
+         .fillColor('#ff0000')
+         .text(`Net Pay: ETB ${payslip.netPay.toLocaleString()}`, 
+         netPayBoxX, 
+         netPayY + (netPayBoxHeight - 16) / 2, // Centers text vertically
+         {
+           width: netPayBoxWidth,
+           align: 'center',
+           lineGap: 0
+         });
+
+      // Footer with styled separator
       const footerY = doc.page.height - 100;
-      doc.fontSize(8)
+      doc.rect(150, footerY - 20, 300, 1)
+         .fillColor('#cccccc')
+         .fill();
+
+      doc.fontSize(9)
+         .font('Helvetica')
          .fillColor('#666666')
          .text('This is a computer-generated document and does not require signature', 
-               leftColX, footerY, { width: 500, align: 'center' })
+               50, footerY, { width: 495, align: 'center' })
          .text(`Generated on: ${new Date().toLocaleString()}`, 
-               leftColX, footerY + 15, { width: 500, align: 'center' });
+               50, footerY + 15, { width: 495, align: 'center' });
     });
     
     doc.end();
