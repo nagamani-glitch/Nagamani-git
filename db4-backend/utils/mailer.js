@@ -28,7 +28,7 @@ export const sendOnboardingEmail = async (email, { name, jobPosition, joiningDat
   const mailOptions = {
     from: process.env.USER,
     to: email,
-    subject: 'Welcome to DB4Cloud Technlogies!',
+    subject: 'Welcome to DB4Cloud Technologies!',
     html: `
       <h2>Welcome ${name}!</h2>
       <p>We're excited to have you join our team as ${jobPosition}.</p>
