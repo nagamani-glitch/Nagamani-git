@@ -80,7 +80,7 @@
     border-radius: 5px;
   }
   
-  .info-icon {
+  /* .info-icon {
     margin-left: 5px;
     color: #888;
     cursor: pointer;
@@ -88,9 +88,8 @@
   
   .info-icon:hover {
     color: #333;
-  }
+  } */
   
-  /**/
   
   .status-indicators {
     display: flex;
@@ -176,12 +175,6 @@
   }
 
   
-  .list-view {
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
 
   .table-container {
     overflow-x: auto;
@@ -189,6 +182,17 @@
     margin-top: 20px;
     position: relative;
     display: flex;
+  }
+  
+
+
+
+
+  .list-view {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
   
   table {
@@ -466,11 +470,11 @@
   }
   
   .DedDelete-btn {
-    color: #1ddc0f;
+    color: #e51212;
   }
   
   .DedEdit-btn:hover {
-    background-color: rgba(0, 123, 255, 0.1);
+    background-color: rgba(255, 94, 0, 0.1);
   }
   
   .DedDelete-btn:hover {
