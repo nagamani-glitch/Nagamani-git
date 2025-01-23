@@ -27,8 +27,9 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   otp: { type: String },  // For OTP storage
   otpExpires: { type: Date },  // Expiry time for OTP
+  resetPasswordToken: String,
+  resetPasswordExpires: Date
 });
-
 // Hash password before saving to DB
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();

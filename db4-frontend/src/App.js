@@ -32,6 +32,8 @@ import { Container } from 'react-bootstrap';
 import { SidebarProvider } from './Context';
 import VerifyOtpPage from './screens/authScreens/registerScreen/VerifyOtpPage';
 import FaqPage from './screens/templates/faqs/FaqPage';
+import ForgotPassword from './screens/authScreens/forgotPassword/ForgotPassword';
+import ResetPassword from './screens/authScreens/resetPassword/ResetPassword';
 
 
 
@@ -45,6 +47,10 @@ function App() {
           <Routes>
             <Route path='/' element={<MainScreen />} />
             <Route path='/login' element={<LoginPage />} />
+
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+
             <Route path='/register' element={<RegisterPage />} />
             <Route path='/verifyOtp' element={<VerifyOtpPage />} />
             <Route element={<PrivateRoute />}>
@@ -77,3 +83,4 @@ function App() {
 }
 
 export default App;
+
