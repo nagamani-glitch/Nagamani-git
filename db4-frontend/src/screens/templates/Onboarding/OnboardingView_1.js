@@ -18,6 +18,29 @@ function OnboardingView() {
     taskStatus: "Pending",
   });
 
+  // Add these validation functions at the top of your component
+  const validatePhone = (phone) => {
+    const phoneRegex = /^[0-9]{10}$/;
+    return phoneRegex.test(phone);
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePosition = (position) => {
+    const positionRegex = /^[a-zA-Z\s]+$/;
+    return positionRegex.test(position);
+  };
+
+  // Add state for validation errors
+  const [validationErrors, setValidationErrors] = useState({
+    phone: "",
+    email: "",
+    position: "",
+  });
+
   const uniqueStages = ["All", "Test", "Interview", "Offer"];
 
   useEffect(() => {
@@ -37,39 +60,92 @@ function OnboardingView() {
     }
   };
 
+  // Update the handleInputChange function
+  const handleInputChange = (e, field) => {
+    const value = e.target.value;
+
+    switch (field) {
+      case "mobile":
+        if (value === "" || /^\d+$/.test(value)) {
+          setNewCandidate({ ...newCandidate, mobile: value });
+          setValidationErrors({
+            ...validationErrors,
+            phone: validatePhone(value)
+              ? ""
+              : "Please enter a valid 10-digit phone number",
+          });
+        }
+        break;
+
+      case "email":
+        setNewCandidate({ ...newCandidate, email: value });
+        setValidationErrors({
+          ...validationErrors,
+          email: validateEmail(value)
+            ? ""
+            : "Please enter a valid email address",
+        });
+        break;
+
+      case "jobPosition":
+        if (value === "" || /^[a-zA-Z\s]+$/.test(value)) {
+          setNewCandidate({ ...newCandidate, jobPosition: value });
+          setValidationErrors({
+            ...validationErrors,
+            position: validatePosition(value)
+              ? ""
+              : "Position should contain only letters",
+          });
+        }
+        break;
+
+      default:
+        setNewCandidate({ ...newCandidate, [field]: value });
+    }
+  };
+
+  // Update the form submission handler
   const handleCreateCandidate = async (e) => {
     e.preventDefault();
-  
-    // Format the data before sending
-    const candidateData = {
-      ...newCandidate,
-      joiningDate: new Date(newCandidate.joiningDate).toISOString()
+
+    const errors = {
+      phone: validatePhone(newCandidate.mobile) ? "" : "Invalid phone number",
+      email: validateEmail(newCandidate.email) ? "" : "Invalid email",
+      position: validatePosition(newCandidate.jobPosition)
+        ? ""
+        : "Invalid position",
     };
 
-    try {
-      const response = await axios.post('http://localhost:5000/api/onboarding', candidateData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+    setValidationErrors(errors);
 
-      if (response.status === 201) {
-        setCandidates([...candidates, response.data]);
-        setNewCandidate({
-          name: '',
-          email: '',
-          jobPosition: '',
-          mobile: '',
-          joiningDate: '',
-          stage: 'Test',
-          portalStatus: 'Active',
-          taskStatus: 'Pending'
-        });
-        setShowCreateForm(false);
-      }
+    if (Object.values(errors).some((error) => error !== "")) {
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/onboarding",
+        newCandidate
+      );
+      setCandidates([...candidates, response.data]);
+      setNewCandidate({
+        name: "",
+        email: "",
+        jobPosition: "",
+        mobile: "",
+        joiningDate: "",
+        stage: "Test",
+        portalStatus: "Active",
+        taskStatus: "Pending",
+      });
+      setValidationErrors({
+        phone: "",
+        email: "",
+        position: "",
+      });
+      setShowCreateForm(false);
     } catch (error) {
-      console.log('Server Response:', error.response?.data);
-      alert(`Unable to create candidate. ${error.response?.data?.message || 'Please try again.'}`);
+      console.error("Error creating candidate:", error);
     }
   };
 
@@ -143,9 +219,7 @@ function OnboardingView() {
                   type="text"
                   placeholder="Full Name"
                   value={newCandidate.name}
-                  onChange={(e) =>
-                    setNewCandidate({ ...newCandidate, name: e.target.value })
-                  }
+                  onChange={(e) => handleInputChange(e, "name")}
                   required
                 />
               </div>
@@ -154,49 +228,65 @@ function OnboardingView() {
                   type="email"
                   placeholder="Email Address"
                   value={newCandidate.email}
-                  onChange={(e) =>
-                    setNewCandidate({ ...newCandidate, email: e.target.value })
-                  }
+                  onChange={(e) => handleInputChange(e, "email")}
                   required
                 />
+                {validationErrors.email && (
+                  <span className="error-message">
+                    {validationErrors.email}
+                  </span>
+                )}
               </div>
               <div className="form-group">
                 <input
                   type="text"
                   placeholder="Job Position"
                   value={newCandidate.jobPosition}
-                  onChange={(e) =>
-                    setNewCandidate({
-                      ...newCandidate,
-                      jobPosition: e.target.value,
-                    })
-                  }
+                  onChange={(e) => handleInputChange(e, "jobPosition")}
                   required
                 />
+                {validationErrors.position && (
+                  <span className="error-message">
+                    {validationErrors.position}
+                  </span>
+                )}
               </div>
               <div className="form-group">
                 <input
                   type="tel"
                   placeholder="Mobile Number"
                   value={newCandidate.mobile}
-                  onChange={(e) =>
-                    setNewCandidate({ ...newCandidate, mobile: e.target.value })
-                  }
+                  onChange={(e) => handleInputChange(e, "mobile")}
                   required
                 />
+                {validationErrors.phone && (
+                  <span className="error-message">
+                    {validationErrors.phone}
+                  </span>
+                )}
               </div>
               <div className="form-group">
                 <input
                   type="date"
                   value={newCandidate.joiningDate}
-                  onChange={(e) =>
-                    setNewCandidate({
-                      ...newCandidate,
-                      joiningDate: e.target.value,
-                    })
-                  }
+                  onChange={(e) => handleInputChange(e, "joiningDate")}
                   required
                 />
+              </div>
+              <div className="form-group">
+                <select
+                  value={newCandidate.stage}
+                  onChange={(e) => handleInputChange(e, "stage")}
+                  required
+                  className="stage-input"
+                >
+                  <option value="" disabled>
+                    Select Stage
+                  </option>
+                  <option value="Test">Test</option>
+                  <option value="Interview">Interview</option>
+                  <option value="Offer">Offer</option>
+                </select>
               </div>
               <div className="form-actions">
                 <button type="submit" className="submit-btn">
@@ -243,14 +333,6 @@ function OnboardingView() {
                     {candidate.stage}
                   </span>
                 </td>
-                {/* <td className="action-buttons">
-                  <button onClick={() => sendMailToCandidate(candidate)} className="mail-btn">
-                    Send Email
-                  </button>
-                  <button onClick={() => handleDeleteCandidate(candidate._id)} className="delete-btn">
-                    Delete
-                  </button>
-                </td> */}
                 <td className="action-cell">
                   <div className="action-buttons-wrapper">
                     <button
