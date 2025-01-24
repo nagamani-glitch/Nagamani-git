@@ -1,178 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { gsap } from 'gsap';
+import { 
+    Container, Paper, Typography, TextField, IconButton, Box,
+    Button, Modal, Card, CardContent, Grid, FormControl,
+    InputLabel, Select, MenuItem
+} from '@mui/material';
+import {
+    Add as AddIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+    Search as SearchIcon,
+    Event as EventIcon
+} from '@mui/icons-material';
 
 const apiBaseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
-const modalAnimation = {
-    initial: { opacity: 0, scale: 0.9, y: 20 },
-    animate: { 
-        opacity: 1, 
-        scale: 1, 
-        y: 0,
-        transition: {
-            type: "spring",
-            damping: 20,
-            stiffness: 300
-        }
-    },
-    exit: { 
-        opacity: 0, 
-        scale: 0.9, 
-        y: 20,
-        transition: {
-            duration: 0.2
-        }
-    }
-};
-
-const styles = {
-    container: {
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '2rem',
-        backgroundColor: '#f8fafc',
-        borderRadius: '16px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-    },
-    searchInput: {
-        width: '400px',
-        height: '50px',
-        padding: '1rem 1.5rem',
-        borderRadius: '12px',
-        border: '2px solid #e2e8f0',
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        fontSize: '1.1rem',
-        fontWeight: '500',
-        transition: 'all 0.3s ease',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-        outline: 'none'
-    },
-    modal: {
-        position: 'fixed',
-        top: '10%',
-        left: '30%',
-        transform: 'translate(-50%, -50%)',
-        backgroundColor: 'white',
-        padding: '2.5rem',
-        borderRadius: '16px',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-        zIndex: 1000,
-        width: '90%',
-        maxWidth: '600px',
-        maxHeight: '90vh',
-        overflowY: 'auto',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.2)',
-        background: 'linear-gradient(to bottom right, #ffffff, #f8fafc)',
-        scrollbarWidth: 'thin',
-        scrollbarColor: '#cbd5e0 #f8fafc',
-        '&::-webkit-scrollbar': {
-            width: '8px'
-        },
-        '&::-webkit-scrollbar-track': {
-            background: '#f8fafc'
-        },
-        '&::-webkit-scrollbar-thumb': {
-            background: '#cbd5e0',
-            borderRadius: '4px'
-        }
-    },
-    modalOverlay: {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 999
-    },
-    formField: {
-        marginBottom: '1.5rem',
-        position: 'relative'
-    },
-    label: {
-        display: 'block',
-        marginBottom: '0.5rem',
-        color: '#2d3748',
-        fontWeight: '600',
-        fontSize: '0.95rem'
-    },
-    input: {
-        width: '100%',
-        padding: '0.875rem 1rem',
-        borderRadius: '8px',
-        border: '2px solid #e2e8f0',
-        transition: 'all 0.3s ease',
-        fontSize: '1rem',
-        backgroundColor: 'white',
-        marginBottom: '1rem'
-    },
-    select: {
-        width: '100%',
-        padding: '0.875rem 1rem',
-        borderRadius: '8px',
-        border: '2px solid #e2e8f0',
-        transition: 'all 0.3s ease',
-        fontSize: '1rem',
-        backgroundColor: 'white',
-        marginBottom: '1rem',
-        cursor: 'pointer'
-    },
-    textarea: {
-        width: '100%',
-        padding: '0.875rem 1rem',
-        borderRadius: '8px',
-        border: '2px solid #e2e8f0',
-        transition: 'all 0.3s ease',
-        fontSize: '1rem',
-        backgroundColor: 'white',
-        marginBottom: '1rem',
-        minHeight: '100px',
-        resize: 'vertical'
-    },
-    button: (color) => ({
-        padding: '0.75rem 1.5rem',
-        backgroundColor: color,
-        color: 'white',
-        border: 'none',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        fontWeight: '600',
-        fontSize: '0.95rem',
-        letterSpacing: '0.025em',
-        transition: 'all 0.3s ease',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.5rem'
-    }),
-    table: {
-        width: '100%',
-        borderCollapse: 'separate',
-        borderSpacing: '0 0.5rem',
-        marginTop: '1rem'
-    },
-    th: {
-        textAlign: 'left',
-        padding: '1rem',
-        backgroundColor: '#f1f5f9',
-        color: '#475569',
-        fontWeight: '600',
-        fontSize: '0.95rem'
-    },
-    td: {
-        padding: '1rem',
-        backgroundColor: 'white',
-        borderBottom: '1px solid #e2e8f0'
-    },
-    actionButtons: {
-        display: 'flex',
-        gap: '0.5rem'
-    }
+const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 400,
+    bgcolor: 'background.paper',
+    borderRadius: 2,
+    boxShadow: 24,
+    p: 4
 };
 
 function RestrictLeaves() {
@@ -191,13 +44,7 @@ function RestrictLeaves() {
     const [editId, setEditId] = useState(null);
 
     useEffect(() => {
-        gsap.from('.leave-item', {
-            duration: 0.8,
-            opacity: 0,
-            y: 30,
-            stagger: 0.2,
-            ease: "power3.out"
-        });
+        
 
         fetchRestrictLeaves();
     }, []);
@@ -221,7 +68,11 @@ function RestrictLeaves() {
     
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        // Apply sentence case only for text fields
+        const transformedValue = ['title', 'description'].includes(name) 
+            ? toSentenceCase(value)
+            : value;
+        setFormData({ ...formData, [name]: transformedValue });
     };
     
     const handleSubmit = async (e) => {
@@ -293,236 +144,246 @@ function RestrictLeaves() {
         }
     };
 
+    const toSentenceCase = (str) => {
+        return str
+            .toLowerCase()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    };
+    
+
     return (
-        <motion.div style={styles.container}>
-            <h1 style={{ 
-                color: '#2d3748', 
-                marginBottom: '2rem', 
-                fontSize: '1.875rem', 
-                fontWeight: '700' 
-            }}>
-                Restricted Leaves
-            </h1>
+        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+            <Paper elevation={3} sx={{ p: 3, borderRadius: 2, backgroundColor: '#ffffff' }}>
+                <Typography variant="h4" align="center" sx={{ mb: 4, fontWeight: 600, color: '#1a1a1a' }}>
+                    Restricted Leaves Management
+                </Typography>
 
-            <div style={{ 
-                display: 'flex', 
-                gap: '1rem', 
-                marginBottom: '2rem',
-                alignItems: 'center' 
-            }}>
-                <input
-                    type="text"
-                    placeholder="Search restricted leaves..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={styles.searchInput}
-                />
-                <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: '0 6px 10px rgba(0,0,0,0.15)' }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                        setFormData({
-                            title: '',
-                            startDate: '',
-                            endDate: '',
-                            department: '',
-                            jobPosition: '',
-                            description: ''
-                        });
-                        setIsAddModalOpen(true);
-                        setIsEditing(false);
-                    }}
-                    style={styles.button('#3498db')}
-                >
-                    Create Restricted Leave
-                </motion.button>
-            </div>
+                <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center', justifyContent: 'space-between' }}>
+                    <TextField
+                        fullWidth
+                        variant="outlined"
+                        placeholder="Search restricted leaves..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        InputProps={{
+                            startAdornment: <SearchIcon sx={{ color: '#6b7280', mr: 1 }} />
+                        }}
+                        sx={{
+                            maxWidth: '70%',
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 2,
+                                '&:hover fieldset': {
+                                    borderColor: '#3b82f6'
+                                }
+                            }
+                        }}
+                    />
 
-            <AnimatePresence>
-                {isAddModalOpen && (
-                    <>
-                        <div style={styles.modalOverlay} onClick={() => setIsAddModalOpen(false)} />
-                        <motion.div {...modalAnimation} style={styles.modal}>
-                            <h2 style={{ 
-                                marginBottom: '1.5rem', 
-                                color: '#2d3748',
-                                fontSize: '1.5rem',
-                                fontWeight: '700'
-                            }}>
-                                {isEditing ? 'Edit Restricted Leave' : 'Add Restricted Leave'}
-                            </h2>
-                            <form onSubmit={handleSubmit}>
-                                <div style={styles.formField}>
-                                    <label style={styles.label}>Title</label>
-                                    <input
-                                        type="text"
-                                        name="title"
-                                        value={formData.title}
-                                        onChange={handleChange}
-                                        style={styles.input}
-                                        required
-                                    />
-                                </div>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => {
+                                setFormData({
+                                    title: '',
+                                    startDate: '',
+                                    endDate: '',
+                                    department: '',
+                                    jobPosition: '',
+                                    description: ''
+                                });
+                                setIsAddModalOpen(true);
+                                setIsEditing(false);
+                            }}
+                            sx={{
+                                backgroundColor: '#3b82f6',
+                                '&:hover': { backgroundColor: '#2563eb' },
+                                borderRadius: 2,
+                                px: 3,
+                                py: 1
+                            }}
+                        >
+                            Add Restricted Leave
+                        </Button>
+                    </motion.div>
+                </Box>
 
-                                <div style={styles.formField}>
-                                    <label style={styles.label}>Start Date</label>
-                                    <input
-                                        type="date"
-                                        name="startDate"
-                                        value={formData.startDate}
-                                        onChange={handleChange}
-                                        style={styles.input}
-                                        required
-                                    />
-                                </div>
+                <Grid container spacing={3}>
+                    {restrictLeaves
+                        .filter(leave =>
+                            leave.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            leave.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            leave.jobPosition.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((leave) => (
+                            <Grid item xs={12} sm={6} md={4} key={leave._id}>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <Card sx={{ 
+                                        height: '100%',
+                                        '&:hover': { boxShadow: 6 },
+                                        transition: 'box-shadow 0.3s'
+                                    }}>
+                                        <CardContent>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                                <EventIcon sx={{ mr: 1, color: '#3b82f6' }} />
+                                                <Typography variant="h6">{leave.title}</Typography>
+                                            </Box>
+                                            
+                                            <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                                                Start: {formatDate(leave.startDate)}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                                                End: {formatDate(leave.endDate)}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                                                Department: {leave.department}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                                                Position: {leave.jobPosition}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                                                Description: {leave.description}
+                                            </Typography>
 
-                                <div style={styles.formField}>
-                                    <label style={styles.label}>End Date</label>
-                                    <input
-                                        type="date"
-                                        name="endDate"
-                                        value={formData.endDate}
-                                        onChange={handleChange}
-                                        style={styles.input}
-                                        required
-                                    />
-                                </div>
+                                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                                <IconButton
+                                                    onClick={() => handleEdit(leave)}
+                                                    sx={{
+                                                        backgroundColor: '#3b82f6',
+                                                        color: 'white',
+                                                        '&:hover': { backgroundColor: '#2563eb' }
+                                                    }}
+                                                >
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton
+                                                    onClick={() => handleDelete(leave._id)}
+                                                    sx={{
+                                                        backgroundColor: '#ef4444',
+                                                        color: 'white',
+                                                        '&:hover': { backgroundColor: '#dc2626' }
+                                                    }}
+                                                >
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            </Grid>
+                        ))}
+                </Grid>
 
-                                <div style={styles.formField}>
-                                    <label style={styles.label}>Department</label>
-                                    <select
-                                        name="department"
-                                        value={formData.department}
-                                        onChange={handleChange}
-                                        style={styles.select}
-                                        required
-                                    >
-                                        <option value="">Select Department</option>
-                                        <option value="Cloud team">Cloud team</option>
-                                        <option value="Development team">Development team</option>
-                                    </select>
-                                </div>
+                <Modal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
+                    <Box sx={modalStyle}>
+                        <Typography variant="h6" sx={{ mb: 2 }}>
+                            {isEditing ? 'Edit Restricted Leave' : 'Add Restricted Leave'}
+                        </Typography>
+                        
+                        <form onSubmit={handleSubmit}>
+                            <TextField
+                                fullWidth
+                                label="Title"
+                                name="title"
+                                value={formData.title}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }}
+                                required
+                            />
 
-                                <div style={styles.formField}>
-                                    <label style={styles.label}>Job Position</label>
-                                    <select
-                                        name="jobPosition"
-                                        value={formData.jobPosition}
-                                        onChange={handleChange}
-                                        style={styles.select}
-                                        required
-                                    >
-                                        <option value="">Select Job Position</option>
-                                        <option value="Associate Engineer">Associate Engineer</option>
-                                        <option value="Senior Engineer">Senior Engineer</option>
-                                        <option value="Manager">Manager</option>
-                                    </select>
-                                </div>
+                            <TextField
+                                fullWidth
+                                type="date"
+                                label="Start Date"
+                                name="startDate"
+                                value={formData.startDate}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }}
+                                InputLabelProps={{ shrink: true }}
+                                required
+                            />
 
-                                <div style={styles.formField}>
-                                    <label style={styles.label}>Description</label>
-                                    <textarea
-                                        name="description"
-                                        value={formData.description}
-                                        onChange={handleChange}
-                                        style={styles.textarea}
-                                        required
-                                    />
-                                </div>
+                            <TextField
+                                fullWidth
+                                type="date"
+                                label="End Date"
+                                name="endDate"
+                                value={formData.endDate}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }}
+                                InputLabelProps={{ shrink: true }}
+                                required
+                            />
 
-                                <div style={{ 
-                                    display: 'flex', 
-                                    gap: '1rem', 
-                                    justifyContent: 'flex-end',
-                                    marginTop: '2rem' 
-                                }}>
-                                    <motion.button
-                                        type="submit"
-                                        whileHover={{ scale: 1.02, boxShadow: '0 6px 10px rgba(0,0,0,0.15)' }}
-                                        whileTap={{ scale: 0.98 }}
-                                        style={styles.button('#2ecc71')}
-                                    >
-                                        {isEditing ? 'Update' : 'Submit'}
-                                    </motion.button>
-                                    <motion.button
-                                        type="button"
-                                        onClick={() => {
-                                            setIsAddModalOpen(false);
-                                            setIsEditing(false);
-                                            setEditId(null);
-                                        }}
-                                        whileHover={{ scale: 1.02, boxShadow: '0 6px 10px rgba(0,0,0,0.15)' }}
-                                        whileTap={{ scale: 0.98 }}
-                                        style={styles.button('#e74c3c')}
-                                    >
-                                        Cancel
-                                    </motion.button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+                            <FormControl fullWidth sx={{ mb: 2 }}>
+                                <InputLabel>Department</InputLabel>
+                                <Select
+                                    name="department"
+                                    value={formData.department}
+                                    onChange={handleChange}
+                                    required
+                                >
+                                    <MenuItem value="Cloud team">Cloud team</MenuItem>
+                                    <MenuItem value="Development team">Development team</MenuItem>
+                                    <MenuItem value="HR team">HR team</MenuItem>
+                                    <MenuItem value="All team">All team</MenuItem>
+                                </Select>
+                            </FormControl>
 
-            <div style={{ overflowX: 'auto' }}>
-                <table style={styles.table}>
-                    <thead>
-                        <tr>
-                            <th style={styles.th}>Title</th>
-                            <th style={styles.th}>Start Date</th>
-                            <th style={styles.th}>End Date</th>
-                            <th style={styles.th}>Department</th>
-                            <th style={styles.th}>Job Position</th>
-                            <th style={styles.th}>Description</th>
-                            <th style={styles.th}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {restrictLeaves
-                            .filter(leave =>
-                                leave.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                leave.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                leave.jobPosition.toLowerCase().includes(searchTerm.toLowerCase())
-                            )
-                            .map((leave) => (
-                                <tr key={leave._id} className="leave-item">
-                                    <td style={styles.td}>{leave.title}</td>
-                                    <td style={styles.td}>{formatDate(leave.startDate)}</td>
-                                    <td style={styles.td}>{formatDate(leave.endDate)}</td>
-                                    <td style={styles.td}>{leave.department}</td>
-                                    <td style={styles.td}>{leave.jobPosition}</td>
-                                    <td style={styles.td}>{leave.description}</td>
-                                    <td style={styles.td}>
-                                        <div style={styles.actionButtons}>
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                onClick={() => handleEdit(leave)}
-                                                style={styles.button('#3498db')}
-                                            >
-                                                Edit
-                                            </motion.button>
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                onClick={() => handleDelete(leave._id)}
-                                                style={styles.button('#e74c3c')}
-                                            >
-                                                Delete
-                                            </motion.button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </motion.div>
+                            <FormControl fullWidth sx={{ mb: 2 }}>
+                                <InputLabel>Job Position</InputLabel>
+                                <Select
+                                    name="jobPosition"
+                                    value={formData.jobPosition}
+                                    onChange={handleChange}
+                                    required
+                                >
+                                    <MenuItem value="Associate Engineer">Associate Engineer</MenuItem>
+                                    <MenuItem value="Senior Engineer">Senior Engineer</MenuItem>
+                                    <MenuItem value="Manager">Manager</MenuItem>
+                                    <MenuItem value="Hr">HR</MenuItem>
+                                    <MenuItem value="All">For All</MenuItem>
+                                </Select>
+                            </FormControl>
+
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={4}
+                                label="Description"
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                sx={{ mb: 3 }}
+                                required
+                            />
+
+                            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => setIsAddModalOpen(false)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    type="submit"
+                                >
+                                    {isEditing ? 'Update' : 'Create'}
+                                </Button>
+                            </Box>
+                        </form>
+                    </Box>
+                </Modal>
+            </Paper>
+        </Container>
     );
 }
 
 export default RestrictLeaves;
-
-
-
-

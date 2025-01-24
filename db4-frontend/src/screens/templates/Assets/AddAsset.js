@@ -17,10 +17,10 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 
 const STATUS_OPTIONS = [
-  'IN USE',
-  'AVAILABLE', 
-  'UNDER SERVICE',
-  'RETURNED'
+  'In Use',
+  'Available', 
+  'Under Maintenance',
+  'Returned'
 ];
 
 const validationSchema = Yup.object().shape({
@@ -31,31 +31,36 @@ const validationSchema = Yup.object().shape({
   previousEmployees: Yup.string()
 });
 
-const toUpperCase = (str) => {
-  return str.trim().toUpperCase();
+const toSentenceCase = (str) => {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };
 
 const AddAsset = ({ onClose, refreshAssets, editAsset }) => {
   const handleSubmit = async (values, { setSubmitting }) => {
     const normalizedValues = Object.keys(values).reduce((acc, key) => {
-      if (typeof values[key] === 'string') {
-        acc[key] = toUpperCase(values[key]);
+      if (typeof values[key] === 'string' && key !== 'status') {
+        acc[key] = toSentenceCase(values[key]);
       } else {
         acc[key] = values[key];
       }
       return acc;
     }, {});
-
+  
     const assetData = {
       ...normalizedValues,
       previousEmployees: normalizedValues.previousEmployees
         .split(',')
-        .map(emp => toUpperCase(emp.trim()))
+        .map(emp => toSentenceCase(emp.trim()))
         .filter(emp => emp)
     };
-
+  
     const API_URL = process.env.REACT_APP_API_URL;
-
+  
     try {
       if (editAsset) {
         await axios.put(`${API_URL}/api/assets/${editAsset._id}`, assetData);
@@ -97,24 +102,37 @@ const AddAsset = ({ onClose, refreshAssets, editAsset }) => {
         >
           {({ errors, touched, isSubmitting }) => (
             <Form style={styles.form}>
-              {['name', 'category', 'currentEmployee', 'previousEmployees'].map((fieldName) => (
-                <Box key={fieldName} sx={styles.formGroup}>
-                  <Field name={fieldName}>
-                    {({ field }) => (
-                      <TextField
-                        {...field}
-                        label={fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, ' $1')}
-                        variant="outlined"
-                        fullWidth
-                        error={touched[fieldName] && errors[fieldName]}
-                        helperText={touched[fieldName] && errors[fieldName]}
-                        sx={styles.input}
-                      />
-                    )}
-                  </Field>
-                </Box>
-              ))}
+              {/* Add this to handle real-time input transformation */}
+              {(() => {
+                const handleFieldChange = (field, value) => {
+                  if (field === 'status') {
+                    return value
+                  }
+                  return toSentenceCase(value)
+                }
 
+                return ['name', 'category', 'currentEmployee', 'previousEmployees'].map((fieldName) => (
+                  <Box key={fieldName} sx={styles.formGroup}>
+                    <Field name={fieldName}>
+                      {({ field, form }) => (
+                        <TextField
+                          {...field}
+                          onChange={(e) => {
+                            const transformedValue = handleFieldChange(fieldName, e.target.value)
+                            form.setFieldValue(fieldName, transformedValue)
+                          }}
+                          label={fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, ' $1')}
+                          variant="outlined"
+                          fullWidth
+                          error={touched[fieldName] && errors[fieldName]}
+                          helperText={touched[fieldName] && errors[fieldName]}
+                          sx={styles.input}
+                        />
+                      )}
+                    </Field>
+                  </Box>
+                ))
+              })()}
               <Box sx={styles.formGroup}>
                 <Field name="status">
                   {({ field }) => (
@@ -127,6 +145,7 @@ const AddAsset = ({ onClose, refreshAssets, editAsset }) => {
                         error={touched.status && errors.status}
                         sx={styles.input}
                       >
+                        <MenuItem value="">Select Status</MenuItem>
                         {STATUS_OPTIONS.map((option) => (
                           <MenuItem key={option} value={option}>
                             {option}
