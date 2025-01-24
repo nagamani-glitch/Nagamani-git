@@ -25,6 +25,8 @@ import shiftRequestRoutes from './routes/shiftRequestRoutes.js';
 import workTypeRequestRoutes from './routes/workTypeRequestRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 import hiredEmployeeRoutes from './routes/hiredEmployeeRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
+
 
 // Sangeeta 
 import allowanceRoutes from './routes/allowanceRoutes.js';
@@ -107,6 +109,7 @@ app.use('/api/faqCategories', faqCategoryRoutes);
 app.use('/api/hired-employees', hiredEmployeeRoutes);
 app.use('/api/shift-requests', shiftRequestRoutes);
 app.use('/api/work-type-requests', workTypeRequestRoutes);
+app.use('/api', documentRoutes);
 
  
  

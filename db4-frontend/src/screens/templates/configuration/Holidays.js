@@ -1,9 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { fetchHolidays, createHoliday, updateHoliday, deleteHoliday } from '../api/holidays';
+import { 
+    Container, Paper, Typography, TextField, IconButton, Box,
+    Button, Modal, Card, CardContent, Grid
+} from '@mui/material';
+import {
+    Add as AddIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+    Search as SearchIcon,
+    Event as EventIcon
+} from '@mui/icons-material';
 
 const validationSchema = Yup.object().shape({
     name: Yup.string()
@@ -27,7 +37,19 @@ const validationSchema = Yup.object().shape({
     recurring: Yup.boolean()
 });
 
-const Holidays = () => {
+const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 400,
+    bgcolor: 'background.paper',
+    borderRadius: 2,
+    boxShadow: 24,
+    p: 4
+};
+
+export default function Holidays() {
     const [holidays, setHolidays] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -37,16 +59,16 @@ const Holidays = () => {
     const holidaysRef = useRef(null);
 
     useEffect(() => {
-        gsap.from('.holiday-item', {
-            duration: 0.8,
-            opacity: 0,
-            y: 50,
-            stagger: 0.2,
-            ease: "power3.out"
-        });
-
         loadHolidays();
     }, []);
+
+    const toSentenceCase = (str) => {
+        return str
+            .toLowerCase()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    };
 
     const loadHolidays = async () => {
         setLoading(true);
@@ -62,27 +84,23 @@ const Holidays = () => {
     };
 
     const handleSubmit = async (values, { resetForm }) => {
+        const formattedValues = {
+            ...values,
+            name: toSentenceCase(values.name)
+        };
+
         try {
-            let response;
             if (editingHoliday) {
-                response = await updateHoliday(editingHoliday._id, values);
-                setHolidays(holidays.map(h => h._id === editingHoliday._id ? response.data : h));
+                await updateHoliday(editingHoliday._id, formattedValues);
             } else {
-                response = await createHoliday(values);
-                setHolidays([...holidays, response.data]);
+                await createHoliday(formattedValues);
             }
-            resetForm();
+            loadHolidays();
             setShowModal(false);
+            resetForm();
             setEditingHoliday(null);
-            
-            gsap.from(holidaysRef.current.lastChild, {
-                duration: 0.5,
-                opacity: 0,
-                y: -20,
-                ease: "back.out"
-            });
         } catch (err) {
-            setError(editingHoliday ? 'Failed to update holiday' : 'Failed to create holiday');
+            setError('Failed to save holiday');
         }
     };
 
@@ -94,344 +112,211 @@ const Holidays = () => {
     const handleDelete = async (id) => {
         try {
             await deleteHoliday(id);
-            gsap.to(`[data-id="${id}"]`, {
-                duration: 0.5,
-                opacity: 0,
-                x: -100,
-                ease: "power2.out",
-                onComplete: () => setHolidays(holidays.filter(h => h._id !== id))
-            });
+            loadHolidays();
         } catch (err) {
             setError('Failed to delete holiday');
         }
     };
 
-    const containerStyle = {
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '2rem',
-        backgroundColor: '#f5f5f5',
-        borderRadius: '10px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-    };
-
-    const modalStyle = {
-        position: 'fixed',
-        top: '10%',
-        left: '40%',
-        transform: 'translate(-50%, -50%)',
-        backgroundColor: 'white',
-        padding: '2.5rem',
-        borderRadius: '12px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-        zIndex: 1000,
-        width: '90%',
-        maxWidth: '500px',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255,255,255,0.2)'
-    };
-
-    const modalOverlayStyle = {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 999
-    };
-
-    const formStyle = {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1rem'
-    };
-
-    const inputStyle = {
-        width: '100%',
-        padding: '0.75rem',
-        borderRadius: '8px',
-        border: '1px solid #ddd',
-        transition: 'border-color 0.3s ease',
-        outline: 'none'
-    };
-
-    const labelStyle = {
-        display: 'block',
-        marginBottom: '0.5rem',
-        color: '#34495e',
-        fontWeight: '500'
-    };
-
     return (
-        <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            style={containerStyle}
-        >
-            <h2 style={{ color: '#333', marginBottom: '2rem' }}>Holidays</h2>
-            
-            {loading && <div>Loading...</div>}
-            {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
-            
-            <motion.div 
-                className="filter-container"
-                whileHover={{ scale: 1.02 }}
-                style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    marginBottom: '2rem'
-                }}
-            >
-                <input
-                    type="text"
-                    placeholder="Filter holidays..."
-                    value={filterQuery}
-                    onChange={(e) => setFilterQuery(e.target.value)}
-                    style={{
-                        width: '1000px',
-                        height: '50px',
-                        padding: '1rem 1.5rem',
-                        borderRadius: '12px',
-                        border: '2px solid #e2e8f0',
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        fontSize: '1.1rem',
-                        fontWeight: '500',
-                        transition: 'all 0.3s ease',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                        outline: 'none'
-                    }}
-                />
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                        setEditingHoliday(null);
-                        setShowModal(true);
-                    }}
-                    style={{
-                        padding: '0.75rem 1.5rem',
-                        backgroundColor: '#3498db',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontWeight: '500',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}
-                >
-                    Create Holiday
-                </motion.button>
-            </motion.div>
+        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+            <Paper elevation={3} sx={{ p: 3, borderRadius: 2, backgroundColor: '#ffffff' }}>
+                <Typography variant="h4" align="center" sx={{ mb: 4, fontWeight: 600, color: '#1a1a1a' }}>
+                    Holidays Management
+                </Typography>
 
-            <AnimatePresence>
-                {showModal && (
-                    <>
-                        <div style={modalOverlayStyle} onClick={() => setShowModal(false)} />
-                        <motion.div 
-                            initial={{ opacity: 0, y: -50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 50 }}
-                            style={modalStyle}
-                        >
-                            <h3 style={{ 
-                                marginBottom: '1.5rem', 
-                                color: '#2c3e50',
-                                borderBottom: '2px solid #eee',
-                                paddingBottom: '0.5rem'
-                            }}>
-                                {editingHoliday ? 'Edit Holiday' : 'Create New Holiday'}
-                            </h3>
-                            
-                            <Formik
-                                initialValues={editingHoliday || {
-                                    name: '',
-                                    startDate: '',
-                                    endDate: '',
-                                    recurring: false
-                                }}
-                                validationSchema={validationSchema}
-                                onSubmit={handleSubmit}
-                            >
-                                {({ isSubmitting }) => (
-                                    <Form style={formStyle}>
-                                        <div style={{ marginBottom: '1rem' }}>
-                                            <label style={labelStyle}>Holiday Name</label>
-                                            <Field
-                                                name="name"
-                                                type="text"
-                                                style={inputStyle}
-                                            />
-                                            <ErrorMessage 
-                                                name="name" 
-                                                component="div" 
-                                                style={{ color: '#e74c3c', fontSize: '0.875rem', marginTop: '0.25rem' }} 
-                                            />
-                                        </div>
+                <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center', justifyContent: 'space-between' }}>
+                    <TextField
+                        fullWidth
+                        variant="outlined"
+                        placeholder="Search holidays..."
+                        value={filterQuery}
+                        onChange={(e) => setFilterQuery(e.target.value)}
+                        InputProps={{
+                            startAdornment: <SearchIcon sx={{ color: '#6b7280', mr: 1 }} />
+                        }}
+                        sx={{
+                            maxWidth: '70%',
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 2,
+                                '&:hover fieldset': {
+                                    borderColor: '#3b82f6'
+                                }
+                            }
+                        }}
+                    />
 
-                                        <div style={{ marginBottom: '1rem' }}>
-                                            <label style={labelStyle}>Start Date</label>
-                                            <Field
-                                                name="startDate"
-                                                type="date"
-                                                style={inputStyle}
-                                            />
-                                            <ErrorMessage 
-                                                name="startDate" 
-                                                component="div" 
-                                                style={{ color: '#e74c3c', fontSize: '0.875rem', marginTop: '0.25rem' }} 
-                                            />
-                                        </div>
-
-                                        <div style={{ marginBottom: '1rem' }}>
-                                            <label style={labelStyle}>End Date</label>
-                                            <Field
-                                                name="endDate"
-                                                type="date"
-                                                style={inputStyle}
-                                            />
-                                            <ErrorMessage 
-                                                name="endDate" 
-                                                component="div" 
-                                                style={{ color: '#e74c3c', fontSize: '0.875rem', marginTop: '0.25rem' }} 
-                                            />
-                                        </div>
-
-                                        <label style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            gap: '0.5rem',
-                                            color: '#34495e'
-                                        }}>
-                                            <Field type="checkbox" name="recurring" />
-                                            Recurring Holiday
-                                        </label>
-
-                                        <div style={{ 
-                                            display: 'flex', 
-                                            gap: '1rem', 
-                                            justifyContent: 'flex-end',
-                                            marginTop: '2rem' 
-                                        }}>
-                                            <motion.button
-                                                type="submit"
-                                                disabled={isSubmitting}
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                style={{
-                                                    padding: '0.75rem 1.5rem',
-                                                    backgroundColor: '#2ecc71',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '8px',
-                                                    cursor: 'pointer',
-                                                    fontWeight: '500',
-                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                                }}
-                                            >
-                                                {editingHoliday ? 'Update Holiday' : 'Create Holiday'}
-                                            </motion.button>
-                                            <motion.button
-                                                type="button"
-                                                onClick={() => {
-                                                    setShowModal(false);
-                                                    setEditingHoliday(null);
-                                                }}
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                style={{
-                                                    padding: '0.75rem 1.5rem',
-                                                    backgroundColor: '#e74c3c',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '8px',
-                                                    cursor: 'pointer',
-                                                    fontWeight: '500',
-                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                                }}
-                                            >
-                                                Cancel
-                                            </motion.button>
-                                        </div>
-                                    </Form>
-                                )}
-                            </Formik>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
-
-            <div ref={holidaysRef} style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-                {holidays
-                    .filter(holiday => holiday.name.toLowerCase().includes(filterQuery.toLowerCase()))
-                    .map((holiday) => (
-                        <motion.div
-                            key={holiday._id}
-                            data-id={holiday._id}
-                            className="holiday-item"
-                            whileHover={{ scale: 1.02 }}
-                            style={{
-                                padding: '1.5rem',
-                                backgroundColor: 'white',
-                                borderRadius: '12px',
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => {
+                                setEditingHoliday(null);
+                                setShowModal(true);
+                            }}
+                            sx={{
+                                backgroundColor: '#3b82f6',
+                                '&:hover': { backgroundColor: '#2563eb' },
+                                borderRadius: 2,
+                                px: 3,
+                                py: 1
                             }}
                         >
-                            <h3 style={{ color: '#2c3e50', marginBottom: '1rem' }}>{holiday.name}</h3>
-                            <p style={{ color: '#34495e', marginBottom: '0.5rem' }}>
-                                Start: {new Date(holiday.startDate).toLocaleDateString()}
-                            </p>
-                            <p style={{ color: '#34495e', marginBottom: '0.5rem' }}>
-                                End: {new Date(holiday.endDate).toLocaleDateString()}
-                            </p>
-                            <p style={{ color: '#34495e', marginBottom: '1rem' }}>
-                                Recurring: {holiday.recurring ? 'Yes' : 'No'}
-                            </p>
-                            
-                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleEdit(holiday)}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        backgroundColor: '#3498db',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontWeight: '500',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                    }}
+                            Add Holiday
+                        </Button>
+                    </motion.div>
+                </Box>
+
+                {loading && <Typography sx={{ textAlign: 'center' }}>Loading...</Typography>}
+                {error && (
+                    <Typography color="error" sx={{ mb: 2, textAlign: 'center' }}>
+                        {error}
+                    </Typography>
+                )}
+
+                <Grid container spacing={3} ref={holidaysRef}>
+                    {holidays
+                        .filter(holiday => 
+                            holiday.name.toLowerCase().includes(filterQuery.toLowerCase())
+                        )
+                        .map((holiday) => (
+                            <Grid item xs={12} sm={6} md={4} key={holiday._id}>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3 }}
                                 >
-                                    Edit
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleDelete(holiday._id)}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        backgroundColor: '#e74c3c',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontWeight: '500',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                    }}
-                                >
-                                    Delete
-                                </motion.button>
-                            </div>
-                        </motion.div>
-                    ))}
-            </div>
-        </motion.div>
+                                    <Card sx={{ 
+                                        height: '100%',
+                                        '&:hover': { boxShadow: 6 },
+                                        transition: 'box-shadow 0.3s'
+                                    }}>
+                                        <CardContent>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                                <EventIcon sx={{ mr: 1, color: '#3b82f6' }} />
+                                                <Typography variant="h6">{holiday.name}</Typography>
+                                            </Box>
+                                            
+                                            <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                                                Start: {new Date(holiday.startDate).toLocaleDateString()}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                                                End: {new Date(holiday.endDate).toLocaleDateString()}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                                                Recurring: {holiday.recurring ? 'Yes' : 'No'}
+                                            </Typography>
+
+                                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                                <IconButton
+                                                    onClick={() => handleEdit(holiday)}
+                                                    sx={{
+                                                        backgroundColor: '#3b82f6',
+                                                        color: 'white',
+                                                        '&:hover': { backgroundColor: '#2563eb' }
+                                                    }}
+                                                >
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton
+                                                    onClick={() => handleDelete(holiday._id)}
+                                                    sx={{
+                                                        backgroundColor: '#ef4444',
+                                                        color: 'white',
+                                                        '&:hover': { backgroundColor: '#dc2626' }
+                                                    }}
+                                                >
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            </Grid>
+                        ))}
+                </Grid>
+
+                <Modal open={showModal} onClose={() => setShowModal(false)}>
+                    <Box sx={modalStyle}>
+                        <Typography variant="h6" sx={{ mb: 2 }}>
+                            {editingHoliday ? 'Edit Holiday' : 'Add New Holiday'}
+                        </Typography>
+                        
+                        <Formik
+                            initialValues={editingHoliday || {
+                                name: '',
+                                startDate: '',
+                                endDate: '',
+                                recurring: false
+                            }}
+                            validationSchema={validationSchema}
+                            onSubmit={handleSubmit}
+                        >
+                            {({ isSubmitting }) => (
+                                <Form>
+                                    <Field
+                                        as={TextField}
+                                        fullWidth
+                                        name="name"
+                                        label="Holiday Name"
+                                        sx={{ mb: 2 }}
+                                    />
+                                    <ErrorMessage name="name" component="div" className="error" />
+
+                                    <Field
+                                        as={TextField}
+                                        fullWidth
+                                        type="date"
+                                        name="startDate"
+                                        label="Start Date"
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{ mb: 2 }}
+                                    />
+                                    <ErrorMessage name="startDate" component="div" className="error" />
+
+                                    <Field
+                                        as={TextField}
+                                        fullWidth
+                                        type="date"
+                                        name="endDate"
+                                        label="End Date"
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{ mb: 2 }}
+                                    />
+                                    <ErrorMessage name="endDate" component="div" className="error" />
+
+                                    <Box sx={{ mb: 3 }}>
+                                        <Field
+                                            type="checkbox"
+                                            name="recurring"
+                                            id="recurring"
+                                        />
+                                        <label htmlFor="recurring" style={{ marginLeft: '8px' }}>
+                                            Recurring Holiday
+                                        </label>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                                        <Button
+                                            variant="outlined"
+                                            onClick={() => setShowModal(false)}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                        >
+                                            {editingHoliday ? 'Update' : 'Create'}
+                                        </Button>
+                                    </Box>
+                                </Form>
+                            )}
+                        </Formik>
+                    </Box>
+                </Modal>
+            </Paper>
+        </Container>
     );
-};
-
-export default Holidays;
-
+}
