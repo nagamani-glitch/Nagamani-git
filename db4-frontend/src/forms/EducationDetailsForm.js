@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-// import axios from 'axios';
-import Footer from '../components/Footer';
 import './styles.css'
+
 
 const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedEducationDetails }) => {
   // State to manage education details
@@ -444,7 +443,7 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
         <button type="submit" className="submit-btn">Next &gt; </button>
         </div>
       </form>
-      <Footer />
+      
     </div>
   );
 };
