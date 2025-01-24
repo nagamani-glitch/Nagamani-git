@@ -234,6 +234,8 @@
     max-width: 700px;
     max-height: 85vh;
     overflow-y: auto;
+    /* display: flex;
+    align-items: center; */
   }
   
   .close-btn {

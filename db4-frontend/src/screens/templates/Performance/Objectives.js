@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import './Objectives.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./Objectives.css";
 
-const API_URL = 'http://localhost:5000/api/objectives';
-
-
+const API_URL = "http://localhost:5000/api/objectives";
 
 const Objectives = () => {
   const [objectives, setObjectives] = useState([]);
-  const [selectedTab, setSelectedTab] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState({ managers: '', assignees: '', keyResults: '', duration: '', archived: '' });
+  const [selectedTab, setSelectedTab] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState({
+    managers: "",
+    assignees: "",
+    keyResults: "",
+    duration: "",
+    archived: "",
+  });
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentObjective, setCurrentObjective] = useState(null);
@@ -25,24 +29,27 @@ const Objectives = () => {
     try {
       const params = {
         searchTerm,
-        objectiveType: selectedTab !== 'all' ? selectedTab : undefined,
+        objectiveType: selectedTab !== "all" ? selectedTab : undefined,
       };
       const response = await axios.get(API_URL, { params });
       setObjectives(response.data);
     } catch (error) {
-      console.error('Error loading objectives:', error);
+      console.error("Error loading objectives:", error);
     }
   };
 
-  const filteredObjectives = objectives.filter(obj => {
+  const filteredObjectives = objectives.filter((obj) => {
     return (
-      (selectedTab === 'all' ? true : obj.objectiveType === selectedTab) &&
-      (searchTerm === '' || obj.title.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (filter.managers === '' || obj.managers.toString() === filter.managers) &&
-      (filter.assignees === '' || obj.assignees.toString() === filter.assignees) &&
-      (filter.keyResults === '' || obj.keyResults.toString() === filter.keyResults) &&
-      (filter.duration === '' || obj.duration.includes(filter.duration)) &&
-      (filter.archived === '' || obj.archived.toString() === filter.archived)
+      (selectedTab === "all" ? true : obj.objectiveType === selectedTab) &&
+      (searchTerm === "" ||
+        obj.title.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (filter.managers === "" || obj.managers.toString() === filter.managers) &&
+      (filter.assignees === "" ||
+        obj.assignees.toString() === filter.assignees) &&
+      (filter.keyResults === "" ||
+        obj.keyResults.toString() === filter.keyResults) &&
+      (filter.duration === "" || obj.duration.includes(filter.duration)) &&
+      (filter.archived === "" || obj.archived.toString() === filter.archived)
     );
   });
 
@@ -55,7 +62,13 @@ const Objectives = () => {
   };
 
   const resetFilter = () => {
-    setFilter({ managers: '', assignees: '', keyResults: '', duration: '', archived: '' });
+    setFilter({
+      managers: "",
+      assignees: "",
+      keyResults: "",
+      duration: "",
+      archived: "",
+    });
     setIsFilterModalOpen(false);
   };
 
@@ -64,12 +77,12 @@ const Objectives = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this objective?')) {
+    if (window.confirm("Are you sure you want to delete this objective?")) {
       try {
         await axios.delete(`${API_URL}/${id}`);
-        setObjectives(objectives.filter(obj => obj._id !== id));
+        setObjectives(objectives.filter((obj) => obj._id !== id));
       } catch (error) {
-        console.error('Error deleting objective:', error);
+        console.error("Error deleting objective:", error);
       }
     }
   };
@@ -83,11 +96,11 @@ const Objectives = () => {
   //         'Content-Type': 'application/json'
   //       }
   //     });
-      
+
   //     setObjectives(objectives.map(obj =>
   //       obj._id === id ? response.data : obj
   //     ));
-      
+
   //     if (!showArchivedTable) {
   //       setShowArchivedTable(true);
   //     }
@@ -98,35 +111,34 @@ const Objectives = () => {
 
   const handleArchive = async (id) => {
     try {
-      const response = await axios.patch(`${API_URL}/${id}/archive`, {}, {
-        headers: {
-          'Content-Type': 'application/json'
+      const response = await axios.patch(
+        `${API_URL}/${id}/archive`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
-      setObjectives(prevObjectives => 
-        prevObjectives.map(obj => 
-          obj._id === id ? response.data : obj
-        )
+      );
+
+      setObjectives((prevObjectives) =>
+        prevObjectives.map((obj) => (obj._id === id ? response.data : obj))
       );
     } catch (error) {
-      console.error('Error toggling archive status:', error);
+      console.error("Error toggling archive status:", error);
     }
   };
-  
-  
-  
 
   const handleAdd = () => {
     const newObjective = {
-      title: '',
-      managers: '',
-      keyResults: '',
-      assignees: '',
-      duration: '0 Days',
-      description: '',
+      title: "",
+      managers: "",
+      keyResults: "",
+      assignees: "",
+      duration: "0 Days",
+      description: "",
       archived: false,
-      objectiveType: 'all'
+      objectiveType: "all",
     };
     setCurrentObjective(newObjective);
     setIsCreateModalOpen(true);
@@ -156,25 +168,24 @@ const Objectives = () => {
         assignees: Number(currentObjective.assignees) || 0,
         duration: currentObjective.duration,
         description: currentObjective.description,
-        objectiveType: currentObjective.objectiveType || 'all',
-        archived: false
+        objectiveType: currentObjective.objectiveType || "all",
+        archived: false,
       };
-  
+
       const response = await axios.post(API_URL, objectiveData, {
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       });
-      
+
       setObjectives([...objectives, response.data]);
       setIsCreateModalOpen(false);
       setCurrentObjective(null);
       setSelectedTab(response.data.objectiveType);
     } catch (error) {
-      console.error('Error creating objective:', error);
+      console.error("Error creating objective:", error);
     }
   };
-  
 
   const handleEdit = (objective) => {
     setCurrentObjective({ ...objective });
@@ -184,40 +195,59 @@ const Objectives = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(`${API_URL}/${currentObjective._id}`, currentObjective);
-      setObjectives(objectives.map(obj =>
-        obj._id === currentObjective._id ? response.data : obj
-      ));
+      const response = await axios.put(
+        `${API_URL}/${currentObjective._id}`,
+        currentObjective
+      );
+      setObjectives(
+        objectives.map((obj) =>
+          obj._id === currentObjective._id ? response.data : obj
+        )
+      );
       setIsEditModalOpen(false);
       setCurrentObjective(null);
     } catch (error) {
-      console.error('Error updating objective:', error);
+      console.error("Error updating objective:", error);
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setCurrentObjective(prev => ({
+    setCurrentObjective((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   return (
-    <div className="objectives"> 
+    <div className="objectives">
       <div className="header-row">
         <h2>Objectives</h2>
         <div className="obj-toolbar">
-          <input type="text" placeholder="Search" value={searchTerm} onChange={handleSearch} className='search-input' />
-          <button className = "obj-filter-button" onClick={() => setIsFilterModalOpen(true)}>Filter</button>
-          <button onClick={handleAdd} className="create-button">Create</button>
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchTerm}
+            onChange={handleSearch}
+            className="search-input"
+          />
+          <button
+            className="obj-filter-button"
+            onClick={() => setIsFilterModalOpen(true)}
+          >
+            Filter
+          </button>
+          <button onClick={handleAdd} className="create-button">
+            Create
+          </button>
         </div>
       </div>
 
       {isCreateModalOpen && (
         <div className="filter-modal">
           <div className="filter-modal-content">
-            <h3>Create New Objective</h3>
+            <h3 className="create-objective-heading">Create New Objective</h3>
+            <hr />
             <form onSubmit={handleCreateSubmit}>
               <div className="group">
                 <label>
@@ -266,7 +296,7 @@ const Objectives = () => {
               <div className="group">
                 <label>
                   Objective Type:
-                  <select 
+                  <select
                     name="objectiveType"
                     value={currentObjective.objectiveType}
                     onChange={handleInputChange}
@@ -292,7 +322,12 @@ const Objectives = () => {
               </div>
               <div style={{ display: "flex", gap: "10px" }}>
                 <button type="submit">Create</button>
-                <button type="button" onClick={() => setIsCreateModalOpen(false)}>Cancel</button>
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(false)}
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
@@ -349,7 +384,7 @@ const Objectives = () => {
               <div className="group">
                 <label>
                   Objective Type:
-                  <select 
+                  <select
                     name="objectiveType"
                     value={currentObjective.objectiveType}
                     onChange={handleInputChange}
@@ -372,7 +407,9 @@ const Objectives = () => {
               </div>
               <div style={{ display: "flex", gap: "10px" }}>
                 <button type="submit">Save Changes</button>
-                <button type="button" onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+                <button type="button" onClick={() => setIsEditModalOpen(false)}>
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
@@ -380,10 +417,20 @@ const Objectives = () => {
       )}
 
       <div className="tabs">
-        <button className={selectedTab === 'self' ? 'active' : ''} onClick={() => setSelectedTab('self')}>Self Objective</button>
-        <button className={selectedTab === 'all' ? 'active' : ''} onClick={() => setSelectedTab('all')}>All Objective</button>
+        <button
+          className={selectedTab === "self" ? "active" : ""}
+          onClick={() => setSelectedTab("self")}
+        >
+          Self Objective
+        </button>
+        <button
+          className={selectedTab === "all" ? "active" : ""}
+          onClick={() => setSelectedTab("all")}
+        >
+          All Objective
+        </button>
         <button onClick={() => setShowArchivedTable(!showArchivedTable)}>
-          {showArchivedTable ? 'Hide Archived' : 'Show Archived'}
+          {showArchivedTable ? "Hide Archived" : "Show Archived"}
         </button>
       </div>
 
@@ -401,24 +448,26 @@ const Objectives = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredObjectives.filter(obj => !obj.archived).map(obj => (
-            <tr key={obj._id}>
-              <td>{obj.title}</td>
-              <td>{obj.managers} Managers</td>
-              <td>{obj.keyResults} Key results</td>
-              <td>{obj.assignees} Assignees</td>
-              <td>{obj.duration}</td>
-              <td>{obj.description}</td>
-              <td>{obj.objectiveType}</td>
-              <td>
-                <button onClick={() => handleEdit(obj)}>✎</button>
-                <button onClick={() => handleArchive(obj._id)}>📥</button>
-                <button onClick={() => handleDelete(obj._id)}>🗑️</button>
-              </td>
-            </tr>
-          ))}
+          {filteredObjectives
+            .filter((obj) => !obj.archived)
+            .map((obj) => (
+              <tr key={obj._id}>
+                <td>{obj.title}</td>
+                <td>{obj.managers} Managers</td>
+                <td>{obj.keyResults} Key results</td>
+                <td>{obj.assignees} Assignees</td>
+                <td>{obj.duration}</td>
+                <td>{obj.description}</td>
+                <td>{obj.objectiveType}</td>
+                <td>
+                  <button onClick={() => handleEdit(obj)}>✎</button>
+                  <button onClick={() => handleArchive(obj._id)}>📥</button>
+                  <button onClick={() => handleDelete(obj._id)}>🗑️</button>
+                </td>
+              </tr>
+            ))}
         </tbody>
-        </table>
+      </table>
 
       {/* {showArchivedTable && (
         <div className="archived-objectives">
@@ -457,71 +506,99 @@ const Objectives = () => {
         </div>
       )} */}
 
-{showArchivedTable && (
-  <div className="archived-objectives">
-    <h3>Archived Objectives</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Managers</th>
-          <th>Key Results</th>
-          <th>Assignees</th>
-          <th>Duration</th>
-          <th>Description</th>
-          <th>Type</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {objectives.filter(obj => obj.archived).map(obj => (
-          <tr key={obj._id}>
-            <td>{obj.title}</td>
-            <td>{obj.managers} Managers</td>
-            <td>{obj.keyResults} Key results</td>
-            <td>{obj.assignees} Assignees</td>
-            <td>{obj.duration}</td>
-            <td>{obj.description}</td>
-            <td>{obj.objectiveType}</td>
-            <td>
-              <button onClick={() => handleArchive(obj._id)}>🔄</button>
-              <button onClick={() => handleDelete(obj._id)}>🗑️</button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)}
-
+      {showArchivedTable && (
+        <div className="archived-objectives">
+          <h3>Archived Objectives</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Managers</th>
+                <th>Key Results</th>
+                <th>Assignees</th>
+                <th>Duration</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {objectives
+                .filter((obj) => obj.archived)
+                .map((obj) => (
+                  <tr key={obj._id}>
+                    <td>{obj.title}</td>
+                    <td>{obj.managers} Managers</td>
+                    <td>{obj.keyResults} Key results</td>
+                    <td>{obj.assignees} Assignees</td>
+                    <td>{obj.duration}</td>
+                    <td>{obj.description}</td>
+                    <td>{obj.objectiveType}</td>
+                    <td>
+                      <button onClick={() => handleArchive(obj._id)}>🔄</button>
+                      <button onClick={() => handleDelete(obj._id)}>🗑️</button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {isFilterModalOpen && (
         <div className="filter-modal">
           <div className="filter-modal-content">
             <h3>Filter Objectives</h3>
-            <div className='group'>
+            <div className="group">
               <label>
                 Managers:
-                <input type="text" value={filter.managers} onChange={e => handleFilterChange('managers', e.target.value)} />
+                <input
+                  type="text"
+                  value={filter.managers}
+                  onChange={(e) =>
+                    handleFilterChange("managers", e.target.value)
+                  }
+                />
               </label>
               <label>
                 Assignees:
-                <input type="text" value={filter.assignees} onChange={e => handleFilterChange('assignees', e.target.value)} />
+                <input
+                  type="text"
+                  value={filter.assignees}
+                  onChange={(e) =>
+                    handleFilterChange("assignees", e.target.value)
+                  }
+                />
               </label>
             </div>
-            <div className='group'>
+            <div className="group">
               <label>
                 Key Results:
-                <input type="number" value={filter.keyResults} onChange={e => handleFilterChange('keyResults', e.target.value)} />
+                <input
+                  type="number"
+                  value={filter.keyResults}
+                  onChange={(e) =>
+                    handleFilterChange("keyResults", e.target.value)
+                  }
+                />
               </label>
               <label>
                 Duration:
-                <input type="text" value={filter.duration} onChange={e => handleFilterChange('duration', e.target.value)} />
+                <input
+                  type="text"
+                  value={filter.duration}
+                  onChange={(e) =>
+                    handleFilterChange("duration", e.target.value)
+                  }
+                />
               </label>
             </div>
             <label>
               Archived:
-              <select value={filter.archived} onChange={e => handleFilterChange('archived', e.target.value)}>
+              <select
+                value={filter.archived}
+                onChange={(e) => handleFilterChange("archived", e.target.value)}
+              >
                 <option value="">All</option>
                 <option value="true">Yes</option>
                 <option value="false">No</option>

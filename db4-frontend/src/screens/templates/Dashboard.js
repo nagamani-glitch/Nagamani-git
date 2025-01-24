@@ -17,7 +17,7 @@ import RecruitmentPipeline from './Recruitment/RecruitmentPipeline';
 import RecruitmentSurvey from './Recruitment/RecruitmentSurvey';
 import RecruitmentCandidate from './Recruitment/RecruitmentCandidate';
 import Interview from './Recruitment/Interview';
-import OpenJobs from './Recruitment/OpenJobs';
+// import OpenJobs from './Recruitment/OpenJobs';
 import SkillZone from './Recruitment/SkillZone';
 //Onboarding
 import OnboardingView from './Onboarding/OnboardingView_1';
@@ -133,8 +133,8 @@ function Dashboard() {
         return <RecruitmentCandidate />;
       case 'interview':
         return <Interview />;
-      case 'openJobs':
-        return <OpenJobs />;
+      // case 'openJobs':
+      //   return <OpenJobs />;
       case 'skillZone':
         return <SkillZone />;
       case 'candidatesView':

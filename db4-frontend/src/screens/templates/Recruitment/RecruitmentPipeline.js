@@ -20,7 +20,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
+// import FilterListIcon from '@mui/icons-material/FilterList';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -32,110 +32,143 @@ const initialColumns = {
   'Operating Manager': ['Reviewed', 'In Progress', 'Completed'],
   'Hiring Employees': ['Shortlisted', 'Offer Extended', 'Joined'],
 };
+  const RecruitmentPipeline = () => {
+    const [tabIndex, setTabIndex] = useState(0);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [candidates, setCandidates] = useState([]);
+    const [newCandidate, setNewCandidate] = useState({
+      name: '',
+      email: '',
+      department: '',
+      column: 'Initial',
+      stars: 0,
+    });
+    const [editingCandidate, setEditingCandidate] = useState(null);
 
-const RecruitmentPipeline = () => {
-  const [tabIndex, setTabIndex] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [candidates, setCandidates] = useState([]);
-  const [newCandidate, setNewCandidate] = useState({
-    name: '',
-    email: '',
-    department: '',
-    column: 'Initial',
-    stars: 0,
-  });
-  const [editingCandidate, setEditingCandidate] = useState(null);
+    // Add these validation functions at the top of your component
+    const validateName = (name) => {
+      const nameRegex = /^[a-zA-Z\s]{2,30}$/;
+      return nameRegex.test(name);
+    };
 
-  // Memoize the tab labels array
-  const tabLabels = useMemo(
-    () => [
-      'Recruitment Drive',
-      'FutureForce Recruitment',
-      'Operating Manager',
-      'Hiring Employees',
-    ],
-    []
-  );
+    const validateEmail = (email) => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    };
 
-  // Fetch candidates when the component mounts or when tabIndex changes
-  useEffect(() => {
-    fetchCandidates(tabLabels[tabIndex]);
-  }, [tabIndex, tabLabels]); // Use memoized tabLabels as a dependency
+    // Add state for validation errors
+    const [validationErrors, setValidationErrors] = useState({
+      name: '',
+      email: ''
+    });
 
-  const handleTabChange = (event, newValue) => {
-    setTabIndex(newValue);
-  };
+    // Memoize the tab labels array
+    const tabLabels = useMemo(
+      () => [
+        'Recruitment Drive',
+        'FutureForce Recruitment',
+        'Operating Manager',
+        'Hiring Employees',
+      ],
+      []
+    );
 
-  const fetchCandidates = async (recruitment) => {
-    try {
-      const response = await axios.get(`http://localhost:5000/api/recruitment/${recruitment}`);
-      setCandidates(response.data);
-    } catch (error) {
-      console.error('Error fetching candidates:', error);
-    }
-  };
+    // Fetch candidates when the component mounts or when tabIndex changes
+    useEffect(() => {
+      fetchCandidates(tabLabels[tabIndex]);
+    }, [tabIndex, tabLabels]); // Use memoized tabLabels as a dependency
 
-  const handleDialogOpen = (candidate = null) => {
-    if (candidate) {
-      setEditingCandidate(candidate);
-      setNewCandidate({ ...candidate });
-    } else {
-      setEditingCandidate(null);
-      setNewCandidate({
-        name: '',
-        email: '',
-        department: '',
-        column: 'Initial',
-        stars: 0,
-      });
-    }
-    setIsDialogOpen(true);
-  };
+    const handleTabChange = (event, newValue) => {
+      setTabIndex(newValue);
+    };
 
-  const handleDialogClose = () => setIsDialogOpen(false);
-
-  // Handle adding or editing a candidate
-  const handleAddOrEditCandidate = async () => {
-    const selectedTabLabel = tabLabels[tabIndex];
-    try {
-      if (editingCandidate) {
-        // Update the existing candidate
-        console.log('Updating candidate', newCandidate);
-        await axios.put(`http://localhost:5000/api/recruitment/${editingCandidate._id}`, newCandidate);
-      } else {
-        // Add a new candidate
-        console.log('Adding new candidate', { ...newCandidate, recruitment: selectedTabLabel });
-        await axios.post('http://localhost:5000/api/recruitment', { ...newCandidate, recruitment: selectedTabLabel });
+    const fetchCandidates = async (recruitment) => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/recruitment/${recruitment}`);
+        setCandidates(response.data);
+      } catch (error) {
+        console.error('Error fetching candidates:', error);
       }
+    };
 
-      fetchCandidates(selectedTabLabel);  // Refresh the candidate list
-      setIsDialogOpen(false);  // Close the dialog
-    } catch (error) {
-      console.error('Error adding/editing candidate:', error);
-    }
-  };
+    const handleDialogOpen = (candidate = null) => {
+      if (candidate) {
+        setEditingCandidate(candidate);
+        setNewCandidate({ ...candidate });
+      } else {
+        setEditingCandidate(null);
+        setNewCandidate({
+          name: '',
+          email: '',
+          department: '',
+          column: 'Initial',
+          stars: 0,
+        });
+      }
+      setIsDialogOpen(true);
+    };
 
-  // Handle deleting a candidate
-  const handleDeleteCandidate = async (candidateId) => {
-    const selectedTabLabel = tabLabels[tabIndex];
-    try {
-      console.log('Deleting candidate', candidateId);
-      await axios.delete(`http://localhost:5000/api/recruitment/${candidateId}`);
-      fetchCandidates(selectedTabLabel);  // Refresh the candidate list
-    } catch (error) {
-      console.error('Error deleting candidate:', error);
-    }
-  };
+    const handleDialogClose = () => setIsDialogOpen(false);
 
-  const handleSearchChange = (event) => setSearchTerm(event.target.value);
+    // Update the input change handler
+    const handleInputChange = (field, value) => {
+      setNewCandidate({ ...newCandidate, [field]: value });
+    
+      if (field === 'name') {
+        setValidationErrors({
+          ...validationErrors,
+          name: validateName(value) ? '' : 'Name should contain only letters and be 2-30 characters long'
+        });
+      }
+    
+      if (field === 'email') {
+        setValidationErrors({
+          ...validationErrors,
+          email: validateEmail(value) ? '' : 'Please enter a valid email address'
+        });
+      }
+    };
 
-  const filteredCandidates = candidates.filter((candidate) =>
-    candidate.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    // Update the handleAddOrEditCandidate function
+    const handleAddOrEditCandidate = async () => {
+      if (!validateName(newCandidate.name) || !validateEmail(newCandidate.email)) {
+        return;
+      }
+    
+      const selectedTabLabel = tabLabels[tabIndex];
+      try {
+        if (editingCandidate) {
+          await axios.put(`http://localhost:5000/api/recruitment/${editingCandidate._id}`, newCandidate);
+        } else {
+          await axios.post('http://localhost:5000/api/recruitment', { ...newCandidate, recruitment: selectedTabLabel });
+        }
+        fetchCandidates(selectedTabLabel);
+        setIsDialogOpen(false);
+      } catch (error) {
+        console.error('Error adding/editing candidate:', error);
+      }
+    };
 
-  const columns = initialColumns[tabLabels[tabIndex]];
+    // Handle deleting a candidate
+    const handleDeleteCandidate = async (candidateId) => {
+      const selectedTabLabel = tabLabels[tabIndex];
+      try {
+        console.log('Deleting candidate', candidateId);
+        await axios.delete(`http://localhost:5000/api/recruitment/${candidateId}`);
+        fetchCandidates(selectedTabLabel);  // Refresh the candidate list
+      } catch (error) {
+        console.error('Error deleting candidate:', error);
+      }
+    };
 
+    const handleSearchChange = (event) => setSearchTerm(event.target.value);
+
+    const filteredCandidates = candidates.filter((candidate) =>
+      candidate.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const columns = initialColumns[tabLabels[tabIndex]];
   return (
     <Box sx={{ padding: 3, backgroundColor: '#f9f9f9' }}>
       {/* Header */}
@@ -154,9 +187,9 @@ const RecruitmentPipeline = () => {
               onChange={handleSearchChange}
             />
           </Paper>
-          <Button variant="outlined" startIcon={<FilterListIcon />} sx={{ mr: 1 }}>
+          {/* <Button variant="outlined" startIcon={<FilterListIcon />} sx={{ mr: 1 }}>
             Filter
-          </Button>
+          </Button> */}
           <Button variant="contained" color="error" startIcon={<AddIcon />} onClick={() => handleDialogOpen()}>
             Add Candidate
           </Button>
@@ -245,7 +278,12 @@ const RecruitmentPipeline = () => {
             variant="outlined"
             margin="normal"
             value={newCandidate.name}
-            onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+            error={!!validationErrors.name}
+            helperText={validationErrors.name}
+            FormHelperTextProps={{
+              style: { color: '#d32f2f' }
+            }}
           />
           <TextField
             fullWidth
@@ -253,7 +291,12 @@ const RecruitmentPipeline = () => {
             variant="outlined"
             margin="normal"
             value={newCandidate.email}
-            onChange={(e) => setNewCandidate({ ...newCandidate, email: e.target.value })}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            error={!!validationErrors.email}
+            helperText={validationErrors.email}
+            FormHelperTextProps={{
+              style: { color: '#d32f2f' }
+            }}
           />
           <TextField
             fullWidth

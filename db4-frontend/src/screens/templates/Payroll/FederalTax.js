@@ -119,7 +119,7 @@ const FederalTax = () => {
                         className="search-input"
                     />
                     <button className="federal-tax-create-button" onClick={handleCreateButtonClick}>
-                        + Create
+                        Create
                     </button>
                 </div>
             </div>

@@ -11,38 +11,38 @@ import {
   FaTrash
 } from "react-icons/fa";
 
-const deductionsData = [
-  {
-    id: 1,
-    code: "ESI",
-    name: "ESI",
-    amount: 200.0,
-    employerRate: "6.25% of Gross Pay",
-    employeeRate: "7.75% of Gross Pay",
-    oneTimeDeduction: "No",
-    taxable: "Yes",
-    fixed: false,
-  },
-  {
-    id: 2,
-    code: "SS",
-    name: "Social Security (FICA)",
-    amount: 1000.0,
-    employerRate: "3.25% of Gross Pay",
-    employeeRate: "0.75% of Gross Pay",
-    oneTimeDeduction: "No",
-    taxable: "Yes",
-    fixed: true,
-    pretax: "Yes",
-  },
+// const deductionsData = [
+//   {
+//     id: 1,
+//     code: "ESI",
+//     name: "ESI",
+//     amount: 200.0,
+//     employerRate: "6.25% of Gross Pay",
+//     employeeRate: "7.75% of Gross Pay",
+//     oneTimeDeduction: "No",
+//     taxable: "Yes",
+//     fixed: false,
+//   },
+//   {
+//     id: 2,
+//     code: "SS",
+//     name: "Social Security (FICA)",
+//     amount: 1000.0,
+//     employerRate: "3.25% of Gross Pay",
+//     employeeRate: "0.75% of Gross Pay",
+//     oneTimeDeduction: "No",
+//     taxable: "Yes",
+//     fixed: true,
+//     pretax: "Yes",
+//   },
 
-  // Add more allowance data here
-];
+//   // Add more allowance data here
+// ];
 
 const Deductions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("card"); // 'card' or 'list'
-  const [filteredData, setFilteredData] = useState(deductionsData);
+  const [filteredData, setFilteredData] = useState([]);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingDeduction, setEditingDeduction] = useState(null);
@@ -240,6 +240,7 @@ const Deductions = () => {
 
   return (
     <div className="deduction-container">
+      <div className="deduction-sub-container">
       <header className="deduction-header">
         <h2>Deductions</h2>
         <div className="controls">
@@ -262,11 +263,11 @@ const Deductions = () => {
           >
             <FaTh />
           </button>
-          <button className="filter-btn" onClick={toggleFilterVisibility}>
+          <button className="deduction-filter-btn" onClick={toggleFilterVisibility}>
             <FaFilter /> Filter
           </button>
           <button className="create-btn" onClick={handleCreateAllowance}>
-            <FaPlus /> Create
+             Create
           </button>
 
           {/* Create modal popup */}
@@ -299,6 +300,7 @@ const Deductions = () => {
 
         </div>
       </header>
+      
 
       {/* Display active filters as tags */}
       <div className="active-filters">
@@ -309,7 +311,7 @@ const Deductions = () => {
         ))}
       </div>
       {isFilterVisible && (
-        <div className="filter-popup" ref={filterRef}>
+        <div className="deduction-filter-popup" ref={filterRef}>
           <div className="filter-form">
             <div className="filter-row">
               <label>Pretax</label>
@@ -377,10 +379,10 @@ const Deductions = () => {
               </div>
               <div className="card-header">
                 <div className="card-actions">
-                  <button className="edit-btn" onClick={() => handleEdit(deduction)}>
+                  <button className="ded-card-edit-btn" onClick={() => handleEdit(deduction)}>
                     <FaEdit size={20} />
                   </button>
-                  <button className="delete-btn" onClick={() => handleDelete(deduction._id)}>
+                  <button className="ded-card-delete-btn" onClick={() => handleDelete(deduction._id)}>
                     <FaTrash size={18} />
                   </button>
                 </div>
@@ -422,16 +424,16 @@ const Deductions = () => {
                     <td>-</td>
                     <td className="sticky-column">
                       <button
-                        className="DedEdit-btn"
+                        className="Ded-list-Edit-btn"
                         onClick={() => handleEdit(deduction.id)}
                       >
-                        <FaEdit />
+                        <FaEdit size={20}/>
                       </button>
                       <button
-                        className="DedDelete-btn"
+                        className="Ded-list-Delete-btn"
                         onClick={() => handleDelete(deduction._id)}
-                      >
-                        <FaTrash />
+                      > 
+                        <FaTrash size={18}/>
                       </button>
                     </td>
                   </tr>
@@ -444,12 +446,11 @@ const Deductions = () => {
 
       <footer className="footer">
         <span>Page 1 of 1</span>
-        <button className="add-btn">
-          <FaPlus />
-        </button>
       </footer>
+    </div>
     </div>
   );
 };
 
 export default Deductions;
+
