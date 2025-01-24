@@ -25,8 +25,7 @@ import shiftRequestRoutes from './routes/shiftRequestRoutes.js';
 import workTypeRequestRoutes from './routes/workTypeRequestRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 import hiredEmployeeRoutes from './routes/hiredEmployeeRoutes.js';
-import documentRoutes from './routes/documentRoutes.js';
-import policyRoutes from './routes/policyRoutes.js';
+
 
 
 // Sangeeta 
@@ -42,6 +41,9 @@ import payrollContractRoutes from './routes/payrollContractRoutes.js';
 
 // Harish
 import attendanceRoutes from './routes/attendanceRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
+import policyRoutes from './routes/policyRoutes.js';
+import organizationRoutes from './routes/organizationRoutes.js';
  
  
 dotenv.config()
@@ -110,8 +112,7 @@ app.use('/api/faqCategories', faqCategoryRoutes);
 app.use('/api/hired-employees', hiredEmployeeRoutes);
 app.use('/api/shift-requests', shiftRequestRoutes);
 app.use('/api/work-type-requests', workTypeRequestRoutes);
-app.use('/api', documentRoutes);
-app.use('/api', policyRoutes);
+
 
  
  
@@ -131,7 +132,9 @@ app.use('/api/resignations', resignationRoutes);
 
 // Harish
 app.use('/api/attendance', attendanceRoutes);
-
+app.use('/api', documentRoutes);
+app.use('/api', policyRoutes);
+app.use('/api', organizationRoutes);
 
 
 const PORT = process.env.PORT || 5000;
