@@ -7,7 +7,7 @@ const workTypeRequestSchema = new mongoose.Schema({
     required: true,
     enum: ['Morning Shift', 'Evening Shift', 'Night Shift']
   },
-  currentShift: { 
+  currentShift: {  
     type: String, 
     default: 'Regular Shift'
   },
