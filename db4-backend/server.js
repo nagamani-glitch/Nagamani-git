@@ -26,6 +26,7 @@ import workTypeRequestRoutes from './routes/workTypeRequestRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 import hiredEmployeeRoutes from './routes/hiredEmployeeRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
+import policyRoutes from './routes/policyRoutes.js';
 
 
 // Sangeeta 
@@ -110,6 +111,7 @@ app.use('/api/hired-employees', hiredEmployeeRoutes);
 app.use('/api/shift-requests', shiftRequestRoutes);
 app.use('/api/work-type-requests', workTypeRequestRoutes);
 app.use('/api', documentRoutes);
+app.use('/api', policyRoutes);
 
  
  
