@@ -1,6 +1,7 @@
 import express from "express"
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
 import connectDB from './config/db.js';
 import employeesRouter from './routes/employeesRouter.js'
 import authRouter from './routes/authRouter.js'
@@ -46,8 +47,10 @@ import attendanceRoutes from './routes/attendanceRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import policyRoutes from './routes/policyRoutes.js';
 import organizationRoutes from './routes/organizationRoutes.js';
- 
- 
+import disciplinaryActionRoutes from './routes/disciplinaryActions.js'; 
+import timeOffRequestRoutes from './routes/timeOffRequests.js'; 
+
+
 dotenv.config()
 connectDB()
 const app = express()
@@ -78,8 +81,10 @@ app.use((err, req, res, next) => {
 
 
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 app.use("/api/employees", employeesRouter);
+app.use('/uploads', express.static('uploads'));
 app.use("/api/auth", authRouter);
 app.use("/api/profiles", profileRouter);
 app.use("/api/contracts", contractRouter);
@@ -125,7 +130,8 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api', documentRoutes);
 app.use('/api', policyRoutes);
 app.use('/api', organizationRoutes);
-
+app.use('/api/disciplinary-actions', disciplinaryActionRoutes);
+app.use('/api/time-off-requests', timeOffRequestRoutes);
 
 const PORT = process.env.PORT || 5000;
 

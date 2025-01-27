@@ -6,8 +6,11 @@ import FamilyDetailsForm from "../forms/FamilyDetailsForm";
 import ServiceHistoryForm from "../forms/ServiceHistoryForm";
 import NominationDetailsForm from "../forms/NominationDetailsForm";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const RegisterScreen = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1); // Tracks the current form page
 
   // Consolidated form data for all steps
@@ -16,12 +19,12 @@ const RegisterScreen = () => {
     addressInfo: {},
     joiningDetails: {},
     educationDetails: {},
-    trainingDetails:{},
-    trainingInIndia:{},
-    trainingInAbroad:{},
+    trainingDetails: {},
+    trainingInIndia: {},
+    trainingInAbroad: {},
     familyDetails: [],
     serviceHistory: {},
-    nominationDetails: {},
+    nominationDetails: {}
   });
 
   // Move to next form page
@@ -42,42 +45,59 @@ const RegisterScreen = () => {
     }));
   };
 
-  // Submit final data
-  const handleSubmit = async () => {
-    try {
-      const formDataToSubmit = {
-        personalInfo: formData.personalInfo,
-        addressInfo: formData.addressInfo,
-        joiningDetails: formData.joiningDetails,
-        educationDetails: formData.educationDetails,
-        trainingDetails: formData.trainingDetails,
-        familyDetails: formData.familyDetails,
-        serviceHistory: formData.serviceHistory,
-        nominationDetails: formData.nominationDetails
-      };
-  
-      const response = await axios.post('http://localhost:5000/api/employees/register', formDataToSubmit, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        withCredentials: true
-      });
-  
-      console.log('Registration successful:', response.data);
-      
-    } catch (error) {
-      if (error.response) {
-        console.error('Server error:', error.response.data);
-      } else if (error.request) {
-        console.error('Network error:', error.message);
-      } else {
-        console.error('Error:', error.message);
-      }
-    }
+  const generateEmployeeId = () => {
+    // Generate a unique employee ID, for example:
+    return 'EMP' + Date.now().toString().slice(-6);
   };
-  
-  
 
+  const [profileImage, setProfileImage] = useState('null'); 
+
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    setProfileImage(file);
+  };
+
+  
+    // Submit final data
+    const handleSubmit = async () => {
+      try {
+        const formDataToSend = new FormData();
+        
+        if (profileImage) {
+          formDataToSend.append('img', profileImage);
+        }
+    
+        const mappedData = {
+          Emp_ID: `EMP${Date.now().toString().slice(-6)}`,
+          name: formData.personalInfo?.firstName ? `${formData.personalInfo.firstName} ${formData.personalInfo.lastName || ''}` : '',
+          email: formData.addressInfo?.email || '',
+          phone: formData.addressInfo?.phoneNumber || '',
+          department: formData.joiningDetails?.officeName || '',
+          role: formData.joiningDetails?.initialDesignation || '',
+          location: formData.addressInfo?.presentAddress || '',
+          dob: formData.personalInfo?.dob ? new Date(formData.personalInfo.dob) : null,
+          ...formData
+        };
+    
+        formDataToSend.append('data', JSON.stringify(mappedData));
+    
+        const response = await axios.post('http://localhost:5000/api/employees/register', formDataToSend, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          withCredentials: true
+        });
+    
+        toast.success('Onboarding completed successfully');
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+  
+      } catch (error) {
+        toast.error('Registration failed: ' + error.message);
+      }
+    };
+    
   // Conditionally render the form based on current step
   const renderForm = () => {
     switch (currentStep) {
