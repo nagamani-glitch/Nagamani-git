@@ -1,79 +1,70 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+
+import React, { useState } from 'react';
 import axios from 'axios';
-import { Box, Button, TextField, Typography, Container } from '@mui/material';
+import { TextField, Button, Typography, Box } from '@mui/material';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const ResetPassword = () => {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const { token } = useParams();
-  const navigate = useNavigate();
+    const { token } = useParams();
+    const [password, setPassword] = useState('');
+    const [message, setMessage] = useState('');
+    const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (password !== confirmPassword) {
-      setMessage('Passwords do not match');
-      return;
-    }
-
-    const config = {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      withCredentials: true
+    const handleResetPassword = async () => {
+        try {
+            const response = await axios.post(`http://localhost:5000/api/auth/reset-password/${token}`, { password });
+            setMessage(response.data.message);
+            setTimeout(() => navigate('/login'), 2000);
+        } catch (error) {
+            setMessage(error.response.data.message || 'An error occurred.');
+        }
     };
 
-    try {
-      const response = await axios.post(
-        `http://localhost:5000/api/auth/reset-password/${token}`,
-        { password },
-        config
-      );
-      
-      setMessage('Password reset successful!');
-      setTimeout(() => navigate('/login'), 2000);
-    } catch (error) {
-      setMessage(error.response?.data?.message || 'Reset token invalid or expired');
-    }
-  };
-
-  return (
-    <Container component="main" maxWidth="xs">
-      <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Typography component="h1" variant="h5">Reset Password</Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            type="password"
-            label="New Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            type="password"
-            label="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
-            Reset Password
-          </Button>
-          {message && (
-            <Typography color="primary" textAlign="center">
-              {message}
+    return (
+        <Box
+            sx={{
+                maxWidth: '400px',
+                margin: 'auto',
+                padding: '20px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+                background: '#f9f9f9',
+                mt: 8,
+            }}
+        >
+            <Typography variant="h5" sx={{ textAlign: 'center', mb: 3 }}>
+                Reset Password
             </Typography>
-          )}
+            <TextField
+                label="New Password"
+                type="password"
+                variant="outlined"
+                fullWidth
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                sx={{ mb: 3 }}
+            />
+            <Button
+                variant="contained"
+                fullWidth
+                onClick={handleResetPassword}
+                sx={{
+                    background: 'linear-gradient(45deg, #2196F3, #21CBF3)',
+                    color: 'white',
+                    py: 1.5,
+                    fontSize: '1rem',
+                }}
+            >
+                Reset Password
+            </Button>
+            {message && (
+                <Typography sx={{ mt: 3, textAlign: 'center', color: 'green' }}>
+                    {message}
+                </Typography>
+            )}
         </Box>
-      </Box>
-    </Container>
-  );
+    );
 };
 
 export default ResetPassword;
+

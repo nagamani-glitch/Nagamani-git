@@ -27,9 +27,11 @@ const RegisterPage = () => {
     setShowPassword(!showPassword);
   };
 
+ 
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(otpSent);
     try {
       await axios.post('http://localhost:5000/api/auth/register', formData);
       alert('OTP sent to email. Please verify.');
@@ -42,7 +44,10 @@ const RegisterPage = () => {
         setError('An error occurred. Please try again.');
       }
     }
-  };
+};
+
+
+
 
   return (
     <motion.div

@@ -14,10 +14,22 @@ export const getCandidates = async (req, res) => {
 // Create new candidate
 export const createCandidate = async (req, res) => {
   try {
-    const newCandidate = new Onboarding(req.body);
+    const candidateData = {
+      name: req.body.name,
+      email: req.body.email,
+      jobPosition: req.body.jobPosition,
+      mobile: req.body.mobile,
+      joiningDate: new Date(req.body.joiningDate),
+      stage: req.body.stage || 'Test',
+      portalStatus: req.body.portalStatus || 'Active',
+      taskStatus: req.body.taskStatus || 'Pending'
+    };
+
+    const newCandidate = new Onboarding(candidateData);
     const savedCandidate = await newCandidate.save();
     res.status(201).json(savedCandidate);
   } catch (error) {
+    console.error('Create Candidate Error:', error);
     res.status(500).json({ message: 'Error creating candidate', error: error.message });
   }
 };

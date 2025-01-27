@@ -24,13 +24,11 @@ import {
 import {
     Edit as EditIcon,
     Delete as DeleteIcon,
-    Refresh as RefreshIcon,
     Add as AddIcon,
     Search as SearchIcon
 } from '@mui/icons-material';
 
 const API_URL = 'http://localhost:5000/api/hired-employees';
-
 
 const CandidatesView = () => {
     const [candidates, setCandidates] = useState([]);
@@ -98,6 +96,21 @@ const CandidatesView = () => {
         }
     };
 
+    const handleSearch = async (value) => {
+        setSearchTerm(value);
+        try {
+            const response = await axios.get(`${API_URL}/filter`, {
+                params: {
+                    department: filters.department !== 'All' ? filters.department : '',
+                    status: filters.status !== 'All' ? filters.status : '',
+                    search: value
+                }
+            });
+            setCandidates(response.data);
+        } catch (error) {
+            showSnackbar('Error applying search', 'error');
+        }
+    };
     const handleFormChange = (event) => {
         const { name, value } = event.target;
         setFormData(prev => ({
@@ -132,7 +145,6 @@ const CandidatesView = () => {
             showSnackbar(error.response?.data?.message || 'Operation failed', 'error');
         }
     };
-    
 
     const handleEdit = (candidate) => {
         setSelectedCandidate(candidate);
@@ -188,39 +200,28 @@ const CandidatesView = () => {
         <div className="candidate-view">
             <Box className="header-section">
                 <Typography variant="h4">Hired Candidates</Typography>
-                <Box className="header-actions">
-                    <Button
-                        startIcon={<RefreshIcon />}
-                        variant="outlined"
-                        onClick={fetchCandidates}
-                    >
-                        Refresh
-                    </Button>
-                    <Button
-                        startIcon={<AddIcon />}
-                        variant="contained"
-                        onClick={() => setDialogOpen(true)}
-                    >
-                        Add Candidate
-                    </Button>
-                </Box>
+                <Button
+                    startIcon={<AddIcon />}
+                    variant="contained"
+                    onClick={() => setDialogOpen(true)}
+                >
+                    Add Candidate
+                </Button>
             </Box>
 
             <Box className="filters-section">
                 <TextField
-                    placeholder=""
+                    className="search-field"
+                    placeholder="Search candidates..."
                     variant="outlined"
                     size="small"
                     value={searchTerm}
-                    onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        handleFilterChange('search', e.target.value);
-                    }}
+                    onChange={(e) => handleSearch(e.target.value)}
                     InputProps={{
                         startAdornment: <SearchIcon color="action" />
                     }}
                 />
-                <FormControl size="small" variant="outlined">
+                <FormControl size="small" variant="outlined" className="filter-select">
                     <InputLabel>Status</InputLabel>
                     <Select
                         value={filters.status}
@@ -233,7 +234,7 @@ const CandidatesView = () => {
                         ))}
                     </Select>
                 </FormControl>
-                <FormControl size="small" variant="outlined">
+                <FormControl size="small" variant="outlined" className="filter-select">
                     <InputLabel>Department</InputLabel>
                     <Select
                         value={filters.department}

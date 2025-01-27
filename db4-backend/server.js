@@ -81,7 +81,7 @@ app.use('/api/hired-employees', hiredEmployeeRoutes);
 app.use('/api/shift-requests', shiftRequestRoutes);
 app.use('/api/work-type-requests', workTypeRequestRoutes);
 
- 
+
  
 
 // Sangeeta integration
