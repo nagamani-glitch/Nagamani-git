@@ -264,7 +264,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                   placeholder="Search..."
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
-                  className="create-ded-search-bar"
+                  className="modal-search-bar"
                 />
                 <div className="employee-list">
                   {filteredEmployees.map((employee) => (
@@ -438,7 +438,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                 placeholder="Search..."
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
-                className="create-search-bar"
+                className="filter-create-search-bar"
               />
               <div className="employee-list">
                 {filteredEmployees.map((employee) => (

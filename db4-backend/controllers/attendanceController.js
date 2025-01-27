@@ -1,6 +1,6 @@
 import Attendance from '../models/attendance.js';
 
-export const AttendanceController = {
+const AttendanceController = {
   getAllAttendance: async (req, res) => {
     try {
       const attendance = await Attendance.find().sort({ date: -1 });
@@ -59,6 +59,34 @@ export const AttendanceController = {
     }
   },
 
+  filterAttendance: async (req, res) => {
+    try {
+      const { employee, workType, shift } = req.query;
+      let query = {};
+
+      if (employee) {
+        const [name, empId] = employee.split('(');
+        query.$or = [
+          { name: new RegExp(name.trim(), 'i') },
+          { empId: new RegExp(empId.replace(')', '').trim(), 'i') }
+        ];
+      }
+
+      if (workType) {
+        query.workType = new RegExp(`^${workType}$`, 'i');
+      }
+
+      if (shift) {
+        query.shift = new RegExp(`^${shift}$`, 'i');
+      }
+
+      const filteredRecords = await Attendance.find(query).sort({ date: -1 });
+      res.json(filteredRecords);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
   bulkUpdateSelection: async (req, res) => {
     const { ids, isSelected } = req.body;
     try {
@@ -81,3 +109,5 @@ export const AttendanceController = {
     }
   }
 };
+
+export { AttendanceController };

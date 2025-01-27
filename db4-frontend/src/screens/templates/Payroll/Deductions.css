@@ -37,8 +37,9 @@
  
 .search-input {
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #e80505;
   border-radius: 4px;
+  border: none;
 }
  
 .view-toggle,
@@ -303,7 +304,7 @@ td.sticky-column {
   top: 25.5%;
   right: 25%;
   transform: translateX(50%);
-  background-color: white;
+  background-color: white; 
   border: 1px solid #ddd;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -441,6 +442,7 @@ td.sticky-column {
  
 .card-actions {
   display: flex;
+  flex-direction: row;
   justify-content: space-around;
   gap: 10px;
   margin-top: 10px;
