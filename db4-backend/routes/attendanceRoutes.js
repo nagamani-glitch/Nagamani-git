@@ -7,6 +7,7 @@ router.get('/', AttendanceController.getAllAttendance);
 router.post('/', AttendanceController.createAttendance);
 router.get('/search', AttendanceController.searchAttendance);
 router.put('/bulk-select', AttendanceController.bulkUpdateSelection);
+router.put('/:id', AttendanceController.updateAttendance);
 router.delete('/:id', AttendanceController.deleteAttendance);
 
 export default router;

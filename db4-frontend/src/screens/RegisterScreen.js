@@ -45,16 +45,38 @@ const RegisterScreen = () => {
   // Submit final data
   const handleSubmit = async () => {
     try {
-      const response = await axios.post('/api/employees/register', formData, {
-        headers: { 'Content-Type': 'application/json' },
+      const formDataToSubmit = {
+        personalInfo: formData.personalInfo,
+        addressInfo: formData.addressInfo,
+        joiningDetails: formData.joiningDetails,
+        educationDetails: formData.educationDetails,
+        trainingDetails: formData.trainingDetails,
+        familyDetails: formData.familyDetails,
+        serviceHistory: formData.serviceHistory,
+        nominationDetails: formData.nominationDetails
+      };
+  
+      const response = await axios.post('http://localhost:5000/api/employees/register', formDataToSubmit, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true
       });
-      console.log(formData);
-      console.log('Data submitted:', response.data);
-      alert("Data Submitted Successfully");
+  
+      console.log('Registration successful:', response.data);
+      
     } catch (error) {
-      console.error('Error submitting data:', error);
+      if (error.response) {
+        console.error('Server error:', error.response.data);
+      } else if (error.request) {
+        console.error('Network error:', error.message);
+      } else {
+        console.error('Error:', error.message);
+      }
     }
   };
+  
+  
 
   // Conditionally render the form based on current step
   const renderForm = () => {

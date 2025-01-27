@@ -25,16 +25,29 @@ const LoginPage = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-        const response = await axios.post('http://localhost:5000/api/auth/login', formData);
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+  
+      const config = {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true
+      };
+
+      try {
+        const response = await axios.post(
+          'http://localhost:5000/api/auth/login', 
+          formData,
+          config
+        );
+    
         localStorage.setItem('token', response.data.token);
         navigate('/Dashboards');
-    } catch (error) {
-        setError('Invalid credentials');
-    }
-};
+      } catch (error) {
+        setError(error.response?.data?.message || 'Login failed. Please try again.');
+      }
+    };
 
 
   return (
@@ -108,6 +121,9 @@ const LoginPage = () => {
           </motion.div>
           {error && <Typography color="error">{error}</Typography>}
           <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
+            <Link to='/forgot-password' style={{ color: 'red', textDecoration: 'none', marginRight: '10px' }}>
+              Forgot Password?
+            </Link><br></br>
             New user? <Link to='/register'>Register here</Link>
           </Typography>
         </Box>

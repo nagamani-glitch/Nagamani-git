@@ -1,289 +1,121 @@
-// import React, { useState } from 'react';
-// import Footer from '../components/Footer';
-
-// const PersonalInformationForm = ({nextStep, handleFormDataChange}) => {
-//   // State for Personal Info
-//   const [formData, setFormData] = useState({
-//     firstName: '',
-//     lastName: '',
-//     dob: '',
-//     gender: '',
-//     maritalStatus: '',
-//     caste: '',
-//     category: '',
-//     religion: '',
-//     bloodGroup: '',
-//     homeState: '',
-//     homeDistrict: '',
-//   });
-
-//   // State for Address Info
-//   const [addressData, setAddressData] = useState({
-//     presentAddress: '',
-//     block: '',
-//     panchayat: '',
-//     district: '',
-//     state: '',
-//     pinCode: '',
-//     phoneNumber: '',
-//     permanentAddress: '',
-//     permanentBlock: '',
-//     permanentPanchayat: '',
-//     permanentDistrict: '',
-//     permanentState: '',
-//     permanentPinCode: ''
-//   });
-
-//   // State for Image Upload
-//   const [employeeImage, setEmployeeImage] = useState(null);
-
-//   // State to manage form steps
-//   const [step, setStep] = useState(1); // 1 for personal info, 2 for address info
-
-//   // Validation state
-//   const [Formerrors, setErrors] = useState({});
-
-//   // Handle input changes for both personal and address info
-//   const handlePersonalChange = (e) => {
-//     setFormData({
-//       ...formData,
-//       [e.target.name]: e.target.value
-//     });
-//   };
-
-//   const handleAddressChange = (e) => {
-//     setAddressData({
-//       ...addressData,
-//       [e.target.name]: e.target.value
-//     });
-//   };
-
-//   // Handle image upload
-//   const handleImageChange = (e) => {
-//     setEmployeeImage(e.target.files[0]);
-//   };
-
-//   // Validate fields
-//   const validateForm = () => {
-//     let newErrors = {};
-//     if (step === 1) {
-//       // Personal info validation
-//       if (!formData.firstName) newErrors.firstName = '*required';
-//       if (!formData.lastName) newErrors.lastName = '*required';
-//       if (!formData.dob) newErrors.dob = '*required';
-//       if (!formData.gender) newErrors.gender = '*required';
-//       if (!formData.maritalStatus) newErrors.maritalStatus = '*required';
-//       if (!formData.caste) newErrors.caste = '*required';
-//       if (!formData.category) newErrors.category = '*required';
-//       if (!formData.religion) newErrors.religion = '*required';
-//       if (!formData.bloodGroup) newErrors.bloodGroup = '*required';
-//     } else if (step === 2) {
-//       // Address info validation
-//       if (!addressData.presentAddress) newErrors.presentAddress = '*required';
-//       if (!addressData.district) newErrors.district = '*required';
-//       if (!addressData.state) newErrors.state = '*required';
-//       if (!addressData.pinCode) newErrors.pinCode = '*required';
-//       if (!addressData.phoneNumber) newErrors.phoneNumber = '*required';
-//     }
-
-//     setErrors(newErrors);
-//     return Object.keys(newErrors).length === 0;
-//   };
-
-//   // Handle form submission
-//   const handleSubmit = (e) => {
-//     e.preventDefault()
-//     if (validateForm()) {
-//       // Submit the form data
-//       console.log('Personal Info:', formData);
-//       console.log('Address Info:', addressData);
-//       if (employeeImage) {
-//         console.log('Employee Image:', employeeImage);
-//         handleFormDataChange("addressInfo", addressData)
-//         nextStep()
-//       }
-//     }
-//   };
-
-//   // Handle moving to the next or previous step
-//   const handleNext = () => {
-//     if (validateForm()) {
-//       setStep((prevStep) => prevStep + 1);
-//       handleFormDataChange("personalInfo", formData)
-//       console.log("Personal Information:", formData)
-//     }
-//   };
-
-//   const handlePrevious = () => {
-//     setStep((prevStep) => prevStep - 1);
-//   };
-
-  
-//   return (
-//     <div className="joining-container">
-//     <form onSubmit={handleSubmit} >
-//       {step === 1 && (
-//         <div className="form-section">
-//           <h2 className="form-subtitle">Employee Personal Information</h2>
-//           <div className="form-grid">
-//           <div className="joiningFormElement">
-//             <label >First Name<span className='star'>*</span>:</label>
-//             <input name="firstName" type="text" onChange={handlePersonalChange} />
-//             {Formerrors.firstName && <p className='error'>{Formerrors.firstName}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label>Last Name<span className='star'>*</span>:</label>
-//             <input name="lastName" type="text"  onChange={handlePersonalChange} />
-//             {Formerrors.lastName && <p className='error'>{Formerrors.lastName}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Date of Birth<span className='star'>*</span>:</label>
-//             <input name="dob" type="date"  onChange={handlePersonalChange} />
-//             {Formerrors.dob && <p className='error' >{Formerrors.dob}</p>}
-//           </div>
-//           <div>
-//             <label >Gender<span className='star'>*</span>:</label>
-//             <div className="joiningFormElement">
-//               <input type="radio" name="gender" value="Male" onChange={handlePersonalChange} /> Male
-//               <input type="radio" name="gender" value="Female" onChange={handlePersonalChange} /> Female
-//               <input type="radio" name="gender" value="Other" onChange={handlePersonalChange} /> Other
-//             </div>
-//             {Formerrors.gender && <p className='error'>{Formerrors.gender}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Marital Status<span className='star'>*</span>:</label>
-//             <input name="maritalStatus" type="text"  onChange={handlePersonalChange} />
-//             {Formerrors.maritalStatus && <p className='error'>{Formerrors.maritalStatus}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Caste<span className='star'>*</span>:</label>
-//             <input name="caste" type="text"  onChange={handlePersonalChange} />
-//             {Formerrors.caste && <p className='error'>{Formerrors.caste}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Category<span className='star'>*</span>:</label>
-//             <input name="category" type="text"  onChange={handlePersonalChange} />
-//             {Formerrors.category && <p className='error'>{Formerrors.category}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Religion <span className='star'>*</span>:</label>
-//             <input name="religion" type="text" onChange={handlePersonalChange} />
-//             {Formerrors.religion && <p className='error'>{Formerrors.religion}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label>Blood Group <span className='star'>*</span>:</label>
-//             <input name="bloodGroup" type="text" onChange={handlePersonalChange} />
-//             {Formerrors.bloodGroup && <p className='error'>{Formerrors.bloodGroup}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label>Home State<span className='star'>*</span>:</label>
-//             <input name="homeState" type="text" onChange={handlePersonalChange} />
-//           </div>
-//           <div className="joiningFormElement">
-//             <label>Home District<span className='star'>*</span>:</label>
-//             <input name="homeDistrict" type="text" onChange={handlePersonalChange} />
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Employee Image<span className='star'>*</span>:</label>
-//             <input type="file" name="employeeImage"  onChange={handleImageChange} />
-//             {employeeImage &&(
-//               <div>
-//                 <img src={URL.createObjectURL(employeeImage)} alt='' style={{ maxWidth: '150px', maxHeight: '150px' }} />
-//                 </div>
-//             )}
-//           </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {step === 2 && (
-//         <div>
-//           <h2 >Employee Address Information</h2>
-//           <div className="form-grid">
-//           <div className="joiningFormElement">
-//             <label >Present Address<span className='star'>*</span>:</label>
-//             <input name="presentAddress" type="text" onChange={handleAddressChange} />
-//             {Formerrors.presentAddress && <p className='error'>{Formerrors.presentAddress}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Block:</label>
-//             <input name="block" type="text" onChange={handleAddressChange} />
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Panchayat<span className='star'>*</span>:</label>
-//             <input name="panchayat" type="text" onChange={handleAddressChange} />
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >District<span className='star'>*</span>:</label>
-//             <input name="district" type="text"  onChange={handleAddressChange} />
-//             {Formerrors.district && <p className='error'>{Formerrors.district}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label>State<span className='star'>*</span>:</label>
-//             <input name="state" type="text"  onChange={handleAddressChange} />
-//             {Formerrors.state && <p className='error'>{Formerrors.state}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Pin Code<span className='star'>*</span>:</label>
-//             <input name="pinCode" type="text" onChange={handleAddressChange} />
-//             {Formerrors.pinCode && <p className='error'>{Formerrors.pinCode}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Phone Number<span className='star'>*</span>:</label>
-//             <input name="phoneNumber" type="text" onChange={handleAddressChange} />
-//             {Formerrors.phoneNumber && <p className='error'>{Formerrors.phoneNumber}</p>}
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Permanent Address<span className='star'>*</span>:</label>
-//             <input name="permanentAddress" type='text' onChange={handleAddressChange} />
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Permanent Block<span className='star'>*</span>:</label>
-//             <input name="permanentBlock" type="text" onChange={handleAddressChange} />
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Permanent Panchayat<span className='star'>*</span>:</label>
-//             <input name="permanentPanchayat" type="text" onChange={handleAddressChange} />
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Permanent District<span className='star'>*</span>:</label>
-//             <input name="permanentDistrict" type="text"  onChange={handleAddressChange} />
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Permanent State<span className='star'>*</span>:</label>
-//             <input name="permanentState" type="text" onChange={handleAddressChange} />
-//           </div>
-//           <div className="joiningFormElement">
-//             <label >Permanent Pin Code<span className='star'>*</span>:</label>
-//             <input name="permanentPinCode" type="text" onChange={handleAddressChange} />
-//           </div>
-//           </div>
-//         </div>
-//       )}
-
-//            <div >
-//              {step > 1 && <button type="button"  onClick={handlePrevious}>Previous</button>}
-//              {step < 2 && <button type="button"  onClick={handleNext}>Next</button>}
-//              {step === 2 && <button type="submit">Next</button>}
-//           </div>
-      
-//     </form>
-//     <Footer />
-//     </div>
-//   );
-// };
-
-// export default PersonalInformationForm
-
-
 import React, { useState } from 'react';
-import Footer from '../components/Footer';
-import { TextField, RadioGroup, FormControlLabel, Radio, Paper, FormControl, Button, Typography, Grid, InputLabel, FormHelperText } from '@mui/material';
-import { motion } from 'framer-motion';
+import { TextField, RadioGroup, FormControlLabel, Radio, Paper, FormControl, Button, Typography, Grid, InputLabel, MenuItem, Select } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
+import { styled } from '@mui/material/styles';
+import { Checkbox, Divider } from '@mui/material';
+
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  borderRadius: theme.spacing(2),
+  background: 'linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    boxShadow: '0 12px 48px rgba(0, 0, 0, 0.12)',
+  }
+}));
+
+const StyledButton = styled(Button)(({ theme }) => ({
+  borderRadius: theme.spacing(1),
+  padding: theme.spacing(1.5, 4),
+  textTransform: 'none',
+  fontWeight: 600,
+  boxShadow: 'none',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  }
+}));
+
+const pageTransition = {
+  initial: { opacity: 0, x: -20 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 20 },
+  transition: { duration: 0.4 }
+};
+
+const personalInfoSchema = Yup.object().shape({
+  firstName: Yup.string().required('First name is required'),
+  lastName: Yup.string().required('Last name is required'),
+  dob: Yup.date().required('Date of birth is required'),
+  gender: Yup.string().required('Gender is required'),
+  maritalStatus: Yup.string().required('Marital status is required'),
+  caste: Yup.string().required('Caste is required'),
+  category: Yup.string().required('Category is required'),
+  religion: Yup.string().required('Religion is required'),
+  bloodGroup: Yup.string().required('Blood group is required'),
+  homeState: Yup.string(),
+  homeDistrict: Yup.string()
+});
+
+const addressInfoSchema = Yup.object().shape({
+  presentAddress: Yup.string().required('Present address is required'),
+  block: Yup.string(),
+  panchayat: Yup.string(),
+  district: Yup.string().required('District is required'),
+  state: Yup.string().required('State is required'),
+  pinCode: Yup.string().matches(/^\d{6}$/, 'Invalid PIN code').required('PIN code is required'),
+  phoneNumber: Yup.string().matches(/^\d{10}$/, 'Invalid phone number').required('Phone number is required'),
+  permanentAddress: Yup.string(),
+  permanentBlock: Yup.string(),
+  permanentPanchayat: Yup.string(),
+  permanentDistrict: Yup.string(),
+  permanentState: Yup.string(),
+  permanentPinCode: Yup.string().matches(/^\d{6}$/, 'Invalid PIN code')
+});
+
+const AnimatedTextField = ({ field, form, label, ...props }) => {
+  const handleChange = (e) => {
+    const sentenceCaseValue = e.target.value
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+    form.setFieldValue(field.name, sentenceCaseValue);
+  };
+
+  return (
+    <motion.div
+      initial={{ scale: 0.98, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <TextField
+        {...field}
+        {...props}
+        label={label}
+        onChange={handleChange}
+        onFocus={(e) => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            '&:hover fieldset': {
+              borderColor: 'primary.main',
+              borderWidth: '2px',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: 'primary.main',
+              borderWidth: '2px',
+            }
+          },
+          '& .MuiInputBase-input': {
+            color: '#000000',
+          },
+          '& .MuiInputBase-input:-webkit-autofill': {
+            '-webkit-text-fill-color': '#000000',
+            'transition': 'background-color 5000s ease-in-out 0s',
+          }
+        }}
+      />
+    </motion.div>
+  );
+};
 
 const PersonalInformationForm = ({ nextStep, handleFormDataChange, savedPersonalInfo, savedAddressinfo }) => {
-  // State for Personal Info
-  const [formData, setFormData] = useState(savedPersonalInfo || {
+  const [step, setStep] = useState(1);
+  const [employeeImage, setEmployeeImage] = useState(null);
+
+  const initialPersonalInfo = savedPersonalInfo || {
     firstName: '',
     lastName: '',
     dob: '',
@@ -294,11 +126,10 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, savedPersonal
     religion: '',
     bloodGroup: '',
     homeState: '',
-    homeDistrict: '',
-  });
+    homeDistrict: ''
+  };
 
-  // State for Address Info
-  const [addressData, setAddressData] = useState(savedAddressinfo ||{
+  const initialAddressInfo = savedAddressinfo || {
     presentAddress: '',
     block: '',
     panchayat: '',
@@ -312,337 +143,407 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, savedPersonal
     permanentDistrict: '',
     permanentState: '',
     permanentPinCode: ''
-  });
-
-  // State for Image Upload
-  const [employeeImage, setEmployeeImage] = useState(null);
-
-  // State to manage form steps
-  const [step, setStep] = useState(1); // 1 for personal info, 2 for address info
-
-  // Validation state
-  const [Formerrors, setErrors] = useState({});
-
-  // Handle input changes for both personal and address info
-  const handlePersonalChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
   };
 
-  const handleAddressChange = (e) => {
-    setAddressData({
-      ...addressData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  // Handle image upload
-  const handleImageChange = (e) => {
-    setEmployeeImage(e.target.files[0]);
-  };
-
-  // Validate fields
-  const validateForm = () => {
-    let newErrors = {};
-    if (step === 1) {
-      // Personal info validation
-      if (!formData.firstName) newErrors.firstName = '*required';
-      if (!formData.lastName) newErrors.lastName = '*required';
-      if (!formData.dob) newErrors.dob = '*required';
-      if (!formData.gender) newErrors.gender = '*required';
-      if (!formData.maritalStatus) newErrors.maritalStatus = '*required';
-      if (!formData.caste) newErrors.caste = '*required';
-      if (!formData.category) newErrors.category = '*required';
-      if (!formData.religion) newErrors.religion = '*required';
-      if (!formData.bloodGroup) newErrors.bloodGroup = '*required';
-    } else if (step === 2) {
-      // Address info validation
-      if (!addressData.presentAddress) newErrors.presentAddress = '*required';
-      if (!addressData.district) newErrors.district = '*required';
-      if (!addressData.state) newErrors.state = '*required';
-      if (!addressData.pinCode) newErrors.pinCode = '*required';
-      if (!addressData.phoneNumber) newErrors.phoneNumber = '*required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      // Submit the form data
-      console.log('Personal Info:', formData);
-      console.log('Address Info:', addressData);
-      if (employeeImage) {
-        console.log('Employee Image:', employeeImage);
-        handleFormDataChange("addressInfo", addressData);
-        nextStep();
-      }
-    }
-  };
-
-  // Handle moving to the next or previous step
-  const handleNext = () => {
-    if (validateForm()) {
-      setStep((prevStep) => prevStep + 1);
-      handleFormDataChange("personalInfo", formData);
-      console.log("Personal Information:", formData);
-    }
-  };
-
-  const handlePrevious = () => {
-    setStep((prevStep) => prevStep - 1);
+  const handleImageUpload = (event) => {
+    setEmployeeImage(event.target.files[0]);
   };
 
   return (
-    <div className="joining-container">
-      <form onSubmit={handleSubmit} className='personalForm' >
-        {step === 1 && (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Paper elevation={3} sx={{ padding: 3, borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Employee Personal Information
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="First Name"
-                required
-                name="firstName"
-                value={formData.firstName}
-                onChange={handlePersonalChange}
-                error={!!Formerrors.firstName}
-                helperText={Formerrors.firstName}
+    <AnimatePresence mode='wait'>
+      <motion.div {...pageTransition}>
+        {step === 1 ? (
+          <Formik
+            initialValues={initialPersonalInfo}
+            validationSchema={personalInfoSchema}
+            onSubmit={(values) => {
+              handleFormDataChange("personalInfo", values);
+              setStep(2);
+            }}
+          >
+            {({ errors, touched }) => (
+              <Form>
+                <StyledPaper>
+                  <Typography variant="h5" gutterBottom color="primary">
+                    Personal Information
+                  </Typography>
+                  <Grid container spacing={3}>
+                    {/* Personal Information Fields */}
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="firstName"
+                        component={AnimatedTextField}
+                        label="First Name"
+                        fullWidth
+                        error={touched.firstName && errors.firstName}
+                        helperText={touched.firstName && errors.firstName}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="lastName"
+                        component={AnimatedTextField}
+                        label="Last Name"
+                        fullWidth
+                        error={touched.lastName && errors.lastName}
+                        helperText={touched.lastName && errors.lastName}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="dob"
+                        component={AnimatedTextField}
+                        label="Date of Birth"
+                        type="date"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                        error={touched.dob && errors.dob}
+                        helperText={touched.dob && errors.dob}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl component="fieldset" fullWidth>
+                        <Typography variant="body1">Gender<span className="required">*</span></Typography>
+                        <Field name="gender">
+                          {({ field }) => (
+                            <RadioGroup {...field} row>
+                              <FormControlLabel value="Male" control={<Radio />} label="Male" />
+                              <FormControlLabel value="Female" control={<Radio />} label="Female" />
+                              <FormControlLabel value="Other" control={<Radio />} label="Other" />
+                            </RadioGroup>
+                          )}
+                        </Field>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+  <Field
+    name="maritalStatus"
+    component={AnimatedTextField}
+    label="Marital Status"
+    fullWidth
+    error={touched.maritalStatus && errors.maritalStatus}
+    helperText={touched.maritalStatus && errors.maritalStatus}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="caste"
+    component={AnimatedTextField}
+    label="Caste"
+    fullWidth
+    error={touched.caste && errors.caste}
+    helperText={touched.caste && errors.caste}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="category"
+    component={AnimatedTextField}
+    label="Category"
+    fullWidth
+    error={touched.category && errors.category}
+    helperText={touched.category && errors.category}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="religion"
+    component={AnimatedTextField}
+    label="Religion"
+    fullWidth
+    error={touched.religion && errors.religion}
+    helperText={touched.religion && errors.religion}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="bloodGroup"
+    component={AnimatedTextField}
+    label="Blood Group"
+    fullWidth
+    error={touched.bloodGroup && errors.bloodGroup}
+    helperText={touched.bloodGroup && errors.bloodGroup}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="homeState"
+    component={AnimatedTextField}
+    label="Home State"
+    fullWidth
+    error={touched.homeState && errors.homeState}
+    helperText={touched.homeState && errors.homeState}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="homeDistrict" 
+    component={AnimatedTextField}
+    label="Home District"
+    fullWidth
+    error={touched.homeDistrict && errors.homeDistrict}
+    helperText={touched.homeDistrict && errors.homeDistrict}
+  />
+</Grid>
+
+                    <Grid item xs={12}>
+                      <InputLabel>Employee Image</InputLabel>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        style={{ marginTop: '8px' }}
+                      />
+                    </Grid>
+                  </Grid>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <StyledButton
+                      type="submit"
+                      variant="contained"
+                      fullWidth
+                      sx={{ mt: 3 }}
+                    >
+                      Next
+                    </StyledButton>
+                  </motion.div>
+                </StyledPaper>
+              </Form>
+            )}
+          </Formik>
+        ) : (
+          <Formik
+            initialValues={initialAddressInfo}
+            validationSchema={addressInfoSchema}
+            onSubmit={(values) => {
+              handleFormDataChange("addressInfo", values);
+              nextStep();
+            }}
+          >
+            {({ errors, touched, values, setFieldValue }) => (
+  <Form>
+    <StyledPaper>
+      <Typography variant="h5" gutterBottom color="primary">
+        Address Information
+      </Typography>
+      <Grid container spacing={3}>
+                    {/* Address Information Fields */}
+                    <Grid item xs={12}>
+                      <Field
+                        name="presentAddress"
+                        component={AnimatedTextField}
+                        label="Present Address"
+                        multiline
+                        rows={4}
+                        fullWidth
+                        error={touched.presentAddress && errors.presentAddress}
+                        helperText={touched.presentAddress && errors.presentAddress}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+  <Field
+    name="block"
+    component={AnimatedTextField}
+    label="Block"
+    fullWidth
+    error={touched.block && errors.block}
+    helperText={touched.block && errors.block}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="panchayat"
+    component={AnimatedTextField}
+    label="Panchayat"
+    fullWidth
+    error={touched.panchayat && errors.panchayat}
+    helperText={touched.panchayat && errors.panchayat}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="district"
+    component={AnimatedTextField}
+    label="District"
+    fullWidth
+    error={touched.district && errors.district}
+    helperText={touched.district && errors.district}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="state"
+    component={AnimatedTextField}
+    label="State"
+    fullWidth
+    error={touched.state && errors.state}
+    helperText={touched.state && errors.state}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="pinCode"
+    component={AnimatedTextField}
+    label="PIN Code"
+    fullWidth
+    error={touched.pinCode && errors.pinCode}
+    helperText={touched.pinCode && errors.pinCode}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="phoneNumber"
+    component={AnimatedTextField}
+    label="Phone Number"
+    fullWidth
+    error={touched.phoneNumber && errors.phoneNumber}
+    helperText={touched.phoneNumber && errors.phoneNumber}
+  />
+</Grid>
+
+<Grid item xs={12}>
+          <Divider sx={{ my: 4 }}>
+            <Typography variant="h6" color="primary">
+              Permanent Address
+            </Typography>
+          </Divider>
+        </Grid>
+
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    const presentFields = {
+                      permanentAddress: values.presentAddress,
+                      permanentBlock: values.block,
+                      permanentPanchayat: values.panchayat,
+                      permanentDistrict: values.district,
+                      permanentState: values.state,
+                      permanentPinCode: values.pinCode
+                    };
+                    Object.keys(presentFields).forEach(field => {
+                      setFieldValue(field, presentFields[field]);
+                    });
+                  }
+                }}
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Last Name"
-                required
-                name="lastName"
-                value={formData.lastName}
-                onChange={handlePersonalChange}
-                error={!!Formerrors.lastName}
-                helperText={Formerrors.lastName}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Date of Birth"
-                type="date"
-                required
-                InputLabelProps={{ shrink: true }}
-                name="dob"
-                value={formData.dob}
-                onChange={handlePersonalChange}
-                error={!!Formerrors.dob}
-                helperText={Formerrors.dob}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl component="fieldset">
-                <Typography variant="body1" sx={{ mb: 1 }}>Gender<span className="star">*</span>:</Typography>
-                <RadioGroup row name="gender" value={formData.gender} onChange={handlePersonalChange}>
-                  <FormControlLabel value="Male" control={<Radio />} label="Male" />
-                  <FormControlLabel value="Female" control={<Radio />} label="Female" />
-                  <FormControlLabel value="Other" control={<Radio />} label="Other" />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Marital Status"
-                required
-                name="maritalStatus"
-                value={formData.maritalStatus}
-                onChange={handlePersonalChange}
-                error={!!Formerrors.maritalStatus}
-                helperText={Formerrors.maritalStatus}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Caste"
-                required
-                name="caste"
-                value={formData.caste}
-                onChange={handlePersonalChange}
-                error={!!Formerrors.caste}
-                helperText={Formerrors.caste}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Category"
-                required
-                name="category"
-                value={formData.category}
-                onChange={handlePersonalChange}
-                error={!!Formerrors.category}
-                helperText={Formerrors.category}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Religion"
-                required
-                name="religion"
-                value={formData.religion}
-                onChange={handlePersonalChange}
-                error={!!Formerrors.religion}
-                helperText={Formerrors.religion}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Blood Group"
-                required
-                name="bloodGroup"
-                value={formData.bloodGroup}
-                onChange={handlePersonalChange}
-                error={!!Formerrors.bloodGroup}
-                helperText={Formerrors.bloodGroup}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Home State"
-                name="homeState"
-                value={formData.homeState}
-                onChange={handlePersonalChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Home District"
-                name="homeDistrict"
-                value={formData.homeDistrict}
-                onChange={handlePersonalChange}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <InputLabel>Employee Image:</InputLabel>
-              <Button variant="contained" component="label">
-                Upload File
-                <input type="file" hidden name="employeeImage" onChange={handleImageChange} />
-              </Button>
-              {employeeImage && (
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Image uploaded: {employeeImage.name}
-                </Typography>
-              )}
-            </Grid>
-          </Grid>
-        </Paper>
+            }
+            label={
+              <Typography variant="body1" color="primary">
+                Same as Present Address
+              </Typography>
+            }
+          />
+        </Grid>
+
+<Grid item xs={12}>
+  <Field
+    name="permanentAddress"
+    component={AnimatedTextField}
+    label="Permanent Address"
+    multiline
+    rows={4}
+    fullWidth
+    error={touched.permanentAddress && errors.permanentAddress}
+    helperText={touched.permanentAddress && errors.permanentAddress}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="permanentBlock"
+    component={AnimatedTextField}
+    label="Permanent Block"
+    fullWidth
+    error={touched.permanentBlock && errors.permanentBlock}
+    helperText={touched.permanentBlock && errors.permanentBlock}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="permanentPanchayat"
+    component={AnimatedTextField}
+    label="Permanent Panchayat"
+    fullWidth
+    error={touched.permanentPanchayat && errors.permanentPanchayat}
+    helperText={touched.permanentPanchayat && errors.permanentPanchayat}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="permanentDistrict"
+    component={AnimatedTextField}
+    label="Permanent District"
+    fullWidth
+    error={touched.permanentDistrict && errors.permanentDistrict}
+    helperText={touched.permanentDistrict && errors.permanentDistrict}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="permanentState"
+    component={AnimatedTextField}
+    label="Permanent State"
+    fullWidth
+    error={touched.permanentState && errors.permanentState}
+    helperText={touched.permanentState && errors.permanentState}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="permanentPinCode"
+    component={AnimatedTextField}
+    label="PIN Code"
+    fullWidth
+    error={touched.permanentPinCode && errors.permanentPinCode}
+    helperText={touched.permanentPinCode && errors.permanentPinCode}
+  />
+</Grid>
+
+                  </Grid>
+                  <Grid container spacing={2} sx={{ mt: 3 }}>
+                    <Grid item xs={6}>
+                      <StyledButton
+                        onClick={() => setStep(1)}
+                        variant="outlined"
+                        fullWidth
+                      >
+                        Back
+                      </StyledButton>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <StyledButton
+                        type="submit"
+                        variant="contained"
+                        fullWidth
+                      >
+                        Submit
+                      </StyledButton>
+                    </Grid>
+                  </Grid>
+                </StyledPaper>
+              </Form>
+            )}
+          </Formik>
+        )}
       </motion.div>
-    )}
-
-{step === 2 && (
-  <motion.div 
-    initial={{ opacity: 0, y: 50 }} 
-    animate={{ opacity: 1, y: 0 }} 
-    transition={{ duration: 0.5 }}
-    className="form-section"
-  >
-    <Typography variant="h6" gutterBottom className="form-subtitle">
-      Address Information
-    </Typography>
-    <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Present Address"
-          name="presentAddress"
-          variant="outlined"
-          required
-          value={addressData.presentAddress}
-          onChange={handleAddressChange}
-          error={Boolean(Formerrors.presentAddress)}
-          helperText={Formerrors.presentAddress || "Your present address"}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="District"
-          name="district"
-          variant="outlined"
-          required
-          value={addressData.district}
-          onChange={handleAddressChange}
-          error={Boolean(Formerrors.district)}
-          helperText={Formerrors.district || "Your district"}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="State"
-          name="state"
-          variant="outlined"
-          required
-          value={addressData.state}
-          onChange={handleAddressChange}
-          error={Boolean(Formerrors.state)}
-          helperText={Formerrors.state || "Your state"}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Pin Code"
-          name="pinCode"
-          variant="outlined"
-          required
-          value={addressData.pinCode}
-          onChange={handleAddressChange}
-          error={Boolean(Formerrors.pinCode)}
-          helperText={Formerrors.pinCode || "Your pin code"}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Phone Number"
-          name="phoneNumber"
-          variant="outlined"
-          required
-          value={addressData.phoneNumber}
-          onChange={handleAddressChange}
-          error={Boolean(Formerrors.phoneNumber)}
-          helperText={Formerrors.phoneNumber || "Your phone number"}
-        />
-      </Grid>
-    </Grid>
-  </motion.div>
-)}
-
-        <div>
-          {step > 1 && <button type="button" onClick={handlePrevious}>Previous</button>}
-          {step < 2 && <button type="button" onClick={handleNext}>Next</button>}
-          {step === 2 && <button type="submit">Next</button>}
-        </div>
-      </form>
-      <Footer />
-    </div>
+    </AnimatePresence>
   );
 };
 
