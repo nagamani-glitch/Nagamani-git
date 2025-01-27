@@ -1,162 +1,214 @@
-import React, { useState } from 'react';
-import { TextField, Button, Box, Typography, Divider, Grid } from '@mui/material';
-import { motion } from 'framer-motion';
-import Footer from "../components/Footer";
+import React from 'react';
+import { TextField, Button, Box, Typography, Divider, Grid, Paper } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
+import { styled } from '@mui/material/styles';
 
-const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoiningDetails }) => {
-  // State to track errors for each field
-  const [errors, setErrors] = useState({});
-  const [joiningDetails, setJoiningDetails] = useState(savedJoiningDetails ||{
-    dateOfAppointment:"",
-    officeName:"",
-    dateOfJoining:"",
-    initialDesignation:"",
-    modeOfRecruitment:"",
-    employeeType:""
-  })
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  borderRadius: theme.spacing(2),
+  background: 'linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    boxShadow: '0 12px 48px rgba(0, 0, 0, 0.12)',
+  }
+}));
 
-  // Handle input change
+const StyledButton = styled(Button)(({ theme }) => ({
+  borderRadius: theme.spacing(1),
+  padding: theme.spacing(1.5, 4),
+  textTransform: 'none',
+  fontWeight: 600,
+  boxShadow: 'none',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  }
+}));
+
+const validationSchema = Yup.object().shape({
+  dateOfAppointment: Yup.date().required('Date of appointment is required'),
+  officeName: Yup.string().required('Office name is required'),
+  dateOfJoining: Yup.date().required('Date of joining is required'),
+  initialDesignation: Yup.string().required('Initial designation is required'),
+  modeOfRecruitment: Yup.string().required('Mode of recruitment is required'),
+  employeeType: Yup.string().required('Employee type is required')
+});
+
+const AnimatedTextField = ({ field, form, label, ...props }) => {
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setJoiningDetails((prevDetails) => ({
-      ...prevDetails,
-      [name]: value,
-    }));
-
-    // Clear error when the user starts typing in a field
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: '', // Clear the error for the field
-    }));
-  };
-
-  // Validate fields
-  const validateFields = () => {
-    const newErrors = {};
-    if (!joiningDetails.dateOfAppointment) newErrors.dateOfAppointment = '*Required';
-    if (!joiningDetails.officeName) newErrors.officeName = '*Required';
-    if (!joiningDetails.dateOfJoining) newErrors.dateOfJoining = '*Required';
-    if (!joiningDetails.initialDesignation) newErrors.initialDesignation = '*Required';
-    if (!joiningDetails.modeOfRecruitment) newErrors.modeOfRecruitment = '*Required';
-    if (!joiningDetails.employeeType) newErrors.employeeType = '*Required';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle form submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // Validate all fields before submission
-    if (validateFields()) {
-      handleFormDataChange("joiningDetails", joiningDetails)
-      console.log("Joining details:", joiningDetails)
-      nextStep(); // Proceed to the next form if validation is successful
-    }
+    const sentenceCaseValue = e.target.value
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+    form.setFieldValue(field.name, sentenceCaseValue);
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      initial={{ scale: 0.98, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.3 }}
     >
-      <Box sx={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-        <form onSubmit={handleSubmit}>
-          {/* Employment Details */}
-          <Box sx={{ marginBottom: '20px' }}>
-            <Typography variant="h5" gutterBottom>
-              Joining Details
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Date of Appointment"
-                  type="date"
-                  name="dateOfAppointment"
-                  value={joiningDetails.dateOfAppointment}
-                  onChange={handleChange}
-                  error={!!errors.dateOfAppointment}
-                  helperText={errors.dateOfAppointment || ''}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Office Name at the time of Initial Joining in Dept"
-                  name="officeName"
-                  value={joiningDetails.officeName}
-                  onChange={handleChange}
-                  error={!!errors.officeName}
-                  helperText={errors.officeName || ''}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Date of Joining in the Dept"
-                  type="date"
-                  name="dateOfJoining"
-                  value={joiningDetails.dateOfJoining}
-                  onChange={handleChange}
-                  error={!!errors.dateOfJoining}
-                  helperText={errors.dateOfJoining || ''}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Initial Designation"
-                  name="initialDesignation"
-                  value={joiningDetails.initialDesignation}
-                  onChange={handleChange}
-                  error={!!errors.initialDesignation}
-                  helperText={errors.initialDesignation || ''}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Mode of Recruitment"
-                  name="modeOfRecruitment"
-                  value={joiningDetails.modeOfRecruitment}
-                  onChange={handleChange}
-                  error={!!errors.modeOfRecruitment}
-                  helperText={errors.modeOfRecruitment || ''}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Employee Type"
-                  name="employeeType"
-                  value={joiningDetails.employeeType}
-                  onChange={handleChange}
-                  error={!!errors.employeeType}
-                  helperText={errors.employeeType || ''}
-                  fullWidth
-                />
-              </Grid>
-            </Grid>
-          </Box>
-
-          <Divider sx={{ marginY: 2 }} />
-          <Box display="flex" justifyContent="space-between">
-            <Button variant="contained" color="primary" onClick={prevStep}>
-              Prev
-            </Button>
-            <Button variant="contained" color="primary" type="submit">
-              Next
-            </Button>
-          </Box>
-        </form>
-      </Box>
-      <Footer />
+      <TextField
+        {...field}
+        {...props}
+        label={label}
+        onChange={handleChange}
+        onFocus={(e) => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            '&:hover fieldset': {
+              borderColor: 'primary.main',
+              borderWidth: '2px',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: 'primary.main',
+              borderWidth: '2px',
+            }
+          },
+          '& .MuiInputBase-input': {
+            color: '#000000',
+          },
+          '& .MuiInputBase-input:-webkit-autofill': {
+            '-webkit-text-fill-color': '#000000',
+            'transition': 'background-color 5000s ease-in-out 0s',
+          }
+        }}
+      />
     </motion.div>
   );
 };
 
-export default JoiningDetailsForm;
+const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoiningDetails }) => {
+  const initialValues = savedJoiningDetails || {
+    dateOfAppointment: '',
+    officeName: '',
+    dateOfJoining: '',
+    initialDesignation: '',
+    modeOfRecruitment: '',
+    employeeType: ''
+  };
 
+  return (
+    <AnimatePresence mode='wait'>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Formik
+          initialValues={initialValues}
+          validationSchema={validationSchema}
+          onSubmit={(values) => {
+            handleFormDataChange("joiningDetails", values);
+            nextStep();
+          }}
+        >
+          {({ errors, touched }) => (
+            <Form>
+              <StyledPaper>
+                <Typography variant="h5" gutterBottom color="primary">
+                  Joining Details
+                </Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6}>
+                    <Field
+                      name="dateOfAppointment"
+                      component={AnimatedTextField}
+                      label="Date of Appointment"
+                      type="date"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                      error={touched.dateOfAppointment && errors.dateOfAppointment}
+                      helperText={touched.dateOfAppointment && errors.dateOfAppointment}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Field
+                      name="officeName"
+                      component={AnimatedTextField}
+                      label="Office Name"
+                      fullWidth
+                      error={touched.officeName && errors.officeName}
+                      helperText={touched.officeName && errors.officeName}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Field
+                      name="dateOfJoining"
+                      component={AnimatedTextField}
+                      label="Date of Joining"
+                      type="date"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                      error={touched.dateOfJoining && errors.dateOfJoining}
+                      helperText={touched.dateOfJoining && errors.dateOfJoining}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Field
+                      name="initialDesignation"
+                      component={AnimatedTextField}
+                      label="Initial Designation"
+                      fullWidth
+                      error={touched.initialDesignation && errors.initialDesignation}
+                      helperText={touched.initialDesignation && errors.initialDesignation}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Field
+                      name="modeOfRecruitment"
+                      component={AnimatedTextField}
+                      label="Mode of Recruitment"
+                      fullWidth
+                      error={touched.modeOfRecruitment && errors.modeOfRecruitment}
+                      helperText={touched.modeOfRecruitment && errors.modeOfRecruitment}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Field
+                      name="employeeType"
+                      component={AnimatedTextField}
+                      label="Employee Type"
+                      fullWidth
+                      error={touched.employeeType && errors.employeeType}
+                      helperText={touched.employeeType && errors.employeeType}
+                    />
+                  </Grid>
+                </Grid>
+
+                <Divider sx={{ my: 4 }} />
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <StyledButton
+                      onClick={prevStep}
+                      variant="outlined"
+                      fullWidth
+                    >
+                      Previous
+                    </StyledButton>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <StyledButton
+                      type="submit"
+                      variant="contained"
+                      fullWidth
+                    >
+                      Next
+                    </StyledButton>
+                  </Grid>
+                </Grid>
+              </StyledPaper>
+            </Form>
+          )}
+        </Formik>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+export default JoiningDetailsForm;

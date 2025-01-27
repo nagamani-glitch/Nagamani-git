@@ -21,6 +21,8 @@ import Interview from './Recruitment/Interview';
 import SkillZone from './Recruitment/SkillZone';
 //Onboarding
 import OnboardingView from './Onboarding/OnboardingView_1';
+//harish
+import OnboardingForms from './Onboarding/OnboardingForms';
 import CandidatesView from './Onboarding/CandidateView';
 import './Dashboard.css';
 import { useSidebar } from '../../Context';
@@ -117,6 +119,8 @@ function Dashboard() {
     switch (activeScreen) {
       case 'onboardingView':
         return <OnboardingView />
+      case 'onboardingForm':
+        return <OnboardingForms />
       case 'dashboard':
         return <MainDashboard />;
       case 'recruitmentdashboard':

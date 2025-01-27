@@ -26,6 +26,10 @@ import workTypeRequestRoutes from './routes/workTypeRequestRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 import hiredEmployeeRoutes from './routes/hiredEmployeeRoutes.js';
 
+
+
+
+
 // Sangeeta 
 import allowanceRoutes from './routes/allowanceRoutes.js';
 import deductionRoutes from './routes/deductionRoutes.js';
@@ -36,25 +40,55 @@ import offboardingRoutes from './routes/offboardingRoutes.js';
 import resignationRoutes from './routes/resignationRoutes.js';
 import Feedback from './routes/feedbackRoutes.js';
 import payrollContractRoutes from './routes/payrollContractRoutes.js';
+
+// Harish
+import attendanceRoutes from './routes/attendanceRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
+import policyRoutes from './routes/policyRoutes.js';
+import organizationRoutes from './routes/organizationRoutes.js';
  
  
 dotenv.config()
 connectDB()
 const app = express()
- 
-app.use(cors({
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    credentials: true,
-    allowedHeaders: [
-        'Content-Type', 
-        'Authorization',
-        'Access-Control-Allow-Methods'
-    ]
-}));
+
+// app.use(cors({
+//     origin: "http://localhost:3000",
+//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+//     credentials: true,
+//     allowedHeaders: [
+//         'Content-Type', 
+//         'Authorization',
+//         'Access-Control-Allow-Methods'
+//     ]
+// }));
 
 
 // Middleware to parse JSON request bodies
+
+app.use(cors({
+    origin: "http://localhost:3000", // Allow your frontend
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
+    credentials: true, // Include credentials like cookies
+    allowedHeaders: [
+        'Content-Type', 
+        'Authorization', 
+        'Access-Control-Allow-Methods', 
+        'Access-Control-Allow-Origin'
+    ] // Include all necessary headers
+}));
+
+
+// Handle preflight requests for all routes
+app.options('*', cors()); 
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'Internal Server Error' });
+});
+
+
 app.use(express.json());
 
 app.use("/api/employees", employeesRouter);
@@ -82,6 +116,7 @@ app.use('/api/shift-requests', shiftRequestRoutes);
 app.use('/api/work-type-requests', workTypeRequestRoutes);
 
 
+
  
 
 // Sangeeta integration
@@ -93,9 +128,15 @@ app.use('/api/payslips', payslipRoutes);
 app.use('/api/federal-tax', federalTaxRoutes);
 app.use('/api/objectives', objectiveRoutes);
 app.use('/api/feedback', Feedback);
-
 app.use('/api/offboarding', offboardingRoutes);
 app.use('/api/resignations', resignationRoutes);
+
+
+// Harish
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api', documentRoutes);
+app.use('/api', policyRoutes);
+app.use('/api', organizationRoutes);
 
 
 const PORT = process.env.PORT || 5000;
