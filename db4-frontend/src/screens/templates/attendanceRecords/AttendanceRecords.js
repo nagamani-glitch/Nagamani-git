@@ -1,256 +1,6 @@
-// import React, { useState } from 'react';
-// import {
-//   Box,
-//   Button,
-//   TextField,
-//   Typography,
-//   IconButton,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableContainer,
-//   TableHead,
-//   TableRow,
-//   Paper,
-//   Checkbox,
-//   Dialog,
-//   DialogTitle,
-//   DialogContent,
-//   DialogActions,
-//   // MenuItem,
-//   // Select,
-//   // FormControl,
-//   // InputLabel,
-//   Fab,
-// } from '@mui/material';
-// import { FilterList, GroupWork, Add, Visibility, Cancel } from '@mui/icons-material';
-
-// const AttendanceRecords = () => {
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [filterOpen, setFilterOpen] = useState(false);
-//   const [groupByOpen, setGroupByOpen] = useState(false);
-//   const [createOpen, setCreateOpen] = useState(false);
-//   const [selectedAll, setSelectedAll] = useState(false);
-//   const [selectedRows, setSelectedRows] = useState([]);
-//   const [rows, setRows] = useState([
-//     { id: 1, name: 'Alan Gland', empId: 'PEP234585', date: 'Nov. 7, 2024', day: 'Thursday', checkIn: '07:09 PM' },
-//     { id: 2, name: 'Dinesh Raj', empId: 'PEP234586', date: 'Nov. 6, 2024', day: 'Wednesday', checkIn: '07:09 PM' },
-//     { id: 3, name: 'Sanju Samson', empId: 'PEP234587', date: 'Nov. 5, 2024', day: 'Tuesday', checkIn: '07:09 PM' },
-//     { id: 4, name: 'Subikshan', empId: 'PEP234588', date: 'Nov. 4, 2024', day: 'Monday', checkIn: '07:09 PM' },
-//     { id: 5, name: 'Ramachandran', empId: 'PEP234589', date: 'Nov. 3, 2024', day: 'Sunday', checkIn: '07:09 PM' },
-//     { id: 6, name: 'Sangeetha', empId: 'PEP234590', date: 'Nov. 2, 2024', day: 'Saturday', checkIn: '07:09 PM' },
-//     { id: 7, name: 'Dilli Babu', empId: 'PEP234591', date: 'Nov. 1, 2024', day: 'Friday', checkIn: '07:09 PM' },
-//     { id: 8, name: 'Subrahmanyam', empId: 'PEP234592', date: 'Nov. 8, 2024', day: 'Friday', checkIn: '07:09 PM' },
-//   ]);
-  
-//   const [newRecord, setNewRecord] = useState({
-//     name: '',
-//     empId: '',
-//     date: '',
-//     day: '',
-//     checkIn: ''
-//   });
-
-//   const handleSearch = (e) => {
-//     setSearchTerm(e.target.value);
-//   };
-
-//   const handleSelectAll = () => {
-//     if (selectedAll) {
-//       setSelectedRows([]);
-//     } else {
-//       setSelectedRows(rows.map(row => row.id));
-//     }
-//     setSelectedAll(!selectedAll);
-//   };
-
-//   const handleHeaderCheckboxChange = (e) => {
-//     if (e.target.checked) {
-//       setSelectedRows(rows.map(row => row.id));
-//       setSelectedAll(true);
-//     } else {
-//       setSelectedRows([]);
-//       setSelectedAll(false);
-//     }
-//   };
-
-//   const handleRowCheckboxChange = (id) => {
-//     setSelectedRows(prevSelected =>
-//       prevSelected.includes(id) ? prevSelected.filter(rowId => rowId !== id) : [...prevSelected, id]
-//     );
-//   };
-
-//   const handleCreateRecord = () => {
-//     setRows([...rows, { ...newRecord, id: rows.length + 1 }]);
-//     setCreateOpen(false);
-//     setNewRecord({
-//       name: '',
-//       empId: '',
-//       date: '',
-//       day: '',
-//       checkIn: ''
-//     });
-//   };
-
-//   return (
-//     <Box p={3}>
-//       <Typography variant="h4" gutterBottom>Attendances</Typography>
-
-//       {/* Search Box */}
-//       <div style={{display:"flex", flexDirection:"row", justifyContent:"space-around", alignItems:"center"}}>
-//       <TextField
-//         variant="outlined"
-//         placeholder="Search"
-//         value={searchTerm}
-//         onChange={handleSearch}
-//         InputProps={{
-//           startAdornment: <IconButton size="small"><span role="img" aria-label="search">🔍</span></IconButton>
-//         }}
-//         style={{ width: '150px', marginBottom: '16px' }}
-//       />
-
-//       {/* Filter, Group By, Actions, and Create Buttons */}
-//       <Box display="flex" gap={2} mb={3} style={{display:"flex", flexDirection:"row", justifyContent:"center", alignItems:"center"}}>
-//         <Button variant="outlined" startIcon={<FilterList />} onClick={() => setFilterOpen(true)}>Filter</Button>
-//         <Button variant="outlined" startIcon={<GroupWork />} onClick={() => setGroupByOpen(true)}>GroupBy</Button>
-//         <Button variant="outlined">Actions</Button>
-//         <Button variant="contained" color="error" startIcon={<Add />} onClick={() => setCreateOpen(true)}>Create</Button>
-//       </Box>
-//       </div>
-
-//       {/* Select All Attendance Button */}
-//       <Button
-//         variant="outlined"
-//         color="success"
-//         onClick={handleSelectAll}
-//         style={{ marginBottom: '16px' }}
-//       >
-//         {selectedAll ? 'Deselect All Records' : 'Select All Records'}
-//       </Button>
-
-//       {/* Attendance Table */}
-//       <TableContainer component={Paper} style={{ maxHeight: '350px', overflowX: 'auto' }}>
-//         <Table stickyHeader>
-//           <TableHead>
-//             <TableRow>
-//               <TableCell padding="checkbox" style={{ position: 'sticky', left: 0, background: '#fff', zIndex: 1 }}>
-//                 <Checkbox
-//                   checked={selectedAll}
-//                   indeterminate={selectedRows.length > 0 && selectedRows.length < rows.length}
-//                   onChange={handleHeaderCheckboxChange}
-//                 />
-//               </TableCell>
-//               <TableCell style={{ position: 'sticky', left: '40px', background: '#fff', zIndex: 1 }}>Employee</TableCell>
-//               <TableCell>Date</TableCell>
-//               <TableCell>Day</TableCell>
-//               <TableCell>Check-In</TableCell>
-//               <TableCell>In Date</TableCell>
-//               <TableCell>Check Out</TableCell>
-//               <TableCell>Out Date</TableCell>
-//               <TableCell>Shift</TableCell>
-//               <TableCell>Work Type</TableCell>
-//               <TableCell>Min Hour</TableCell>
-//               <TableCell>At Work</TableCell>
-//               <TableCell>Overtime</TableCell>
-//               <TableCell>Comment</TableCell>
-//               <TableCell style={{ position: 'sticky', right: 0, background: '#fff', zIndex: 1 }}>Actions</TableCell>
-//             </TableRow>
-//           </TableHead>
-//           <TableBody>
-//             {rows.map((row) => (
-//               <TableRow key={row.id}>
-//                 <TableCell padding="checkbox" style={{ position: 'sticky', left: 0, background: '#fff' }}>
-//                   <Checkbox
-//                     checked={selectedRows.includes(row.id)}
-//                     onChange={() => handleRowCheckboxChange(row.id)}
-//                   />
-//                 </TableCell>
-//                 <TableCell style={{ position: 'sticky', left: '40px', background: '#fff' }}>{row.name} ({row.empId})</TableCell>
-//                 <TableCell>{row.date}</TableCell>
-//                 <TableCell>{row.day}</TableCell>
-//                 <TableCell>{row.checkIn}</TableCell>
-//                 <TableCell>-</TableCell>
-//                 <TableCell>-</TableCell>
-//                 <TableCell>-</TableCell>
-//                 <TableCell>-</TableCell>
-//                 <TableCell>-</TableCell>
-//                 <TableCell>-</TableCell>
-//                 <TableCell>-</TableCell>
-//                 <TableCell>-</TableCell>
-//                 <TableCell>-</TableCell>
-//                 <TableCell style={{ position: 'sticky', right: 0, background: '#fff' }}>
-//                   <IconButton><Visibility /></IconButton>
-//                   <IconButton><Cancel /></IconButton>
-//                 </TableCell>
-//               </TableRow>
-//             ))}
-//           </TableBody>
-//         </Table>
-//       </TableContainer>
-
-//       {/* Floating Action Button */}
-//       <Fab color="primary" aria-label="add" style={{ position: 'fixed', bottom: 16, right: 16 }} onClick={() => setCreateOpen(true)}>
-//         <Add />
-//       </Fab>
-
-//       {/* Create Popup */}
-//       <Dialog open={createOpen} onClose={() => setCreateOpen(false)}>
-//         <DialogTitle>Create Attendance</DialogTitle>
-//         <DialogContent>
-//           <TextField
-//             label="Employee Name"
-//             fullWidth
-//             value={newRecord.name}
-//             onChange={(e) => setNewRecord({ ...newRecord, name: e.target.value })}
-//             margin="dense"
-//           />
-//           <TextField
-//             label="Employee ID"
-//             fullWidth
-//             value={newRecord.empId}
-//             onChange={(e) => setNewRecord({ ...newRecord, empId: e.target.value })}
-//             margin="dense"
-//           />
-//           <TextField
-//             label="Date"
-//             fullWidth
-//             type="date"
-//             value={newRecord.date}
-//             onChange={(e) => setNewRecord({ ...newRecord, date: e.target.value })}
-//             margin="dense"
-//             InputLabelProps={{ shrink: true }}
-//           />
-//           <TextField
-//             label="Day"
-//             fullWidth
-//             value={newRecord.day}
-//             onChange={(e) => setNewRecord({ ...newRecord, day: e.target.value })}
-//             margin="dense"
-//           />
-//           <TextField
-//             label="Check-In Time"
-//             fullWidth
-//             type="time"
-//             value={newRecord.checkIn}
-//             onChange={(e) => setNewRecord({ ...newRecord, checkIn: e.target.value })}
-//             margin="dense"
-//             InputLabelProps={{ shrink: true }}
-//           />
-//         </DialogContent>
-//         <DialogActions>
-//           <Button onClick={() => setCreateOpen(false)} color="primary">Cancel</Button>
-//           <Button onClick={handleCreateRecord} color="primary">Create</Button>
-//         </DialogActions>
-//       </Dialog>
-//     </Box>
-//   );
-// };
-
-// export default AttendanceRecords;
-
-
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { styled } from "@mui/material/styles";
 import {
   Box,
   Button,
@@ -264,304 +14,441 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Checkbox,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Fab,
   Snackbar,
-  Alert
-} from '@mui/material';
-import { FilterList, GroupWork, Add, Visibility, Cancel } from '@mui/icons-material';
-
+  Alert,
+  useTheme,
+  alpha,
+  InputAdornment,
+} from "@mui/material";
+import {
+  FilterList,
+  GroupWork,
+  Add,
+  Visibility,
+  Cancel,
+  Edit,
+  Search,
+} from "@mui/icons-material";
+ 
+// Styled Components
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+}));
+ 
+const SearchTextField = styled(TextField)(({ theme }) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: theme.spacing(2),
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+}));
+ 
+const ActionButton = styled(Button)(({ theme }) => ({
+  borderRadius: theme.spacing(1),
+  textTransform: "none",
+  padding: theme.spacing(1, 3),
+}));
+ 
 const AttendanceRecords = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const theme = useTheme();
+  const [searchTerm, setSearchTerm] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [groupByOpen, setGroupByOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const [selectedAll, setSelectedAll] = useState(false);
-  const [selectedRows, setSelectedRows] = useState([]);
+  const [editOpen, setEditOpen] = useState(false);
   const [rows, setRows] = useState([]);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [newRecord, setNewRecord] = useState({
-    name: '',
-    empId: '',
-    date: '',
-    checkIn: '',
-    shift: '',
-    workType: '',
-    minHour: '',
-    comment: ''
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
   });
-
-  const API_URL = 'http://localhost:5000/api/attendance';
+  const [editRecord, setEditRecord] = useState(null);
+  const [newRecord, setNewRecord] = useState({
+    name: "",
+    empId: "",
+    date: "",
+    checkIn: "",
+    shift: "",
+    workType: "",
+    minHour: "",
+    comment: "",
+  });
+ 
+  const API_URL = "http://localhost:5000/api/attendance";
+  // Styled Table Components
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.common.white,
+    fontSize: 14,
+    fontWeight: "bold",
+    padding: theme.spacing(2),
+    "&.MuiTableCell-body": {
+      color: theme.palette.text.primary,
+      fontSize: 14,
+    },
+  }));
+ 
+  const StyledTableRow = styled(TableRow)(({ theme }) => ({
+    "&:nth-of-type(odd)": {
+      backgroundColor: alpha(theme.palette.primary.light, 0.05),
+    },
+    "&:hover": {
+      backgroundColor: alpha(theme.palette.primary.light, 0.1),
+      transition: "background-color 0.2s ease",
+    },
+  }));
+ 
   useEffect(() => {
     fetchAttendanceRecords();
   }, []);
-
-  const showSnackbar = (message, severity = 'success') => {
+ 
+  const showSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
   };
-
-  // const fetchAttendanceRecords = async () => {
-  //   try {
-  //     const response = await axios.get(API_URL);
-  //     setRows(response.data);
-  //   } catch (error) {
-  //     showSnackbar('Error fetching attendance records', 'error');
-  //   }
-  // };
-
-
-  // Update fetchAttendanceRecords function
-const fetchAttendanceRecords = async () => {
-  try {
-    const response = await axios.get(API_URL, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-    setRows(response.data);
-  } catch (error) {
-    showSnackbar('Error fetching attendance records', 'error');
-  }
-};
-
-
-
+ 
+  const fetchAttendanceRecords = async () => {
+    try {
+      const response = await axios.get(API_URL);
+      setRows(response.data);
+    } catch (error) {
+      showSnackbar("Error fetching attendance records", "error");
+    }
+  };
+ 
   const handleSearch = async (e) => {
     setSearchTerm(e.target.value);
     try {
-      const response = await axios.get(`${API_URL}/search?searchTerm=${e.target.value}`);
+      const response = await axios.get(
+        `${API_URL}/search?searchTerm=${e.target.value}`
+      );
       setRows(response.data);
     } catch (error) {
-      showSnackbar('Error searching records', 'error');
+      showSnackbar("Error searching records", "error");
     }
   };
-
-  const handleSelectAll = async () => {
-    const newSelectedState = !selectedAll;
-    setSelectedAll(newSelectedState);
-    const ids = rows.map(row => row._id);
-    
+ 
+  const handleCreateRecord = async () => {
     try {
-      await axios.put(`${API_URL}/bulk-select`, {
-        ids,
-        isSelected: newSelectedState
-      });
-      setSelectedRows(newSelectedState ? ids : []);
-      fetchAttendanceRecords();
-      showSnackbar(`${newSelectedState ? 'Selected' : 'Deselected'} all records`);
-    } catch (error) {
-      showSnackbar('Error updating selection', 'error');
-    }
-  };
-
-  const handleRowCheckboxChange = async (id) => {
-    try {
-      await axios.put(`${API_URL}/bulk-select`, {
-        ids: [id],
-        isSelected: !selectedRows.includes(id)
-      });
-      setSelectedRows(prev =>
-        prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
-      );
-      fetchAttendanceRecords();
-    } catch (error) {
-      showSnackbar('Error updating row selection', 'error');
-    }
-  };
-
-  // const handleCreateRecord = async () => {
-  //   try {
-  //     const formattedData = {
-  //       ...newRecord,
-  //       date: new Date(newRecord.date).toISOString(),
-  //       minHour: Number(newRecord.minHour) || 0
-  //     };
-      
-  //     const response = await axios.post(API_URL, formattedData, {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Access-Control-Allow-Origin': '*'
-  //       }
-  //     });
-      
-  //     if (response.data) {
-  //       setCreateOpen(false);
-  //       fetchAttendanceRecords();
-  //       showSnackbar('Attendance record created successfully');
-  //       setNewRecord({
-  //         name: '',
-  //         empId: '',
-  //         date: '',
-  //         checkIn: '',
-  //         shift: '',
-  //         workType: '',
-  //         minHour: '',
-  //         comment: ''
-  //       });
-  //     }
-  //   } catch (error) {
-  //     showSnackbar('Error creating record', 'error');
-  //   }
-  // };
-
-
-// Update the handleCreateRecord function
-const handleCreateRecord = async () => {
-  try {
-    const formattedData = {
-      ...newRecord,
-      date: new Date(newRecord.date).toISOString(),
-      minHour: Number(newRecord.minHour) || 0
-    };
-    
-    const response = await axios.post(API_URL, formattedData, {
-      headers: {
-        'Content-Type': 'application/json'
+      const formattedData = {
+        ...newRecord,
+        date: new Date(newRecord.date).toISOString(),
+        minHour: Number(newRecord.minHour) || 0,
+      };
+ 
+      const response = await axios.post(API_URL, formattedData);
+      if (response.data) {
+        setCreateOpen(false);
+        fetchAttendanceRecords();
+        showSnackbar("Attendance record created successfully");
+        setNewRecord({
+          name: "",
+          empId: "",
+          date: "",
+          checkIn: "",
+          shift: "",
+          workType: "",
+          minHour: "",
+          comment: "",
+        });
       }
-    });
-    
-    if (response.data) {
-      setCreateOpen(false);
-      fetchAttendanceRecords();
-      showSnackbar('Attendance record created successfully');
-      setNewRecord({
-        name: '',
-        empId: '',
-        date: '',
-        checkIn: '',
-        shift: '',
-        workType: '',
-        minHour: '',
-        comment: ''
-      });
+    } catch (error) {
+      showSnackbar("Error creating record", "error");
     }
-  } catch (error) {
-    showSnackbar('Error creating record', 'error');
-  }
-};
-
-
-
-
+  };
+ 
+  const handleEdit = (row) => {
+    setEditRecord({
+      ...row,
+      date: new Date(row.date).toISOString().split("T")[0],
+    });
+    setEditOpen(true);
+  };
+ 
+  const handleUpdateRecord = async () => {
+    try {
+      const formattedData = {
+        ...editRecord,
+        date: new Date(editRecord.date).toISOString(),
+        minHour: Number(editRecord.minHour) || 0,
+      };
+ 
+      await axios.put(`${API_URL}/${editRecord._id}`, formattedData);
+      setEditOpen(false);
+      fetchAttendanceRecords();
+      showSnackbar("Record updated successfully");
+    } catch (error) {
+      showSnackbar("Error updating record", "error");
+    }
+  };
+ 
   const handleDeleteRecord = async (id) => {
     try {
       await axios.delete(`${API_URL}/${id}`);
       fetchAttendanceRecords();
-      showSnackbar('Record deleted successfully');
+      showSnackbar("Record deleted successfully");
     } catch (error) {
-      showSnackbar('Error deleting record', 'error');
+      showSnackbar("Error deleting record", "error");
     }
   };
   return (
-    <Box p={3}>
-      <Typography variant="h4" gutterBottom>Attendance Records</Typography>
-
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <TextField
-          variant="outlined"
-          placeholder="Search"
-          value={searchTerm}
-          onChange={handleSearch}
-          size="small"
-        />
-
-        <Box display="flex" gap={2}>
-          <Button variant="outlined" startIcon={<FilterList />} onClick={() => setFilterOpen(true)}>
-            Filter
-          </Button>
-          <Button variant="outlined" startIcon={<GroupWork />} onClick={() => setGroupByOpen(true)}>
-            Group By
-          </Button>
-          <Button variant="outlined">Actions</Button>
-          <Button variant="contained" color="primary" startIcon={<Add />} onClick={() => setCreateOpen(true)}>
-            Create
-          </Button>
-        </Box>
-      </Box>
-
-      <Button
-        variant="outlined"
-        onClick={handleSelectAll}
-        sx={{ mb: 2 }}
+    <Box sx={{ p: 4, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+      <Typography
+        variant="h4"
+        sx={{
+          mb: 4,
+          color: theme.palette.primary.main,
+          fontWeight: 600,
+          letterSpacing: 0.5,
+        }}
       >
-        {selectedAll ? 'Deselect All' : 'Select All'}
-      </Button>
-
-      <TableContainer component={Paper}>
+        Attendance Records
+      </Typography>
+ 
+      <StyledPaper>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <SearchTextField
+            placeholder="Search records..."
+            value={searchTerm}
+            onChange={handleSearch}
+            size="small"
+            sx={{ width: 300 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+ 
+          <Box display="flex" gap={2}>
+            <ActionButton
+              variant="outlined"
+              startIcon={<FilterList />}
+              onClick={() => setFilterOpen(true)}
+            >
+              Filter
+            </ActionButton>
+ 
+            <ActionButton
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => setCreateOpen(true)}
+              sx={{
+                background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                color: "white",
+                "&:hover": {
+                  background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                },
+              }}
+            >
+              Create Record
+            </ActionButton>
+          </Box>
+        </Box>
+      </StyledPaper>
+ 
+      <TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2 }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  checked={selectedAll}
-                  indeterminate={selectedRows.length > 0 && selectedRows.length < rows.length}
-                  onChange={handleSelectAll}
-                />
-              </TableCell>
-              <TableCell>Employee</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell>Day</TableCell>
-              <TableCell>Check-In</TableCell>
-              <TableCell>Check-Out</TableCell>
-              <TableCell>Shift</TableCell>
-              <TableCell>Work Type</TableCell>
-              <TableCell>Min Hour</TableCell>
-              <TableCell>At Work</TableCell>
-              <TableCell>Overtime</TableCell>
-              <TableCell>Comment</TableCell>
-              <TableCell>Actions</TableCell>
+              <StyledTableCell>Employee</StyledTableCell>
+              <StyledTableCell>Date</StyledTableCell>
+              <StyledTableCell>Day</StyledTableCell>
+              <StyledTableCell>Check-In</StyledTableCell>
+              <StyledTableCell>Check-Out</StyledTableCell>
+              <StyledTableCell>Shift</StyledTableCell>
+              <StyledTableCell>Work Type</StyledTableCell>
+              <StyledTableCell>Min Hour</StyledTableCell>
+              <StyledTableCell>At Work</StyledTableCell>
+              <StyledTableCell>Overtime</StyledTableCell>
+              <StyledTableCell>Comment</StyledTableCell>
+              <StyledTableCell align="center">Actions</StyledTableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row) => (
-              <TableRow key={row._id}>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={selectedRows.includes(row._id)}
-                    onChange={() => handleRowCheckboxChange(row._id)}
-                  />
+              <StyledTableRow key={row._id}>
+                <TableCell sx={{ fontWeight: 500 }}>
+                  {row.name} ({row.empId})
                 </TableCell>
-                <TableCell>{row.name} ({row.empId})</TableCell>
                 <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
                 <TableCell>{row.day}</TableCell>
                 <TableCell>{row.checkIn}</TableCell>
-                <TableCell>{row.checkOut || '-'}</TableCell>
-                <TableCell>{row.shift || '-'}</TableCell>
-                <TableCell>{row.workType || '-'}</TableCell>
-                <TableCell>{row.minHour || '-'}</TableCell>
-                <TableCell>{row.atWork || '-'}</TableCell>
-                <TableCell>{row.overtime || '-'}</TableCell>
-                <TableCell>{row.comment || '-'}</TableCell>
-                <TableCell>
-                  <IconButton><Visibility /></IconButton>
-                  <IconButton onClick={() => handleDeleteRecord(row._id)}><Cancel /></IconButton>
+                <TableCell>{row.checkOut || "-"}</TableCell>
+                <TableCell>{row.shift || "-"}</TableCell>
+                <TableCell>{row.workType || "-"}</TableCell>
+                <TableCell>{row.minHour || "-"}</TableCell>
+                <TableCell>{row.atWork || "-"}</TableCell>
+                <TableCell>{row.overtime || "-"}</TableCell>
+                <TableCell>{row.comment || "-"}</TableCell>
+                <TableCell align="center">
+                  <IconButton
+                    size="small"
+                    sx={{ color: theme.palette.info.main }}
+                  >
+                    <Visibility />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleEdit(row)}
+                    sx={{ color: theme.palette.primary.main }}
+                  >
+                    <Edit />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDeleteRecord(row._id)}
+                    sx={{ color: theme.palette.error.main }}
+                  >
+                    <Cancel />
+                  </IconButton>
                 </TableCell>
-              </TableRow>
+              </StyledTableRow>
             ))}
+ 
+            <Dialog
+              open={editOpen}
+              onClose={() => setEditOpen(false)}
+              maxWidth="sm"
+              fullWidth
+            >
+              <DialogTitle>Edit Attendance Record</DialogTitle>
+              <DialogContent>
+                <Box display="flex" flexDirection="column" gap={2} pt={2}>
+                  <TextField
+                    label="Name"
+                    fullWidth
+                    value={editRecord?.name || ""}
+                    onChange={(e) =>
+                      setEditRecord({ ...editRecord, name: e.target.value })
+                    }
+                  />
+                  <TextField
+                    label="Employee ID"
+                    fullWidth
+                    value={editRecord?.empId || ""}
+                    onChange={(e) =>
+                      setEditRecord({ ...editRecord, empId: e.target.value })
+                    }
+                  />
+                  <TextField
+                    label="Date"
+                    type="date"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    value={editRecord?.date || ""}
+                    onChange={(e) =>
+                      setEditRecord({ ...editRecord, date: e.target.value })
+                    }
+                  />
+                  <TextField
+                    label="Check-In Time"
+                    type="time"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    value={editRecord?.checkIn || ""}
+                    onChange={(e) =>
+                      setEditRecord({ ...editRecord, checkIn: e.target.value })
+                    }
+                  />
+                  <TextField
+                    label="Shift"
+                    fullWidth
+                    value={editRecord?.shift || ""}
+                    onChange={(e) =>
+                      setEditRecord({ ...editRecord, shift: e.target.value })
+                    }
+                  />
+                  <TextField
+                    label="Work Type"
+                    fullWidth
+                    value={editRecord?.workType || ""}
+                    onChange={(e) =>
+                      setEditRecord({ ...editRecord, workType: e.target.value })
+                    }
+                  />
+                  <TextField
+                    label="Minimum Hours"
+                    type="number"
+                    fullWidth
+                    value={editRecord?.minHour || ""}
+                    onChange={(e) =>
+                      setEditRecord({ ...editRecord, minHour: e.target.value })
+                    }
+                  />
+                  <TextField
+                    label="Comment"
+                    fullWidth
+                    multiline
+                    rows={2}
+                    value={editRecord?.comment || ""}
+                    onChange={(e) =>
+                      setEditRecord({ ...editRecord, comment: e.target.value })
+                    }
+                  />
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setEditOpen(false)}>Cancel</Button>
+                <Button
+                  onClick={handleUpdateRecord}
+                  variant="contained"
+                  color="primary"
+                >
+                  Update
+                </Button>
+              </DialogActions>
+            </Dialog>
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create Attendance Record</DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2} pt={2}>
+ 
+      <Dialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 2 },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            bgcolor: theme.palette.primary.main,
+            color: "white",
+            fontSize: 18,
+          }}
+        >
+          Create Attendance Record
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Box display="flex" flexDirection="column" gap={2}>
+            {/* Form fields remain the same but with enhanced spacing */}
             <TextField
               label="Name"
               fullWidth
               value={newRecord.name}
-              onChange={(e) => setNewRecord({ ...newRecord, name: e.target.value })}
+              onChange={(e) =>
+                setNewRecord({ ...newRecord, name: e.target.value })
+              }
             />
             <TextField
               label="Employee ID"
               fullWidth
               value={newRecord.empId}
-              onChange={(e) => setNewRecord({ ...newRecord, empId: e.target.value })}
+              onChange={(e) =>
+                setNewRecord({ ...newRecord, empId: e.target.value })
+              }
             />
             <TextField
               label="Date"
@@ -569,7 +456,9 @@ const handleCreateRecord = async () => {
               fullWidth
               InputLabelProps={{ shrink: true }}
               value={newRecord.date}
-              onChange={(e) => setNewRecord({ ...newRecord, date: e.target.value })}
+              onChange={(e) =>
+                setNewRecord({ ...newRecord, date: e.target.value })
+              }
             />
             <TextField
               label="Check-In Time"
@@ -577,26 +466,34 @@ const handleCreateRecord = async () => {
               fullWidth
               InputLabelProps={{ shrink: true }}
               value={newRecord.checkIn}
-              onChange={(e) => setNewRecord({ ...newRecord, checkIn: e.target.value })}
+              onChange={(e) =>
+                setNewRecord({ ...newRecord, checkIn: e.target.value })
+              }
             />
             <TextField
               label="Shift"
               fullWidth
               value={newRecord.shift}
-              onChange={(e) => setNewRecord({ ...newRecord, shift: e.target.value })}
+              onChange={(e) =>
+                setNewRecord({ ...newRecord, shift: e.target.value })
+              }
             />
             <TextField
               label="Work Type"
               fullWidth
               value={newRecord.workType}
-              onChange={(e) => setNewRecord({ ...newRecord, workType: e.target.value })}
+              onChange={(e) =>
+                setNewRecord({ ...newRecord, workType: e.target.value })
+              }
             />
             <TextField
               label="Minimum Hours"
               type="number"
               fullWidth
               value={newRecord.minHour}
-              onChange={(e) => setNewRecord({ ...newRecord, minHour: e.target.value })}
+              onChange={(e) =>
+                setNewRecord({ ...newRecord, minHour: e.target.value })
+              }
             />
             <TextField
               label="Comment"
@@ -604,31 +501,47 @@ const handleCreateRecord = async () => {
               multiline
               rows={2}
               value={newRecord.comment}
-              onChange={(e) => setNewRecord({ ...newRecord, comment: e.target.value })}
+              onChange={(e) =>
+                setNewRecord({ ...newRecord, comment: e.target.value })
+              }
             />
           </Box>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2.5 }}>
           <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
-          <Button onClick={handleCreateRecord} variant="contained" color="primary">
+          <Button
+            onClick={handleCreateRecord}
+            variant="contained"
+            sx={{ px: 3 }}
+          >
             Create
           </Button>
         </DialogActions>
       </Dialog>
-
+ 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={4000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+        <Alert
+          severity={snackbar.severity}
+          variant="filled"
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
-
+ 
       <Fab
         color="primary"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          boxShadow: 3,
+        }}
         onClick={() => setCreateOpen(true)}
       >
         <Add />
@@ -636,5 +549,5 @@ const handleCreateRecord = async () => {
     </Box>
   );
 };
-
+ 
 export default AttendanceRecords;

@@ -23,6 +23,27 @@ export const AttendanceController = {
     }
   },
 
+  updateAttendance: async (req, res) => {
+    try {
+      const updatedAttendance = await Attendance.findByIdAndUpdate(
+        req.params.id,
+        {
+          ...req.body,
+          day: new Date(req.body.date).toLocaleDateString('en-US', { weekday: 'long' })
+        },
+        { new: true }
+      );
+      
+      if (!updatedAttendance) {
+        return res.status(404).json({ message: 'Record not found' });
+      }
+      
+      res.json(updatedAttendance);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
   searchAttendance: async (req, res) => {
     const { searchTerm } = req.query;
     try {
