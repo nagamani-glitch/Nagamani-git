@@ -259,13 +259,13 @@ const TimeOffRequests = () => {
         </Box>
 
         <Box sx={{ p: 3, backgroundColor: "background.default" }}>
-          <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+          <Box sx={{ mb: 3, display: "flex", gap: 2 }}>
             <TextField
               placeholder="Search by name or ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               size="small"
-              sx={{ width: '200px' }}
+              sx={{ width: "200px" }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -279,8 +279,8 @@ const TimeOffRequests = () => {
               select
               value={filterStatus}
               onChange={handleFilterChange}
-              size="small" 
-              sx={{ width: '150px' }}
+              size="small"
+              sx={{ width: "150px" }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -290,9 +290,13 @@ const TimeOffRequests = () => {
               }}
             >
               <MenuItem value="all">All</MenuItem>
-              {statusOptions.filter(option => option !== 'All').map(option => (
-                <MenuItem key={option} value={option}>{option}</MenuItem>
-              ))}
+              {statusOptions
+                .filter((option) => option !== "All")
+                .map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
             </TextField>
           </Box>
           <TableContainer
@@ -587,185 +591,199 @@ const TimeOffRequests = () => {
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ p: 4 }}>
-  <Grid container spacing={3} sx={{ mt: 0.5 }}>
-    <Grid item xs={12} md={6}>
-      <TextField
-        name="name"
-        label="Employee Name"
-        fullWidth
-        required
-        value={formData.name}
-        onChange={handleInputChange}
-        sx={{ mb: 1 }}
-      />
-    </Grid>
-    <Grid item xs={12} md={6}>
-      <TextField
-        name="empId"
-        label="Employee ID"
-        fullWidth
-        required
-        value={formData.empId}
-        onChange={handleInputChange}
-        sx={{ mb: 1 }}
-      />
-    </Grid>
-    <Grid item xs={12} md={6}>
-      <TextField
-        name="date"
-        label="Date"
-        type="date"
-        fullWidth
-        required
-        InputLabelProps={{ shrink: true }}
-        value={formData.date}
-        onChange={handleInputChange}
-        sx={{ mb: 1 }}
-      />
-    </Grid>
-    <Grid item xs={12} md={6}>
-      <TextField
-        name="day"
-        label="Day"
-        fullWidth
-        required
-        value={formData.day}
-        onChange={handleInputChange}
-        sx={{ mb: 1 }}
-      />
-    </Grid>
-    <Grid item xs={12} md={6}>
-      <TextField
-        name="checkIn"
-        label="Check In Time"
-        type="time"
-        fullWidth
-        required
-        InputLabelProps={{ shrink: true }}
-        value={formData.checkIn}
-        onChange={handleInputChange}
-        sx={{ mb: 1 }}
-      />
-    </Grid>
-    <Grid item xs={12} md={6}>
-      <TextField
-        name="checkOut"
-        label="Check Out Time"
-        type="time"
-        fullWidth
-        required
-        InputLabelProps={{ shrink: true }}
-        value={formData.checkOut}
-        onChange={handleInputChange}
-        sx={{ mb: 1 }}
-      />
-    </Grid>
-    <Grid item xs={12} md={6}>
-      <TextField
-        select
-        name="shift"
-        label="Shift"
-        fullWidth
-        required
-        value={formData.shift}
-        onChange={handleInputChange}
-        sx={{ mb: 1 }}
-      >
-        {shiftOptions.map(option => (
-          <MenuItem key={option} value={option}>{option}</MenuItem>
-        ))}
-      </TextField>
-    </Grid>
-    <Grid item xs={12} md={6}>
-      <TextField
-        select
-        name="workType"
-        label="Work Type"
-        fullWidth
-        required
-        value={formData.workType}
-        onChange={handleInputChange}
-        sx={{ mb: 1 }}
-      >
-        {workTypeOptions.map(option => (
-          <MenuItem key={option} value={option}>{option}</MenuItem>
-        ))}
-      </TextField>
-    </Grid>
-    <Grid item xs={12} md={4}>
-      <TextField
-        name="minHour"
-        label="Minimum Hours"
-        type="number"
-        fullWidth
-        required
-        value={formData.minHour}
-        onChange={handleInputChange}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">h</InputAdornment>
-        }}
-        sx={{ mb: 1 }}
-      />
-    </Grid>
-    <Grid item xs={12} md={4}>
-      <TextField
-        name="atWork"
-        label="At Work"
-        type="number"
-        fullWidth
-        required
-        value={formData.atWork}
-        onChange={handleInputChange}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">h</InputAdornment>
-        }}
-        sx={{ mb: 1 }}
-      />
-    </Grid>
-    <Grid item xs={12} md={4}>
-      <TextField
-        name="overtime"
-        label="Overtime"
-        type="number"
-        fullWidth
-        value={formData.overtime}
-        onChange={handleInputChange}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">h</InputAdornment>
-        }}
-        sx={{ mb: 1 }}
-      />
-    </Grid>
-    <Grid item xs={12} md={6}>
-      <TextField
-        select
-        name="status"
-        label="Status"
-        fullWidth
-        required
-        value={formData.status}
-        onChange={handleInputChange}
-        sx={{ mb: 1 }}
-      >
-        {statusOptions.filter(option => option !== 'All').map(option => (
-          <MenuItem key={option} value={option}>{option}</MenuItem>
-        ))}
-      </TextField>
-    </Grid>
-    <Grid item xs={12}>
-      <TextField
-        name="comment"
-        label="Comment"
-        fullWidth
-        multiline
-        rows={3}
-        value={formData.comment}
-        onChange={handleInputChange}
-        sx={{ mb: 1 }}
-      />
-    </Grid>
-  </Grid>
-</DialogContent>
+          <Grid container spacing={3} sx={{ mt: 0.5 }}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="name"
+                label="Employee Name"
+                fullWidth
+                required
+                value={formData.name}
+                onChange={handleInputChange}
+                sx={{ mb: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="empId"
+                label="Employee ID"
+                fullWidth
+                required
+                value={formData.empId}
+                onChange={handleInputChange}
+                sx={{ mb: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="date"
+                label="Date"
+                type="date"
+                fullWidth
+                required
+                InputLabelProps={{ shrink: true }}
+                value={formData.date}
+                onChange={handleInputChange}
+                sx={{ mb: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="day"
+                label="Day"
+                fullWidth
+                required
+                value={formData.day}
+                onChange={handleInputChange}
+                sx={{ mb: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="checkIn"
+                label="Check In Time"
+                type="time"
+                fullWidth
+                required
+                InputLabelProps={{ shrink: true }}
+                value={formData.checkIn}
+                onChange={handleInputChange}
+                sx={{ mb: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="checkOut"
+                label="Check Out Time"
+                type="time"
+                fullWidth
+                required
+                InputLabelProps={{ shrink: true }}
+                value={formData.checkOut}
+                onChange={handleInputChange}
+                sx={{ mb: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                select
+                name="shift"
+                label="Shift"
+                fullWidth
+                required
+                value={formData.shift}
+                onChange={handleInputChange}
+                sx={{ mb: 1 }}
+              >
+                {shiftOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                select
+                name="workType"
+                label="Work Type"
+                fullWidth
+                required
+                value={formData.workType}
+                onChange={handleInputChange}
+                sx={{ mb: 1 }}
+              >
+                {workTypeOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                name="minHour"
+                label="Minimum Hours"
+                type="number"
+                fullWidth
+                required
+                value={formData.minHour}
+                onChange={handleInputChange}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">h</InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                name="atWork"
+                label="At Work"
+                type="number"
+                fullWidth
+                required
+                value={formData.atWork}
+                onChange={handleInputChange}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">h</InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                name="overtime"
+                label="Overtime"
+                type="number"
+                fullWidth
+                value={formData.overtime}
+                onChange={handleInputChange}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">h</InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                select
+                name="status"
+                label="Status"
+                fullWidth
+                required
+                value={formData.status}
+                onChange={handleInputChange}
+                sx={{ mb: 1 }}
+              >
+                {statusOptions
+                  .filter((option) => option !== "All")
+                  .map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="comment"
+                label="Comment"
+                fullWidth
+                multiline
+                rows={3}
+                value={formData.comment}
+                onChange={handleInputChange}
+                sx={{ mb: 1 }}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
 
         <DialogActions
           sx={{ p: 3, borderTop: 1, borderColor: "divider", gap: 2 }}
@@ -788,188 +806,220 @@ const TimeOffRequests = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Preview Dialog */}
       <Dialog
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 2, boxShadow: 24 } }}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+          },
+        }}
       >
         <DialogTitle
           sx={{
-            borderBottom: 1,
-            borderColor: "divider",
+            borderBottom: "2px solid",
+            borderColor: "primary.light",
             bgcolor: "primary.lighter",
-            py: 2,
+            py: 2.5,
+            px: 4,
           }}
         >
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h5" fontWeight="600" color="primary.dark">
             Request Details
           </Typography>
           <IconButton
             onClick={() => setPreviewOpen(false)}
             sx={{
               position: "absolute",
-              right: 8,
-              top: 8,
+              right: 16,
+              top: 12,
               color: "grey.500",
-              "&:hover": { color: "primary.main" },
+              "&:hover": {
+                color: "primary.main",
+                bgcolor: "primary.lighter",
+              },
             }}
           >
             <Close />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
+
+        <DialogContent sx={{ p: 4 }}>
           {selectedRequest && (
-            <Grid container spacing={3}>
+            <Grid container spacing={4}>
               <Grid item xs={12} md={6}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Employee
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {selectedRequest.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {selectedRequest.empId}
-                </Typography>
+                <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Employee Details
+                  </Typography>
+                  <Typography variant="h6" fontWeight="600">
+                    {selectedRequest.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    ID: {selectedRequest.empId}
+                  </Typography>
+                </Box>
               </Grid>
+
               <Grid item xs={12} md={6}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Date & Time
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {new Date(selectedRequest.date).toLocaleDateString()}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {selectedRequest.day}
-                </Typography>
+                <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Date & Time
+                  </Typography>
+                  <Typography variant="h6" fontWeight="600">
+                    {new Date(selectedRequest.date).toLocaleDateString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {selectedRequest.day}
+                  </Typography>
+                </Box>
               </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Check In
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {selectedRequest.checkIn}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Check Out
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {selectedRequest.checkOut}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Shift
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {selectedRequest.shift}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Work Type
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {selectedRequest.workType}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Status
-                </Typography>
-                <Chip
-                  label={selectedRequest.status}
-                  color={getStatusColor(selectedRequest.status)}
-                  size="small"
-                  sx={{ mt: 1, fontWeight: 500 }}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Minimum Hours
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {selectedRequest.minHour}h
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  At Work
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {selectedRequest.atWork}h
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Overtime
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {selectedRequest.overtime}h
-                </Typography>
-              </Grid>
+
               <Grid item xs={12}>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Comment
-                </Typography>
-                <Typography variant="body1" fontWeight={500}>
-                  {selectedRequest.comment}
-                </Typography>
+                <Divider sx={{ my: 2 }} />
               </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Box sx={{ textAlign: "center" }}>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Check In
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    fontWeight="600"
+                    color="primary.main"
+                  >
+                    {selectedRequest.checkIn}
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Box sx={{ textAlign: "center" }}>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Check Out
+                  </Typography>
+                  <Typography variant="h6" fontWeight="600" color="error.main">
+                    {selectedRequest.checkOut}
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Box sx={{ textAlign: "center" }}>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Status
+                  </Typography>
+                  <Chip
+                    label={selectedRequest.status}
+                    color={getStatusColor(selectedRequest.status)}
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: "0.9rem",
+                      px: 2,
+                      py: 2.5,
+                    }}
+                  />
+                </Box>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Box sx={{ mt: 2, p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Additional Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="body2" color="text.secondary">
+                        Shift
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600">
+                        {selectedRequest.shift}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="body2" color="text.secondary">
+                        Work Type
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600">
+                        {selectedRequest.workType}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="body2" color="text.secondary">
+                        Min Hours
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600">
+                        {selectedRequest.minHour}h
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="body2" color="text.secondary">
+                        At Work
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600">
+                        {selectedRequest.atWork}h
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Grid>
+
+              {selectedRequest.comment && (
+                <Grid item xs={12}>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      Comment
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        pl: 2,
+                        borderLeft: 3,
+                        borderColor: "primary.light",
+                      }}
+                    >
+                      {selectedRequest.comment}
+                    </Typography>
+                  </Box>
+                </Grid>
+              )}
             </Grid>
           )}
         </DialogContent>
       </Dialog>
-
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
