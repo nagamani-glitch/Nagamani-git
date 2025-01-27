@@ -38,22 +38,24 @@ const createEmployee = async (req, res) => {
     }
 };
 
-const registerEmployee =async(req, res)=>{
-    try{
-    console.log("body:", req.body)
-    const {personalInfo, addressInfo, joiningDetails, trainingDetails, educationDetails, familyDetails, serviceHistory, nominationDetails} = req.body
-    const newEmployee = new employeeRegisterModel({
-        personalInfo, addressInfo, joiningDetails, educationDetails,trainingDetails, familyDetails, serviceHistory, nominationDetails
-    })
-   await newEmployee.save()
-   console.log("new employee:", newEmployee)
-   res.status(201).json({message:"Employee Registered successFully", employee: newEmployee})
-}catch(error){
-    console.log(error)
-    res.status(500).json({message:"error registering employee", error:error.message})
+const registerEmployee = async(req, res) => {
+    try {
+        const newEmployee = new employeeRegisterModel({
+            user: req.user._id, // Add user reference
+            ...req.body
+        });
+        await newEmployee.save();
+        res.status(201).json({
+            message: "Employee Registered successfully",
+            employee: newEmployee
+        });
+    } catch(error) {
+        res.status(500).json({
+            message: "Error registering employee",
+            error: error.message
+        });
+    }
+};
 
-}
-
-}
 
 export { getEmployees, createEmployee, registerEmployee};

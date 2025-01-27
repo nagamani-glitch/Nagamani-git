@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-//import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import icons from react-icons
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import './RegisterPage.css';
 import { motion } from 'framer-motion';
-import { Box, Button, TextField, Typography, Container } from '@mui/material';
+import { Box, Button, TextField, Typography, Container, InputAdornment, IconButton } from '@mui/material';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -14,7 +14,8 @@ const RegisterPage = () => {
   });
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-
+  const [showPassword, setShowPassword] = useState(false);
+  
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -22,11 +23,17 @@ const RegisterPage = () => {
     setError('');
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+ 
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(otpSent);
     try {
-       await axios.post('http://localhost:5000/api/auth/register', formData);
+      await axios.post('http://localhost:5000/api/auth/register', formData);
       alert('OTP sent to email. Please verify.');
       setOtpSent(true);
       navigate('/verifyOtp', { state: { email: formData.email } });
@@ -37,7 +44,10 @@ const RegisterPage = () => {
         setError('An error occurred. Please try again.');
       }
     }
-  };
+};
+
+
+
 
   return (
     <motion.div
@@ -81,10 +91,23 @@ const RegisterPage = () => {
             fullWidth
             label="Password"
             name="password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
             onChange={handleChange}
             required
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={togglePasswordVisibility}
+                    edge="end"
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           {error && (
             <Typography variant="body2" color="error" sx={{ mt: 1 }}>
