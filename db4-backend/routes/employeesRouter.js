@@ -1,16 +1,21 @@
-import express from 'express'
-import { getEmployees, createEmployee, registerEmployee } from '../controllers/employeesController.js'
-import multer from 'multer'
+import express from 'express';
+import { getAllEmployees, registerEmployee, upload } from '../controllers/employeesController.js';
+
 const router = express.Router();
 
-// Multer configurationn
-const upload = multer({ dest: 'uploads/' }); // Stores the image in 'uploads/' folder
-// Modify the POST route to include multer upload middleware
+router.get('/', getAllEmployees);
+router.post('/register', upload.single('img'), registerEmployee);
 
-router.route('/').get(getEmployees)
-.post(upload.single('img'), createEmployee)
+export default router;
 
-router.route('/register')
-.post(registerEmployee)
 
-export default router
+
+// import express from 'express';
+// import { getEmployees, registerEmployee, upload } from '../controllers/employeesController.js';
+
+// const router = express.Router();
+
+// router.get('/', getEmployees);
+// router.post('/register', upload.single('img'), registerEmployee);
+
+// export default router;
