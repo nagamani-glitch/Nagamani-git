@@ -92,6 +92,7 @@ app.use((err, req, res, next) => {
 app.use(express.json());
 
 app.use("/api/employees", employeesRouter);
+app.use('/uploads', express.static('uploads'));
 app.use("/api/auth", authRouter);
 app.use("/api/profiles", profileRouter);
 app.use("/api/contracts", contractRouter);
