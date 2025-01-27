@@ -586,252 +586,187 @@ const TimeOffRequests = () => {
             <Close />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="name"
-                label="Employee Name"
-                fullWidth
-                required
-                value={formData.name}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="empId"
-                label="Employee ID"
-                fullWidth
-                required
-                value={formData.empId}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="date"
-                label="Date"
-                type="date"
-                fullWidth
-                required
-                InputLabelProps={{ shrink: true }}
-                value={formData.date}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="day"
-                label="Day"
-                fullWidth
-                required
-                value={formData.day}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="checkIn"
-                label="Check In Time"
-                type="time"
-                fullWidth
-                required
-                InputLabelProps={{ shrink: true }}
-                value={formData.checkIn}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="checkOut"
-                label="Check Out Time"
-                type="time"
-                fullWidth
-                required
-                InputLabelProps={{ shrink: true }}
-                value={formData.checkOut}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                select
-                name="shift"
-                label="Shift"
-                fullWidth
-                required
-                value={formData.shift}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              >
-                {shiftOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                select
-                name="workType"
-                label="Work Type"
-                fullWidth
-                required
-                value={formData.workType}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              >
-                {workTypeOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                name="minHour"
-                label="Minimum Hours"
-                type="number"
-                fullWidth
-                required
-                value={formData.minHour}
-                onChange={handleInputChange}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">h</InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                name="atWork"
-                label="At Work"
-                type="number"
-                fullWidth
-                required
-                value={formData.atWork}
-                onChange={handleInputChange}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">h</InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                name="overtime"
-                label="Overtime"
-                type="number"
-                fullWidth
-                value={formData.overtime}
-                onChange={handleInputChange}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">h</InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                select
-                name="status"
-                label="Status"
-                fullWidth
-                required
-                value={formData.status}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              >
-                {statusOptions
-                  .filter((option) => option !== "All")
-                  .map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="comment"
-                label="Comment"
-                fullWidth
-                multiline
-                rows={3}
-                value={formData.comment}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
+        <DialogContent sx={{ p: 4 }}>
+  <Grid container spacing={3} sx={{ mt: 0.5 }}>
+    <Grid item xs={12} md={6}>
+      <TextField
+        name="name"
+        label="Employee Name"
+        fullWidth
+        required
+        value={formData.name}
+        onChange={handleInputChange}
+        sx={{ mb: 1 }}
+      />
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        name="empId"
+        label="Employee ID"
+        fullWidth
+        required
+        value={formData.empId}
+        onChange={handleInputChange}
+        sx={{ mb: 1 }}
+      />
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        name="date"
+        label="Date"
+        type="date"
+        fullWidth
+        required
+        InputLabelProps={{ shrink: true }}
+        value={formData.date}
+        onChange={handleInputChange}
+        sx={{ mb: 1 }}
+      />
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        name="day"
+        label="Day"
+        fullWidth
+        required
+        value={formData.day}
+        onChange={handleInputChange}
+        sx={{ mb: 1 }}
+      />
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        name="checkIn"
+        label="Check In Time"
+        type="time"
+        fullWidth
+        required
+        InputLabelProps={{ shrink: true }}
+        value={formData.checkIn}
+        onChange={handleInputChange}
+        sx={{ mb: 1 }}
+      />
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        name="checkOut"
+        label="Check Out Time"
+        type="time"
+        fullWidth
+        required
+        InputLabelProps={{ shrink: true }}
+        value={formData.checkOut}
+        onChange={handleInputChange}
+        sx={{ mb: 1 }}
+      />
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        select
+        name="shift"
+        label="Shift"
+        fullWidth
+        required
+        value={formData.shift}
+        onChange={handleInputChange}
+        sx={{ mb: 1 }}
+      >
+        {shiftOptions.map(option => (
+          <MenuItem key={option} value={option}>{option}</MenuItem>
+        ))}
+      </TextField>
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        select
+        name="workType"
+        label="Work Type"
+        fullWidth
+        required
+        value={formData.workType}
+        onChange={handleInputChange}
+        sx={{ mb: 1 }}
+      >
+        {workTypeOptions.map(option => (
+          <MenuItem key={option} value={option}>{option}</MenuItem>
+        ))}
+      </TextField>
+    </Grid>
+    <Grid item xs={12} md={4}>
+      <TextField
+        name="minHour"
+        label="Minimum Hours"
+        type="number"
+        fullWidth
+        required
+        value={formData.minHour}
+        onChange={handleInputChange}
+        InputProps={{
+          endAdornment: <InputAdornment position="end">h</InputAdornment>
+        }}
+        sx={{ mb: 1 }}
+      />
+    </Grid>
+    <Grid item xs={12} md={4}>
+      <TextField
+        name="atWork"
+        label="At Work"
+        type="number"
+        fullWidth
+        required
+        value={formData.atWork}
+        onChange={handleInputChange}
+        InputProps={{
+          endAdornment: <InputAdornment position="end">h</InputAdornment>
+        }}
+        sx={{ mb: 1 }}
+      />
+    </Grid>
+    <Grid item xs={12} md={4}>
+      <TextField
+        name="overtime"
+        label="Overtime"
+        type="number"
+        fullWidth
+        value={formData.overtime}
+        onChange={handleInputChange}
+        InputProps={{
+          endAdornment: <InputAdornment position="end">h</InputAdornment>
+        }}
+        sx={{ mb: 1 }}
+      />
+    </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        select
+        name="status"
+        label="Status"
+        fullWidth
+        required
+        value={formData.status}
+        onChange={handleInputChange}
+        sx={{ mb: 1 }}
+      >
+        {statusOptions.filter(option => option !== 'All').map(option => (
+          <MenuItem key={option} value={option}>{option}</MenuItem>
+        ))}
+      </TextField>
+    </Grid>
+    <Grid item xs={12}>
+      <TextField
+        name="comment"
+        label="Comment"
+        fullWidth
+        multiline
+        rows={3}
+        value={formData.comment}
+        onChange={handleInputChange}
+        sx={{ mb: 1 }}
+      />
+    </Grid>
+  </Grid>
+</DialogContent>
+
         <DialogActions
           sx={{ p: 3, borderTop: 1, borderColor: "divider", gap: 2 }}
         >
