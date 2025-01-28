@@ -89,14 +89,11 @@ const Leave = () => {
       <Box
         sx={{
           maxWidth: "100%",
-          maxHeight: 400,
+          maxHeight: 400, 
           overflowX: "auto",
           display: "flex",
           gap: 2,
-          padding: 2,
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-          boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)"
+          padding: 2
         }}
       >
         {leaveData.map((leave, index) => (
@@ -233,8 +230,11 @@ const Leave = () => {
                 <TableCell>Status</TableCell>
                 <TableCell>Action</TableCell>
               </TableRow>
+              
             </TableHead>
             <TableBody>
+
+
               {leaveTableData.map((row, index) => (
                 <TableRow key={index}>
                   <TableCell>
