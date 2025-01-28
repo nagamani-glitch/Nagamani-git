@@ -72,36 +72,36 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
  
  
   // Handle saving the form data
-  const handleSave = async (event) => {
-    event.preventDefault();
-    const formData = {
-      code: document.querySelector("input[placeholder='Enter title']").value,
-      name: document.querySelector("input[placeholder='Enter title']").value,
-      amount: Number(document.querySelector("input[type='number']").value) || 0,
-      oneTimeDeduction: document.querySelector("input[type='date']").value ? 'Yes' : 'No',
-      taxable: isTaxable ? 'Yes' : 'No',
-      fixed: isFixed,
-      pretax: isTaxable ? 'Yes' : 'No',
-      specificEmployees: selectedEmployee,
-      employerRate: "6.25% of Gross Pay",
-      employeeRate: "7.75% of Gross Pay",
-      isConditionBased: isConditionBased,
-      ifChoice: document.querySelector("select[required]").value,
-      ifCondition: document.querySelector(".condition-options").value,
-      ifAmount: Number(document.querySelector("input[placeholder='0.0']").value) || 0,
-      updateCompensation: document.querySelector("select[required]").value
-    };
+  // const handleSave = async (event) => {
+  //   event.preventDefault();
+  //   const formData = {
+  //     code: document.querySelector("input[placeholder='Enter title']").value,
+  //     name: document.querySelector("input[placeholder='Enter title']").value,
+  //     amount: Number(document.querySelector("input[type='number']").value) || 0,
+  //     oneTimeDeduction: document.querySelector("input[type='date']").value ? 'Yes' : 'No',
+  //     taxable: isTaxable ? 'Yes' : 'No',
+  //     fixed: isFixed,
+  //     pretax: isTaxable ? 'Yes' : 'No',
+  //     specificEmployees: selectedEmployee,
+  //     employerRate: "6.25% of Gross Pay",
+  //     employeeRate: "7.75% of Gross Pay",
+  //     isConditionBased: isConditionBased,
+  //     ifChoice: document.querySelector("select[required]").value,
+  //     ifCondition: document.querySelector(".condition-options").value,
+  //     ifAmount: Number(document.querySelector("input[placeholder='0.0']").value) || 0,
+  //     updateCompensation: document.querySelector("select[required]").value
+  //   };
  
-    try {
-      const response = await axios.post('http://localhost:5000/api/deductions', formData);
-      console.log("Form Data saved:", response.data);
-      alert("Form data saved successfully!");
-      onClose();
-    } catch (error) {
-      console.error("Error saving deduction:", error);
-      alert("Failed to save deduction data");
-    }
-  };
+  //   try {
+  //     const response = await axios.post('http://localhost:5000/api/deductions', formData);
+  //     console.log("Form Data saved:", response.data);
+  //     alert("Form data saved successfully!");
+  //     onClose();
+  //   } catch (error) {
+  //     console.error("Error saving deduction:", error);
+  //     alert("Failed to save deduction data");
+  //   }
+  // };
  
   const validateForm = () => {
     const title = document.querySelector("input[placeholder='Enter title']").value;
@@ -264,7 +264,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                   placeholder="Search..."
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
-                  className="search-bar"
+                  className="modal-search-bar"
                 />
                 <div className="employee-list">
                   {filteredEmployees.map((employee) => (
@@ -438,7 +438,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                 placeholder="Search..."
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
-                className="create-search-bar"
+                className="filter-create-search-bar"
               />
               <div className="employee-list">
                 {filteredEmployees.map((employee) => (

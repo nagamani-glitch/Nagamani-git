@@ -268,12 +268,25 @@
     cursor: pointer;
   }
   
-  .create-search-bar {
+  .create-ded-search-bar {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
-    border: 1px solid #ddd;
+    border: none;
     border-radius: 5px;
+    border: 1px solid #e80505;
+  }
+
+  .modal-search-bar {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 5px;
+    border: 1px solid #e80505;
+  }
+  .filter-create-search-bar{
+    border: 2px solid #e80505;
   }
   
   .employee-list {

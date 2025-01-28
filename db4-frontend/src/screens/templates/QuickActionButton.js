@@ -62,7 +62,7 @@ const actions = [
   { icon: <WorkIcon />, name: 'Recruitment', page: 'recruitmentdashboard', color: '#FF9800' },
   { icon: <AttachMoneyIcon />, name: 'Payroll', page: 'payrollDashboard', color: '#F44336' },
   { icon: <LaptopMacIcon />, name: 'Assets', page: 'assetsDashboard', color: '#3F51B5' },
-  { icon: <LocalOfferIcon />, name: 'Help Desk', page: 'faqPage', color: '#009688' },
+  { icon: <LocalOfferIcon />, name: 'Help Desk', page: 'faqCategory', color: '#009688' },
   { icon: <BarChartIcon />, name: 'Performance', page: 'dashboard', color: '#795548' },
 ];
 
