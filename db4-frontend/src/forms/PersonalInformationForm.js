@@ -137,6 +137,7 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, savedPersonal
     state: '',
     pinCode: '',
     phoneNumber: '',
+    email: '',
     permanentAddress: '',
     permanentBlock: '',
     permanentPanchayat: '',
@@ -408,6 +409,17 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, savedPersonal
     fullWidth
     error={touched.phoneNumber && errors.phoneNumber}
     helperText={touched.phoneNumber && errors.phoneNumber}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <Field
+    name="email"
+    component={AnimatedTextField}
+    label="E-mail ID"
+    fullWidth
+    error={touched.email && errors.email}
+    helperText={touched.email && errors.email}
   />
 </Grid>
 

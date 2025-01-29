@@ -1,210 +1,358 @@
-import React, { useState } from 'react';
-import { TextField, Button, Grid, Typography, Container, Box } from '@mui/material';
+import React from 'react';
+import { 
+  TextField, 
+  Button, 
+  Grid, 
+  Typography, 
+  Container, 
+  Box,
+  Paper,
+  IconButton,
+  Tooltip
+} from '@mui/material';
 import { motion } from 'framer-motion';
-import Footer from '../components/Footer';
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup';
+import { styled } from '@mui/material/styles';
+import { 
+  PersonAdd, 
+  ArrowBack, 
+  Send,
+  Home,
+  Phone,
+  Badge,
+  Percent,
+  CalendarToday,
+  LocationOn
+} from '@mui/icons-material';
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  borderRadius: theme.spacing(2),
+  background: 'linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    boxShadow: '0 12px 48px rgba(0, 0, 0, 0.12)',
+  }
+}));
+
+const StyledButton = styled(Button)(({ theme }) => ({
+  borderRadius: theme.spacing(1),
+  padding: theme.spacing(1.5, 4),
+  textTransform: 'none',
+  fontWeight: 600,
+  boxShadow: 'none',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  }
+}));
+
+const validationSchema = Yup.object().shape({
+  name: Yup.string().required('Nominee name is required'),
+  relation: Yup.string().required('Relation is required'),
+  typeOfNomination: Yup.string().required('Type of nomination is required'),
+  nominationPercentage: Yup.number()
+    .required('Nomination percentage is required')
+    .min(0, 'Percentage cannot be negative')
+    .max(100, 'Percentage cannot exceed 100'),
+  nomineeAge: Yup.number()
+    .required('Age is required')
+    .positive('Age must be positive')
+    .integer('Age must be a whole number'),
+  presentAddress: Yup.string().required('Present address is required'),
+  district: Yup.string().required('District is required'),
+  state: Yup.string().required('State is required'),
+  pinCode: Yup.string()
+    .matches(/^\d{6}$/, 'Pin code must be 6 digits')
+    .required('Pin code is required'),
+  phoneNumber: Yup.string()
+    .matches(/^\d{10}$/, 'Phone number must be 10 digits')
+    .required('Phone number is required')
+});
 
 const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, savedNominationDetails }) => {
-  const [nominee, setNominee] = useState(savedNominationDetails || {
+  const initialValues = savedNominationDetails || {
     name: '',
     relation: '',
     typeOfNomination: '',
     nominationPercentage: '',
-    nomineeAge:'' ,
+    nomineeAge: '',
     presentAddress: '',
     block: '',
     panchayatMandal: '',
     district: '',
     state: '',
     pinCode: '',
-    phoneNumber: '',
-  });
-
-
-  const [errors, setErrors] = useState({});
-
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setNominee({ ...nominee, [name]: value });
+    phoneNumber: ''
   };
 
-  const validateForm = () => {
-    let validationErrors = {};
-    if (!nominee.name) validationErrors.name = 'Nominee name is required';
-    if (!nominee.relation) validationErrors.relation = 'Relation is required';
-    if (!nominee.typeOfNomination) validationErrors.typeOfNomination = 'Type of nomination is required';
-    if (!nominee.nominationPercentage) validationErrors.nominationPercentage = 'Nomination percentage is required';
-    if (!nominee.nomineeAge) validationErrors.nomineeAge = 'Enter Age';
-    if (!nominee.presentAddress) validationErrors.presentAddress = 'Present address is required';
-    if (!nominee.district) validationErrors.district = 'District is required';
-    if (!nominee.state) validationErrors.state = 'State is required';
-    if (!nominee.pinCode) validationErrors.pinCode = 'Pin Code is required';
-    if (!nominee.phoneNumber) validationErrors.phoneNumber = 'Phone number is required';
-
-    setErrors(validationErrors);
-    return Object.keys(validationErrors).length === 0;
-  };
-
-  const handleFinalSubmit  = (e) => {
-    e.preventDefault()
-    if (validateForm()) {
-      handleFormDataChange("nominationDetails", nominee)
-      console.log("nominationDetails", nominee)
-      handleSubmit()
-    }
+  const handleFinalSubmit = (values) => {
+    handleFormDataChange("nominationDetails", values);
+    handleSubmit();
   };
 
   return (
-    <Container component={motion.div} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} maxWidth="md">
-      <Typography variant="h4" gutterBottom align="center" style={{ marginTop: '20px', fontWeight: 'bold' }}>
-        FORM-7: EMPLOYEE NOMINATION DETAILS
-      </Typography>
-      <Box component="form" onSubmit={handleFinalSubmit} sx={{ mt: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Nominee Name"
-              name="name"
-              value={nominee.name}
-              onChange={handleInputChange}
-              fullWidth
-              error={!!errors.name}
-              helperText={errors.name}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Relation with Employee"
-              name="relation"
-              value={nominee.relation}
-              onChange={handleInputChange}
-              fullWidth
-              error={!!errors.relation}
-              helperText={errors.relation}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Type of Nomination"
-              name="typeOfNomination"
-              value={nominee.typeOfNomination}
-              onChange={handleInputChange}
-              fullWidth
-              error={!!errors.typeOfNomination}
-              helperText={errors.typeOfNomination}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Nomination Percentage (%)"
-              type="number"
-              name="nominationPercentage"
-              value={nominee.nominationPercentage}
-              onChange={handleInputChange}
-              fullWidth
-              error={!!errors.nominationPercentage}
-              helperText={errors.nominationPercentage}
-              inputProps={{ min: 0, max: 100 }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Nominee Age"
-              type="number"
-              name="nomineeAge"
-              value={nominee.nomineeAge}
-              onChange={handleInputChange}
-              fullWidth
-              error={!!errors.nomineeAge}
-              helperText={errors.nomineeAge}
-              inputProps={{ min: 0, max: 100 }}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Present Address"
-              name="presentAddress"
-              value={nominee.presentAddress}
-              onChange={handleInputChange}
-              fullWidth
-              multiline
-              rows={3}
-              error={!!errors.presentAddress}
-              helperText={errors.presentAddress}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Block"
-              name="block"
-              value={nominee.block}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Panchayat/Mandal"
-              name="panchayatMandal"
-              value={nominee.panchayatMandal}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="District"
-              name="district"
-              value={nominee.district}
-              onChange={handleInputChange}
-              fullWidth
-              error={!!errors.district}
-              helperText={errors.district}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="State"
-              name="state"
-              value={nominee.state}
-              onChange={handleInputChange}
-              fullWidth
-              error={!!errors.state}
-              helperText={errors.state}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Pin Code"
-              name="pinCode"
-              value={nominee.pinCode}
-              onChange={handleInputChange}
-              fullWidth
-              error={!!errors.pinCode}
-              helperText={errors.pinCode}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Phone Number"
-              name="phoneNumber"
-              value={nominee.phoneNumber}
-              onChange={handleInputChange}
-              fullWidth
-              error={!!errors.phoneNumber}
-              helperText={errors.phoneNumber}
-            />
-          </Grid>
-        </Grid>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-          <Button variant="outlined" onClick={prevStep} sx={{ padding: '10px 20px' }}>
-            Previous
-          </Button>
-          <Button type="submit" variant="contained" color="primary" sx={{ padding: '10px 20px' }}>
-            Submit
-          </Button>
-        </Box>
-      </Box>
-      <Footer />
+    <Container 
+      component={motion.div} 
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.5 }}
+      maxWidth="md"
+    >
+      <StyledPaper elevation={3}>
+        <Typography 
+          variant="h4" 
+          gutterBottom 
+          align="center" 
+          component={motion.div}
+          whileHover={{ scale: 1.02 }}
+          sx={{ 
+            marginTop: '20px', 
+            fontWeight: 'bold',
+            color: 'primary.main' 
+          }}
+        >
+          <PersonAdd sx={{ mr: 2, verticalAlign: 'middle' }} />
+          EMPLOYEE NOMINATION DETAILS
+        </Typography>
+
+        <Formik
+          initialValues={initialValues}
+          validationSchema={validationSchema}
+          onSubmit={handleFinalSubmit}
+        >
+          {({ values, errors, touched, handleChange, handleBlur }) => (
+            <Form>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    name="name"
+                    label="Nominee Name"
+                    value={values.name}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.name && Boolean(errors.name)}
+                    helperText={touched.name && errors.name}
+                    InputProps={{
+                      startAdornment: <Badge sx={{ mr: 1, color: 'primary.main' }} />
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    name="relation"
+    label="Relation with Employee"
+    value={values.relation}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    error={touched.relation && Boolean(errors.relation)}
+    helperText={touched.relation && errors.relation}
+    InputProps={{
+      startAdornment: <PersonAdd sx={{ mr: 1, color: 'primary.main' }} />
+    }}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    name="typeOfNomination"
+    label="Type of Nomination"
+    value={values.typeOfNomination}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    error={touched.typeOfNomination && Boolean(errors.typeOfNomination)}
+    helperText={touched.typeOfNomination && errors.typeOfNomination}
+    InputProps={{
+      startAdornment: <Badge sx={{ mr: 1, color: 'primary.main' }} />
+    }}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    name="nominationPercentage"
+    label="Nomination Percentage (%)"
+    type="number"
+    value={values.nominationPercentage}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    error={touched.nominationPercentage && Boolean(errors.nominationPercentage)}
+    helperText={touched.nominationPercentage && errors.nominationPercentage}
+    InputProps={{
+      startAdornment: <Percent sx={{ mr: 1, color: 'primary.main' }} />,
+      inputProps: { min: 0, max: 100 }
+    }}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    name="nomineeAge"
+    label="Nominee Age"
+    type="number"
+    value={values.nomineeAge}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    error={touched.nomineeAge && Boolean(errors.nomineeAge)}
+    helperText={touched.nomineeAge && errors.nomineeAge}
+    InputProps={{
+      startAdornment: <CalendarToday sx={{ mr: 1, color: 'primary.main' }} />,
+      inputProps: { min: 0 }
+    }}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    name="block"
+    label="Block"
+    value={values.block}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    InputProps={{
+      startAdornment: <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
+    }}
+  />
+</Grid>
+
+<Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    name="presentAddress"
+                    label="Present Address"
+                    value={values.presentAddress}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.presentAddress && Boolean(errors.presentAddress)}
+                    helperText={touched.presentAddress && errors.presentAddress}
+                    InputProps={{
+                      startAdornment: <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
+                    }}
+                  />
+                </Grid>
+              
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    name="panchayatMandal"
+    label="Panchayat/Mandal"
+    value={values.panchayatMandal}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    InputProps={{
+      startAdornment: <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
+    }}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    name="district"
+    label="District"
+    value={values.district}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    error={touched.district && Boolean(errors.district)}
+    helperText={touched.district && errors.district}
+    InputProps={{
+      startAdornment: <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
+    }}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    name="state"
+    label="State"
+    value={values.state}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    error={touched.state && Boolean(errors.state)}
+    helperText={touched.state && errors.state}
+    InputProps={{
+      startAdornment: <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
+    }}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    name="pinCode"
+    label="Pin Code"
+    value={values.pinCode}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    error={touched.pinCode && Boolean(errors.pinCode)}
+    helperText={touched.pinCode && errors.pinCode}
+    InputProps={{
+      startAdornment: <Home sx={{ mr: 1, color: 'primary.main' }} />
+    }}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    name="phoneNumber"
+    label="Phone Number"
+    value={values.phoneNumber}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    error={touched.phoneNumber && Boolean(errors.phoneNumber)}
+    helperText={touched.phoneNumber && errors.phoneNumber}
+    InputProps={{
+      startAdornment: <Phone sx={{ mr: 1, color: 'primary.main' }} />
+    }}
+  />
+</Grid>
+
+              </Grid>
+
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                mt: 4 
+              }}>
+                <Tooltip title="Previous Step">
+                  <StyledButton
+                    variant="outlined"
+                    onClick={prevStep}
+                    startIcon={<ArrowBack />}
+                  >
+                    Previous
+                  </StyledButton>
+                </Tooltip>
+
+                <Tooltip title="Submit Registration">
+                  <StyledButton
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    endIcon={<Send />}
+                  >
+                    Submit
+                  </StyledButton>
+                </Tooltip>
+              </Box>
+            </Form>
+          )}
+        </Formik>
+      </StyledPaper>
     </Container>
   );
 };
