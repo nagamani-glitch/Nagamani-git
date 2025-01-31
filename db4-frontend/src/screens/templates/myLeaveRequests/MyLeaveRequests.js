@@ -32,11 +32,15 @@ const MyLeaveRequests = () => {
     confirmation: ''
   });
 
-  const [leaveData, setLeaveData] = useState([
-    { id: 1, type: 'Maladie', startDate: 'Nov. 6, 2024', endDate: 'Nov. 6, 2024', days: 1, status: 'Approved', comment: 'Urgent', confirmation: 'Confirmed' },
-    { id: 2, type: 'Maladie', startDate: 'Nov. 5, 2024', endDate: 'Nov. 6, 2024', days: 2, status: 'Rejected', comment: 'Incomplete', confirmation: 'Pending' },
-    { id: 3, type: 'Annual Leave', startDate: 'Nov. 4, 2024', endDate: 'Nov. 4, 2024', days: 1, status: 'Approved', comment: 'Vacation', confirmation: 'Confirmed' },
-  ]);
+  // Initialize leaveData with localStorage
+  const [leaveData, setLeaveData] = useState(() => {
+    const savedData = localStorage.getItem('leaveData');
+    return savedData ? JSON.parse(savedData) : [
+      { id: 1, type: 'Maladie', startDate: 'Nov. 6, 2024', endDate: 'Nov. 6, 2024', days: 1, status: 'Approved', comment: 'Urgent', confirmation: 'Confirmed' },
+      { id: 2, type: 'Maladie', startDate: 'Nov. 5, 2024', endDate: 'Nov. 6, 2024', days: 2, status: 'Rejected', comment: 'Incomplete', confirmation: 'Pending' },
+      { id: 3, type: 'Annual Leave', startDate: 'Nov. 4, 2024', endDate: 'Nov. 4, 2024', days: 1, status: 'Approved', comment: 'Vacation', confirmation: 'Confirmed' },
+    ];
+  });
 
   const handleSelectAll = (event) => {
     const isChecked = event.target.checked;
@@ -64,14 +68,18 @@ const MyLeaveRequests = () => {
   };
 
   const handleUpdate = (id) => {
-    setLeaveData(leaveData.map(leave => 
+    const updatedData = leaveData.map(leave => 
       leave.id === id ? { ...leave, ...editFormData } : leave
-    ));
+    );
+    setLeaveData(updatedData);
+    localStorage.setItem('leaveData', JSON.stringify(updatedData));
     setEditingId(null);
   };
 
   const handleDelete = (id) => {
-    setLeaveData(leaveData.filter(leave => leave.id !== id));
+    const updatedData = leaveData.filter(leave => leave.id !== id);
+    setLeaveData(updatedData);
+    localStorage.setItem('leaveData', JSON.stringify(updatedData));
   };
 
   const handleCreateClose = () => setIsCreateOpen(false);

@@ -29,7 +29,8 @@ const ResetPassword = () => {
                 borderRadius: '8px',
                 boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
                 background: '#f9f9f9',
-                mt: 8,
+                marginTop: '150px',
+                // mt: 8,
             }}
         >
             <Typography variant="h5" sx={{ textAlign: 'center', mb: 3 }}>

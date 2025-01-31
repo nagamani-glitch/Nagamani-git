@@ -90,8 +90,13 @@
   input[type="number"],
   select {
     width: 100%;
+<<<<<<< HEAD
     padding: 8px;
-    border: 1px solid gray;
+    border: none;
+=======
+    padding: 18px;
+    /* border: 1px solid gray; */
+>>>>>>> b30b69d1624bbc7fd5e2f6594afb4209ee37b898
     border-radius: 4px;
     font-size: 1rem;
     font-size: 14px;
@@ -268,7 +273,7 @@
     cursor: pointer;
   }
   
-  .create-ded-search-bar {
+  .search-create-deduction {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
