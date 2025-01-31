@@ -97,7 +97,7 @@ const DocumentRequestPage = () => {
     } catch (error) {
       console.error('Error deleting document:', error);
     }
-  };
+  }; 
 
   
   const handleSave = async (e) => {
@@ -166,7 +166,7 @@ const DocumentRequestPage = () => {
     <div className="document-request-page">
       <header className="header">
         <h2>Document Requests</h2>
-        <div className="search-bar">
+        <div className="document-request-search-bar">
           <input
             type="text"
             placeholder="Search documents..."

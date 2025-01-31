@@ -10,9 +10,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tabs,
   Menu,
-  Tab,
   Checkbox,
   Typography,
   Paper,
@@ -29,11 +27,10 @@ import {
   FormControlLabel,
   Select,
   MenuItem,
-  Badge as CommentIcon,
-  InputAdornment
+  InputAdornment,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
-// import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-
 import { FilterList, Search, GroupWork, Add, Edit, FileCopy, Delete } from '@mui/icons-material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
@@ -49,10 +46,10 @@ const employees = Array.from({ length: 20 }, (_, i) => ({
   description: 'Request for shift adjustment',
   comment: 'Needs urgent consideration',
 }));
-
 const ShiftRequests = () => {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const [tabValue, setTabValue] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedAllocations, setSelectedAllocations] = useState([]);
   const [groupByOpen, setGroupByOpen] = useState(false);
@@ -74,6 +71,15 @@ const ShiftRequests = () => {
     description: ''
   });
 
+  const groupByOptions = [
+    'Department',
+    'Shift Type',
+    'Status',
+    'Employee',
+    'Date',
+    'Location'
+  ];
+
   useEffect(() => {
     const loadShiftRequests = async () => {
       try {
@@ -85,7 +91,6 @@ const ShiftRequests = () => {
     };
     loadShiftRequests();
   }, []);
-
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -96,9 +101,7 @@ const ShiftRequests = () => {
 
   const handleFilterClick = () => setFilterOpen(true);
   const handleGroupByClick = () => setGroupByOpen(true);
-  const handleActionsClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const handleActionsClick = (event) => setAnchorEl(event.currentTarget);
 
   const handleSelectAll = () => {
     setSelectedAllocations(employees.map(emp => emp.id));
@@ -122,7 +125,6 @@ const ShiftRequests = () => {
       console.error('Error approving shift request:', error);
     }
   };
-
 
   const handleCreateShift = async (formData) => {
     try {
@@ -150,7 +152,6 @@ const ShiftRequests = () => {
     }
   };
 
-
   const handleEdit = (shift) => {
     setEditingShift(shift);
     setFormData({
@@ -176,8 +177,6 @@ const ShiftRequests = () => {
     }
   };
 
-
-
   const handleDelete = async (id) => {
     try {
       await deleteShiftRequest(id);
@@ -188,8 +187,6 @@ const ShiftRequests = () => {
       console.error('Error deleting shift request:', error);
     }
   };
-
-
 
   const handleSaveEdit = async () => {
     try {
@@ -205,6 +202,7 @@ const ShiftRequests = () => {
       console.error('Error updating shift request:', error);
     }
   };
+
   const handleCopy = (shift) => {
     const newShift = {
       ...shift,
@@ -213,96 +211,20 @@ const ShiftRequests = () => {
     };
     setShiftRequests([...shiftRequests, newShift]);
   };
-
-
-
-  const groupByOptions = [
-    'Department',
-    'Shift Type',
-    'Status',
-    'Employee',
-    'Date',
-    'Location'
-  ];
-
-  const allocatedShifts = [
-    {
-      id: 1,
-      employee: { name: 'John Smith', code: 'EMP001' },
-      allocatedEmployee: 'Sarah Johnson',
-      userAvailability: 'Available',
-      requestedShift: 'Morning Shift',
-      currentShift: 'Night Shift',
-      requestedDate: '2024-01-15',
-      requestedTill: '2024-01-20',
-      description: 'Temporary shift coverage needed',
-      hasComments: true
-    },
-    {
-      id: 2,
-      employee: { name: 'Michael Brown', code: 'EMP002' },
-      allocatedEmployee: 'David Wilson',
-      userAvailability: 'Partially Available',
-      requestedShift: 'Evening Shift',
-      currentShift: 'Morning Shift',
-      requestedDate: '2024-01-16',
-      requestedTill: '2024-01-22',
-      description: 'Emergency coverage request',
-      hasComments: true
-    },
-    {
-      id: 3,
-      employee: { name: 'Emma Davis', code: 'EMP003' },
-      allocatedEmployee: 'James Miller',
-      userAvailability: 'Available',
-      requestedShift: 'Night Shift',
-      currentShift: 'Evening Shift',
-      requestedDate: '2024-01-17',
-      requestedTill: '2024-01-25',
-      description: 'Shift swap request',
-      hasComments: false
-    },
-    {
-      id: 4,
-      employee: { name: 'Lisa Anderson', code: 'EMP004' },
-      allocatedEmployee: 'Robert Taylor',
-      userAvailability: 'Not Available',
-      requestedShift: 'Morning Shift',
-      currentShift: 'Evening Shift',
-      requestedDate: '2024-01-18',
-      requestedTill: '2024-01-23',
-      description: 'Training period coverage',
-      hasComments: true
-    },
-    {
-      id: 5,
-      employee: { name: 'Kevin White', code: 'EMP005' },
-      allocatedEmployee: 'Patricia Moore',
-      userAvailability: 'Available',
-      requestedShift: 'Evening Shift',
-      currentShift: 'Morning Shift',
-      requestedDate: '2024-01-19',
-      requestedTill: '2024-01-24',
-      description: 'Personal emergency coverage',
-      hasComments: true
-    }
-  ];
-
   return (
-    <Box>
-      <Box sx={{ padding: 4 }}>
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
-          Shift Requests
-        </Typography>
+    <Box sx={{ padding: isSmallScreen ? 2 : 4 }}>
+      <Typography variant="h5" fontWeight="bold" gutterBottom>
+        Shift Requests
+      </Typography>
 
-        {/* Top row with filter buttons */}
+      <Box sx={{ display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row', gap: 2, mb: 2 }}>
         <TextField
           placeholder="Search Employee"
           size="small"
           variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ width: 250 }}
+          sx={{ width: isSmallScreen ? '100%' : 250 }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -311,53 +233,49 @@ const ShiftRequests = () => {
             ),
           }}
         />
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button startIcon={<FilterList />} onClick={handleFilterClick} variant="outlined">Filter</Button>
-            <Button startIcon={<GroupWork />} variant="outlined" onClick={handleGroupByClick}>Group By</Button>
-            <Button variant="outlined" onClick={handleActionsClick}>Actions</Button>
-            <Button startIcon={<Add />} variant="contained" color="error" onClick={() => setCreateDialogOpen(true)}>Create</Button>
-          </Box>
-        </Box>
-
-        {/* Second row with selection buttons */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <Button
-            variant="outlined"
-            sx={{ color: 'green', borderColor: 'green' }}
-            onClick={handleSelectAll}
-          >
-            Select All Shifts
-          </Button>
-
-          {showSelectionButtons && (
-            <>
-              <Button
-                variant="outlined"
-                sx={{ color: 'grey.500', borderColor: 'grey.500' }}
-                onClick={handleUnselectAll}
-              >
-                Unselect All
-              </Button>
-
-              <Button
-                variant="outlined"
-                sx={{ color: 'blue', borderColor: 'blue' }}
-              >
-                Export Shifts
-              </Button>
-
-              <Button
-                variant="outlined"
-                sx={{ color: 'maroon', borderColor: 'maroon' }}
-              >
-                {selectedAllocations.length} Selected
-              </Button>
-            </>
-          )}
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Button startIcon={<FilterList />} onClick={handleFilterClick} variant="outlined">Filter</Button>
+          <Button startIcon={<GroupWork />} variant="outlined" onClick={handleGroupByClick}>Group By</Button>
+          <Button variant="outlined" onClick={handleActionsClick}>Actions</Button>
+          <Button startIcon={<Add />} variant="contained" color="error" onClick={() => setCreateDialogOpen(true)}>Create</Button>
         </Box>
       </Box>
 
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+        <Button
+          variant="outlined"
+          sx={{ color: 'green', borderColor: 'green' }}
+          onClick={handleSelectAll}
+        >
+          Select All Shifts
+        </Button>
+
+        {showSelectionButtons && (
+          <>
+            <Button
+              variant="outlined"
+              sx={{ color: 'grey.500', borderColor: 'grey.500' }}
+              onClick={handleUnselectAll}
+            >
+              Unselect All
+            </Button>
+
+            <Button
+              variant="outlined"
+              sx={{ color: 'blue', borderColor: 'blue' }}
+            >
+              Export Shifts
+            </Button>
+
+            <Button
+              variant="outlined"
+              sx={{ color: 'maroon', borderColor: 'maroon' }}
+            >
+              {selectedAllocations.length} Selected
+            </Button>
+          </>
+        )}
+      </Box>
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -368,7 +286,7 @@ const ShiftRequests = () => {
         <MenuItem onClick={() => setAnchorEl(null)}>Reject Requests</MenuItem>
         <MenuItem onClick={() => setAnchorEl(null)}>Delete</MenuItem>
       </Menu>
-      {/* Approval Status Indicators */}
+
       <Box sx={{ display: 'flex', gap: 2, my: 2 }}>
         <Button
           sx={{ color: 'green' }}
@@ -383,146 +301,57 @@ const ShiftRequests = () => {
           ● Rejected
         </Button>
       </Box>
-      {/* Tabs */}
-      <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} textColor="primary" indicatorColor="primary">
-        <Tab label="Shift Requests" />
-        <Tab label="Allocated Shift Requests" />
-      </Tabs>
+
       <Divider sx={{ mb: 2 }} />
 
-      {/* Table */}
-      {tabValue === 0 ? (
-        <TableContainer component={Paper} sx={{ maxHeight: 400, overflowY: 'auto' }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      if (checked) {
-                        setSelectedAllocations(employees.map(emp => emp.id));
-                      } else {
-                        setSelectedAllocations([]);
-                      }
-                    }}
-                    checked={selectedAllocations.length === employees.length}
-                  />
-                </TableCell>
-                <TableCell>Employee</TableCell>
-                <TableCell>Requested Shift Type</TableCell>
-                <TableCell>Previous/Current Shift Type</TableCell>
-                <TableCell>Requested Date</TableCell>
-                <TableCell>Requested Till</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Comment</TableCell>
-                <TableCell>Confirmation</TableCell>
-                <TableCell>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {shiftRequests
-                .filter(emp => {
-                  // Add null checks and access the correct property
-                  const employeeName = emp?.employee?.name || emp?.name || '';
-                  return employeeName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-                    (filterStatus === 'all' || emp.status === filterStatus);
-                })
-                .map((emp) => (
-                  <TableRow key={emp.id}>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={selectedAllocations.includes(emp.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedAllocations([...selectedAllocations, emp.id]);
-                          } else {
-                            setSelectedAllocations(selectedAllocations.filter(id => id !== emp.id));
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Box display="flex" alignItems="center">
-                        <Box
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: '50%',
-                            bgcolor: emp.id % 2 === 0 ? 'primary.main' : 'secondary.main',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mr: 1,
-                          }}
-                        >
-                          {(emp?.employee?.name || emp?.name || 'U')[0]}
-                        </Box>
-                        ({emp?.employee?.code || emp?.employeeCode || 'N/A'})
-                      </Box>
-                    </TableCell>
-                    <TableCell>{emp.requestedShift}</TableCell>
-                    <TableCell>{emp.currentShift}</TableCell>
-                    <TableCell>{emp.requestedDate}</TableCell>
-                    <TableCell>{emp.requestedTill}</TableCell>
-                    <TableCell sx={{ color: emp.status === 'Approved' ? 'green' : 'red' }}>
-                      {emp.status}
-                    </TableCell>
-                    <TableCell>{emp.description}</TableCell>
-                    <TableCell>{emp.comment}</TableCell>
-                    <TableCell>
-                      <IconButton color="success" onClick={() => handleApprove(emp._id)}>
-                        ✔️
-                      </IconButton>
-                      <IconButton color="error" onClick={() => handleReject(emp._id)}>
-                        ✖️
-                      </IconButton>
-                    </TableCell>
-                    <TableCell>
-                      <IconButton color="primary" onClick={() => handleEdit(emp)}>
-                        <Edit fontSize="small" />
-                      </IconButton>
-                      <IconButton color="secondary" onClick={() => handleCopy(emp)}>
-                        <FileCopy fontSize="small" />
-                      </IconButton>
-                      <IconButton color="error" onClick={() => handleDelete(emp._id)}>
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-      ) : (
-        <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell padding="checkbox" sx={{ position: 'sticky', left: 0, backgroundColor: 'white', zIndex: 3 }}>
-                  <Checkbox />
-                </TableCell>
-                <TableCell>Employee</TableCell>
-                <TableCell>Allocated Employee</TableCell>
-                <TableCell>User Availability</TableCell>
-                <TableCell>Requested Shift</TableCell>
-                <TableCell>Previous/Current Shift</TableCell>
-                <TableCell>Requested Date</TableCell>
-                <TableCell>Requested Till</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Comment</TableCell>
-                <TableCell>Actions</TableCell>
-                <TableCell sx={{ position: 'sticky', right: 0, backgroundColor: 'white', zIndex: 3 }}>Confirmation</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {allocatedShifts.map((shift) => (
-                <TableRow key={shift.id}>
-                  <TableCell padding="checkbox" sx={{ position: 'sticky', left: 0, backgroundColor: 'white', zIndex: 3 }}>
-                    <Checkbox />
+      <TableContainer component={Paper} sx={{ maxHeight: 400, overflowY: 'auto' }}>
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <TableCell padding="checkbox">
+                <Checkbox
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedAllocations(employees.map(emp => emp.id));
+                    } else {
+                      setSelectedAllocations([]);
+                    }
+                  }}
+                  checked={selectedAllocations.length === employees.length}
+                />
+              </TableCell>
+              <TableCell>Employee</TableCell>
+              <TableCell>Requested Shift Type</TableCell>
+              <TableCell>Previous/Current Shift Type</TableCell>
+              <TableCell>Requested Date</TableCell>
+              <TableCell>Requested Till</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Comment</TableCell>
+              <TableCell>Confirmation</TableCell>
+              <TableCell>Action</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {shiftRequests
+              .filter(emp => {
+                const employeeName = emp?.employee?.name || emp?.name || '';
+                return employeeName.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                  (filterStatus === 'all' || emp.status === filterStatus);
+              })
+              .map((emp) => (
+                <TableRow key={emp.id}>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={selectedAllocations.includes(emp.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedAllocations([...selectedAllocations, emp.id]);
+                        } else {
+                          setSelectedAllocations(selectedAllocations.filter(id => id !== emp.id));
+                        }
+                      }}
+                    />
                   </TableCell>
                   <TableCell>
                     <Box display="flex" alignItems="center">
@@ -531,7 +360,7 @@ const ShiftRequests = () => {
                           width: 32,
                           height: 32,
                           borderRadius: '50%',
-                          bgcolor: 'primary.main',
+                          bgcolor: emp.id % 2 === 0 ? 'primary.main' : 'secondary.main',
                           color: 'white',
                           display: 'flex',
                           alignItems: 'center',
@@ -539,39 +368,44 @@ const ShiftRequests = () => {
                           mr: 1,
                         }}
                       >
-                        {shift.employee.name[0]}
+                        {(emp?.employee?.name || emp?.name || 'U')[0]}
                       </Box>
-                      {shift.employee.name} ({shift.employee.code})
+                      ({emp?.employee?.code || emp?.employeeCode || 'N/A'})
                     </Box>
                   </TableCell>
-                  <TableCell>{shift.allocatedEmployee}</TableCell>
-                  <TableCell>{shift.userAvailability}</TableCell>
-                  <TableCell>{shift.requestedShift}</TableCell>
-                  <TableCell>{shift.currentShift}</TableCell>
-                  <TableCell>{shift.requestedDate}</TableCell>
-                  <TableCell>{shift.requestedTill}</TableCell>
-                  <TableCell>{shift.description}</TableCell>
+                  <TableCell>{emp.requestedShift}</TableCell>
+                  <TableCell>{emp.currentShift}</TableCell>
+                  <TableCell>{emp.requestedDate}</TableCell>
+                  <TableCell>{emp.requestedTill}</TableCell>
+                  <TableCell sx={{ color: emp.status === 'Approved' ? 'green' : 'red' }}>
+                    {emp.status}
+                  </TableCell>
+                  <TableCell>{emp.description}</TableCell>
+                  <TableCell>{emp.comment}</TableCell>
                   <TableCell>
-                    {shift.hasComments && <CommentIcon color="primary" />}
+                    <IconButton color="success" onClick={() => handleApprove(emp._id)}>
+                      ✔️
+                    </IconButton>
+                    <IconButton color="error" onClick={() => handleReject(emp._id)}>
+                      ✖️
+                    </IconButton>
                   </TableCell>
                   <TableCell>
-                    <IconButton color="primary">
+                    <IconButton color="primary" onClick={() => handleEdit(emp)}>
                       <Edit fontSize="small" />
                     </IconButton>
-                    <IconButton color="error">
+                    <IconButton color="secondary" onClick={() => handleCopy(emp)}>
+                      <FileCopy fontSize="small" />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => handleDelete(emp._id)}>
                       <Delete fontSize="small" />
                     </IconButton>
                   </TableCell>
-                  <TableCell sx={{ position: 'sticky', right: 0, backgroundColor: 'white', zIndex: 3 }}>
-                    <IconButton color="success">✔️</IconButton>
-                    <IconButton color="error">✖️</IconButton>
-                  </TableCell>
                 </TableRow>
               ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <Dialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
@@ -655,11 +489,7 @@ const ShiftRequests = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => {
-              // Add save logic here
-              handleCreateShift(formData)
-              setCreateDialogOpen(false);
-            }}
+            onClick={() => handleCreateShift(formData)}
           >
             Save
           </Button>
@@ -747,15 +577,13 @@ const ShiftRequests = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => {
-              // Add your grouping logic here
-              setGroupByOpen(false);
-            }}
+            onClick={() => setGroupByOpen(false)}
           >
             Apply
           </Button>
         </DialogActions>
       </Dialog>
+
       <Dialog
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
@@ -834,7 +662,6 @@ const ShiftRequests = () => {
             />
           </Box>
         </DialogContent>
-
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" color="primary" onClick={handleSaveEdit}>
@@ -843,7 +670,8 @@ const ShiftRequests = () => {
         </DialogActions>
       </Dialog>
     </Box>
-  )
-}
+  );
+};
 
 export default ShiftRequests;
+

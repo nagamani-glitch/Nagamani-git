@@ -184,7 +184,7 @@ const Allowances = () => {
             placeholder="Search"
             value={searchTerm}
             onChange={handleSearch}
-            className="allowance-search-input"
+            className="allowance-search"
           />
           <button 
             className={`view-toggle ${view === "list" ? "active" : ""}`}
@@ -208,7 +208,7 @@ const Allowances = () => {
             className="create-btn" 
             onClick={() => setIsCreateModalOpen(true)}
           >
-            <FaPlus /> Create
+             Create
           </button>
         </div>
       </header>
@@ -350,13 +350,13 @@ const Allowances = () => {
                         className="all-list-edit-btn"
                         onClick={() => handleEdit(allowance._id)}
                       >
-                        <FaEdit />
+                        <FaEdit size={20}/>
                       </button>
                       <button
                         className="all-list-delete-btn"
                         onClick={() => handleDelete(allowance._id)}
                       >
-                        <FaTrash />
+                        <FaTrash size={18}/>
                       </button>
                     </td>
                   </tr>

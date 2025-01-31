@@ -25,9 +25,9 @@
   margin-bottom: 16px;
 }
 
-.allowance-search-input {
+.allowance-search {
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #dc0f0f;
   border-radius: 4px;
   flex: 1;
   max-width: 300px;
