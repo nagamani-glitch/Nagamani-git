@@ -50,6 +50,8 @@ import organizationRoutes from './routes/organizationRoutes.js';
 import disciplinaryActionRoutes from './routes/disciplinaryActions.js'; 
 import timeOffRequestRoutes from './routes/timeOffRequests.js'; 
 import rotatingShiftRoutes from './routes/rotatingShiftRoutes.js';
+import rotatingWorktypeRoutes from './routes/rotatingWorktypeRoutes.js';
+
 
 dotenv.config()
 connectDB()
@@ -133,6 +135,7 @@ app.use('/api', organizationRoutes);
 app.use('/api/disciplinary-actions', disciplinaryActionRoutes);
 app.use('/api/time-off-requests', timeOffRequestRoutes);
 app.use('/api/rotating-shift', rotatingShiftRoutes);
+app.use('/api/rotating-worktype', rotatingWorktypeRoutes);
 
 const PORT = process.env.PORT || 5000;
 
