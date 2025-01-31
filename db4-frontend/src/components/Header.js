@@ -108,11 +108,9 @@ const Header = () => {
           </LinkContainer>
 
           {/* Path Indicator */}
-<<<<<<< HEAD
           {/* //<div className="path-indicator">{getPathIndicator()}</div> */}
-=======
           {/* <div className="path-indicator">{getPathIndicator()}</div> */}
->>>>>>> 59020e94b66359190b6c9ce1c66457d4dae37027
+
 
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
