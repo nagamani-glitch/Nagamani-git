@@ -97,9 +97,6 @@ const LeaveRequests = () => {
 
 
 
-
-
-
   const calculateDays = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -140,7 +137,11 @@ const LeaveRequests = () => {
 
   const handleConfirmationChange = (id, status) => {
     const updatedData = leaveData.map(leave =>
-      leave.id === id ? { ...leave, confirmation: status } : leave
+      leave.id === id ? { 
+        ...leave, 
+        confirmation: status,
+        status: status // This will update the status column to match confirmation
+      } : leave
     );
     setLeaveData(updatedData);
     localStorage.setItem('leaveRequests', JSON.stringify(updatedData));
