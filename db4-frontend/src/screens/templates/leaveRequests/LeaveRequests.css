@@ -1,39 +1,64 @@
+/* Add container styles */
+.App {
+  padding: 20px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Header section styling */
+.headers {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Table container responsiveness */
 .leave-table {
-    margin-top: 20px;
-    overflow-y: auto;
-    max-height: 300px; /* Adjust height as needed */
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-  }
-  
-  .headers{
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    
+  width: 100%;
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 20px;
+}
+
+.leave-table table {
+  min-width: 1000px; /* Minimum width to prevent squishing */
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Keep your existing styles and add these responsive adjustments */
+@media screen and (max-width: 768px) {
+  .headers {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .leave-table table {
+  .header-actions {
+    justify-content: space-between;
+  }
+
+  .filter-section {
+    padding: 15px;
+  }
+
+  .filter-controls {
+    flex-direction: column;
+  }
+
+  .filter-select {
     width: 100%;
-    border-collapse: collapse;
   }
-  
-  .leave-table th,
-  .leave-table td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #f0f0f0;
-  }
-  
-  .leave-table th {
-    background-color: #f5f5f5;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
-  
-  .leave-table tbody tr:hover {
-    background-color: #f9f9f9;
-  }
-  
+}
+
+/* Rest of your existing styles remain the same */

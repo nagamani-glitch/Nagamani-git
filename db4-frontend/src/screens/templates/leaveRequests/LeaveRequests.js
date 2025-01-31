@@ -7,7 +7,9 @@ import {
   Add, Delete, FilterList, Search, Edit, Save, CheckCircle, Cancel,
   AddComment, ChatBubbleOutline
 } from '@mui/icons-material';
-import './LeaveRequests.css'
+import './LeaveRequests.css';
+
+
 
 const LeaveRequests = () => {
   // Initialize leaveData from localStorage
@@ -137,8 +139,8 @@ const LeaveRequests = () => {
 
   const handleConfirmationChange = (id, status) => {
     const updatedData = leaveData.map(leave =>
-      leave.id === id ? { 
-        ...leave, 
+      leave.id === id ? {
+        ...leave,
         confirmation: status,
         status: status // This will update the status column to match confirmation
       } : leave
@@ -364,6 +366,55 @@ const LeaveRequests = () => {
       </div>
 
       {/* Comment Dialog */}
+
+
+      <Dialog open={isFilterOpen} onClose={() => setFilterOpen(false)}>
+        <DialogTitle>Filter Leave Requests</DialogTitle>
+        <DialogContent>
+          <Select
+            name="type"
+            value={filters.type}
+            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+            fullWidth
+            margin="dense"
+            label="Leave Type"
+          >
+            <MenuItem value="">All Types</MenuItem>
+            <MenuItem value="Annual Leave">Annual Leave</MenuItem>
+            <MenuItem value="Sick Leave">Sick Leave</MenuItem>
+            <MenuItem value="Maladie">Maladie</MenuItem>
+          </Select>
+
+          <Select
+            name="status"
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+            fullWidth
+            margin="dense"
+            label="Status"
+          >
+            <MenuItem value="">All Status</MenuItem>
+            <MenuItem value="Pending">Pending</MenuItem>
+            <MenuItem value="Approved">Approved</MenuItem>
+            <MenuItem value="Rejected">Rejected</MenuItem>
+          </Select>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setFilters({
+              type: '',
+              status: '',
+              dateRange: { start: '', end: '' }
+            });
+          }} color="secondary">
+            Clear Filters
+          </Button>
+          <Button onClick={() => setFilterOpen(false)} color="primary">
+            Apply
+          </Button>
+        </DialogActions>
+      </Dialog>
+
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)}>
