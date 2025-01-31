@@ -66,3 +66,32 @@ export const rejectWorkTypeRequest = async (req, res) => {
     res.status(500).json({ message: 'Error rejecting work type request', error });
   }
 };
+
+// Add these new functions to the existing controller
+
+export const bulkApproveRequests = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    await WorkTypeRequest.updateMany(
+      { _id: { $in: ids } },
+      { status: 'Approved' }
+    );
+    res.status(200).json({ message: 'Requests approved successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error bulk approving requests', error });
+  }
+};
+
+export const bulkRejectRequests = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    await WorkTypeRequest.updateMany(
+      { _id: { $in: ids } },
+      { status: 'Rejected' }
+    );
+    res.status(200).json({ message: 'Requests rejected successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error bulk rejecting requests', error });
+  }
+};
+

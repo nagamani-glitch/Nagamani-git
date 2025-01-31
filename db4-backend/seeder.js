@@ -1,42 +1,42 @@
-import connectDB from "./config/db.js";
-import mongoose from "mongoose";
-import colors from 'colors'
-import dotenv from 'dotenv'
-import Profile from "./models/profileModels.js";
-import profiles from "./data/profiles.js";
+// import connectDB from "./config/db.js";
+// import mongoose from "mongoose";
+// import colors from 'colors'
+// import dotenv from 'dotenv'
+// import Profile from "./models/profileModels.js";
+// import profiles from "./data/profiles.js";
 
-dotenv.config()
-connectDB()
+// dotenv.config()
+// connectDB()
 
-const importData=async()=>{
-    try{
-        Profile.deleteMany()
-        const createdProfiles = await Profile.insertMany(profiles)
-        console.log('Data Imported'.green.inverse)
-        process.exit(0)
-    }catch (error)
-    {
-        console.log(`${error}`.red.inverse)
-        process.exit(1)
-    }
-}
+// const importData=async()=>{
+//     try{
+//         Profile.deleteMany()
+//         const createdProfiles = await Profile.insertMany(profiles)
+//         console.log('Data Imported'.green.inverse)
+//         process.exit(0)
+//     }catch (error)
+//     {
+//         console.log(`${error}`.red.inverse)
+//         process.exit(1)
+//     }
+// }
 
-const destroyData= async()=>{
-        try{
-            await Profile.deleteMany()
-            console.log('Data Destroyed!'.red.inverse)
-            process.exit(1)
-        }catch(error){
-            console.log(`${error}`.red.inverse)
-            process.exit(1)
-        }
-}
+// const destroyData= async()=>{
+//         try{
+//             await Profile.deleteMany()
+//             console.log('Data Destroyed!'.red.inverse)
+//             process.exit(1)
+//         }catch(error){
+//             console.log(`${error}`.red.inverse)
+//             process.exit(1)
+//         }
+// }
 
-if(process.argv[2]==="-d"){
-    destroyData()
-}else{
-    importData()
-}
+// if(process.argv[2]==="-d"){
+//     destroyData()
+// }else{
+//     importData()
+// }
 
 
 // import mongoose from 'mongoose';
