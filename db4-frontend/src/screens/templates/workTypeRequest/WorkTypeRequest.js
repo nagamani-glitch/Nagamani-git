@@ -21,19 +21,14 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Accordion,
   Switch,
-  AccordionSummary,
-  AccordionDetails,
   FormControlLabel,
-  Select,
   MenuItem,
-  Badge as CommentIcon,
   InputAdornment,
 } from "@mui/material";
 
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
 
 import {
   fetchWorkTypeRequests,
@@ -42,8 +37,6 @@ import {
   deleteWorkTypeRequest,
   approveWorkTypeRequest,
   rejectWorkTypeRequest,
-  bulkApproveRequests,
-  bulkRejectRequests,
 } from "../api/workTypeRequestApi";
 
 const employees = Array.from({ length: 20 }, (_, i) => ({
@@ -119,19 +112,19 @@ const WorkTypeRequest = () => {
     }
   };
 
-  const handleBulkDelete = async () => {
-    try {
-      const promises = selectedAllocations.map((id) =>
-        deleteWorkTypeRequest(id)
-      );
-      await Promise.all(promises);
-      await loadWorkTypeRequests();
-      setSelectedAllocations([]);
-      setShowSelectionButtons(false);
-    } catch (error) {
-      console.error("Error bulk deleting requests:", error);
-    }
-  };
+  // const handleBulkDelete = async () => {
+  //   try {
+  //     const promises = selectedAllocations.map((id) =>
+  //       deleteWorkTypeRequest(id)
+  //     );
+  //     await Promise.all(promises);
+  //     await loadWorkTypeRequests();
+  //     setSelectedAllocations([]);
+  //     setShowSelectionButtons(false);
+  //   } catch (error) {
+  //     console.error("Error bulk deleting requests:", error);
+  //   }
+  // };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
