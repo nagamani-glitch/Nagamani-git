@@ -105,7 +105,7 @@ app.use('/api/restrictLeaves', restrictLeaveRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/faqCategories', faqCategoryRoutes);
 app.use('/api/hired-employees', hiredEmployeeRoutes);
-app.use('/api/shift-requests', shiftRequestRoutes);
+app.use('/api/shift-request', shiftRequestRoutes);
 app.use('/api/work-type-requests', workTypeRequestRoutes);
 
 

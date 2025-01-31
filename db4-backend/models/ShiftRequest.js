@@ -1,62 +1,47 @@
-// import mongoose  from 'mongoose';
-
-// const shiftRequestSchema = new mongoose.Schema({
-//   employee: {type: String, required: true },
-//   code: { type: String, required: true },
-//   requestedShift: { 
-//     type: String, 
-//     required: true,
-//     enum: ['Morning Shift', 'Evening Shift', 'Night Shift']
-//   },
-//   currentShift: { 
-//     type: String, 
-//     default: 'Regular Shift'
-//   },
-//   requestedDate: { type: Date, required: true },
-//   requestedTill: { type: Date, required: true },
-//   status: {
-//     type: String,
-//     enum: ['Pending', 'Approved', 'Rejected'],
-//     default: 'Pending'
-//   },
-//   description: { type: String },
-//   comment: { type: String, default: '' },
-//   isPermanentRequest: { type: Boolean, default: false },
-//   createdAt: { type: Date, default: Date.now }
-// });
-
-// const ShiftRequest = mongoose.model('ShiftRequest', shiftRequestSchema);
-// export default ShiftRequest;
-
 import mongoose from 'mongoose';
 
 const shiftRequestSchema = new mongoose.Schema({
-  employee: {
-    name: { type: String, required: true },
-    code: { type: String }
+  name: {
+    type: String,
+    required: true
   },
-  requestedShift: { 
-    type: String, 
+  employeeCode: {
+    type: String,
+    required: true
+  },
+  requestedShift: {
+    type: String,
     required: true,
     enum: ['Morning Shift', 'Evening Shift', 'Night Shift']
   },
-  currentShift: { 
-    type: String, 
+  currentShift: {
+    type: String,
     default: 'Regular Shift'
   },
-  requestedDate: { type: Date, required: true },
-  requestedTill: { type: Date, required: true },
+  requestedDate: {
+    type: Date,
+    required: true
+  },
+  requestedTill: {
+    type: Date,
+    required: true
+  },
   status: {
     type: String,
     enum: ['Pending', 'Approved', 'Rejected'],
     default: 'Pending'
   },
-  description: { type: String },
-  comment: { type: String, default: '' },
-  isPermanentRequest: { type: Boolean, default: false }
+  description: String,
+  isPermanentRequest: {
+    type: Boolean,
+    default: false
+  },
+  isAllocated: {
+    type: Boolean,
+    default: false
+  }
 }, {
   timestamps: true
 });
 
-const ShiftRequest = mongoose.model('ShiftRequest', shiftRequestSchema);
-export default ShiftRequest;
+export default mongoose.model('ShiftRequest', shiftRequestSchema);

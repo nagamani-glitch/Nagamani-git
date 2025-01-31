@@ -40,17 +40,6 @@ const Interview = () => {
     fetchInterviews();
   }, [statusFilter]);
 
-  // const fetchInterviews = () => {
-  //   const url =
-  //     statusFilter === "All"
-  //       ? "http://localhost:5000/api/interviews"
-  //       : `http://localhost:5000/api/interviews?status=${statusFilter}`;
-
-  //   axios
-  //     .get(url)
-  //     .then((response) => setData(response.data))
-  //     .catch((error) => console.error("Error fetching interviews:", error));
-  // };
   const fetchInterviews = () => {
     const url = "http://localhost:5000/api/interviews";
     axios
@@ -140,6 +129,7 @@ const Interview = () => {
       }}
     >
       <Typography
+      
         variant="h4"
         sx={{
           fontWeight: 600,

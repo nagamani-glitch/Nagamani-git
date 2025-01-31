@@ -1,157 +1,60 @@
-// import ShiftRequest from '../models/ShiftRequest.js';
-
-// const getAllShiftRequests = async (req, res) => {
-//   try {
-//     const shiftRequests = await ShiftRequest.find();
-//     res.status(200).json(shiftRequests);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error fetching shift requests', error });
-//   }
-// };
-
-// const createShiftRequest = async (req, res) => {
-//   try {
-//     const { employee, requestedShift, requestedDate, requestedTill, description, isPermanentRequest } = req.body;
-    
-//     const newShiftRequest = new ShiftRequest({
-//       employee: {
-//         name: employee,
-//         code: `EMP${Math.floor(1000 + Math.random() * 9000)}` // Generate employee code
-//       },
-//       requestedShift,
-//       requestedDate,
-//       requestedTill,
-//       description,
-//       isPermanentRequest
-//     });
-
-//     const savedRequest = await newShiftRequest.save();
-//     res.status(201).json(savedRequest);
-//   } catch (error) {
-//     console.error('Create error:', error);
-//     res.status(500).json({ message: 'Error creating shift request', error: error.message });
-//   }
-// };
-
-
-// const updateShiftRequest = async (req, res) => {
-//   try {
-//     const updatedRequest = await ShiftRequest.findByIdAndUpdate(
-//       req.params.id,
-//       req.body,
-//       { new: true }
-//     );
-//     res.status(200).json(updatedRequest);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error updating shift request', error });
-//   }
-// };
-
-// const deleteShiftRequest = async (req, res) => {
-//   try {
-//     await ShiftRequest.findByIdAndDelete(req.params.id);
-//     res.status(200).json({ message: 'Shift request deleted successfully' });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error deleting shift request', error });
-//   }
-// };
-
-// const approveShiftRequest = async (req, res) => {
-//   try {
-//     const request = await ShiftRequest.findByIdAndUpdate(
-//       req.params.id,
-//       { status: 'Approved' },
-//       { new: true }
-//     );
-//     res.status(200).json(request);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error approving shift request', error });
-//   }
-// };
-
-// const rejectShiftRequest = async (req, res) => {
-//   try {
-//     const request = await ShiftRequest.findByIdAndUpdate(
-//       req.params.id,
-//       { status: 'Rejected' },
-//       { new: true }
-//     );
-//     res.status(200).json(request);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error rejecting shift request', error });
-//   }
-// };
-
-// export {
-//   getAllShiftRequests,
-//   createShiftRequest,
-//   updateShiftRequest,
-//   deleteShiftRequest,
-//   approveShiftRequest,
-//   rejectShiftRequest,
-// };
 import ShiftRequest from '../models/ShiftRequest.js';
 
-const getAllShiftRequests = async (req, res) => {
+export const getAllShiftRequests = async (req, res) => {
   try {
-    const shiftRequests = await ShiftRequest.find().sort('-createdAt');
-    res.status(200).json(shiftRequests);
+    const { isAllocated } = req.query;
+    const shifts = await ShiftRequest.find({ 
+      isAllocated: isAllocated === 'true' 
+    }).sort('-createdAt');
+    res.status(200).json(shifts);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching shift requests', error });
+    res.status(500).json({ message: error.message });
   }
 };
 
-const createShiftRequest = async (req, res) => {
+export const createShiftRequest = async (req, res) => {
   try {
     const newShiftRequest = new ShiftRequest({
-      employee: {
-        name: req.body.employee,
-        code: `EMP${Math.floor(1000 + Math.random() * 9000)}`
-      },
+      name: req.body.name,
+      employeeCode: req.body.employeeCode,
       requestedShift: req.body.requestedShift,
-      currentShift: 'Regular Shift',
+      currentShift: req.body.currentShift,
       requestedDate: req.body.requestedDate,
       requestedTill: req.body.requestedTill,
       description: req.body.description,
-      isPermanentRequest: req.body.isPermanentRequest
+      isPermanentRequest: req.body.isPermanentRequest,
+      isAllocated: req.body.isAllocated
     });
     const savedRequest = await newShiftRequest.save();
     res.status(201).json(savedRequest);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating shift request', error: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
-const updateShiftRequest = async (req, res) => {
+export const updateShiftRequest = async (req, res) => {
   try {
     const updatedRequest = await ShiftRequest.findByIdAndUpdate(
       req.params.id,
-      {
-        'employee.name': req.body.employee,
-        requestedShift: req.body.requestedShift,
-        requestedDate: req.body.requestedDate,
-        requestedTill: req.body.requestedTill,
-        description: req.body.description,
-        isPermanentRequest: req.body.isPermanentRequest
-      },
+      req.body,
       { new: true }
     );
     res.status(200).json(updatedRequest);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating shift request', error });
+    res.status(400).json({ message: error.message });
   }
 };
 
-const deleteShiftRequest = async (req, res) => {
+export const deleteShiftRequest = async (req, res) => {
   try {
     await ShiftRequest.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Shift request deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting shift request', error });
+    res.status(400).json({ message: error.message });
   }
 };
 
-const approveShiftRequest = async (req, res) => {
+export const approveShiftRequest = async (req, res) => {
   try {
     const request = await ShiftRequest.findByIdAndUpdate(
       req.params.id,
@@ -160,11 +63,11 @@ const approveShiftRequest = async (req, res) => {
     );
     res.status(200).json(request);
   } catch (error) {
-    res.status(500).json({ message: 'Error approving shift request', error });
+    res.status(400).json({ message: error.message });
   }
 };
 
-const rejectShiftRequest = async (req, res) => {
+export const rejectShiftRequest = async (req, res) => {
   try {
     const request = await ShiftRequest.findByIdAndUpdate(
       req.params.id,
@@ -173,15 +76,32 @@ const rejectShiftRequest = async (req, res) => {
     );
     res.status(200).json(request);
   } catch (error) {
-    res.status(500).json({ message: 'Error rejecting shift request', error });
+    res.status(400).json({ message: error.message });
   }
 };
 
-export {
-  getAllShiftRequests,
-  createShiftRequest,
-  updateShiftRequest,
-  deleteShiftRequest,
-  approveShiftRequest,
-  rejectShiftRequest
+export const bulkApproveRequests = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    await ShiftRequest.updateMany(
+      { _id: { $in: ids } },
+      { status: 'Approved' }
+    );
+    res.status(200).json({ message: 'Shifts approved successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const bulkRejectRequests = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    await ShiftRequest.updateMany(
+      { _id: { $in: ids } },
+      { status: 'Rejected' }
+    );
+    res.status(200).json({ message: 'Shifts rejected successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 };
