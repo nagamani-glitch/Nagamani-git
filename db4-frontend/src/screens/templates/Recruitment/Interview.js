@@ -129,13 +129,14 @@ const Interview = () => {
       }}
     >
       <Typography
-      
+
         variant="h4"
         sx={{
           fontWeight: 600,
           color: "#1a237e",
           marginBottom: 4,
           borderBottom: "2px solid #1a237e",
+
           paddingBottom: 2,
         }}
       >
@@ -318,7 +319,7 @@ const Interview = () => {
             value={candidate}
             onChange={(e) => setCandidate(e.target.value)}
             fullWidth
-            sx={{ marginBottom: 2, marginTop: 1 }}
+            sx={{ marginBottom: 2, marginTop: 2.5 }}
           />
           <TextField
             label="Interviewer"
