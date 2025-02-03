@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import MainScreen from './screens/mainScreen/MainScreen';
+
 // import AuthScreen from './screens/authScreens/AuthScreen';
 import LoginPage from './screens/authScreens/loginScreen/LoginPage';
 import RegisterPage from './screens/authScreens/registerScreen/RegisterPage';
@@ -73,8 +74,12 @@ function App() {
               <Route path='/Anniversaries' element={<Anniversaries />} />
               <Route path='/Personal Information' element={<RegisterScreen />} />
               <Route path="/faq/:categoryId" element={<FaqPage />} />
+
+              <Route path="/mainscreen" element={<MainScreen />} />
+
             </Route>
             <Route path='/hr' element={<Dashboards />} />
+
           </Routes>
         </Container>
         </SidebarProvider>

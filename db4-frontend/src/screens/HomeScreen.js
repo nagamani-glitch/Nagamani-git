@@ -25,7 +25,7 @@ const Dashboard = () => {
 
   return (
     <div>
-    <h1  style={{textAlign:"center", marginTop:"70px"}}>Home</h1>
+    {/* <h1  style={{textAlign:"center", marginTop:"70px"}}>Home</h1> */}
     <Container className="dashboard">
       <Row className="justify-content-center">
         {dashboardData.map((item, index) => (
