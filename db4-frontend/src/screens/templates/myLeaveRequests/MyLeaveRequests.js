@@ -1,268 +1,646 @@
-import React, { useState } from 'react';
-import { Button, Card, Checkbox, IconButton, TextField, Typography, Tooltip } from '@mui/material';
-import { Add, Delete, FilterList, Search, Edit, Save } from '@mui/icons-material';
-import './MyLeaveRequests.css';
+import React, { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+  MenuItem,
+  InputAdornment,
+  Alert,
+  Snackbar,
+  FormControlLabel,
+  Switch,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Search as SearchIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
+import { format } from 'date-fns';
+
+const API_URL = 'http://localhost:5000/api/my-leave-requests';
+
 
 const leaveTypes = [
-  { type: 'Maladie', color: 'blue', availableDays: 10, carryForward: 2, totalDays: 12, taken: 3 },
-  { type: 'Annual Leave', color: 'orange', availableDays: 15, carryForward: 5, totalDays: 20, taken: 10 },
-  { type: 'Leave Without Pay', color: 'red', availableDays: 0, carryForward: 0, totalDays: 0, taken: 0 },
-  { type: 'Company Paid Sickness', color: 'green', availableDays: 7, carryForward: 0, totalDays: 7, taken: 1 },
-  { type: 'Paternity Leave', color: 'purple', availableDays: 5, carryForward: 0, totalDays: 5, taken: 0 },
-  { type: 'Study Leave', color: 'teal', availableDays: 10, carryForward: 3, totalDays: 13, taken: 5 },
-  { type: 'Bereavement Leave', color: 'grey', availableDays: 3, carryForward: 0, totalDays: 3, taken: 0 },
-  { type: 'Marriage Leave', color: 'pink', availableDays: 5, carryForward: 0, totalDays: 5, taken: 2 }
+  { id: 'annual', label: 'Annual Leave' },
+  { id: 'sick', label: 'Sick Leave' },
+  { id: 'personal', label: 'Personal Leave' },
+  { id: 'maternity', label: 'Maternity Leave' },
+  { id: 'paternity', label: 'Paternity Leave' }
 ];
 
 
+const statsCards = [
+  { id: 'total', label: 'Total Requests', color: '#2196f3', getValue: (leaves) => leaves.length },
+  { id: 'pending', label: 'Pending', color: '#ff9800', getValue: (leaves) => leaves.filter(l => l.status === 'pending').length },
+  { id: 'approved', label: 'Approved', color: '#4caf50', getValue: (leaves) => leaves.filter(l => l.status === 'approved').length },
+  { id: 'rejected', label: 'Rejected', color: '#f44336', getValue: (leaves) => leaves.filter(l => l.status === 'rejected').length },
+];
+
+const styles = {
+  mainContainer: {
+    p: 4,
+    backgroundColor: '#f8fafc',
+    minHeight: '100vh',
+  },
+  headerSection: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    mb: 4,
+  },
+  pageTitle: {
+    fontSize: '2rem',
+    fontWeight: 600,
+    color: '#1a237e',
+  },
+  newRequestButton: {
+    background: 'linear-gradient(45deg, #2196f3, #1976d2)',
+    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
+    '&:hover': {
+      background: 'linear-gradient(45deg, #1976d2, #1565c0)',
+      boxShadow: '0 6px 16px rgba(25, 118, 210, 0.3)',
+    },
+  },
+  statsCard: {
+    p: 3,
+    borderRadius: 2,
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-5px)',
+      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.12)',
+    },
+  },
+  tableContainer: {
+    borderRadius: 2,
+    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)',
+    overflow: 'hidden',
+  },
+  tableHeader: {
+    backgroundColor: '#f1f5f9',
+    '& .MuiTableCell-head': {
+      color: '#475569',
+      fontWeight: 600,
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+    },
+  },
+  statusChip: (status) => ({
+    borderRadius: '20px',
+    fontWeight: 500,
+    textTransform: 'capitalize',
+    ...(status === 'pending' && {
+      backgroundColor: '#fff7ed',
+      color: '#c2410c',
+    }),
+    ...(status === 'approved' && {
+      backgroundColor: '#f0fdf4',
+      color: '#15803d',
+    }),
+    ...(status === 'rejected' && {
+      backgroundColor: '#fef2f2',
+      color: '#dc2626',
+    }),
+  }),
+  actionButton: {
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      transform: 'scale(1.1)',
+    },
+  },
+};
 const MyLeaveRequests = () => {
-  const [isFilterOpen, setFilterOpen] = useState(false);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectAll, setSelectAll] = useState(false);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [editingId, setEditingId] = useState(null);
-  const [editFormData, setEditFormData] = useState({
-    type: '',
-    startDate: '',
-    endDate: '',
-    days: '',
-    status: '',
-    comment: '',
-    confirmation: ''
+  const [leaves, setLeaves] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [filters, setFilters] = useState({
+    search: '',
+    status: 'all',
+    type: 'all',
+  });
+  const [formData, setFormData] = useState({
+    employeeName: '',
+    employeeCode: '',
+    leaveType: '',
+    startDate: format(new Date(), 'yyyy-MM-dd'),
+    endDate: format(new Date(), 'yyyy-MM-dd'),
+    reason: '',
+    halfDay: false,
   });
 
-  // Initialize leaveData with localStorage
-  const [leaveData, setLeaveData] = useState(() => {
-    const savedData = localStorage.getItem('leaveData');
-    return savedData ? JSON.parse(savedData) : [
-      { id: 1, type: 'Maladie', startDate: 'Nov. 6, 2024', endDate: 'Nov. 6, 2024', days: 1, status: 'Approved', comment: 'Urgent', confirmation: 'Confirmed' },
-      { id: 2, type: 'Maladie', startDate: 'Nov. 5, 2024', endDate: 'Nov. 6, 2024', days: 2, status: 'Rejected', comment: 'Incomplete', confirmation: 'Pending' },
-      { id: 3, type: 'Annual Leave', startDate: 'Nov. 4, 2024', endDate: 'Nov. 4, 2024', days: 1, status: 'Approved', comment: 'Vacation', confirmation: 'Confirmed' },
-    ];
-  });
+  useEffect(() => {
+    fetchLeaveRequests();
+  }, []);
 
-  const handleSelectAll = (event) => {
-    const isChecked = event.target.checked;
-    setSelectAll(isChecked);
-    setSelectedRows(isChecked ? leaveData.map(row => row.id) : []);
+  const fetchLeaveRequests = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(API_URL);
+      setLeaves(response.data);
+    } catch (err) {
+      setError('Failed to fetch leave requests');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRowSelect = (id) => {
-    setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
-    );
+  // const handleCreateLeave = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.post(API_URL, {
+  //       ...formData,
+  //       status: 'pending'
+  //     });
+  //     setLeaves([...leaves, response.data]);
+  //     setSuccess('Leave request created successfully');
+  //     setOpenDialog(false);
+  //     resetForm();
+  //   } catch (err) {
+  //     setError('Failed to create leave request');
+  //     console.error(err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  const handleCreateLeave = async () => {
+    try {
+      setLoading(true);
+      const leaveData = {
+        employeeName: formData.employeeName,
+        employeeCode: formData.employeeCode,
+        leaveType: formData.leaveType,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        reason: formData.reason,
+        halfDay: formData.halfDay,
+        status: 'pending'
+      };
+      const response = await axios.post(API_URL, leaveData);
+      setLeaves([...leaves, response.data]);
+      setSuccess('Leave request created successfully');
+      setOpenDialog(false);
+      resetForm();
+    } catch (err) {
+      setError('Failed to create leave request');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
+  const handleUpdateLeave = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.put(`${API_URL}/${selectedLeave._id}`, formData);
+      setLeaves(leaves.map(leave => 
+        leave._id === selectedLeave._id ? response.data : leave
+      ));
+      setSuccess('Leave request updated successfully');
+      setOpenDialog(false);
+      resetForm();
+    } catch (err) {
+      setError('Failed to update leave request');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteLeave = async (id) => {
+    try {
+      setLoading(true);
+      await axios.delete(`${API_URL}/${id}`);
+      setLeaves(leaves.filter(leave => leave._id !== id));
+      setSuccess('Leave request deleted successfully');
+    } catch (err) {
+      setError('Failed to delete leave request');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApproveLeave = async (id) => {
+    try {
+      setLoading(true);
+      const response = await axios.put(`${API_URL}/${id}/approve`);
+      setLeaves(leaves.map(leave => 
+        leave._id === id ? response.data : leave
+      ));
+      setSuccess('Leave request approved successfully');
+    } catch (err) {
+      setError('Failed to approve leave request');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRejectLeave = async (id) => {
+    try {
+      setLoading(true);
+      const response = await axios.put(`${API_URL}/${id}/reject`, { rejectionReason });
+      setLeaves(leaves.map(leave => 
+        leave._id === id ? response.data : leave
+      ));
+      setSuccess('Leave request rejected successfully');
+      setRejectDialogOpen(false);
+      setRejectionReason('');
+    } catch (err) {
+      setError('Failed to reject leave request');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEdit = (leave) => {
-    setEditingId(leave.id);
-    setEditFormData({
-      type: leave.type,
-      startDate: leave.startDate,
-      endDate: leave.endDate,
-      days: leave.days,
-      status: leave.status,
-      comment: leave.comment,
-      confirmation: leave.confirmation
+    setSelectedLeave(leave);
+    setFormData({
+      employeeName: leave.employeeName,
+      employeeCode: leave.employeeCode,
+      leaveType: leave.leaveType,
+      startDate: format(new Date(leave.startDate), 'yyyy-MM-dd'),
+      endDate: format(new Date(leave.endDate), 'yyyy-MM-dd'),
+      reason: leave.reason,
+      halfDay: leave.halfDay || false,
     });
+    setEditMode(true);
+    setOpenDialog(true);
   };
 
-  const handleUpdate = (id) => {
-    const updatedData = leaveData.map(leave => 
-      leave.id === id ? { ...leave, ...editFormData } : leave
-    );
-    setLeaveData(updatedData);
-    localStorage.setItem('leaveData', JSON.stringify(updatedData));
-    setEditingId(null);
+  const resetForm = () => {
+    setFormData({
+      employeeName: '',
+      employeeCode: '',
+      leaveType: '',
+      startDate: format(new Date(), 'yyyy-MM-dd'),
+      endDate: format(new Date(), 'yyyy-MM-dd'),
+      reason: '',
+      halfDay: false,
+    });
+    setSelectedLeave(null);
+    setEditMode(false);
   };
 
-  const handleDelete = (id) => {
-    const updatedData = leaveData.filter(leave => leave.id !== id);
-    setLeaveData(updatedData);
-    localStorage.setItem('leaveData', JSON.stringify(updatedData));
-  };
-
-  const handleCreateClose = () => setIsCreateOpen(false);
-  const handleFilterClose = () => setFilterOpen(false);
-
-  const filteredLeaveData = leaveData.filter(
-    (leave) =>
-      leave.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      leave.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      leave.comment.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+  const filteredLeaves = useMemo(() => {
+    return leaves.filter(leave => {
+      const matchesSearch = leave.reason?.toLowerCase().includes(filters.search.toLowerCase()) ||
+                          leave.employeeName?.toLowerCase().includes(filters.search.toLowerCase());
+      const matchesStatus = filters.status === 'all' || leave.status === filters.status;
+      const matchesType = filters.type === 'all' || leave.leaveType === filters.type;
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [leaves, filters]);
   return (
-    <div className="App">
-      <div className="headers" style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "20px",
-        flexWrap: "wrap",
-        gap: "20px"
-      }}>
-        <Typography variant="h6" style={{ minWidth: "200px" }}>My Leave Requests</Typography>
-        
-        <TextField
-          placeholder="Search..."
-          variant="outlined"
-          size="small"
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{ startAdornment: <Search /> }}
-          style={{ flex: 1, maxWidth: "400px" }}
-        />
-        
-        <div className="header-actions" style={{
-          display: "flex",
-          gap: "10px",
-          flexWrap: "wrap"
-        }}>
-          <Button variant="outlined" onClick={() => setFilterOpen(true)} startIcon={<FilterList />}>Filter</Button>
-          <Button variant="contained" color="error" onClick={() => setIsCreateOpen(true)} startIcon={<Add />}>Create</Button>
-        </div>
-      </div>
-        <div className="leave-cards" style={{
-          display: "flex",
-          flexDirection: "row",
-          gap: "20px",
-          padding: "20px",
-          maxHeight: "80vh",
-          overflowY: "auto",
-          scrollBehavior: "smooth"
-        }}>
-          {leaveTypes.map((card, index) => (
-            <Card key={index} className="leave-card" style={{
-              padding: "20px",
-              cursor: "pointer",
-              minHeight: "200px",
-              width: "100%",
-              maxWidth: "600px",
-              margin: "0 auto",
-              border: `2px solid ${card.color}`,
-              borderRadius: "10px",
-              boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-              transition: "transform 0.2s ease-in-out",
+    <Box sx={styles.mainContainer}>
+      <Box sx={styles.headerSection}>
+        <Typography sx={styles.pageTitle}>
+          My Leave Requests
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => {
+            resetForm();
+            setOpenDialog(true);
+          }}
+          sx={styles.newRequestButton}
+        >
+          New Leave Request
+        </Button>
+      </Box>
+
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {statsCards.map((stat) => (
+          <Grid item xs={12} sm={6} md={3} key={stat.id}>
+            <Paper sx={{
+              ...styles.statsCard,
+              borderLeft: `4px solid ${stat.color}`,
             }}>
-              <Typography variant="h6" style={{ 
-                marginBottom: "15px",
-                color: card.color,
-                fontWeight: "bold" 
-              }}>
-                {card.type}
+              <Typography sx={styles.statsLabel}>
+                {stat.label}
               </Typography>
-              <div className="card-content">
-                <p>Available Days: {card.availableDays}</p>
-                <p>Carry Forward Days: {card.carryForward}</p>
-                <p>Total Leave Days: {card.totalDays}</p>
-                <p>Total Leave Taken: {card.taken}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-      <div className="leave-table" style={{
-        overflowX: "auto",
-        padding: "20px"
-      }}>
-        <table style={{ width: "100%", minWidth: "800px" }}>
-          <thead>
-            <tr>
-              <th>
-                <Checkbox checked={selectAll} onChange={handleSelectAll} />
-              </th>
-              <th>Leave Type</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Requested Days</th>
-              <th>Status</th>
-              <th>Comments</th>
-              <th>Confirmation</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredLeaveData.map((leave) => (
-              <tr key={leave.id}>
-                <td>
-                  <Checkbox checked={selectedRows.includes(leave.id)} onChange={() => handleRowSelect(leave.id)} />
-                </td>
-                <td>
-                  {editingId === leave.id ? (
-                    <TextField
-                      value={editFormData.type}
-                      onChange={(e) => setEditFormData({...editFormData, type: e.target.value})}
-                    />
-                  ) : leave.type}
-                </td>
-                <td>
-                  {editingId === leave.id ? (
-                    <TextField
-                      value={editFormData.startDate}
-                      onChange={(e) => setEditFormData({...editFormData, startDate: e.target.value})}
-                    />
-                  ) : leave.startDate}
-                </td>
-                <td>
-                  {editingId === leave.id ? (
-                    <TextField
-                      value={editFormData.endDate}
-                      onChange={(e) => setEditFormData({...editFormData, endDate: e.target.value})}
-                    />
-                  ) : leave.endDate}
-                </td>
-                <td>
-                  {editingId === leave.id ? (
-                    <TextField
-                      value={editFormData.days}
-                      onChange={(e) => setEditFormData({...editFormData, days: e.target.value})}
-                    />
-                  ) : leave.days}
-                </td>
-                <td>{leave.status}</td>
-                <td>
-                  {editingId === leave.id ? (
-                    <TextField
-                      value={editFormData.comment}
-                      onChange={(e) => setEditFormData({...editFormData, comment: e.target.value})}
-                    />
-                  ) : leave.comment}
-                </td>
-                <td>{leave.confirmation}</td>
-                <td style={{ textAlign: 'center' }}>
-                  {editingId === leave.id ? (
-                    <Tooltip title="Save">
-                      <IconButton 
-                        color="primary"
-                        onClick={() => handleUpdate(leave.id)}
-                      >
-                        <Save />
-                      </IconButton>
-                    </Tooltip>
-                  ) : (
-                    <Tooltip title="Edit">
-                      <IconButton 
-                        color="primary"
-                        onClick={() => handleEdit(leave)}
-                      >
-                        <Edit />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  <Tooltip title="Delete">
-                    <IconButton 
-                      color="error"
-                      onClick={() => handleDelete(leave.id)}
+              <Typography sx={styles.statsValue}>
+                {stat.getValue(leaves)}
+              </Typography>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Search by reason or employee..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Status"
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+            >
+              <MenuItem value="all">All Status</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="approved">Approved</MenuItem>
+              <MenuItem value="rejected">Rejected</MenuItem>
+            </TextField>
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Leave Type"
+              value={filters.type}
+              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+            >
+              <MenuItem value="all">All Types</MenuItem>
+              {leaveTypes.map(type => (
+                <MenuItem key={type.id} value={type.id}>
+                  {type.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Employee</TableCell>
+              <TableCell>Leave Type</TableCell>
+              <TableCell>Start Date</TableCell>
+              <TableCell>End Date</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Reason</TableCell>
+              <TableCell align="center">Approve</TableCell>
+              <TableCell align="center">Reject</TableCell>
+              <TableCell align="center">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredLeaves.map((leave) => (
+              <TableRow key={leave._id}>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography>{leave.employeeName}</Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      ({leave.employeeCode})
+                    </Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  {leaveTypes.find(type => type.id === leave.leaveType)?.label}
+                </TableCell>
+                <TableCell>{format(new Date(leave.startDate), 'dd/MM/yyyy')}</TableCell>
+                <TableCell>{format(new Date(leave.endDate), 'dd/MM/yyyy')}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={leave.status}
+                    sx={styles.statusChip(leave.status)}
+                  />
+                </TableCell>
+                <TableCell>{leave.reason}</TableCell>
+                <TableCell align="center">
+                  {leave.status === 'pending' && (
+                    <IconButton
+                      size="small"
+                      color="success"
+                      onClick={() => handleApproveLeave(leave._id)}
                     >
-                      <Delete />
+                      <CheckIcon fontSize="small" />
                     </IconButton>
-                  </Tooltip>
-                </td>
-              </tr>
+                  )}
+                </TableCell>
+                <TableCell align="center">
+                  {leave.status === 'pending' && (
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => {
+                        setSelectedLeave(leave);
+                        setRejectDialogOpen(true);
+                      }}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  )}
+                </TableCell>
+                <TableCell align="center">
+                  {leave.status === 'pending' && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                      <IconButton size="small" color="primary" onClick={() => handleEdit(leave)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" color="error" onClick={() => handleDeleteLeave(leave._id)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Dialog
+        open={openDialog}
+        onClose={() => {
+          setOpenDialog(false);
+          resetForm();
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {editMode ? 'Edit Leave Request' : 'New Leave Request'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <TextField
+              label="Employee Name"
+              value={formData.employeeName}
+              onChange={(e) => setFormData({ ...formData, employeeName: e.target.value })}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Employee Code"
+              value={formData.employeeCode}
+              onChange={(e) => setFormData({ ...formData, employeeCode: e.target.value })}
+              fullWidth
+              required
+            />
+            <TextField
+              select
+              label="Leave Type"
+              value={formData.leaveType}
+              onChange={(e) => setFormData({ ...formData, leaveType: e.target.value })}
+              fullWidth
+              required
+            >
+              {leaveTypes.map(type => (
+                <MenuItem key={type.id} value={type.id}>
+                  {type.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label="Start Date"
+              type="date"
+              value={formData.startDate}
+              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              required
+            />
+            <TextField
+              label="End Date"
+              type="date"
+              value={formData.endDate}
+              onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Reason"
+              multiline
+              rows={4}
+              value={formData.reason}
+              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+              fullWidth
+              required
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.halfDay}
+                  onChange={(e) => setFormData({ ...formData, halfDay: e.target.checked })}
+                />
+              }
+              label="Half Day"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setOpenDialog(false);
+            resetForm();
+          }}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={editMode ? handleUpdateLeave : handleCreateLeave}
+            disabled={loading}
+          >
+            {editMode ? 'Update' : 'Submit'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={rejectDialogOpen}
+        onClose={() => setRejectDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Reject Leave Request</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Rejection Reason"
+            fullWidth
+            multiline
+            rows={4}
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            required
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            color="error"
+            onClick={() => handleRejectLeave(selectedLeave._id)}
+            disabled={!rejectionReason.trim() || loading}
+          >
+            Reject
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={!!success || !!error}
+        autoHideDuration={6000}
+        onClose={() => {
+          setSuccess(null);
+          setError(null);
+        }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={success ? "success" : "error"}
+          variant="filled"
+          onClose={() => {
+            setSuccess(null);
+            setError(null);
+          }}
+        >
+          {success || error}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 
