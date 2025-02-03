@@ -51,11 +51,15 @@ import disciplinaryActionRoutes from './routes/disciplinaryActions.js';
 import timeOffRequestRoutes from './routes/timeOffRequests.js'; 
 import rotatingShiftRoutes from './routes/rotatingShiftRoutes.js';
 import rotatingWorktypeRoutes from './routes/rotatingWorktypeRoutes.js';
+import leaveRequestRoutes from './routes/leaveRequestRoutes.js';
 
 
 dotenv.config()
 connectDB()
 const app = express()
+
+
+
 
 // Middleware to parse JSON request bodies
 
@@ -136,7 +140,11 @@ app.use('/api/disciplinary-actions', disciplinaryActionRoutes);
 app.use('/api/time-off-requests', timeOffRequestRoutes);
 app.use('/api/rotating-shift', rotatingShiftRoutes);
 app.use('/api/rotating-worktype', rotatingWorktypeRoutes);
+app.use('/api/leave-requests', leaveRequestRoutes);
+
+
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, console.log(`✨ Server running on port ${PORT}`.yellow.bold));
+

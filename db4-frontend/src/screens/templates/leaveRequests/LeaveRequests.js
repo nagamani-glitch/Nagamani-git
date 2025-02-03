@@ -13,6 +13,7 @@ import './LeaveRequests.css';
 
 const LeaveRequests = () => {
   // Initialize leaveData from localStorage
+
   const [leaveData, setLeaveData] = useState(() => {
     const savedData = localStorage.getItem('leaveRequests');
     return savedData ? JSON.parse(savedData) : [];
