@@ -18,6 +18,7 @@ import VerifyOtpPage from './screens/authScreens/registerScreen/VerifyOtpPage';
 import ForgotPassword from './screens/authScreens/forgotPassword/ForgotPassword';
 import ResetPassword from './screens/authScreens/resetPassword/ResetPassword';
  
+import Settings from './screens/Settings';
 
 function App() {
   return (
@@ -37,6 +38,9 @@ function App() {
             <Route element={<PrivateRoute />}>
               <Route path='/home' element={<HomeScreen />} />
               <Route path='/Dashboards' element={<Dashboard />} />
+              <Route path="/settings" element={<Settings />} />
+
+
             </Route>
 
           </Routes>
