@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
 
 const Settings = () => {
   return (
@@ -29,7 +29,6 @@ const Settings = () => {
         <h2 style={{
           fontSize: '2.5rem',
           fontWeight: '600',
-          color: '#444',
           marginBottom: '1.5rem',
           color:'#e54f38',
           marginTop:'-30px',
@@ -43,6 +42,7 @@ const Settings = () => {
           lineHeight: '1.6',
           maxWidth: '600px',
           margin: '0 auto',
+          marginBottom: '2rem',
 
         
         }}>

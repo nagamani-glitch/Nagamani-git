@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import Sidebar from "./sidebar/Sidebar";
-import { useParams } from "react-router-dom";
-import DocumentRequestPage from "./productManagement/DocumentRequestPage";
+import React, { useState } from 'react';
+import Sidebar from './sidebar/Sidebar';
+//import { useParams } from 'react-router-dom';
+import DocumentRequestPage from './productManagement/DocumentRequestPage';
 
 //Subikshan Integration
 //Dasboard
@@ -63,10 +63,10 @@ import CreateFeedback from "./Performance/CreateFeedback";
 import ExitPage from "./Offboarding/ExitPage";
 import ResignationPage from "./Offboarding/ResignationPage";
 
-import QuickActionButton from "./QuickActionButton";
-
+import QuickActionButton from './QuickActionButton';
+ 
 function Dashboard() {
-  const { categoryId } = useParams(); // for category id of faq
+  //const {categoryId} = useParams();// for category id of faq
   // State to manage the active screen
   const [activeScreen, setActiveScreen] = useState("dashboard");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(
@@ -153,11 +153,10 @@ function Dashboard() {
       case "companyLeaves":
         return <CompanyHolidays />;
       case "restrictLeaves":
-        return <RestrictLeaves />;
+        return <RestrictLeaves />
 
-        // Sangeeta
-        return <RestrictLeaves />;
-
+      
+        // Sangeeta 
       case "payrollDashboard":
         return <PayrollDashboard />;
       case "allowances":
