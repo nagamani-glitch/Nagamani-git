@@ -242,6 +242,20 @@
   .save-button:hover {
     background-color: #0056b3;
   }
+
+  .cancel-button {
+    background-color: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+  
+  .cancel-button:hover {
+    background-color: #c82333;
+  }
   
   .half-width {
     display: flex;
