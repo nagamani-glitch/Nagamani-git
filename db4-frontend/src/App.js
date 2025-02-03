@@ -17,8 +17,7 @@ import { SidebarProvider } from './Context';
 import VerifyOtpPage from './screens/authScreens/registerScreen/VerifyOtpPage';
 import ForgotPassword from './screens/authScreens/forgotPassword/ForgotPassword';
 import ResetPassword from './screens/authScreens/resetPassword/ResetPassword';
-
-
+ 
 
 function App() {
   return (
