@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from './sidebar/Sidebar';
-import { useParams } from 'react-router-dom';
+//import { useParams } from 'react-router-dom';
 import DocumentRequestPage from './productManagement/DocumentRequestPage';
 
 //Subikshan Integration
@@ -65,14 +65,9 @@ import ExitPage  from './Offboarding/ExitPage';
 import ResignationPage from './Offboarding/ResignationPage';
 
 import QuickActionButton from './QuickActionButton';
-
-
-
- 
- 
  
 function Dashboard() {
-  const {categoryId} = useParams();// for category id of faq
+  //const {categoryId} = useParams();// for category id of faq
   // State to manage the active screen
   const [activeScreen, setActiveScreen] = useState('dashboard');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('67343940a35795672c4c79a1');
@@ -161,9 +156,6 @@ function Dashboard() {
 
       
         // Sangeeta 
-        return <RestrictLeaves />      
-        
-      
       case "payrollDashboard":
         return <PayrollDashboard />;
       case "allowances":
