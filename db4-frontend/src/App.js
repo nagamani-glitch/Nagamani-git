@@ -39,7 +39,6 @@ function App() {
               <Route path='/home' element={<HomeScreen />} />
               <Route path='/Dashboards' element={<Dashboard />} />
             </Route>
-            <Route path='/hr' element={<Dashboards />} />
 
           </Routes>
         </Container>
