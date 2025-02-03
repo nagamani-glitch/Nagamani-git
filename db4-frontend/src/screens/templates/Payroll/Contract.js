@@ -279,7 +279,7 @@ const Contract = () => {
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`http://localhost:5000/api/payroll-contracts/${id}`); 
+    await axios.delete(`http://localhost:5000/api/payroll-contracts/${id}`);
     setContracts((prev) => prev.filter((contract) => contract._id !== id));
     setFilteredContracts((prev) =>
       prev.filter((contract) => contract._id !== id)
@@ -573,9 +573,13 @@ const Contract = () => {
               >
                 Save
               </button>
-              <button type="button" className="cancel-button" onClick={() => setShowCreatePage(false)}>
-    Cancel
-  </button>
+              <button
+                type="button"
+                className="cancel-button"
+                onClick={() => setShowCreatePage(false)}
+              >
+                Cancel
+              </button>
             </div>
           </form>
         </div>
@@ -586,14 +590,15 @@ const Contract = () => {
   const handleSearchChange = (e) => {
     const searchValue = e.target.value.toLowerCase();
     setSearchTerm(searchValue);
-    
-    const searchResults = contracts.filter((contract) => 
-      contract.employee.toLowerCase().includes(searchValue) ||
-      contract.contract.toLowerCase().includes(searchValue) ||
-      contract.wageType.toLowerCase().includes(searchValue) ||
-      contract.filingStatus.toLowerCase().includes(searchValue)
+
+    const searchResults = contracts.filter(
+      (contract) =>
+        contract.employee.toLowerCase().includes(searchValue) ||
+        contract.contract.toLowerCase().includes(searchValue) ||
+        contract.wageType.toLowerCase().includes(searchValue) ||
+        contract.filingStatus.toLowerCase().includes(searchValue)
     );
-    
+
     setFilteredContracts(searchResults);
   };
 
@@ -700,10 +705,16 @@ const Contract = () => {
             className="search-input"
           />
 
-          <button className="contract-filter-button" onClick={handleFilterIconClick}>
+          <button
+            className="contract-filter-button"
+            onClick={handleFilterIconClick}
+          >
             <FaFilter /> Filter
           </button>
-          <button className="contract-create-button" onClick={handleCreateClick}>
+          <button
+            className="contract-create-button"
+            onClick={handleCreateClick}
+          >
             Create
           </button>
         </div>
@@ -1002,5 +1013,3 @@ const Contract = () => {
 };
 
 export default Contract;
-
-
