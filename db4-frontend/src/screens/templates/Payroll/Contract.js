@@ -573,6 +573,9 @@ const Contract = () => {
               >
                 Save
               </button>
+              <button type="button" className="cancel-button" onClick={() => setShowCreatePage(false)}>
+    Cancel
+  </button>
             </div>
           </form>
         </div>
