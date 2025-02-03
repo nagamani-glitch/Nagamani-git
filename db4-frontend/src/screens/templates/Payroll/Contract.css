@@ -135,7 +135,7 @@
   border-radius: 4px;
   cursor: pointer;
 }
-.contract-table-action--button {
+.contract-table-action-save-button {
   padding: 4px 10px;
   margin-right: 5px;
   background-color: transparent;
