@@ -3,13 +3,13 @@ import { FaChartBar, FaBook } from 'react-icons/fa';
 import { Nav } from 'react-bootstrap';
 import './MainScreen.css';
 import { Link } from 'react-router-dom';
-
+ 
 const items = [
   { title: "My Workspace", icon: <i className="fas fa-chart-bar"></i>, color: '#3498db', delay: '1s' },
   { title: "Dashboards", icon: <FaChartBar />, color: '#e74c3c', delay: '0.9s' },
   { title: "Directory", icon: <FaBook />, color: '#2ecc71', delay: '0.5s' },
 ];
-
+ 
 const MainScreen = () => {
   return (
     <div className="main-container">
@@ -18,8 +18,8 @@ const MainScreen = () => {
           {items.map((item, index) => (
             <Nav.Link key={index} as={Link} to={`/${item.title}`}>
               <div className="icon-item" style={{ animationDelay: item.delay }}>
-                <div 
-                  className="icon-circle" 
+                <div
+                  className="icon-circle"
                   style={{ backgroundColor: item.color }}
                 >
                   {item.icon}
@@ -33,5 +33,5 @@ const MainScreen = () => {
     </div>
   );
 };
-
+ 
 export default MainScreen;
