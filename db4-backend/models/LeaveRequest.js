@@ -24,7 +24,10 @@ const leaveRequestSchema = new mongoose.Schema({
     default: 'Pending',
     enum: ['Pending', 'Approved', 'Rejected']
   },
-  comment: String,
+  comment: {
+    type: String,
+    default: ''
+  },
   confirmation: {
     type: String,
     default: 'Pending',
@@ -32,13 +35,13 @@ const leaveRequestSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// Add pre-save middleware to validate dates
 leaveRequestSchema.pre('save', function(next) {
   if (this.startDate > this.endDate) {
     next(new Error('Start date cannot be after end date'));
   }
+  const diffTime = Math.abs(this.endDate - this.startDate);
+  this.days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   next();
 });
-
 
 export default mongoose.model('LeaveRequest', leaveRequestSchema);

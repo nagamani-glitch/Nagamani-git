@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import MainScreen from './screens/mainScreen/MainScreen';
+
 // import AuthScreen from './screens/authScreens/AuthScreen';
 import LoginPage from './screens/authScreens/loginScreen/LoginPage';
 import RegisterPage from './screens/authScreens/registerScreen/RegisterPage';
@@ -14,7 +15,6 @@ import PrivateRoute from './screens/PrivateRoute';
 import { Container } from 'react-bootstrap';
 import { SidebarProvider } from './Context';
 import VerifyOtpPage from './screens/authScreens/registerScreen/VerifyOtpPage';
-import FaqPage from './screens/templates/faqs/FaqPage';
 import ForgotPassword from './screens/authScreens/forgotPassword/ForgotPassword';
 import ResetPassword from './screens/authScreens/resetPassword/ResetPassword';
 
@@ -39,6 +39,8 @@ function App() {
               <Route path='/home' element={<HomeScreen />} />
               <Route path='/Dashboards' element={<Dashboard />} />
             </Route>
+            <Route path='/hr' element={<Dashboards />} />
+
           </Routes>
         </Container>
         </SidebarProvider>
