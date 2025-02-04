@@ -66,31 +66,18 @@ export default function FaqPage() {
     }, [categoryId]);
 
     const fetchCategoryTitle = async () => {
-        if (!categoryId) {
-            console.error('Category ID is missing.');
-            setCategoryTitle('Unknown Category');
-            return;
-        }
-    
+        if (!categoryId) return;
+        
         try {
-            const { data } = await axios.get(`${apiBaseURL}/api/faqCategories/${categoryId}`);
-            if (data?.title) {
-                setCategoryTitle(data.title);
-            } else {
-                console.warn('Category data is missing or invalid:', data);
-                setCategoryTitle('Unknown Category');
+            const response = await axios.get(`${apiBaseURL}/api/faqCategories/${categoryId}`);
+            if (response.data) {
+                setCategoryTitle(response.data.title);
             }
         } catch (err) {
-            const status = err.response?.status;
-            if (status === 404) {
-                console.error('Category not found:', err.response?.data || err.message);
-                setCategoryTitle('Category Not Found');
-            } else {
-                console.error('Error fetching category:', err.message);
-                setCategoryTitle('Error Loading Category');
-            }
+            setCategoryTitle('Category Not Found');
         }
     };
+    
     
 
     useEffect(() => {
@@ -200,13 +187,13 @@ export default function FaqPage() {
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 2, backgroundColor: '#ffffff' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <Button 
+                    {/* <Button 
                         startIcon={<ArrowBackIcon />}
-                        onClick={() => navigate('/faq-category')}
+                        onClick={() => navigate('/Dashboards/faq-category')}
                         sx={{ mr: 2 }}
                     >
                         Back to Categories
-                    </Button>
+                    </Button> */}
                     <Typography variant="h4" sx={{ fontWeight: 600 }}>
                         {categoryTitle || 'Loading...'} - FAQs
                     </Typography>

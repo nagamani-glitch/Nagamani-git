@@ -228,16 +228,16 @@ export default function FaqCategory() {
                                                 {category.description}
                                             </Typography>
                                             <Button
-                                                variant="contained"
-                                                onClick={() => navigate(`/faq/${category._id}`)}
-                                                sx={{
-                                                    mt: 'auto',
-                                                    backgroundColor: '#3b82f6',
-                                                    '&:hover': { backgroundColor: '#2563eb' }
-                                                }}
-                                            >
-                                                View FAQs
-                                            </Button>
+    variant="contained"
+    onClick={() => navigate(`/Dashboards/faq/${category._id}`)}
+    sx={{
+        mt: 'auto',
+        backgroundColor: '#3b82f6',
+        '&:hover': { backgroundColor: '#2563eb' }
+    }}
+>
+    View FAQs
+</Button>
                                         </CardContent>
                                     </Card>
                                 </motion.div>
@@ -291,3 +291,4 @@ export default function FaqCategory() {
         </Container>
     );
 }
+

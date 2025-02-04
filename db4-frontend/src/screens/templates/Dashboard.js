@@ -287,7 +287,7 @@ function Dashboard() {
         <Routes>
           <Route path="/" element={<MainDashboard />} />
           <Route path="/onboarding-view" element={<OnboardingView />} />
-          <Route path="/onboarding-forms" element={<OnboardingForms />} />
+          <Route path="/onboarding-form" element={<OnboardingForms />} />
           <Route path="/recruitment-dashboard" element={<RecruitmentDashboard />} />
           <Route path="/recruitment-pipeline" element={<RecruitmentPipeline />} />
           <Route path="/recruitment-survey" element={<RecruitmentSurvey />} />
