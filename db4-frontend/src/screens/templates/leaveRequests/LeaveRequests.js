@@ -16,13 +16,11 @@ const LeaveRequests = () => {
   const [leaveData, setLeaveData] = useState([]);
   const [isFilterOpen, setFilterOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedRows, setSelectedRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [selectedLeaveId, setSelectedLeaveId] = useState(null);
   const [newComment, setNewComment] = useState('');
-  const [selectAll, setSelectAll] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const [createFormData, setCreateFormData] = useState({
@@ -187,17 +185,6 @@ const LeaveRequests = () => {
     setNewComment('');
   };
 
-  const handleSelectAll = (event) => {
-    setSelectAll(event.target.checked);
-    setSelectedRows(event.target.checked ? leaveData.map(row => row._id) : []);
-  };
-
-  const handleRowSelect = (id) => {
-    setSelectedRows(prev =>
-      prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
-    );
-  };
-
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
   };
@@ -250,7 +237,6 @@ const LeaveRequests = () => {
         <table>
           <thead>
             <tr>
-              <th><Checkbox checked={selectAll} onChange={handleSelectAll} /></th>
               <th>Leave Type</th>
               <th>Start Date</th>
               <th>End Date</th>
@@ -264,12 +250,6 @@ const LeaveRequests = () => {
           <tbody>
             {filteredLeaveData.map((leave) => (
               <tr key={leave._id}>
-                <td>
-                  <Checkbox
-                    checked={selectedRows.includes(leave._id)}
-                    onChange={() => handleRowSelect(leave._id)}
-                  />
-                </td>
                 <td>{leave.type}</td>
                 <td>{new Date(leave.startDate).toLocaleDateString()}</td>
                 <td>{new Date(leave.endDate).toLocaleDateString()}</td>
@@ -327,8 +307,7 @@ const LeaveRequests = () => {
         </table>
       </div>
 
-      {/* Create Dialog */}
-      <Dialog open={isCreateOpen} onClose={() => setIsCreateOpen(false)} maxWidth="sm" fullWidth>
+      {/* Create Dialog */}      <Dialog open={isCreateOpen} onClose={() => setIsCreateOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Create Leave Request</DialogTitle>
         <DialogContent>
           <Select

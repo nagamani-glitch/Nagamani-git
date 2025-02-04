@@ -9,7 +9,6 @@ import {
   FaTrash,
   FaSave,
 } from "react-icons/fa";
-import { IoIosOptions } from "react-icons/io";
 import "./Contract.css";
 
 const Contract = () => {
