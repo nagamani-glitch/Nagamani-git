@@ -189,6 +189,7 @@ const RecruitmentPipeline = () => {
     }
   };
 
+
   const handleSearchChange = (event) => setSearchTerm(event.target.value);
 
   const filteredCandidates = candidates.filter((candidate) =>
@@ -197,7 +198,7 @@ const RecruitmentPipeline = () => {
 
   const columns = initialColumns[tabLabels[tabIndex]];
   return (
-    <Box sx={{ padding: 3, backgroundColor: "#f9f9f9" }}>
+    <Box sx={{  backgroundColor: "#f9f9f9" }}>
       {/* Header */}
 
       <Box
@@ -245,7 +246,6 @@ const RecruitmentPipeline = () => {
               sx={{
                 flex: 1,
                 "& input": {
-                  padding: "8px 0",
                 },
               }}
               placeholder="Search candidates..."
@@ -291,8 +291,8 @@ const RecruitmentPipeline = () => {
       {/* Column-based Candidate Display */}
       <Grid container spacing={2}>
         {columns.map((column) => (
-          <Grid 
-            item 
+          <Grid
+            item
             xs={12}      // Full width on mobile
             sm={6}       // 2 cards per row on small tablets
             md={4}       // 3 cards per row on tablets
@@ -301,19 +301,15 @@ const RecruitmentPipeline = () => {
           >
             <Paper
               sx={{
-                padding: { xs: 1.5, sm: 2 },
-                backgroundColor: "#FFFFFF",
-                borderRadius: 2,
-                boxShadow: 2,
-                height: '100%',
+        
                 display: 'flex',
                 flexDirection: 'column'
               }}
             >
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 1, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 1,
                   color: "#1976d2",
                   fontSize: { xs: '1rem', sm: '1.25rem' }
                 }}
@@ -329,44 +325,38 @@ const RecruitmentPipeline = () => {
                       key={candidate._id}
                       elevation={2}
                       sx={{
-                        padding: { xs: 1.5, sm: 2 },
                         mb: 2,
-                        borderRadius: 2,
-                        boxShadow: 1,
-                        transition: 'transform 0.2s ease-in-out',
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: 3
-                        }
+                      
                       }}
                     >
-                      <Box sx={{ 
-                        display: 'flex', 
+                      <Box sx={{
+                        display: 'flex',
                         alignItems: 'center',
                         flexWrap: { xs: 'wrap', sm: 'nowrap' },
                         gap: 1
                       }}>
-                        <Avatar 
-                          sx={{ 
+                        <Avatar
+                          sx={{
                             bgcolor: "#FF5C8D",
-                            width: { xs: 40, sm: 45 },
-                            height: { xs: 40, sm: 45 }
+                            marginLeft:'10px',
+                            width: '28px',
+                            height: '28px',
                           }}
                         >
                           {candidate?.name?.[0]?.toUpperCase() || 'U'}
                         </Avatar>
                         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
+                          <Typography
+                            variant="body1"
+                            sx={{
                               fontWeight: "bold",
-                              fontSize: { xs: '0.9rem', sm: '1rem' }
+                              fontSize: { xs: '0.9rem', sm: '14px' }
                             }}
                           >
                             {candidate.name}
                           </Typography>
-                          <Box sx={{ 
-                            display: 'flex', 
+                          <Box sx={{
+                            display: 'flex',
                             alignItems: 'center',
                             mt: 0.5,
                             flexWrap: 'wrap',
@@ -382,25 +372,25 @@ const RecruitmentPipeline = () => {
                               />
                             ))}
                           </Box>
-                          <Typography 
-                            variant="body2" 
+                          <Typography
+                            variant="body2"
                             color="textSecondary"
-                            sx={{ 
-                              fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                            sx={{
+                              fontSize: { xs: '0.8rem', sm: '11px' },
                               wordBreak: 'break-word'
                             }}
                           >
                             {candidate.email}
                           </Typography>
-                          <Typography 
-                            variant="body2" 
+                          <Typography
+                            variant="body2"
                             color="textSecondary"
-                            sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                            sx={{ fontSize: { xs: '0.8rem', sm: '11px' } }}
                           >
                             {candidate.department}
                           </Typography>
                         </Box>
-                        <Box sx={{ 
+                        <Box sx={{
                           display: 'flex',
                           gap: 0.5,
                           marginLeft: 'auto'
@@ -408,14 +398,12 @@ const RecruitmentPipeline = () => {
                           <IconButton
                             size="small"
                             onClick={() => handleDialogOpen(candidate)}
-                            sx={{ padding: { xs: 0.5, sm: 1 } }}
                           >
                             <EditIcon fontSize="small" />
                           </IconButton>
                           <IconButton
                             size="small"
                             onClick={() => handleDeleteCandidate(candidate._id)}
-                            sx={{ padding: { xs: 0.5, sm: 1 } }}
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -429,7 +417,9 @@ const RecruitmentPipeline = () => {
         ))}
       </Grid>
 
-      <Dialog        open={isDialogOpen} 
+
+    
+      <Dialog open={isDialogOpen}
         onClose={handleDialogClose}
         PaperProps={{
           sx: {
@@ -444,23 +434,22 @@ const RecruitmentPipeline = () => {
           color: 'white',
           fontSize: '1.5rem',
           fontWeight: 600,
-          padding: '24px 32px',
           display: 'flex',
           alignItems: 'center',
           gap: 2
         }}>
-          
+
           {editingCandidate ? 'Edit Candidate' : 'Add New Candidate'}
         </DialogTitle>
 
-        <DialogContent sx={{ 
-          padding: '32px',
+        <DialogContent sx={{
+          // padding: '32px',
           backgroundColor: '#f8fafc'
         }}>
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: 3 
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3
           }}>
             <TextField
               fullWidth
@@ -471,6 +460,7 @@ const RecruitmentPipeline = () => {
               error={!!validationErrors.name}
               helperText={validationErrors.name}
               sx={{
+                marginTop: '16px',
                 '& .MuiOutlinedInput-root': {
                   backgroundColor: 'white',
                   borderRadius: '12px',
@@ -482,8 +472,8 @@ const RecruitmentPipeline = () => {
                   color: '#1976d2'
                 }
               }}
-              sx={{marginTop: '16px'}}
             />
+
 
             <TextField
               fullWidth
@@ -521,31 +511,31 @@ const RecruitmentPipeline = () => {
               }}
             />
             <TextField
-  select
-  fullWidth
-  label="Column"
-  variant="outlined"
-  value={newCandidate.column}
-  onChange={(e) => setNewCandidate({ ...newCandidate, column: e.target.value })}
-  sx={{
-    '& .MuiOutlinedInput-root': {
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      '&:hover fieldset': {
-        borderColor: '#1976d2'
-      }
-    }
-  }}
->
-  {columns.map((column) => (
-    <MenuItem key={column} value={column}>
-      {column}
-    </MenuItem>
-  ))}
-</TextField>
+              select
+              fullWidth
+              label="Column"
+              variant="outlined"
+              value={newCandidate.column}
+              onChange={(e) => setNewCandidate({ ...newCandidate, column: e.target.value })}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'white',
+                  borderRadius: '12px',
+                  '&:hover fieldset': {
+                    borderColor: '#1976d2'
+                  }
+                }
+              }}
+            >
+              {columns.map((column) => (
+                <MenuItem key={column} value={column}>
+                  {column}
+                </MenuItem>
+              ))}
+            </TextField>
 
 
-            <Box sx={{ 
+            <Box sx={{
               mt: 1,
               p: 3,
               backgroundColor: 'white',
@@ -577,18 +567,16 @@ const RecruitmentPipeline = () => {
         </DialogContent>
 
         <DialogActions sx={{
-          padding: '24px 32px',
           backgroundColor: '#f8fafc',
           borderTop: '1px solid #e0e0e0',
           gap: 2
         }}>
-          <Button 
+          <Button
             onClick={handleDialogClose}
             sx={{
               color: '#64748b',
               fontSize: '0.95rem',
               textTransform: 'none',
-              padding: '8px 24px',
               borderRadius: '10px',
               '&:hover': {
                 backgroundColor: '#f1f5f9'
@@ -604,7 +592,6 @@ const RecruitmentPipeline = () => {
               background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
               fontSize: '0.95rem',
               textTransform: 'none',
-              padding: '8px 32px',
               borderRadius: '10px',
               boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
               '&:hover': {
