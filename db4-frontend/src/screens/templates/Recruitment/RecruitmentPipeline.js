@@ -198,16 +198,21 @@ const RecruitmentPipeline = () => {
 
   const columns = initialColumns[tabLabels[tabIndex]];
   return (
-    <Box sx={{  backgroundColor: "#f9f9f9" }}>
+    <Box sx={{ 
+      backgroundColor: "#f9f9f9",
+      padding: {xs: "16px", sm: "24px", md: "32px" },
+      width: "100%" ,
+      minHeight: "100vh"
+    }}>
       {/* Header */}
-
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 2,
-          gap: 2,
+          mb: 3,
+          flexWrap: { xs: "wrap", md: "nowrap" },
+          gap: { xs: 2, md: 3 }
         }}
       >
         <Typography
@@ -215,6 +220,7 @@ const RecruitmentPipeline = () => {
           sx={{
             fontWeight: 500,
             color: "#1a237e",
+            flexShrink: 0
           }}
         >
           Recruitments
@@ -225,6 +231,8 @@ const RecruitmentPipeline = () => {
             display: "flex",
             alignItems: "center",
             gap: 2,
+            width: { xs: "100%", md: "auto" },
+            justifyContent: { xs: "space-between", md: "flex-end" }
           }}
         >
           <Paper
@@ -233,7 +241,7 @@ const RecruitmentPipeline = () => {
               p: "2px 8px",
               display: "flex",
               alignItems: "center",
-              width: 300,
+              width: { xs: "60%", sm: "300px" },
               borderRadius: "8px",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
               "&:hover": {
@@ -243,11 +251,7 @@ const RecruitmentPipeline = () => {
           >
             <SearchIcon sx={{ color: "action.active", mr: 1 }} />
             <InputBase
-              sx={{
-                flex: 1,
-                "& input": {
-                },
-              }}
+              sx={{ flex: 1 }}
               placeholder="Search candidates..."
               value={searchTerm}
               onChange={handleSearchChange}
@@ -264,13 +268,14 @@ const RecruitmentPipeline = () => {
               textTransform: "none",
               px: 3,
               py: 1,
+              whiteSpace: "nowrap",
+              minWidth: "fit-content"
             }}
           >
             Add Candidate
           </Button>
         </Box>
       </Box>
-
       {/* Tabs */}
       <Tabs
         value={tabIndex}
@@ -289,15 +294,15 @@ const RecruitmentPipeline = () => {
       <Divider sx={{ mb: 2 }} />
 
       {/* Column-based Candidate Display */}
-      <Grid container spacing={2}>
-        {columns.map((column) => (
-          <Grid
-            item
-            xs={12}      // Full width on mobile
-            sm={6}       // 2 cards per row on small tablets
-            md={4}       // 3 cards per row on tablets
-            lg={3}       // 4 cards per row on desktop
-            key={column}
+      <Grid container spacing={3} sx={{ mt: 1 }}>
+    {columns.map((column) => (
+      <Grid
+        item
+        xs={12}
+        sm={6}
+        md={4}
+        lg={3}
+        key={column}
           >
             <Paper
               sx={{
@@ -608,3 +613,5 @@ const RecruitmentPipeline = () => {
 };
 
 export default RecruitmentPipeline;
+
+

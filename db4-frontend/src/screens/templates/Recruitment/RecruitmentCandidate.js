@@ -446,7 +446,7 @@ const RecruitmentCandidate = () => {
               onChange={(e) =>
                 setNewCandidate({ ...newCandidate, name: e.target.value })
               }
-              sx={{
+              sx={{ mt:2,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "white",
                   borderRadius: "12px",
@@ -458,10 +458,10 @@ const RecruitmentCandidate = () => {
                   color: "#1976d2",
                 },
               }}
-              sx={{ mt: 2 }}
+              // sx={{ mt: 2 }}
             />
 
-            <TextField
+            <TextField 
               fullWidth
               label="Email"
               name="email"

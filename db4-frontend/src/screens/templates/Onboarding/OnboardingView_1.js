@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./OnboardingView.css";
-
+ 
 function OnboardingView() {
   const [candidates, setCandidates] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,36 +17,36 @@ function OnboardingView() {
     portalStatus: "Active",
     taskStatus: "Pending",
   });
-
+ 
   // Add these validation functions at the top of your component
   const validatePhone = (phone) => {
     const phoneRegex = /^[0-9]{10}$/;
     return phoneRegex.test(phone);
   };
-
+ 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
-
+ 
   const validatePosition = (position) => {
     const positionRegex = /^[a-zA-Z\s]+$/;
     return positionRegex.test(position);
   };
-
+ 
   // Add state for validation errors
   const [validationErrors, setValidationErrors] = useState({
     phone: "",
     email: "",
     position: "",
   });
-
+ 
   const uniqueStages = ["All", "Test", "Interview", "Offer"];
-
+ 
   useEffect(() => {
     fetchCandidates();
   }, [stageFilter]);
-
+ 
   const fetchCandidates = async () => {
     try {
       const url =
@@ -59,11 +59,11 @@ function OnboardingView() {
       console.error("Error fetching candidates:", error);
     }
   };
-
+ 
   // Update the handleInputChange function
   const handleInputChange = (e, field) => {
     const value = e.target.value;
-
+ 
     switch (field) {
       case "mobile":
         if (value === "" || /^\d+$/.test(value)) {
@@ -76,7 +76,7 @@ function OnboardingView() {
           });
         }
         break;
-
+ 
       case "email":
         setNewCandidate({ ...newCandidate, email: value });
         setValidationErrors({
@@ -86,7 +86,7 @@ function OnboardingView() {
             : "Please enter a valid email address",
         });
         break;
-
+ 
       case "jobPosition":
         if (value === "" || /^[a-zA-Z\s]+$/.test(value)) {
           setNewCandidate({ ...newCandidate, jobPosition: value });
@@ -98,16 +98,16 @@ function OnboardingView() {
           });
         }
         break;
-
+ 
       default:
         setNewCandidate({ ...newCandidate, [field]: value });
     }
   };
-
+ 
   // Update the form submission handler
   const handleCreateCandidate = async (e) => {
     e.preventDefault();
-
+ 
     const errors = {
       phone: validatePhone(newCandidate.mobile) ? "" : "Invalid phone number",
       email: validateEmail(newCandidate.email) ? "" : "Invalid email",
@@ -115,13 +115,13 @@ function OnboardingView() {
         ? ""
         : "Invalid position",
     };
-
+ 
     setValidationErrors(errors);
-
+ 
     if (Object.values(errors).some((error) => error !== "")) {
       return;
     }
-
+ 
     try {
       const response = await axios.post(
         "http://localhost:5000/api/onboarding",
@@ -148,7 +148,7 @@ function OnboardingView() {
       console.error("Error creating candidate:", error);
     }
   };
-
+ 
   const handleDeleteCandidate = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/onboarding/${id}`);
@@ -157,7 +157,7 @@ function OnboardingView() {
       console.error("Error deleting candidate:", error);
     }
   };
-
+ 
   const sendMailToCandidate = async (candidate) => {
     try {
       await axios.post("http://localhost:5000/api/onboarding/send-email", {
@@ -172,11 +172,11 @@ function OnboardingView() {
       alert("Failed to send email. Please try again.");
     }
   };
-
+ 
   const filteredCandidates = candidates.filter((candidate) =>
     candidate.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
+ 
   return (
     <div className="onboarding-container">
       <div className="onboarding-header">
@@ -208,7 +208,7 @@ function OnboardingView() {
           </button>
         </div>
       </div>
-
+ 
       {showCreateForm && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -304,7 +304,7 @@ function OnboardingView() {
           </div>
         </div>
       )}
-
+ 
       <div className="candidates-table-container">
         <table className="candidates-table">
           <thead>
@@ -357,5 +357,6 @@ function OnboardingView() {
     </div>
   );
 }
-
+ 
 export default OnboardingView;
+ 
