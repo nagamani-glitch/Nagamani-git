@@ -114,7 +114,7 @@ const RegisterScreen = () => {
         formDataToSend.append('data', JSON.stringify(mappedData));
         
         const response = await axios.post(
-          'http://localhost:5000/api/employees/register',
+          `http://localhost:5000/api/employees/register`,
           formDataToSend,
           {
             headers: { 'Content-Type': 'multipart/form-data' },
@@ -131,13 +131,7 @@ const RegisterScreen = () => {
         console.log('Error Response:', error.response?.data);
         toast.error(`Registration failed: ${error.response?.data?.error || error.message}`);
       }
-    };
-    
-
-    
-    
-    
-    
+    };    
     
   // Conditionally render the form based on current step
   const renderForm = () => {
@@ -219,115 +213,3 @@ const RegisterScreen = () => {
 };
 
 export default RegisterScreen;
-// import React, { useState } from "react";
-// import { Routes, Route, useNavigate } from "react-router-dom";
-// import PersonalInformationForm from "../forms/PersonalInformationForm";
-// import JoiningDetailsForm from "../forms/JoiningDetailsForm";
-// import EducationDetailsForm from "../forms/EducationDetailsForm";
-// import FamilyDetailsForm from "../forms/FamilyDetailsForm";
-// import ServiceHistoryForm from "../forms/ServiceHistoryForm";
-// import NominationDetailsForm from "../forms/NominationDetailsForm";
-
-// const RegisterScreen = () => {
-//   const navigate = useNavigate();
-//   const [formData, setFormData] = useState({
-//     Emp_ID: '',
-//     name: '',
-//     email: '',
-//     phone: '',
-//     department: '',
-//     role: '',
-//     location: '',
-//     dob: '',
-//     personalInfo: {},
-//     addressInfo: {},
-//     joiningDetails: {},
-//     educationDetails: {},
-//     trainingDetails: {},
-//     familyDetails: [],
-//     serviceHistory: [],
-//     nominationDetails: {}
-//   });
-
-//   const handleFormDataChange = (section, data) => {
-//     setFormData(prevData => ({
-//       ...prevData,
-//       [section]: data
-//     }));
-//   };
-
-//   return (
-//     <div>
-//       <h1>Registration Form</h1>
-//       <Routes>
-//         <Route 
-//           path="/" 
-//           element={
-//             <PersonalInformationForm 
-//               handleFormDataChange={handleFormDataChange}
-//               savedData={formData.personalInfo}
-//               onNext={() => navigate('joining')}
-//             />
-//           } 
-//         />
-//         <Route 
-//           path="joining" 
-//           element={
-//             <JoiningDetailsForm 
-//               handleFormDataChange={handleFormDataChange}
-//               savedData={formData.joiningDetails}
-//               onNext={() => navigate('education')}
-//               onPrev={() => navigate('/')}
-//             />
-//           } 
-//         />
-//         <Route 
-//           path="education" 
-//           element={
-//             <EducationDetailsForm 
-//               handleFormDataChange={handleFormDataChange}
-//               savedData={formData.educationDetails}
-//               onNext={() => navigate('family')}
-//               onPrev={() => navigate('joining')}
-//             />
-//           } 
-//         />
-//         <Route 
-//           path="family" 
-//           element={
-//             <FamilyDetailsForm 
-//               handleFormDataChange={handleFormDataChange}
-//               savedData={formData.familyDetails}
-//               onNext={() => navigate('service')}
-//               onPrev={() => navigate('education')}
-//             />
-//           } 
-//         />
-//         <Route 
-//           path="service" 
-//           element={
-//             <ServiceHistoryForm 
-//               handleFormDataChange={handleFormDataChange}
-//               savedData={formData.serviceHistory}
-//               onNext={() => navigate('nomination')}
-//               onPrev={() => navigate('family')}
-//             />
-//           } 
-//         />
-//         <Route 
-//           path="nomination" 
-//           element={
-//             <NominationDetailsForm 
-//               handleFormDataChange={handleFormDataChange}
-//               savedData={formData.nominationDetails}
-//               formData={formData}
-//               onPrev={() => navigate('service')}
-//             />
-//           } 
-//         />
-//       </Routes>
-//     </div>
-//   );
-// };
-
-// export default RegisterScreen;
