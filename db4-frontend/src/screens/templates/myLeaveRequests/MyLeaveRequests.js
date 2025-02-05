@@ -170,24 +170,6 @@ const MyLeaveRequests = () => {
     }
   };
 
-  // const handleCreateLeave = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await axios.post(API_URL, {
-  //       ...formData,
-  //       status: 'pending'
-  //     });
-  //     setLeaves([...leaves, response.data]);
-  //     setSuccess('Leave request created successfully');
-  //     setOpenDialog(false);
-  //     resetForm();
-  //   } catch (err) {
-  //     setError('Failed to create leave request');
-  //     console.error(err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const handleCreateLeave = async () => {
     try {
       setLoading(true);
@@ -233,6 +215,20 @@ const MyLeaveRequests = () => {
     }
   };
 
+  // const handleDeleteLeave = async (id) => {
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(`${API_URL}/${id}`);
+  //     setLeaves(leaves.filter(leave => leave._id !== id));
+  //     setSuccess('Leave request deleted successfully');
+  //   } catch (err) {
+  //     setError('Failed to delete leave request');
+  //     console.error(err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleDeleteLeave = async (id) => {
     try {
       setLoading(true);
@@ -240,12 +236,13 @@ const MyLeaveRequests = () => {
       setLeaves(leaves.filter(leave => leave._id !== id));
       setSuccess('Leave request deleted successfully');
     } catch (err) {
-      setError('Failed to delete leave request');
-      console.error(err);
+      setError(err.response?.data?.message || 'Failed to delete leave request');
+      console.error('Delete error:', err);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const handleApproveLeave = async (id) => {
     try {
@@ -473,16 +470,16 @@ const MyLeaveRequests = () => {
                   )}
                 </TableCell>
                 <TableCell align="center">
-                  {leave.status === 'pending' && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                    {leave.status === 'pending' && (
                       <IconButton size="small" color="primary" onClick={() => handleEdit(leave)}>
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDeleteLeave(leave._id)}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  )}
+                    )}
+                    <IconButton size="small" color="error" onClick={() => handleDeleteLeave(leave._id)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}

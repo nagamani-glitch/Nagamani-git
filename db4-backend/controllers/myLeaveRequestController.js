@@ -37,11 +37,10 @@ export const updateLeaveRequest = async (req, res) => {
 
 export const deleteLeaveRequest = async (req, res) => {
   try {
-    const leaveRequest = await MyLeaveRequest.findById(req.params.id);
+    const leaveRequest = await MyLeaveRequest.findByIdAndDelete(req.params.id);
     if (!leaveRequest) {
       return res.status(404).json({ message: 'Leave request not found' });
     }
-    await leaveRequest.remove();
     res.status(200).json({ message: 'Leave request deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
