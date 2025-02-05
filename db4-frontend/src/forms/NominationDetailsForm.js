@@ -88,7 +88,13 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
   };
 
   const handleFinalSubmit = (values) => {
-    handleFormDataChange("nominationDetails", values);
+    // First update the nomination details
+    handleFormDataChange("nominationDetails", {
+      ...values,
+      nomineeAge: parseInt(values.nomineeAge),
+      nominationPercentage: parseInt(values.nominationPercentage)
+    });
+    // Then trigger the final submission
     handleSubmit();
   };
 
