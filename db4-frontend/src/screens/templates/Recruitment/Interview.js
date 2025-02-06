@@ -368,7 +368,10 @@ const Interview = () => {
           </FormControl>
         </DialogContent>
         <DialogActions sx={{ padding: 2 }}>
-          <Button onClick={() => setOpenDialog(false)} sx={{ color: "#666" }}>
+          <Button onClick={() => setOpenDialog(false)} sx={{ color: "#fff",
+            backgroundColor: "#1a237e",
+
+          }}>
             Cancel
           </Button>
           <Button

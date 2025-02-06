@@ -419,25 +419,29 @@ const LeaveRequests = () => {
       {/* Filter Dialog */}
       <Dialog open={isFilterOpen} onClose={() => setFilterOpen(false)}>
         <DialogTitle>Filter Leave Requests</DialogTitle>
-        <DialogContent>
+
+        <DialogContent sx={{ padding: '20px' }}>
           <Select
             name="type"
             value={filters.type}
             onChange={(e) => setFilters({ ...filters, type: e.target.value })}
             fullWidth
             margin="dense"
+            sx={{ marginBottom: '20px' }}
           >
             <MenuItem value="">All Types</MenuItem>
             <MenuItem value="Annual Leave">Annual Leave</MenuItem>
             <MenuItem value="Sick Leave">Sick Leave</MenuItem>
             <MenuItem value="Maladie">Maladie</MenuItem>
           </Select>
+        
           <Select
             name="status"
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             fullWidth
             margin="dense"
+            sx={{ marginBottom: '20px' }}
           >
             <MenuItem value="">All Status</MenuItem>
             <MenuItem value="Pending">Pending</MenuItem>
@@ -445,6 +449,9 @@ const LeaveRequests = () => {
             <MenuItem value="Rejected">Rejected</MenuItem>
           </Select>
         </DialogContent>
+        
+
+
         <DialogActions>
           <Button onClick={() => {
             setFilters({
@@ -460,6 +467,8 @@ const LeaveRequests = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+
 
       {/* Comment Dialog */}
       <Dialog open={isCommentDialogOpen} onClose={handleCloseCommentDialog}>
