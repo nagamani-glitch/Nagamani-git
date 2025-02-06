@@ -266,10 +266,13 @@ const ShiftRequest = () => {
       <Box sx={{ padding: 4 }}>
         {/* Header Section */}
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-          <Typography variant="h5" fontWeight="bold">
+          {/* <Typography variant="h5" fontWeight="bold">
             {tabValue === 0 ? "Shift Requests" : "Allocated Shifts"}
-          </Typography>
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          </Typography> */}
+          <Typography variant="h3" sx={{ fontWeight: 800 }}>
+            {tabValue === 0 ? "Shift Requests" : "Allocated Shifts"}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
             <TextField
               placeholder="Search Employee"
               size="small"
@@ -383,7 +386,7 @@ const ShiftRequest = () => {
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
+              {/* <TableCell padding="checkbox">
                 <Checkbox
                   onChange={(e) => {
                     if (e.target.checked) handleSelectAll();
@@ -394,7 +397,8 @@ const ShiftRequest = () => {
                     (tabValue === 0 ? shiftRequests.length > 0 : allocatedShifts.length > 0)
                   }
                 />
-              </TableCell>
+              </TableCell> */}
+              <TableCell>Select</TableCell>
               <TableCell>Employee</TableCell>
               <TableCell>Requested Shift Type</TableCell>
               <TableCell>Current Shift Type</TableCell>

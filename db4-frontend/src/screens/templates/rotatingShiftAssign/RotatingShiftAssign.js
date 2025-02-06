@@ -263,7 +263,7 @@ const RotatingShiftAssign = () => {
     <Box>
       <Box sx={{ padding: 4 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-          <Typography variant="h5" fontWeight="bold">
+          <Typography variant="h3" fontWeight="800">
             {tabValue === 0 ? "Rotating Shift Requests" : "Allocated Rotating Shifts"}
           </Typography>
           <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
@@ -375,7 +375,7 @@ const RotatingShiftAssign = () => {
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
+              {/* <TableCell padding="checkbox">
                 <Checkbox
                   onChange={(e) => {
                     if (e.target.checked) handleSelectAll();
@@ -386,7 +386,8 @@ const RotatingShiftAssign = () => {
                     (tabValue === 0 ? shiftRequests.length > 0 : allocatedShifts.length > 0)
                   }
                 />
-              </TableCell>
+              </TableCell> */}
+              <TableCell>Select</TableCell>
               <TableCell>Employee</TableCell>
               <TableCell>Requested Work Type</TableCell>
               <TableCell>Previous/Current Work Type</TableCell>
