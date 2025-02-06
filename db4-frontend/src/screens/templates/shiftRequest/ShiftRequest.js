@@ -386,7 +386,7 @@ const ShiftRequest = () => {
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
+              {/* <TableCell padding="checkbox">
                 <Checkbox
                   onChange={(e) => {
                     if (e.target.checked) handleSelectAll();
@@ -397,7 +397,8 @@ const ShiftRequest = () => {
                     (tabValue === 0 ? shiftRequests.length > 0 : allocatedShifts.length > 0)
                   }
                 />
-              </TableCell>
+              </TableCell> */}
+              <TableCell>Select</TableCell>
               <TableCell>Employee</TableCell>
               <TableCell>Requested Shift Type</TableCell>
               <TableCell>Current Shift Type</TableCell>

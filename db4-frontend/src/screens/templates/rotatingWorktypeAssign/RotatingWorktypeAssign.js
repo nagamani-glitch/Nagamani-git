@@ -262,7 +262,7 @@ const RotatingWorktypeAssign = () => {
     <Box>
       <Box sx={{ padding: 4 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-          <Typography variant="h5" fontWeight="bold">
+          <Typography variant="h3" fontWeight="800">
             {tabValue === 0 ? "Rotating Work Type Requests" : "Allocated Worktypes"}
           </Typography>
           <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
@@ -374,7 +374,7 @@ const RotatingWorktypeAssign = () => {
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
+              {/* <TableCell padding="checkbox">
                 <Checkbox
                   onChange={(e) => {
                     if (e.target.checked) handleSelectAll();
@@ -385,7 +385,8 @@ const RotatingWorktypeAssign = () => {
                     (tabValue === 0 ? worktypeRequests.length > 0 : allocatedWorktypes.length > 0)
                   }
                 />
-              </TableCell>
+              </TableCell> */}
+              <TableCell>Select</TableCell>
               <TableCell>Employee</TableCell>
               <TableCell>Requested Work Type</TableCell>
               <TableCell>Current Work Type</TableCell>

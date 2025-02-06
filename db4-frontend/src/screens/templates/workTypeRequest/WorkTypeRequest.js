@@ -372,7 +372,7 @@ const WorkTypeRequest = () => {
                   }
                 />
               </TableCell> */}
-              <TableCell padding="checkbox"></TableCell>  
+              <TableCell>Select</TableCell> 
               <TableCell>Employee</TableCell>
               <TableCell>Requested Work Type</TableCell>
               <TableCell>Previous/Current Work Type</TableCell>
