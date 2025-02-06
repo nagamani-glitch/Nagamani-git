@@ -75,9 +75,13 @@ const RotatingShiftAssign = () => {
 
   const loadRotatingShiftRequests = async () => {
     try {
+      <Typography variant="h3" fontWeight="800" fontSize="1.5rem">
+        {tabValue === 0 ? "Rotating Shift Requests" : "Allocated Rotating Shifts"}
+      </Typography>
       const response = await axios.get(`${API_URL}/shifts`, {
         params: { isAllocated: tabValue === 1 }
       });
+    
       if (tabValue === 0) {
         setShiftRequests(response.data);
       } else {
@@ -263,7 +267,7 @@ const RotatingShiftAssign = () => {
     <Box>
       <Box sx={{ padding: 4 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-          <Typography variant="h3" fontWeight="800">
+          <Typography variant="h3" fontWeight="800"  fontSize="1.5rem">
             {tabValue === 0 ? "Rotating Shift Requests" : "Allocated Rotating Shifts"}
           </Typography>
           <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>

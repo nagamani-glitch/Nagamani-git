@@ -471,7 +471,7 @@ const DisciplinaryActions = () => {
   return (
     <Box sx={{ padding: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h5" fontWeight="bold">
+      <Typography variant="h3" fontWeight="800"  fontSize="1.5rem">
           Disciplinary Actions
         </Typography>
         <Button

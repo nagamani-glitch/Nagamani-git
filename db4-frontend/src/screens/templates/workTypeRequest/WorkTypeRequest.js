@@ -242,7 +242,7 @@ const WorkTypeRequest = () => {
             mb: 3,
           }}
         >
-          <Typography variant="h3" fontWeight="800">
+          <Typography variant="h3" fontWeight="800"  fontSize="1.5rem">
             Work Type Requests
           </Typography>
           <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
