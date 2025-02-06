@@ -40,23 +40,55 @@ import axios from "axios";
 
 const styles = {
   root: {
-    padding: "24px",
+    padding: {
+      xs: "12px",
+      sm: "16px",
+      md: "24px"
+    },
     backgroundColor: "#f8fafc",
     minHeight: "100vh",
   },
   header: {
     display: "flex",
-    alignItems: "center",
+    flexDirection: {
+      xs: "column",
+      md: "row"
+    },
+    alignItems: {
+      xs: "flex-start",
+      md: "center"
+    },
+    gap: {
+      xs: 2,
+      md: 0
+    },
     justifyContent: "space-between",
     marginBottom: "32px",
-    padding: "24px",
+    padding: {
+      xs: "16px",
+      sm: "20px",
+      md: "24px"
+    },
     backgroundColor: "white",
     borderRadius: "12px",
     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
   },
+  actionButtons: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "16px",
+    alignItems: "center",
+    width: {
+      xs: "100%",
+      md: "auto"
+    }
+  },
   searchBar: {
     marginRight: 2,
-    width: 280,
+    width: {
+      xs: "100%",
+      sm: "280px"
+    },
     backgroundColor: "#fff",
     borderRadius: "8px",
     "& .MuiOutlinedInput-root": {
@@ -67,11 +99,6 @@ const styles = {
         borderColor: "#1976d2",
       },
     },
-  },
-  actionButtons: {
-    display: "flex",
-    gap: "16px",
-    alignItems: "center",
   },
   card: {
     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -237,167 +264,169 @@ const RecruitmentCandidate = () => {
 
   return (
     <Box sx={styles.root}>
-      <Paper elevation={0} sx={styles.header}>
-        <Typography variant="h4" fontWeight="700" color="#1a2027">
-          Recruitment Candidates
-        </Typography>
-        <Box sx={styles.actionButtons}>
-          <TextField
-            variant="outlined"
-            placeholder="Search candidates..."
-            size="small"
-            InputProps={{
-              startAdornment: <Search sx={{ color: "#94a3b8", mr: 1 }} />,
-            }}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={styles.searchBar}
-          />
+      <Box maxWidth="1800px" margin="0 auto">
+        <Paper elevation={0} sx={styles.header}>
+          <Typography variant="h6" fontWeight="700" color="#1a2027">
+            Recruitment Candidates
+          </Typography>
+          <Box sx={styles.actionButtons}>
+            <TextField
+              variant="outlined"
+              placeholder="Search candidates..."
+              size="small"
+              InputProps={{
+                startAdornment: <Search sx={{ color: "#94a3b8", mr: 1 }} />,
+              }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={styles.searchBar}
+            />
 
-          <ToggleButtonGroup
-            value={view}
-            exclusive
-            onChange={(e, nextView) => nextView && setView(nextView)}
-            sx={{ backgroundColor: "white" }}
-          >
-            <ToggleButton value="list" sx={styles.toggleButton}>
-              <List />
-            </ToggleButton>
-            <ToggleButton value="grid" sx={styles.toggleButton}>
-              <GridView />
-            </ToggleButton>
-          </ToggleButtonGroup>
+            <ToggleButtonGroup
+              value={view}
+              exclusive
+              onChange={(e, nextView) => nextView && setView(nextView)}
+              sx={{ backgroundColor: "white" }}
+            >
+              <ToggleButton value="list" sx={styles.toggleButton}>
+                <List />
+              </ToggleButton>
+              <ToggleButton value="grid" sx={styles.toggleButton}>
+                <GridView />
+              </ToggleButton>
+            </ToggleButtonGroup>
 
-          <Button
-            variant="outlined"
-            startIcon={<FilterList />}
-            onClick={() =>
-              setFilter(
-                filter === "" ? "Hired" : filter === "Hired" ? "Not-Hired" : ""
-              )
-            }
-            sx={styles.actionButton}
-          >
-            {filter || "All Status"}
-          </Button>
+            <Button
+              variant="outlined"
+              startIcon={<FilterList />}
+              onClick={() =>
+                setFilter(
+                  filter === "" ? "Hired" : filter === "Hired" ? "Not-Hired" : ""
+                )
+              }
+              sx={styles.actionButton}
+            >
+              {filter || "All Status"}
+            </Button>
 
-          <Button
-            variant="outlined"
-            startIcon={<GroupWork />}
-            onClick={() => setGroupBy(!groupBy)}
-            sx={styles.actionButton}
-          >
-            {groupBy ? "Ungroup" : "Group by Position"}
-          </Button>
+            <Button
+              variant="outlined"
+              startIcon={<GroupWork />}
+              onClick={() => setGroupBy(!groupBy)}
+              sx={styles.actionButton}
+            >
+              {groupBy ? "Ungroup" : "Group by Position"}
+            </Button>
 
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setCreateDialogOpen(true)}
-            sx={{
-              ...styles.actionButton,
-              backgroundColor: "#1976d2",
-              "&:hover": { backgroundColor: "#1565c0" },
-            }}
-          >
-            Add Candidate
-          </Button>
-        </Box>
-      </Paper>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => setCreateDialogOpen(true)}
+              sx={{
+                ...styles.actionButton,
+                backgroundColor: "#1976d2",
+                "&:hover": { backgroundColor: "#1565c0" },
+              }}
+            >
+              Add Candidate
+            </Button>
+          </Box>
+        </Paper>
 
-      {Object.entries(groupedCandidates).map(([position, candidates]) => (
-        <Fade in={true} timeout={500} key={position}>
-          <Box mb={4}>
-            {groupBy && (
-              <Typography
-                variant="h5"
-                fontWeight="600"
-                color="#1a2027"
-                sx={{ mb: 3, pl: 1 }}
-              >
-                {position || "Unspecified Position"}
-              </Typography>
-            )}
-
-            <Grid container spacing={3}>
-              {candidates.map((candidate) => (
-                <Grid
-                  item
-                  xs={12}
-                  md={view === "grid" ? 4 : 12}
-                  key={candidate._id}
+        {Object.entries(groupedCandidates).map(([position, candidates]) => (
+          <Fade in={true} timeout={500} key={position}>
+            <Box mb={4}>
+              {groupBy && (
+                <Typography
+                  variant="h5"
+                  fontWeight="600"
+                  color="#1a2027"
+                  sx={{ mb: 3, pl: 1 }}
                 >
-                  <Card
-                    sx={{
-                      ...styles.card,
-                      borderLeft: `4px solid ${candidate.color}`,
-                      backgroundColor: "white",
-                    }}
+                  {position || "Unspecified Position"}
+                </Typography>
+              )}
+
+              <Grid container spacing={3}>
+                {candidates.map((candidate) => (
+                  <Grid
+                    item
+                    xs={12}
+                    md={view === "grid" ? 4 : 12}
+                    key={candidate._id}
                   >
-                    <CardContent sx={styles.cardContent}>
-                      <Box display="flex" alignItems="center" gap={2}>
-                        <Avatar
-                          sx={{
-                            ...styles.avatar,
-                            bgcolor: candidate.color,
-                            color: "white",
-                          }}
-                        >
-                          {(candidate?.name?.[0] || "U").toUpperCase()}
-                        </Avatar>
-                        <Box flexGrow={1}>
-                          <Typography
-                            variant="h6"
-                            fontWeight="600"
-                            color="#1a2027"
-                          >
-                            {candidate.name}
-                          </Typography>
-                          <Typography color="text.secondary" sx={{ mb: 1 }}>
-                            {candidate.email}
-                          </Typography>
-                          <Typography
-                            variant="body2"
+                    <Card
+                      sx={{
+                        ...styles.card,
+                        borderLeft: `4px solid ${candidate.color}`,
+                        backgroundColor: "white",
+                      }}
+                    >
+                      <CardContent sx={styles.cardContent}>
+                        <Box display="flex" alignItems="center" gap={2}>
+                          <Avatar
                             sx={{
-                              color: "#64748b",
-                              fontWeight: 500,
-                              mb: 1,
-                            }}
-                          >
-                            {candidate.position}
-                          </Typography>
-                          <Chip
-                            label={candidate.status}
-                            sx={{
+                              ...styles.avatar,
                               bgcolor: candidate.color,
                               color: "white",
-                              ...styles.statusChip,
                             }}
-                          />
+                          >
+                            {(candidate?.name?.[0] || "U").toUpperCase()}
+                          </Avatar>
+                          <Box flexGrow={1}>
+                            <Typography
+                              variant="h6"
+                              fontWeight="600"
+                              color="#1a2027"
+                            >
+                              {candidate.name}
+                            </Typography>
+                            <Typography color="text.secondary" sx={{ mb: 1 }}>
+                              {candidate.email}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "#64748b",
+                                fontWeight: 500,
+                                mb: 1,
+                              }}
+                            >
+                              {candidate.position}
+                            </Typography>
+                            <Chip
+                              label={candidate.status}
+                              sx={{
+                                bgcolor: candidate.color,
+                                color: "white",
+                                ...styles.statusChip,
+                              }}
+                            />
+                          </Box>
+                          <IconButton
+                            onClick={(e) => {
+                              setAnchorEl(e.currentTarget);
+                              setSelectedCandidate(candidate);
+                            }}
+                            sx={{
+                              color: "#64748b",
+                              "&:hover": {
+                                backgroundColor: "#f1f5f9",
+                              },
+                            }}
+                          >
+                            <MoreVert />
+                          </IconButton>
                         </Box>
-                        <IconButton
-                          onClick={(e) => {
-                            setAnchorEl(e.currentTarget);
-                            setSelectedCandidate(candidate);
-                          }}
-                          sx={{
-                            color: "#64748b",
-                            "&:hover": {
-                              backgroundColor: "#f1f5f9",
-                            },
-                          }}
-                        >
-                          <MoreVert />
-                        </IconButton>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        </Fade>
-      ))}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          </Fade>
+        ))}
+      </Box>
 
       <Dialog
         open={createDialogOpen}
@@ -457,8 +486,8 @@ const RecruitmentCandidate = () => {
                 "& .MuiInputLabel-root.Mui-focused": {
                   color: "#1976d2",
                 },
+                mt: 2
               }}
-              sx={{ mt: 2 }}
             />
 
             <TextField
@@ -645,6 +674,6 @@ const RecruitmentCandidate = () => {
       </Snackbar>
     </Box>
   );
-};
+}
 
 export default RecruitmentCandidate;
