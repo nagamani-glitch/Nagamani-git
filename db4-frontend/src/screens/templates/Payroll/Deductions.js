@@ -243,13 +243,14 @@ const Deductions = () => {
       <div className="deduction-sub-container">
       <header className="deduction-header">
         <h2>Deductions</h2>
-        <div className="controls">
+        <div className="deduction-controls">
           <input
             type="text"
             placeholder="Search"
             value={searchTerm}
             onChange={handleSearch}
-            className="search-input"
+            // className="deduction-search-input"
+            style={{border: '1px solid gray', padding: '8px', borderRadius: '4px', marginRight: '8px'}}
           />
           <button
             className={`view-toggle ${view === "list" ? "active" : ""}`}

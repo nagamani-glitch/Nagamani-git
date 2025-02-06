@@ -8,7 +8,7 @@
   
   }  
  
-.create-allowance-container {
+.create-deduction-container {
   padding: 30px;
   width: 100%;
   max-width: 1200px;
@@ -16,7 +16,7 @@
   background-color: #ffffff;
   border-radius: 8px;
   border: 1.5px solid rgb(216, 212, 212);
-  border: 2px solid red;
+  border: 1px solid red;
 
     
   }

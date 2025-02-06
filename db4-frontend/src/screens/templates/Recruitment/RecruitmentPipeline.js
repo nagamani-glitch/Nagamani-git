@@ -614,6 +614,9 @@ const RecruitmentPipeline = () => {
 
 export default RecruitmentPipeline;
 
+
+
+
 // import React, { useState, useEffect, useMemo } from "react";
 // import axios from "axios";
 // import {
@@ -641,12 +644,14 @@ export default RecruitmentPipeline;
 // import DeleteIcon from "@mui/icons-material/Delete";
 // import StarIcon from "@mui/icons-material/Star";
 
+
 // const initialColumns = {
 //   "Recruitment Drive": ["Initial", "Interview", "Hired", "Cancelled", "Technical"],
 //   "FutureForce Recruitment": ["Applied", "Screening", "Interviewed", "Offered", "Rejected"],
 //   "Operating Manager": ["Reviewed", "In Progress", "Completed"],
 //   "Hiring Employees": ["Shortlisted", "Offer Extended", "Joined"],
 // };
+
 
 // const RecruitmentPipeline = () => {
 //   const [tabIndex, setTabIndex] = useState(0);

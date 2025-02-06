@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import { IoFilterOutline } from "react-icons/io5";
 import axios from "axios";
-import './CreateDeduction.css'
+import {motion} from "framer-motion";
+ import './CreateDeduction.css'
  
  
 const CreateDeduction = ({ onClose, editData, onUpdate }) => {
@@ -117,8 +118,8 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
  
  
   return (
-    <div className="main-container">
-      <div className="create-allowance-container">
+    <div className="create-deduction-container">
+      <div className="create-deduction-container">
         <div className="deduction-row">
           <h2 className="deduction-heading">{editData ? 'Edit Deduction' : 'Create Deduction'}</h2>
         </div>
