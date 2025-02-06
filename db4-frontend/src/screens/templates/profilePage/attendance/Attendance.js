@@ -256,7 +256,7 @@ const Attendance = () => {
             margin="normal"
           />
         </DialogContent>
-        <DialogActions>
+        <DialogActions >
           <Button onClick={handleClose}>Cancel</Button>
           <Button variant="contained" color="primary" onClick={handleSave}>
             Save
