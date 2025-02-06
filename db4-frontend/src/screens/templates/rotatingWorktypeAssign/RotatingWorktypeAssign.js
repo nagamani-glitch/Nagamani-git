@@ -262,7 +262,7 @@ const RotatingWorktypeAssign = () => {
     <Box>
       <Box sx={{ padding: 4 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-          <Typography variant="h3" fontWeight="800">
+          <Typography variant="h3" fontWeight="800"  fontSize="1.5rem">
             {tabValue === 0 ? "Rotating Work Type Requests" : "Allocated Worktypes"}
           </Typography>
           <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>

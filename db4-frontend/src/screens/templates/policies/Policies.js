@@ -99,7 +99,7 @@ const Policies = () => {
   return (
     <Box sx={{ padding: '24px' }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-        <Typography variant="h4">Policies</Typography>
+      <Typography variant="h3" fontWeight="800"  fontSize="1.5rem">Policies</Typography>
         <Box display="flex" alignItems="center">
           <TextField
             variant="outlined"

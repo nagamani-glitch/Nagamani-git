@@ -267,7 +267,7 @@ const RotatingShiftAssign = () => {
     <Box>
       <Box sx={{ padding: 4 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-          <Typography variant="h3" fontWeight="600"  fontSize="1.5rem">
+          <Typography variant="h3" fontWeight="800"  fontSize="1.5rem">
             {tabValue === 0 ? "Rotating Shift Requests" : "Allocated Rotating Shifts"}
           </Typography>
           <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>

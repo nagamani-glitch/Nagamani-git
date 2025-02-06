@@ -269,7 +269,7 @@ const ShiftRequest = () => {
           {/* <Typography variant="h5" fontWeight="bold">
             {tabValue === 0 ? "Shift Requests" : "Allocated Shifts"}
           </Typography> */}
-          <Typography variant="h3" sx={{ fontWeight: 800 }}>
+          <Typography variant="h3" fontWeight="800"  fontSize="1.5rem">
             {tabValue === 0 ? "Shift Requests" : "Allocated Shifts"}
             </Typography>
             <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
