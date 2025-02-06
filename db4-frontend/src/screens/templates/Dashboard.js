@@ -221,6 +221,7 @@ import Sidebar from './sidebar/Sidebar';
 import { useSidebar } from "../../Context";
 import QuickActionButton from './QuickActionButton';
 import "./Dashboard.css";
+import axios from 'axios';
 
 // All component imports remain the same as in previous code...
 import MainDashboard from "./MainDashboard";
@@ -280,6 +281,17 @@ function Dashboard() {
     navigate(path);
   };
 
+  const handleProfileNavigation = async (employeeId) => {
+    try {
+      const response = await axios.get(`/api/employees/verify/${employeeId}`);
+      if (response.data.email) {
+        navigate(`/Dashboards/profile/${employeeId}`);
+      }
+    } catch (error) {
+      console.log('User verification failed');
+    }
+  };
+
   return (
     <div className={`dashboard-container ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
       <Sidebar onNavigate={handleNavigation} />
@@ -295,7 +307,14 @@ function Dashboard() {
           <Route path="/interview" element={<Interview />} />
           <Route path="/skill-zone" element={<SkillZone />} />
           <Route path="/candidates-view" element={<CandidatesView />} />
-          <Route path="/profile/:id" element={<ProfilePage />} />
+
+          <Route path="/profile/:id" element={<ProfilePage 
+      onVerify={handleProfileNavigation}
+    />
+          }
+          />
+
+          {/* <Route path="/profile/:Id" element={<ProfilePage />} /> */}
           <Route path="/employees" element={<EmployeeListing onNavigate={handleNavigation} />} />
           <Route path="/document-request" element={<DocumentRequestPage />} />
           <Route path="/work-type-request" element={<WorkTypeRequest />} />

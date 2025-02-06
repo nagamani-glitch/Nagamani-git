@@ -198,16 +198,21 @@ const RecruitmentPipeline = () => {
 
   const columns = initialColumns[tabLabels[tabIndex]];
   return (
-    <Box sx={{  backgroundColor: "#f9f9f9" }}>
+    <Box sx={{ 
+      backgroundColor: "#f9f9f9",
+      padding: {xs: "16px", sm: "24px", md: "32px" },
+      width: "100%" ,
+      minHeight: "100vh"
+    }}>
       {/* Header */}
-
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 2,
-          gap: 2,
+          mb: 3,
+          flexWrap: { xs: "wrap", md: "nowrap" },
+          gap: { xs: 2, md: 3 }
         }}
       >
         <Typography
@@ -215,6 +220,7 @@ const RecruitmentPipeline = () => {
           sx={{
             fontWeight: 500,
             color: "#1a237e",
+            flexShrink: 0
           }}
         >
           Recruitments
@@ -225,6 +231,8 @@ const RecruitmentPipeline = () => {
             display: "flex",
             alignItems: "center",
             gap: 2,
+            width: { xs: "100%", md: "auto" },
+            justifyContent: { xs: "space-between", md: "flex-end" }
           }}
         >
           <Paper
@@ -233,7 +241,7 @@ const RecruitmentPipeline = () => {
               p: "2px 8px",
               display: "flex",
               alignItems: "center",
-              width: 300,
+              width: { xs: "60%", sm: "300px" },
               borderRadius: "8px",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
               "&:hover": {
@@ -243,11 +251,7 @@ const RecruitmentPipeline = () => {
           >
             <SearchIcon sx={{ color: "action.active", mr: 1 }} />
             <InputBase
-              sx={{
-                flex: 1,
-                "& input": {
-                },
-              }}
+              sx={{ flex: 1 }}
               placeholder="Search candidates..."
               value={searchTerm}
               onChange={handleSearchChange}
@@ -264,13 +268,14 @@ const RecruitmentPipeline = () => {
               textTransform: "none",
               px: 3,
               py: 1,
+              whiteSpace: "nowrap",
+              minWidth: "fit-content"
             }}
           >
             Add Candidate
           </Button>
         </Box>
       </Box>
-
       {/* Tabs */}
       <Tabs
         value={tabIndex}
@@ -289,15 +294,15 @@ const RecruitmentPipeline = () => {
       <Divider sx={{ mb: 2 }} />
 
       {/* Column-based Candidate Display */}
-      <Grid container spacing={2}>
-        {columns.map((column) => (
-          <Grid
-            item
-            xs={12}      // Full width on mobile
-            sm={6}       // 2 cards per row on small tablets
-            md={4}       // 3 cards per row on tablets
-            lg={3}       // 4 cards per row on desktop
-            key={column}
+      <Grid container spacing={3} sx={{ mt: 1 }}>
+    {columns.map((column) => (
+      <Grid
+        item
+        xs={12}
+        sm={6}
+        md={4}
+        lg={3}
+        key={column}
           >
             <Paper
               sx={{
@@ -608,3 +613,460 @@ const RecruitmentPipeline = () => {
 };
 
 export default RecruitmentPipeline;
+
+// import React, { useState, useEffect, useMemo } from "react";
+// import axios from "axios";
+// import {
+//   Box,
+//   Typography,
+//   Button,
+//   Grid,
+//   Tabs,
+//   Tab,
+//   IconButton,
+//   Paper,
+//   Avatar,
+//   Divider,
+//   InputBase,
+//   Dialog,
+//   DialogTitle,
+//   DialogContent,
+//   TextField,
+//   DialogActions,
+//   MenuItem,
+// } from "@mui/material";
+// import SearchIcon from "@mui/icons-material/Search";
+// import AddIcon from "@mui/icons-material/Add";
+// import EditIcon from "@mui/icons-material/Edit";
+// import DeleteIcon from "@mui/icons-material/Delete";
+// import StarIcon from "@mui/icons-material/Star";
+
+// const initialColumns = {
+//   "Recruitment Drive": ["Initial", "Interview", "Hired", "Cancelled", "Technical"],
+//   "FutureForce Recruitment": ["Applied", "Screening", "Interviewed", "Offered", "Rejected"],
+//   "Operating Manager": ["Reviewed", "In Progress", "Completed"],
+//   "Hiring Employees": ["Shortlisted", "Offer Extended", "Joined"],
+// };
+
+// const RecruitmentPipeline = () => {
+//   const [tabIndex, setTabIndex] = useState(0);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [isDialogOpen, setIsDialogOpen] = useState(false);
+//   const [candidates, setCandidates] = useState([]);
+//   const [newCandidate, setNewCandidate] = useState({
+//     name: "",
+//     email: "",
+//     department: "",
+//     column: "Initial",
+//     stars: 0,
+//   });
+//   const [editingCandidate, setEditingCandidate] = useState(null);
+//   const [validationErrors, setValidationErrors] = useState({
+//     name: "",
+//     email: "",
+//   });
+
+//   const validateName = (name) => {
+//     const nameRegex = /^[a-zA-Z\s]{2,30}$/;
+//     return nameRegex.test(name);
+//   };
+
+//   const validateEmail = (email) => {
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     return emailRegex.test(email);
+//   };
+
+//   const tabLabels = useMemo(
+//     () => [
+//       "Recruitment Drive",
+//       "FutureForce Recruitment",
+//       "Operating Manager",
+//       "Hiring Employees",
+//     ],
+//     []
+//   );
+
+//   useEffect(() => {
+//     fetchCandidates(tabLabels[tabIndex]);
+//   }, [tabIndex, tabLabels]);
+
+//   const handleTabChange = (event, newValue) => {
+//     setTabIndex(newValue);
+//   };
+
+//   const fetchCandidates = async (recruitment) => {
+//     try {
+//       const response = await axios.get(
+//         `http://localhost:5000/api/recruitment/${recruitment}`
+//       );
+//       setCandidates(response.data);
+//     } catch (error) {
+//       console.error("Error fetching candidates:", error);
+//     }
+//   };
+
+//   const handleDialogOpen = (candidate = null) => {
+//     if (candidate) {
+//       setEditingCandidate(candidate);
+//       setNewCandidate({ ...candidate });
+//     } else {
+//       setEditingCandidate(null);
+//       setNewCandidate({
+//         name: "",
+//         email: "",
+//         department: "",
+//         column: "Initial",
+//         stars: 0,
+//       });
+//     }
+//     setIsDialogOpen(true);
+//   };
+
+//   const handleDialogClose = () => setIsDialogOpen(false);
+
+//   const handleInputChange = (field, value) => {
+//     setNewCandidate({ ...newCandidate, [field]: value });
+
+//     if (field === "name") {
+//       setValidationErrors({
+//         ...validationErrors,
+//         name: validateName(value)
+//           ? ""
+//           : "Name should contain only letters and be 2-30 characters long",
+//       });
+//     }
+
+//     if (field === "email") {
+//       setValidationErrors({
+//         ...validationErrors,
+//         email: validateEmail(value) ? "" : "Please enter a valid email address",
+//       });
+//     }
+//   };
+
+//   const handleAddOrEditCandidate = async () => {
+//     if (!validateName(newCandidate.name) || !validateEmail(newCandidate.email)) {
+//       return;
+//     }
+
+//     const selectedTabLabel = tabLabels[tabIndex];
+//     try {
+//       if (editingCandidate) {
+//         await axios.put(
+//           `http://localhost:5000/api/recruitment/${editingCandidate._id}`,
+//           newCandidate
+//         );
+//       } else {
+//         await axios.post("http://localhost:5000/api/recruitment", {
+//           ...newCandidate,
+//           recruitment: selectedTabLabel,
+//         });
+//       }
+//       fetchCandidates(selectedTabLabel);
+//       setIsDialogOpen(false);
+//     } catch (error) {
+//       console.error("Error adding/editing candidate:", error);
+//     }
+//   };
+
+//   const handleDeleteCandidate = async (candidateId) => {
+//     const selectedTabLabel = tabLabels[tabIndex];
+//     try {
+//       await axios.delete(`http://localhost:5000/api/recruitment/${candidateId}`);
+//       fetchCandidates(selectedTabLabel);
+//     } catch (error) {
+//       console.error("Error deleting candidate:", error);
+//     }
+//   };
+
+//   const handleSearchChange = (event) => setSearchTerm(event.target.value);
+
+//   const filteredCandidates = candidates.filter((candidate) =>
+//     candidate.name.toLowerCase().includes(searchTerm.toLowerCase())
+//   );
+
+//   const columns = initialColumns[tabLabels[tabIndex]];
+//   return (
+//     <Box sx={{ backgroundColor: "#f9f9f9" }}>
+//       <Box
+//         sx={{
+//           display: "flex",
+//           justifyContent: "space-between",
+//           alignItems: "center",
+//           mb: 2,
+//           gap: 2,
+//         }}
+//       >
+//         <Typography
+//           variant="h4"
+//           sx={{
+//             fontWeight: 500,
+//             color: "#1a237e",
+//           }}
+//         >
+//           Recruitments
+//         </Typography>
+  
+//         <Box
+//           sx={{
+//             display: "flex",
+//             alignItems: "center",
+//             gap: 2,
+//           }}
+//         >
+//           <Paper
+//             component="form"
+//             sx={{
+//               p: "2px 8px",
+//               display: "flex",
+//               alignItems: "center",
+//               width: 300,
+//               borderRadius: "8px",
+//               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+//               "&:hover": {
+//                 boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+//               },
+//             }}
+//           >
+//             <SearchIcon sx={{ color: "action.active", mr: 1 }} />
+//             <InputBase
+//               sx={{ flex: 1 }}
+//               placeholder="Search candidates..."
+//               value={searchTerm}
+//               onChange={handleSearchChange}
+//             />
+//           </Paper>
+  
+//           <Button
+//             variant="contained"
+//             color="error"
+//             startIcon={<AddIcon />}
+//             onClick={() => handleDialogOpen()}
+//             sx={{
+//               borderRadius: "8px",
+//               textTransform: "none",
+//               px: 3,
+//               py: 1,
+//             }}
+//           >
+//             Add Candidate
+//           </Button>
+//         </Box>
+//       </Box>
+  
+//       <Tabs
+//         value={tabIndex}
+//         onChange={handleTabChange}
+//         indicatorColor="primary"
+//         textColor="inherit"
+//         sx={{ mb: 2 }}
+//         variant="scrollable"
+//         scrollButtons="auto"
+//       >
+//         {tabLabels.map((label, index) => (
+//           <Tab key={index} label={label} />
+//         ))}
+//       </Tabs>
+  
+//       <Divider sx={{ mb: 2 }} />
+  
+//       <Grid 
+//         container 
+//         sx={{ 
+//           p: 2,
+//           display: 'grid',
+//           gridTemplateColumns: {
+//             xs: '1fr',                    
+//             sm: 'repeat(2, 1fr)',        
+//             md: 'repeat(3, 1fr)',        
+//             lg: 'repeat(4, 1fr)',        
+//           },
+//           gap: 3,
+//           alignItems: 'start'
+//         }}
+//       >
+//         {columns.map((column) => (
+//           <Paper
+//             key={column}
+//             elevation={3}
+//             sx={{
+//               height: '100%',
+//               borderRadius: '12px',
+//               p: 2,
+//               display: 'flex',
+//               flexDirection: 'column',
+//             }}
+//           >
+//             <Box sx={{
+//               display: 'flex',
+//               alignItems: 'center',
+//               justifyContent: 'space-between',
+//               mb: 2,
+//               pb: 1,
+//               borderBottom: '1px solid #e0e0e0'
+//             }}>
+//               <Typography variant="h6">
+//                 {column}
+//               </Typography>
+//               <Typography variant="caption" sx={{ px: 1.5, py: 0.5, borderRadius: '12px' }}>
+//                 {filteredCandidates.filter(c => c.column === column).length}
+//               </Typography>
+//             </Box>
+  
+//             <Box sx={{ 
+//               flexGrow: 1, 
+//               overflowY: 'auto',
+//               maxHeight: '70vh'
+//             }}>
+//               {filteredCandidates
+//               .filter((candidate) => candidate.column === column)
+//               .map((candidate) => (
+//                 <Paper
+//                   key={candidate._id}
+//                   elevation={1}
+//                   sx={{
+//                     mb: 2,
+//                     p: 2,
+//                     borderRadius: '8px',
+//                   }}
+//                 >
+//                   <Box sx={{
+//                     display: 'flex',
+//                     alignItems: 'flex-start',
+//                     gap: 1.5
+//                   }}>
+//                     <Avatar sx={{ bgcolor: "#FF5C8D" }}>
+//                       {candidate?.name?.[0]?.toUpperCase() || 'U'}
+//                     </Avatar>
+                    
+//                     <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+//                       <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+//                         {candidate.name}
+//                       </Typography>
+                      
+//                       <Typography variant="body2" color="textSecondary">
+//                         {candidate.email}
+//                       </Typography>
+                      
+//                       <Box sx={{
+//                         display: 'flex',
+//                         alignItems: 'center',
+//                         justifyContent: 'space-between',
+//                         mt: 1
+//                       }}>
+//                         <Box sx={{ display: 'flex', gap: 0.5 }}>
+//                           {Array.from({ length: 5 }).map((_, starIdx) => (
+//                             <StarIcon
+//                               key={starIdx}
+//                               sx={{
+//                                 fontSize: 18,
+//                                 color: starIdx < candidate.stars ? '#FFB400' : '#E0E0E0'
+//                               }}
+//                             />
+//                           ))}
+//                         </Box>
+                        
+//                         <Box sx={{ display: 'flex', gap: 1 }}>
+//                           <IconButton
+//                             size="small"
+//                             onClick={() => handleDialogOpen(candidate)}
+//                           >
+//                             <EditIcon fontSize="small" />
+//                           </IconButton>
+//                           <IconButton
+//                             size="small"
+//                             onClick={() => handleDeleteCandidate(candidate._id)}
+//                           >
+//                             <DeleteIcon fontSize="small" />
+//                           </IconButton>
+//                         </Box>
+//                       </Box>
+//                     </Box>
+//                   </Box>
+//                 </Paper>
+//               ))}
+//           </Box>
+//         </Paper>
+//       ))}
+//     </Grid>
+
+//     <Dialog open={isDialogOpen} onClose={handleDialogClose}>
+//       <DialogTitle>
+//         {editingCandidate ? 'Edit Candidate' : 'Add New Candidate'}
+//       </DialogTitle>
+
+//       <DialogContent>
+//         <TextField
+//           margin="dense"
+//           label="Name"
+//           fullWidth
+//           value={newCandidate.name}
+//           onChange={(e) => handleInputChange('name', e.target.value)}
+//           error={!!validationErrors.name}
+//           helperText={validationErrors.name}
+//         />
+
+//         <TextField
+//           margin="dense"
+//           label="Email"
+//           fullWidth
+//           value={newCandidate.email}
+//           onChange={(e) => handleInputChange('email', e.target.value)}
+//           error={!!validationErrors.email}
+//           helperText={validationErrors.email}
+//         />
+
+//         <TextField
+//           margin="dense"
+//           label="Department"
+//           fullWidth
+//           value={newCandidate.department}
+//           onChange={(e) => setNewCandidate({ ...newCandidate, department: e.target.value })}
+//         />
+
+//         <TextField
+//           select
+//           margin="dense"
+//           label="Column"
+//           fullWidth
+//           value={newCandidate.column}
+//           onChange={(e) => setNewCandidate({ ...newCandidate, column: e.target.value })}
+//         >
+//           {columns.map((column) => (
+//             <MenuItem key={column} value={column}>
+//               {column}
+//             </MenuItem>
+//           ))}
+//         </TextField>
+
+//         <Box sx={{ mt: 2 }}>
+//           <Typography variant="subtitle1">Rating</Typography>
+//           <Box sx={{ display: 'flex', gap: 1 }}>
+//             {Array.from({ length: 5 }).map((_, starIdx) => (
+//               <IconButton
+//                 key={starIdx}
+//                 onClick={() => setNewCandidate({ ...newCandidate, stars: starIdx + 1 })}
+//               >
+//                 <StarIcon
+//                   sx={{
+//                     color: starIdx < newCandidate.stars ? '#FFB400' : '#E0E0E0'
+//                   }}
+//                 />
+//               </IconButton>
+//             ))}
+//           </Box>
+//         </Box>
+//       </DialogContent>
+
+//       <DialogActions>
+//         <Button onClick={handleDialogClose}>Cancel</Button>
+//         <Button onClick={handleAddOrEditCandidate} variant="contained">
+//           {editingCandidate ? 'Save Changes' : 'Add Candidate'}
+//         </Button>
+//       </DialogActions>
+//     </Dialog>
+//   </Box>
+// );
+// };
+
+// export default RecruitmentPipeline;
