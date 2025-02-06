@@ -242,7 +242,7 @@ const WorkTypeRequest = () => {
             mb: 3,
           }}
         >
-          <Typography variant="h5" fontWeight="bold">
+          <Typography variant="h3" fontWeight="800">
             Work Type Requests
           </Typography>
           <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
@@ -357,7 +357,7 @@ const WorkTypeRequest = () => {
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
+              {/* <TableCell padding="checkbox">
                 <Checkbox
                   onChange={(e) => {
                     if (e.target.checked) {
@@ -371,7 +371,8 @@ const WorkTypeRequest = () => {
                     shiftRequests.length > 0
                   }
                 />
-              </TableCell>
+              </TableCell> */}
+              <TableCell>Select</TableCell> 
               <TableCell>Employee</TableCell>
               <TableCell>Requested Work Type</TableCell>
               <TableCell>Previous/Current Work Type</TableCell>

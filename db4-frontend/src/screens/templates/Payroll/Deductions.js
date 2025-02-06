@@ -242,7 +242,7 @@ const Deductions = () => {
     <div className="deduction-container">
       <div className="deduction-sub-container">
       <header className="deduction-header">
-        <h2>Deductions</h2>
+        <h1>Deductions</h1>
         <div className="deduction-controls">
           <input
             type="text"

@@ -585,16 +585,32 @@ const AttendanceRecords = () => {
             </Grid>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleCreateRecord}
-            variant="contained"
-            sx={{ px: 4 }}
-          >
-            Create
-          </Button>
-        </DialogActions>
+            <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'flex-start' }}>
+              <Button 
+                onClick={() => setCreateOpen(false)}
+                sx={{ 
+                  bgcolor: '#1976d2',
+                  color: 'white',
+                  '&:hover': { bgcolor: '#1565c0' }
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateRecord}
+                variant="contained"
+                sx={{ 
+                  px: 4, 
+                  ml: 1,
+                  bgcolor: '#1976d2',
+                  color: 'white',
+                  '&:hover': { bgcolor: '#1565c0' }
+                }}
+              >
+                Create
+              </Button>
+            </DialogActions>
+        
       </Dialog>
 
       {/* For edit the attendance record */}
@@ -834,7 +850,7 @@ const AttendanceRecords = () => {
           Attendance Details
           <IconButton
             onClick={() => setPreviewOpen(false)}
-            sx={{ color: "white" }}
+            sx={{ color: "#1976d2" }}
           >
             <Cancel />
           </IconButton>

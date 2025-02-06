@@ -7,7 +7,6 @@ import {
   FaList,
   FaTh,
   FaFilter,
-  FaPlus,
   FaEdit,
   FaTrash,
 } from "react-icons/fa";
@@ -21,6 +20,8 @@ const Allowances = () => {
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
   const [editFormData, setEditFormData] = useState({
     code: "",
     name: "",
@@ -38,6 +39,17 @@ const Allowances = () => {
   });
 
   const [filtersApplied, setFiltersApplied] = useState(false);
+
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+  
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   useEffect(() => {
     if (debouncedSearchTerm === "") {
@@ -177,14 +189,22 @@ const Allowances = () => {
   return (
     <div className="allowances-container">
       <header className="allowances-header">
-        <h2>Allowances</h2>
+        <h1>Allowances</h1>
         <div className="controls">
           <input
             type="text"
             placeholder="Search"
             value={searchTerm}
             onChange={handleSearch}
-            className="allowance-search"
+            //  className="allowance-search"
+            style={{
+              maxWidth: "200px",
+              // height: "30px",
+              padding: "8px",
+              borderRadius: "5px",
+              border: "1px solid #ccc",
+              marginRight: "10px",
+            }}
           />
           <button 
             className={`view-toggle ${view === "list" ? "active" : ""}`}
@@ -468,3 +488,6 @@ const Allowances = () => {
 };
 
 export default Allowances;
+
+
+
