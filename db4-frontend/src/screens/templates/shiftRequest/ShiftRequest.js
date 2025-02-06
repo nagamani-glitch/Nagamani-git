@@ -266,10 +266,13 @@ const ShiftRequest = () => {
       <Box sx={{ padding: 4 }}>
         {/* Header Section */}
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-          <Typography variant="h5" fontWeight="bold">
+          {/* <Typography variant="h5" fontWeight="bold">
             {tabValue === 0 ? "Shift Requests" : "Allocated Shifts"}
-          </Typography>
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          </Typography> */}
+          <Typography variant="h3" sx={{ fontWeight: 800 }}>
+            {tabValue === 0 ? "Shift Requests" : "Allocated Shifts"}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
             <TextField
               placeholder="Search Employee"
               size="small"
