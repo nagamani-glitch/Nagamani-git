@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   FaFilter,
@@ -87,6 +87,21 @@ const Contract = () => {
   const [selectedContracts, setSelectedContracts] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
+  const filterRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilterPopup(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   useEffect(() => {
     fetchContracts();
   }, []);
@@ -143,115 +158,47 @@ const Contract = () => {
     });
   };
 
-  // const handleSaveCreate = async () => {
-  //   const newContract = {
-  //     contract: formData.contractTitle, // Add this line to map contractTitle to contract
-  //     contractStatus: formData.contractStatus,
-  //     employee: formData.employee,
-  //     startDate: formData.startDate,
-  //     endDate: formData.endDate,
-  //     wageType: formData.wageType,
-  //     basicSalary: Number(formData.basicSalary),
-  //     department: formData.department,
-  //     position: formData.position,
-  //     role: formData.role,
-  //     shift: formData.shift,
-  //     workType: formData.workType,
-  //     noticePeriod: Number(formData.noticePeriod),
-  //     deductFromBasicPay: formData.deductFromBasicPay,
-  //     calculateDailyLeave: formData.calculateDailyLeave,
-  //     note: formData.note,
-  //     filingStatus: formData.contractStatus,
-  //   };
+  const handleSaveCreate = async () => {
+    const newContract = {
+      contract: formData.contractTitle, // Add this line to map contractTitle to contract
+      contractStatus: formData.contractStatus,
+      employee: formData.employee,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      wageType: formData.wageType,
+      basicSalary: Number(formData.basicSalary),
+      department: formData.department,
+      position: formData.position,
+      role: formData.role,
+      shift: formData.shift,
+      workType: formData.workType,
+      noticePeriod: Number(formData.noticePeriod),
+      deductFromBasicPay: formData.deductFromBasicPay,
+      calculateDailyLeave: formData.calculateDailyLeave,
+      note: formData.note,
+      filingStatus: formData.filingStatus,
+    };
 
-  //   try {
-  //     const response = await axios.post(
-  //       "http://localhost:5000/api/payroll-contracts",
-  //       newContract
-  //     );
-  //     if (response.data.success) {
-  //       setContracts((prevContracts) => [...prevContracts, response.data.data]);
-  //       setFilteredContracts((prevFiltered) => [
-  //         ...prevFiltered,
-  //         response.data.data,
-  //       ]);
-  //       setShowCreatePage(false);
-  //     }
-  //   } catch (error) {
-  //     console.error(
-  //       "Contract creation error:",
-  //       error.response?.data || error.message
-  //     );
-  //   }
-  // };
-
-
-
-// Update the handleSaveCreate function in Contract.js
-
-
-// Update the initial formData state to include contractStatus
-// const [formData, setFormData] = useState({
-//   contractStatus: "",
-//   contractTitle: "",
-//   employee: "",
-//   startDate: "",
-//   endDate: "",
-//   wageType: "",
-//   payFrequency: "",
-//   basicSalary: "",
-//   filingStatus: "",  // Add this explicitly
-//   department: "",
-//   jobOption: "",
-//   jobPosition: "",
-//   shift: "",
-//   workType: "",
-//   noticePeriod: "",
-//   contractDocument: null,
-//   deductFromBasicPay: false,
-//   calculateDailyLeave: false,
-//   note: "",
-// });
-
-// Update the handleSaveCreate function
-const handleSaveCreate = async () => {
-  const newContract = {
-    contract: formData.contractTitle,
-    contractStatus: formData.contractStatus,
-    employee: formData.employee,
-    startDate: formData.startDate,
-    endDate: formData.endDate,
-    wageType: formData.wageType,
-    basicSalary: Number(formData.basicSalary),
-    department: formData.department,
-    position: formData.position,
-    role: formData.role,
-    shift: formData.shift,
-    workType: formData.workType,
-    noticePeriod: Number(formData.noticePeriod),
-    deductFromBasicPay: formData.deductFromBasicPay,
-    calculateDailyLeave: formData.calculateDailyLeave,
-    note: formData.note,
-    filingStatus: formData.contractStatus  // This maps the status directly
-  };
-
-  try {
-    const response = await axios.post("http://localhost:5000/api/payroll-contracts", newContract);
-    if (response.data.success) {
-      const updatedContract = response.data.data;
-      setContracts(prevContracts => [...prevContracts, updatedContract]);
-      setFilteredContracts(prevFiltered => [...prevFiltered, updatedContract]);
-      setShowCreatePage(false);
-      fetchContracts(); // Refresh the table data
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/payroll-contracts",
+        newContract
+      );
+      if (response.data.success) {
+        setContracts((prevContracts) => [...prevContracts, response.data.data]);
+        setFilteredContracts((prevFiltered) => [
+          ...prevFiltered,
+          response.data.data,
+        ]);
+        setShowCreatePage(false);
+      }
+    } catch (error) {
+      console.error(
+        "Contract creation error:",
+        error.response?.data || error.message
+      );
     }
-  } catch (error) {
-    console.error("Contract creation error:", error);
-  }
-};
-
-
-
-
+  };
 
   useEffect(() => {
     const fetchContracts = async () => {
@@ -434,7 +381,12 @@ const handleSaveCreate = async () => {
                 <label>
                   Wage Type <span className="required">*</span>
                 </label>
-                <select name="wageType" onChange={handleInputChange} required style={{ border: "1px solid gray" }}>
+                <select
+                  name="wageType"
+                  onChange={handleInputChange}
+                  required
+                  style={{ border: "1px solid gray" }}
+                >
                   <option value="">Select Wage Type</option>
                   <option value="Daily">Daily</option>
                   <option value="Monthly">Monthly</option>
@@ -448,7 +400,7 @@ const handleSaveCreate = async () => {
                 <select
                   name="payFrequency"
                   onChange={handleInputChange}
-                  required 
+                  required
                   style={{ border: "1px solid gray" }}
                 >
                   <option value="">Select Frequency</option>
@@ -472,7 +424,7 @@ const handleSaveCreate = async () => {
                   required
                 />
               </div>
-              {/* <div className="form-group">
+              <div className="form-group">
                 <label>Filing Status</label>
                 <input
                   type="text"
@@ -480,13 +432,17 @@ const handleSaveCreate = async () => {
                   value={formData.filingStatus}
                   onChange={handleInputChange}
                 />
-              </div> */}
+              </div>
             </div>
 
             <div className="form-row">
-              <div className="form-group" >
+              <div className="form-group">
                 <label>Department</label>
-                <select name="department" onChange={handleInputChange} style={{ border: "1px solid gray" }}>
+                <select
+                  name="department"
+                  onChange={handleInputChange}
+                  style={{ border: "1px solid gray" }}
+                >
                   <option value="">Select Department</option>
                   <option value="HR Dept">HR Dept</option>
                   <option value="Sales Dept">Sales Dept</option>
@@ -498,7 +454,11 @@ const handleSaveCreate = async () => {
               </div>
               <div className="form-group">
                 <label>Job Position</label>
-                <select name="position" onChange={handleInputChange} style={{ border: "1px solid gray" }}>
+                <select
+                  name="position"
+                  onChange={handleInputChange}
+                  style={{ border: "1px solid gray" }}
+                >
                   <option value="">Select Position</option>
                   <option value="HR Dept">HR Dept</option>
                   <option value="Sales Dept">
@@ -521,7 +481,11 @@ const handleSaveCreate = async () => {
             <div className="form-row">
               <div className="form-group">
                 <label>Job Role</label>
-                <select name="role" onChange={handleInputChange} style={{ border: "1px solid gray" }}>
+                <select
+                  name="role"
+                  onChange={handleInputChange}
+                  style={{ border: "1px solid gray" }}
+                >
                   <option value="">Select Position</option>
                   <option value="HR Dept">Intern - Recuriter</option>
                   <option value="Sales Dept">Intern - Sales Man</option>
@@ -535,7 +499,11 @@ const handleSaveCreate = async () => {
               </div>
               <div className="form-group">
                 <label>Shift</label>
-                <select name="shift" onChange={handleInputChange} style={{ border: "1px solid gray" }}>
+                <select
+                  name="shift"
+                  onChange={handleInputChange}
+                  style={{ border: "1px solid gray" }}
+                >
                   <option value="">Select Shift</option>
                   <option value="Regular">Regular</option>
                   <option value="Night Shift">Night Shift</option>
@@ -549,14 +517,16 @@ const handleSaveCreate = async () => {
             <div className="form-row">
               <div className="form-group">
                 <label>Work Type</label>
-                <select name="workType" onChange={handleInputChange} 
-                style={{ border: "1px solid gray", outline: "none" }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#4CAF50';
-                  e.target.style.outline = 'none';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
-                }}
-                
+                <select
+                  name="workType"
+                  onChange={handleInputChange}
+                  style={{ border: "1px solid gray", outline: "none" }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#4CAF50";
+                    e.target.style.outline = "none";
+                    e.target.style.boxShadow =
+                      "0 0 0 3px rgba(76, 175, 80, 0.1)";
+                  }}
                 >
                   <option value="">Select Work Type</option>
                   <option value="Hybrid">Hybrid</option>
@@ -787,12 +757,283 @@ const handleSaveCreate = async () => {
             }}
           />
 
-          <button
-            className="contract-filter-button"
-            onClick={handleFilterIconClick}
+          <div
+            style={{ position: "relative", display: "inline-block" }}
+            ref={filterRef}
           >
-            <FaFilter /> Filter
-          </button>
+            <button
+              onClick={handleFilterIconClick}
+              style={{
+                padding: "8px 16px",
+                background: "linear-gradient(45deg, #3498db, #2980b9)",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                boxShadow: "0 2px 8px rgba(52, 152, 219, 0.2)",
+                fontSize: "14px",
+                fontWeight: "500",
+              }}
+            >
+              <FaFilter /> Filter
+            </button>
+
+            {showFilterPopup && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 10px)",
+                  right: 0,
+                  width: "600px",
+                  background: "linear-gradient(to bottom, #ffffff, #f8fafc)",
+                  borderRadius: "12px",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                  border: "1px solid rgba(255,255,255,0.8)",
+                  zIndex: 1000,
+                  padding: "16px",
+                  animation: "fadeIn 0.3s ease",
+                }}
+              >
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "12px",
+                  }}
+                >
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        color: "#2c3e50",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      Contract Status
+                    </label>
+                    <select
+                      name="contractStatus"
+                      value={filterData.contractStatus}
+                      onChange={handleFilterChange}
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        borderRadius: "8px",
+                        border: "2px solid #e0e7ff",
+                        fontSize: "14px",
+                        background: "white",
+                        outline: "none",
+                      }}
+                    >
+                      <option value="">All</option>
+                      <option value="Draft">Draft</option>
+                      <option value="Active">Active</option>
+                      <option value="Expired">Expired</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        color: "#2c3e50",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      Employee Name
+                    </label>
+                    <input
+                      type="text"
+                      name="employeeName"
+                      value={filterData.employeeName}
+                      onChange={handleFilterChange}
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        borderRadius: "8px",
+                        border: "2px solid #e0e7ff",
+                        fontSize: "14px",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        color: "#2c3e50",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={filterData.startDate}
+                      onChange={handleFilterChange}
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        borderRadius: "8px",
+                        border: "2px solid #e0e7ff",
+                        fontSize: "14px",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        color: "#2c3e50",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={filterData.endDate}
+                      onChange={handleFilterChange}
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        borderRadius: "8px",
+                        border: "2px solid #e0e7ff",
+                        fontSize: "14px",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        color: "#2c3e50",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      Status
+                    </label>
+                    <select
+                      name="status"
+                      value={filterData.status}
+                      onChange={handleFilterChange}
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        borderRadius: "8px",
+                        border: "2px solid #e0e7ff",
+                        fontSize: "14px",
+                        background: "white",
+                        outline: "none",
+                      }}
+                    >
+                      <option value="">All</option>
+                      <option value="Full-time">Full-time</option>
+                      <option value="Part-time">Part-time</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        color: "#2c3e50",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      Wage Type
+                    </label>
+                    <select
+                      name="wageType"
+                      value={filterData.wageType}
+                      onChange={handleFilterChange}
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        borderRadius: "8px",
+                        border: "2px solid #e0e7ff",
+                        fontSize: "14px",
+                        background: "white",
+                        outline: "none",
+                      }}
+                    >
+                      <option value="">All</option>
+                      <option value="Monthly">Monthly</option>
+                      <option value="Hourly">Hourly</option>
+                    </select>
+                  </div>
+
+                  <div
+                    style={{
+                      gridColumn: "1 / -1",
+                      display: "flex",
+                      gap: "12px",
+                      marginTop: "8px",
+                    }}
+                  >
+                    <button
+                      onClick={handleApplyFilter}
+                      style={{
+                        flex: 1,
+                        padding: "10px",
+                        background: "linear-gradient(45deg, #3498db, #2980b9)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      Apply Filters
+                    </button>
+                    <button
+                      onClick={handleResetFilter}
+                      style={{
+                        flex: 1,
+                        padding: "10px",
+                        background: "linear-gradient(45deg, #e74c3c, #c0392b)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             className="contract-create-button"
             onClick={handleCreateClick}
@@ -801,92 +1042,6 @@ const handleSaveCreate = async () => {
           </button>
         </div>
       </div>
-
-      {/* Filter Popup */}
-      {showFilterPopup && (
-        <div className="filter-popup-overlay">
-          <div className="filter-popup">
-            <h2>Filter Contracts</h2>
-            <form>
-              <div className="filter-row">
-                <label>Contract Status:</label>
-                <select
-                  name="contractStatus"
-                  value={filterData.contractStatus}
-                  onChange={handleFilterChange}
-                >
-                  <option value="">All</option>
-                  <option value="Draft">Draft</option>
-                  <option value="Active">Active</option>
-                  <option value="Expired">Expired</option>
-                </select>
-              </div>
-              <div className="filter-row">
-                <label>Employee Name:</label>
-                <input
-                  type="text"
-                  name="employeeName"
-                  value={filterData.employeeName}
-                  onChange={handleFilterChange}
-                />
-              </div>
-              <div className="filter-row">
-                <label>Start Date:</label>
-                <input
-                  type="date"
-                  name="startDate"
-                  value={filterData.startDate}
-                  onChange={handleFilterChange}
-                />
-              </div>
-              <div className="filter-row">
-                <label>End Date:</label>
-                <input
-                  type="date"
-                  name="endDate"
-                  value={filterData.endDate}
-                  onChange={handleFilterChange}
-                />
-              </div>
-
-              {/* wage status */}
-              <div className="filter-group">
-                <label>Status:</label>
-                <select
-                  name="status"
-                  value={filterData.status}
-                  onChange={handleFilterChange}
-                >
-                  <option value="">All</option>
-                  <option value="Full-time">Full-time</option>
-                  <option value="Part-time">Part-time</option>
-                </select>
-              </div>
-
-              <div className="filter-group">
-                <label>Wage Type:</label>
-                <select
-                  name="wageType"
-                  value={filterData.wageType}
-                  onChange={handleFilterChange}
-                >
-                  <option value="">All</option>
-                  <option value="Monthly">Monthly</option>
-                  <option value="Hourly">Hourly</option>
-                </select>
-              </div>
-            </form>
-            <div style={{ display: "flex" }}>
-              <button type="button" onClick={handleApplyFilter}>
-                Apply Filters
-              </button>
-              <button type="button" onClick={handleResetFilter}>
-                Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Options bar */}
       {selectedContracts.length > 0 && (
@@ -902,7 +1057,6 @@ const handleSaveCreate = async () => {
           </button>
         </div>
       )}
-
       {/* Table */}
       <table className="contract-table">
         <thead>
