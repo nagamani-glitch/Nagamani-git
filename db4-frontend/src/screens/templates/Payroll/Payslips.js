@@ -82,10 +82,19 @@ const CreatePayslipModal = ({ isOpen, onClose, onSubmit }) => {
                                   <div className="error">{errors.deduction}</div>}
                           </div>
 
-                          <div className="modal-actions">
-                              <button type="submit" className="btn-primary">Create</button>
-                              <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-                          </div>
+
+                         <div className="modal-actions" style={{ 
+                                display: 'flex', 
+                                justifyContent: 'flex-start', 
+                                gap: '10px',
+                                marginTop: '20px'
+                            }}>
+                                <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+                                <button type="submit" className="btn-primary">Save</button>
+                            </div>
+
+
+
                       </Form>
                   )}
               </Formik>
@@ -93,7 +102,6 @@ const CreatePayslipModal = ({ isOpen, onClose, onSubmit }) => {
       </div>
   );
 };
-
 const EditPayslipModal = ({ isOpen, onClose, onSubmit, payslip }) => {
   if (!isOpen) return null;
 
@@ -154,10 +162,19 @@ const EditPayslipModal = ({ isOpen, onClose, onSubmit, payslip }) => {
                                   <div className="error">{errors.deduction}</div>}
                           </div>
 
-                          <div className="modal-actions">
-                              <button type="submit" className="btn-primary">Update</button>
-                              <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-                          </div>
+
+                          <div className="modal-actions" style={{ 
+                            display: 'flex', 
+                            justifyContent: 'flex-start', 
+                            gap: '10px',
+                            marginTop: '20px'
+                        }}>
+                            <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+                            <button type="submit" className="btn-primary">Update</button>
+                        </div>
+                        
+
+
                       </Form>
                   )}
               </Formik>
@@ -277,18 +294,28 @@ const Payslips = () => {
   }, [payslips, searchQuery]);
   return (
 
-    <div className="payslips-container">
-        <div className="header">
+                    <div className="payslips-container">
+                        <div className="header">
 
-            <h1>Payslips Management</h1>
-            <div className="actions">
-                <input
-                    type="text"
-                    placeholder="Search employees..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="search-input"
-                />
+                            <h1>Payslips Management</h1>
+                            
+                            <div className="actions">
+                                <input
+                        type="text"
+                        placeholder="Search employees..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        style={{
+                            padding: '10px 15px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            fontSize: '14px',
+                            width: '250px',
+                            outline: 'none',
+                            transition: 'border-color 0.2s ease',
+                            marginRight: '15px'
+                        }}
+                    />
 
                 
                 <button onClick={() => setIsCreateModalOpen(true)} className="btn-primary create-payslip">
@@ -359,21 +386,62 @@ const Payslips = () => {
                             <td>{payslip.deduction}</td>
                             <td>{payslip.netPay}</td>
                             <td>
+
+
                                 <button 
                                     onClick={() => {
                                         setEditingPayslip(payslip);
                                         setIsEditModalOpen(true);
                                     }}
                                     className="btn-icon"
+
+                                    style={{
+                                        color: '#28a745',
+                                        backgroundColor: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        padding: '8px',
+                                        transition: 'all 0.3s ease',
+                                        marginRight: '8px'
+                                    }}
+                                    onMouseOver={e => {
+                                        e.currentTarget.style.transform = 'scale(1.2)';
+                                        e.currentTarget.style.color = '#1e7e34';
+                                    }}
+                                    onMouseOut={e => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                        e.currentTarget.style.color = '#28a745';
+                                    }}
                                 >
                                     <FaEdit />
                                 </button>
                                 <button 
                                     onClick={() => handleDeletePayslip(payslip._id)}
                                     className="btn-icon"
-                                >
+                                    style={{
+                                        color: '#dc3545',
+                                        backgroundColor: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        padding: '8px',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                    onMouseOver={e => {
+                                        e.currentTarget.style.transform = 'scale(1.2)';
+                                        e.currentTarget.style.color = '#c82333';
+                                    }}
+                                    onMouseOut={e => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                        e.currentTarget.style.color = '#dc3545';
+                                    }}
+                                
+                                
+                                    >
                                     <FaTrash />
                                 </button>
+
+
+                                
                             </td>
                         </tr>
                     ))}
