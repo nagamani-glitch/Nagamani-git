@@ -152,11 +152,10 @@
 }
 
 .close-button {
-    background-color: #918b8b;
+    background-color: green;
     color: white;
-    padding: 8px 16px;
     border: none;
-    border-radius: 4px;
+    border-radius: 60px;
     cursor: pointer;
     margin-top: 10px;
     margin-left: 10px;

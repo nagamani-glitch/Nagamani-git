@@ -44,27 +44,27 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
     return newErrors;
   };
 
-  // Validate training fields
-  const validateTraining = () => {
-    const newErrors = {};
-    trainingInIndia.forEach((train, index) => {
-      if (!train.type) newErrors[`training_in_india_type_${index}`] = 'Type is required';
-      if (!train.topic) newErrors[`training_in_india_topic_${index}`] = 'Topic is required';
-      if (!train.institute) newErrors[`training_in_india_institute_${index}`] = 'Institute is required';
-      if (!train.from) newErrors[`training_in_india_from_${index}`] = 'From date is required';
-      if (!train.sponsor) newErrors[`training_in_india_sponsor_${index}`] = 'Sponsor is required';
-      if (!train.to) newErrors[`training_in_india_to_${index}`] = 'To date is required';
-    });
-    trainingAbroad.forEach((train, index) => {
-      if (!train.type) newErrors[`training_abroad_type_${index}`] = 'Type is required';
-      if (!train.topic) newErrors[`training_abroad_topic_${index}`] = 'Topic is required';
-      if (!train.institute) newErrors[`training_abroad_institute_${index}`] = 'Institute is required';
-      if (!train.sponsor) newErrors[`training_abroad_sponsor_${index}`] = 'Sponsor is required';
-      if (!train.from) newErrors[`training_abroad_from_${index}`] = 'From date is required';
-      if (!train.to) newErrors[`training_abroad_to_${index}`] = 'To date is required';
-    });
-    return newErrors;
-  };
+  // // Validate training fields
+  // const validateTraining = () => {
+  //   const newErrors = {};
+  //   trainingInIndia.forEach((train, index) => {
+  //     if (!train.type) newErrors[`training_in_india_type_${index}`] = 'Type is required';
+  //     if (!train.topic) newErrors[`training_in_india_topic_${index}`] = 'Topic is required';
+  //     if (!train.institute) newErrors[`training_in_india_institute_${index}`] = 'Institute is required';
+  //     if (!train.from) newErrors[`training_in_india_from_${index}`] = 'From date is required';
+  //     if (!train.sponsor) newErrors[`training_in_india_sponsor_${index}`] = 'Sponsor is required';
+  //     if (!train.to) newErrors[`training_in_india_to_${index}`] = 'To date is required';
+  //   });
+  //   trainingAbroad.forEach((train, index) => {
+  //     if (!train.type) newErrors[`training_abroad_type_${index}`] = 'Type is required';
+  //     if (!train.topic) newErrors[`training_abroad_topic_${index}`] = 'Topic is required';
+  //     if (!train.institute) newErrors[`training_abroad_institute_${index}`] = 'Institute is required';
+  //     if (!train.sponsor) newErrors[`training_abroad_sponsor_${index}`] = 'Sponsor is required';
+  //     if (!train.from) newErrors[`training_abroad_from_${index}`] = 'From date is required';
+  //     if (!train.to) newErrors[`training_abroad_to_${index}`] = 'To date is required';
+  //   });
+  //   return newErrors;
+  // };
 
   // Handle input change for education
   const handleEducationChange = (category, index, e) => {
@@ -138,8 +138,8 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
 
     // Validate all fields
     const educationErrors = validateEducation();
-    const trainingErrors = validateTraining();
-    const allErrors = { ...educationErrors, ...trainingErrors };
+    // const trainingErrors = validateTraining();
+    const allErrors = { ...educationErrors};
     const trainingDetails = {trainingInIndia, trainingAbroad}
 
     if (Object.keys(allErrors).length > 0) {
