@@ -276,8 +276,10 @@ const Payslips = () => {
       );
   }, [payslips, searchQuery]);
   return (
+
     <div className="payslips-container">
         <div className="header">
+
             <h1>Payslips Management</h1>
             <div className="actions">
                 <input
@@ -287,6 +289,8 @@ const Payslips = () => {
                     onChange={e => setSearchQuery(e.target.value)}
                     className="search-input"
                 />
+
+                
                 <button onClick={() => setIsCreateModalOpen(true)} className="btn-primary create-payslip">
                     New Payslip
                 </button>
@@ -303,6 +307,7 @@ const Payslips = () => {
             </div>
         </div>
 
+        
         {loading ? (
             <div className="loading">Loading...</div>
         ) : (
