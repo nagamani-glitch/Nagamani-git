@@ -1,6 +1,7 @@
 import express from "express"
 import dotenv from 'dotenv';
 import cors from 'cors';
+import fs from 'fs';
 import path from 'path';
 import connectDB from './config/db.js';
 import employeesRouter from './routes/employeesRouter.js'
@@ -56,6 +57,7 @@ import leaveRequestRoutes from './routes/leaveRequestRoutes.js';
 
 dotenv.config()
 connectDB()
+
 const app = express()
 
 
