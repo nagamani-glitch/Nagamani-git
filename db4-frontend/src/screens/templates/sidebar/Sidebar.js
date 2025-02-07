@@ -29,11 +29,13 @@ function Sidebar() {
       </div>
       <ul>
         <li onClick={() => handleNavigation('/Dashboards')}>
-          <FontAwesomeIcon icon={faChartPie} /> Dashboard
+          <FontAwesomeIcon icon={faChartPie} /> 
+          <span>Dashboard</span>
         </li>
 
         <li onClick={() => handleMainClick('recruitment')}>
-          <FontAwesomeIcon icon={faBullseye} /> Recruitment
+          <FontAwesomeIcon icon={faBullseye} /> 
+          <span>Recruitment</span>
         </li>
         {activeMenu === 'recruitment' && (
           <ul className="sub-menu">
@@ -47,7 +49,8 @@ function Sidebar() {
         )}
 
         <li onClick={() => handleMainClick('onboarding')}>
-          <FontAwesomeIcon icon={faRocket} /> Onboarding
+          <FontAwesomeIcon icon={faRocket} />
+          <span>Onboarding</span>
         </li>
         {activeMenu === 'onboarding' && (
           <ul className="sub-menu">
@@ -58,7 +61,8 @@ function Sidebar() {
         )}
 
         <li onClick={() => handleMainClick('employee')}>
-          <FontAwesomeIcon icon={faUsers} /> Employee
+          <FontAwesomeIcon icon={faUsers} />
+          <span>Employee</span>
         </li>
         {activeMenu === 'employee' && (
           <ul className="sub-menu">
@@ -76,7 +80,8 @@ function Sidebar() {
         )}
 
         <li onClick={() => handleMainClick('attendance')}>
-          <FontAwesomeIcon icon={faCalendarCheck} /> Attendance
+          <FontAwesomeIcon icon={faCalendarCheck} />
+          <span>Attendance</span>
         </li>
         {activeMenu === 'attendance' && (
           <ul className="sub-menu">
@@ -86,7 +91,8 @@ function Sidebar() {
         )}
 
         <li onClick={() => handleMainClick('leave')}>
-          <FontAwesomeIcon icon={faCalendarTimes} /> Leave
+          <FontAwesomeIcon icon={faCalendarTimes} />
+          <span>Leave</span>
         </li>
         {activeMenu === 'leave' && (
           <ul className="sub-menu">
@@ -96,7 +102,8 @@ function Sidebar() {
         )}
 
         <li onClick={() => handleMainClick('payroll')}>
-          <FontAwesomeIcon icon={faMoneyBillWave} /> Payroll
+          <FontAwesomeIcon icon={faMoneyBillWave} />
+          <span>Payroll</span>
         </li>
         {activeMenu === 'payroll' && (
           <ul className="sub-menu">
@@ -110,7 +117,8 @@ function Sidebar() {
         )}
 
         <li onClick={() => handleMainClick('performance')}>
-          <FontAwesomeIcon icon={faChartLine} /> Performance
+          <FontAwesomeIcon icon={faChartLine} />
+          <span>Performance</span>
         </li>
         {activeMenu === 'performance' && (
           <ul className="sub-menu">
@@ -121,7 +129,8 @@ function Sidebar() {
         )}
 
         <li onClick={() => handleMainClick('offboarding')}>
-          <FontAwesomeIcon icon={faSignOutAlt} /> Offboarding
+          <FontAwesomeIcon icon={faSignOutAlt} />
+          <span>Offboarding</span>
         </li>
         {activeMenu === 'offboarding' && (
           <ul className="sub-menu">
@@ -131,7 +140,8 @@ function Sidebar() {
         )}
 
         <li onClick={() => handleMainClick('assets')}>
-          <FontAwesomeIcon icon={faLaptop} /> Assets
+          <FontAwesomeIcon icon={faLaptop} />
+          <span>Assets</span>
         </li>
         {activeMenu === 'assets' && (
           <ul className="sub-menu">
@@ -143,7 +153,8 @@ function Sidebar() {
         )}
 
         <li onClick={() => handleMainClick('helpDesk')}>
-          <FontAwesomeIcon icon={faHeadset} /> Help Desk
+          <FontAwesomeIcon icon={faHeadset} />
+          <span>Help Desk</span>
         </li>
         {activeMenu === 'helpDesk' && (
           <ul className="sub-menu">
@@ -152,7 +163,8 @@ function Sidebar() {
         )}
 
         <li onClick={() => handleMainClick('configuration')}>
-          <FontAwesomeIcon icon={faCogs} /> Configuration
+          <FontAwesomeIcon icon={faCogs} />
+          <span>Configuration</span>
         </li>
         {activeMenu === 'configuration' && (
           <ul className="sub-menu">

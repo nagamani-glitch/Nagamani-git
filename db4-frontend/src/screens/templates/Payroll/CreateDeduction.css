@@ -8,7 +8,7 @@
   
   }  
  
-.create-allowance-container {
+.create-deduction-container {
   padding: 30px;
   width: 100%;
   max-width: 1200px;
@@ -16,7 +16,7 @@
   background-color: #ffffff;
   border-radius: 8px;
   border: 1.5px solid rgb(216, 212, 212);
-  border: 2px solid red;
+  border: 1px solid red;
 
     
   }
@@ -239,7 +239,7 @@
   }
 
   /* Modal Styling */
-.modal {
+.create-deduction-modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -258,6 +258,8 @@
     padding: 20px;
     border-radius: 8px;
     position: relative;
+    max-height: calc(90vh - 100px);
+  overflow-y: auto;
   }
   
   .close-modal {
@@ -287,6 +289,7 @@
     border-radius: 5px;
     border: 1px solid #e80505;
   }
+
   .filter-create-search-bar{
     border: 2px solid #e80505;
   }
@@ -398,8 +401,8 @@
   cursor: pointer;
   padding: 5px 10px;
 }
-
+/* 
 .modal-content {
   max-height: calc(90vh - 100px);
   overflow-y: auto;
-}
+} */

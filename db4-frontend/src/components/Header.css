@@ -1,6 +1,6 @@
 /* src/components/Header.css */
 
-.custom-navbar {
+/* .custom-navbar {
     background-color: cadetblue;
     padding: 0.5rem 1rem;
   }
@@ -9,7 +9,23 @@
     font-size: 1.5rem;
     margin-right: 1rem;
     color: white !important;
-  }
+  } */
+
+  .custom-navbar {
+    background-color: cadetblue;
+    padding: 0.5rem 1rem;
+    height: 60px;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1001;
+}
+
+.brand {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    color: white !important;
+}
   
   .path-indicator {
     color: white;

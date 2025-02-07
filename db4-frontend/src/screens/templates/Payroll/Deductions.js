@@ -11,34 +11,6 @@ import {
   FaTrash
 } from "react-icons/fa";
 
-// const deductionsData = [
-//   {
-//     id: 1,
-//     code: "ESI",
-//     name: "ESI",
-//     amount: 200.0,
-//     employerRate: "6.25% of Gross Pay",
-//     employeeRate: "7.75% of Gross Pay",
-//     oneTimeDeduction: "No",
-//     taxable: "Yes",
-//     fixed: false,
-//   },
-//   {
-//     id: 2,
-//     code: "SS",
-//     name: "Social Security (FICA)",
-//     amount: 1000.0,
-//     employerRate: "3.25% of Gross Pay",
-//     employeeRate: "0.75% of Gross Pay",
-//     oneTimeDeduction: "No",
-//     taxable: "Yes",
-//     fixed: true,
-//     pretax: "Yes",
-//   },
-
-//   // Add more allowance data here
-// ];
-
 const Deductions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("card"); // 'card' or 'list'
@@ -242,14 +214,15 @@ const Deductions = () => {
     <div className="deduction-container">
       <div className="deduction-sub-container">
       <header className="deduction-header">
-        <h2>Deductions</h2>
-        <div className="controls">
+        <h1>Deductions</h1>
+        <div className="deduction-controls">
           <input
             type="text"
             placeholder="Search"
             value={searchTerm}
             onChange={handleSearch}
-            className="search-input"
+            // className="deduction-search-input"
+            style={{border: '1px solid gray', padding: '8px', borderRadius: '4px', marginRight: '8px'}}
           />
           <button
             className={`view-toggle ${view === "list" ? "active" : ""}`}
