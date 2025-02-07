@@ -137,7 +137,7 @@ const Header = () => {
               </div>
 
               {/* Home Icon */}
-              <Nav.Link className="icon-link ms-3" onClick={() => navigate('/home')}>
+              <Nav.Link className="icon-link ms-3" onClick={() => navigate('/')}>
                 <FaHome size={32} title="Home" />
               </Nav.Link>
 
