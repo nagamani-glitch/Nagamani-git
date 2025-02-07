@@ -13,8 +13,8 @@
     margin-bottom: 20px;
   }
   
-  .header-title {
-    font-size: 24px;
+  .contract-header-title {
+    font-size: 30px;
     font-weight: bold;
   }
   
@@ -24,7 +24,7 @@
     gap: 10px;
   }
   
-  .search-bar {
+  /* .search-bar {
     display: flex;
     align-items: center;
     gap: 3px;
@@ -37,7 +37,7 @@
   .search-bar input {
     border: none;
     outline: none;
-  }
+  } */
   
   .header-icon {
     background: none;
@@ -193,6 +193,7 @@
   
   .form-row {
     display: flex;
+    flex-direction: column;
     gap: 20px;
   } 
   
@@ -226,7 +227,7 @@
     right: 20px;
   }
 
-  .save-button{
+  .contract-save-button{
     background-color: #28a745;
     margin-top: 20px;
     padding: 10px 20px;
@@ -235,8 +236,7 @@
     border-radius: 4px;
     cursor: pointer;
     display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
+    justify-content: center;
      }
   
   .save-button:hover {
@@ -259,6 +259,7 @@
   
   .half-width {
     display: flex;
+    flex-direction: row;
     gap: 10px;
   }
   

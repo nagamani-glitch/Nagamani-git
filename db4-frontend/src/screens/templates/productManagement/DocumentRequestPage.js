@@ -202,8 +202,13 @@ const DocumentRequestPage = () => {
         <div className="modal">
           <div className="modal-content">
             <button className="close-button" onClick={closeFilterModal}>×</button>
-            <h3>Filter Options</h3>
-            <div style={{ marginBottom: '10px' }}>
+            <h3 style={{
+              backgroundColor: '#28a745',
+              color: '#ffffff',
+              padding: '10px',
+              borderRadius: '4px'
+            }}>Filter Options</h3>
+                        <div style={{ marginBottom: '10px' }}>
               <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                 <input 
                   type="checkbox" 
@@ -282,10 +287,10 @@ const DocumentRequestPage = () => {
             backgroundColor: 'white',
             padding: '20px',
             borderRadius: '8px',
-            width: '400px',
+            width: '600px',
             maxHeight: '80vh',
             overflowY: 'auto',
-            position: 'relative'
+            position: 'relative',
           }}>
             <button 
               onClick={closeCreateModal}
@@ -293,7 +298,9 @@ const DocumentRequestPage = () => {
                 position: 'absolute',
                 right: '10px',
                 top: '10px',
-                background: 'none',
+               borderRadius: 'green',
+                boder:'50px',
+                color: "white",
                 border: 'none',
                 fontSize: '20px',
                 cursor: 'pointer'
@@ -301,7 +308,21 @@ const DocumentRequestPage = () => {
             >
               ×
             </button>
-            <h3>{editingDocument ? 'Edit Document Request' : 'Create Document Request'}</h3>
+
+            <h3 style={{
+              backgroundColor: 'green',  
+              borderRadius: '4px',
+              padding:'16px',
+              color: 'white',
+              margin: '10px 0',
+              fontsize:'1.5rem',
+              margintop: '60px',
+
+
+            }}>
+              {editingDocument ? 'Edit Document Request' : 'Create Document Request'}
+            </h3>
+                        
             <form onSubmit={handleSave}>
               {['title', 'employee', 'format', 'maxSize', 'status', 'description'].map((field) => (
                 <div key={field} style={{ marginBottom: '15px' }}>
@@ -320,7 +341,7 @@ const DocumentRequestPage = () => {
                       name={field}
                       value={editingDocument ? editingDocument[field] : newDocument[field]}
                       onChange={handleInputChange}
-                      style={{ width: '100%', padding: '8px' }}
+                      style={{ width: '100%', padding: '8px', border: '1px solid #111'}}
                       required
                     >
                       <option value="pending">Pending</option>
@@ -333,21 +354,32 @@ const DocumentRequestPage = () => {
                       name={field}
                       value={editingDocument ? editingDocument[field] : newDocument[field]}
                       onChange={handleInputChange}
-                      style={{ width: '100%', padding: '8px' }}
+                      style={{ width: '100%', padding: '8px', border: '1px solid #111'}}
                       required={field !== 'description'}
                     />
                   )}
                 </div>
               ))}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-                <button type="button" onClick={closeCreateModal}>Cancel</button>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '10px', marginTop: '20px' }}>
+                <button 
+                  type="button" 
+                  onClick={closeCreateModal}
+                  style={{ backgroundColor: '#007bff', color: 'white', padding: '8px 16px', borderRadius: '4px', border: 'none',
+                }}
+                >
+                  Cancel
+                </button>
                 <button 
                   type="submit" 
-                  style={{ backgroundColor: '#007bff', color: 'white', padding: '8px 16px', borderRadius: '4px' }}
+                  style={{ backgroundColor: '#007bff', color: 'white', padding: '8px 16px', borderRadius: '4px',border: 'none',
+                }}
                 >
                   {editingDocument ? 'Update' : 'Save'}
                 </button>
               </div>
+              
+
             </form>
           </div>
         </div>

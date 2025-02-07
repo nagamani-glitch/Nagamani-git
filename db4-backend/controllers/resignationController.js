@@ -1,4 +1,4 @@
-import Resignation from '../models/Resignation.js';
+import Resignation from '../models/resignation.js';
 import { sendResignationEmail } from '../services/emailservice.js';
 
 // export const createResignation = async (req, res) => {

@@ -143,47 +143,115 @@ const Contract = () => {
     });
   };
 
-  const handleSaveCreate = async () => {
-    const newContract = {
-      contract: formData.contractTitle, // Add this line to map contractTitle to contract
-      contractStatus: formData.contractStatus,
-      employee: formData.employee,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      wageType: formData.wageType,
-      basicSalary: Number(formData.basicSalary),
-      department: formData.department,
-      position: formData.position,
-      role: formData.role,
-      shift: formData.shift,
-      workType: formData.workType,
-      noticePeriod: Number(formData.noticePeriod),
-      deductFromBasicPay: formData.deductFromBasicPay,
-      calculateDailyLeave: formData.calculateDailyLeave,
-      note: formData.note,
-      filingStatus: formData.filingStatus,
-    };
+  // const handleSaveCreate = async () => {
+  //   const newContract = {
+  //     contract: formData.contractTitle, // Add this line to map contractTitle to contract
+  //     contractStatus: formData.contractStatus,
+  //     employee: formData.employee,
+  //     startDate: formData.startDate,
+  //     endDate: formData.endDate,
+  //     wageType: formData.wageType,
+  //     basicSalary: Number(formData.basicSalary),
+  //     department: formData.department,
+  //     position: formData.position,
+  //     role: formData.role,
+  //     shift: formData.shift,
+  //     workType: formData.workType,
+  //     noticePeriod: Number(formData.noticePeriod),
+  //     deductFromBasicPay: formData.deductFromBasicPay,
+  //     calculateDailyLeave: formData.calculateDailyLeave,
+  //     note: formData.note,
+  //     filingStatus: formData.contractStatus,
+  //   };
 
-    try {
-      const response = await axios.post(
-        "http://localhost:5000/api/payroll-contracts",
-        newContract
-      );
-      if (response.data.success) {
-        setContracts((prevContracts) => [...prevContracts, response.data.data]);
-        setFilteredContracts((prevFiltered) => [
-          ...prevFiltered,
-          response.data.data,
-        ]);
-        setShowCreatePage(false);
-      }
-    } catch (error) {
-      console.error(
-        "Contract creation error:",
-        error.response?.data || error.message
-      );
-    }
+  //   try {
+  //     const response = await axios.post(
+  //       "http://localhost:5000/api/payroll-contracts",
+  //       newContract
+  //     );
+  //     if (response.data.success) {
+  //       setContracts((prevContracts) => [...prevContracts, response.data.data]);
+  //       setFilteredContracts((prevFiltered) => [
+  //         ...prevFiltered,
+  //         response.data.data,
+  //       ]);
+  //       setShowCreatePage(false);
+  //     }
+  //   } catch (error) {
+  //     console.error(
+  //       "Contract creation error:",
+  //       error.response?.data || error.message
+  //     );
+  //   }
+  // };
+
+
+
+// Update the handleSaveCreate function in Contract.js
+
+
+// Update the initial formData state to include contractStatus
+// const [formData, setFormData] = useState({
+//   contractStatus: "",
+//   contractTitle: "",
+//   employee: "",
+//   startDate: "",
+//   endDate: "",
+//   wageType: "",
+//   payFrequency: "",
+//   basicSalary: "",
+//   filingStatus: "",  // Add this explicitly
+//   department: "",
+//   jobOption: "",
+//   jobPosition: "",
+//   shift: "",
+//   workType: "",
+//   noticePeriod: "",
+//   contractDocument: null,
+//   deductFromBasicPay: false,
+//   calculateDailyLeave: false,
+//   note: "",
+// });
+
+// Update the handleSaveCreate function
+const handleSaveCreate = async () => {
+  const newContract = {
+    contract: formData.contractTitle,
+    contractStatus: formData.contractStatus,
+    employee: formData.employee,
+    startDate: formData.startDate,
+    endDate: formData.endDate,
+    wageType: formData.wageType,
+    basicSalary: Number(formData.basicSalary),
+    department: formData.department,
+    position: formData.position,
+    role: formData.role,
+    shift: formData.shift,
+    workType: formData.workType,
+    noticePeriod: Number(formData.noticePeriod),
+    deductFromBasicPay: formData.deductFromBasicPay,
+    calculateDailyLeave: formData.calculateDailyLeave,
+    note: formData.note,
+    filingStatus: formData.contractStatus  // This maps the status directly
   };
+
+  try {
+    const response = await axios.post("http://localhost:5000/api/payroll-contracts", newContract);
+    if (response.data.success) {
+      const updatedContract = response.data.data;
+      setContracts(prevContracts => [...prevContracts, updatedContract]);
+      setFilteredContracts(prevFiltered => [...prevFiltered, updatedContract]);
+      setShowCreatePage(false);
+      fetchContracts(); // Refresh the table data
+    }
+  } catch (error) {
+    console.error("Contract creation error:", error);
+  }
+};
+
+
+
+
 
   useEffect(() => {
     const fetchContracts = async () => {
@@ -366,7 +434,7 @@ const Contract = () => {
                 <label>
                   Wage Type <span className="required">*</span>
                 </label>
-                <select name="wageType" onChange={handleInputChange} required>
+                <select name="wageType" onChange={handleInputChange} required style={{ border: "1px solid gray" }}>
                   <option value="">Select Wage Type</option>
                   <option value="Daily">Daily</option>
                   <option value="Monthly">Monthly</option>
@@ -380,7 +448,8 @@ const Contract = () => {
                 <select
                   name="payFrequency"
                   onChange={handleInputChange}
-                  required
+                  required 
+                  style={{ border: "1px solid gray" }}
                 >
                   <option value="">Select Frequency</option>
                   <option value="Weekly">Weekly</option>
@@ -403,7 +472,7 @@ const Contract = () => {
                   required
                 />
               </div>
-              <div className="form-group">
+              {/* <div className="form-group">
                 <label>Filing Status</label>
                 <input
                   type="text"
@@ -411,13 +480,13 @@ const Contract = () => {
                   value={formData.filingStatus}
                   onChange={handleInputChange}
                 />
-              </div>
+              </div> */}
             </div>
 
             <div className="form-row">
-              <div className="form-group">
+              <div className="form-group" >
                 <label>Department</label>
-                <select name="department" onChange={handleInputChange}>
+                <select name="department" onChange={handleInputChange} style={{ border: "1px solid gray" }}>
                   <option value="">Select Department</option>
                   <option value="HR Dept">HR Dept</option>
                   <option value="Sales Dept">Sales Dept</option>
@@ -429,7 +498,7 @@ const Contract = () => {
               </div>
               <div className="form-group">
                 <label>Job Position</label>
-                <select name="position" onChange={handleInputChange}>
+                <select name="position" onChange={handleInputChange} style={{ border: "1px solid gray" }}>
                   <option value="">Select Position</option>
                   <option value="HR Dept">HR Dept</option>
                   <option value="Sales Dept">
@@ -452,7 +521,7 @@ const Contract = () => {
             <div className="form-row">
               <div className="form-group">
                 <label>Job Role</label>
-                <select name="role" onChange={handleInputChange}>
+                <select name="role" onChange={handleInputChange} style={{ border: "1px solid gray" }}>
                   <option value="">Select Position</option>
                   <option value="HR Dept">Intern - Recuriter</option>
                   <option value="Sales Dept">Intern - Sales Man</option>
@@ -466,7 +535,7 @@ const Contract = () => {
               </div>
               <div className="form-group">
                 <label>Shift</label>
-                <select name="shift" onChange={handleInputChange}>
+                <select name="shift" onChange={handleInputChange} style={{ border: "1px solid gray" }}>
                   <option value="">Select Shift</option>
                   <option value="Regular">Regular</option>
                   <option value="Night Shift">Night Shift</option>
@@ -480,7 +549,15 @@ const Contract = () => {
             <div className="form-row">
               <div className="form-group">
                 <label>Work Type</label>
-                <select name="workType" onChange={handleInputChange}>
+                <select name="workType" onChange={handleInputChange} 
+                style={{ border: "1px solid gray", outline: "none" }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#4CAF50';
+                  e.target.style.outline = 'none';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
+                }}
+                
+                >
                   <option value="">Select Work Type</option>
                   <option value="Hybrid">Hybrid</option>
                   <option value="Remote">Remote</option>
@@ -567,7 +644,7 @@ const Contract = () => {
             <div className="form-row">
               <button
                 type="button"
-                className="save-button"
+                className="contract-save-button"
                 onClick={handleSaveCreate}
               >
                 Save
@@ -694,14 +771,20 @@ const Contract = () => {
     <div className="contract-page">
       {/* Header */}
       <div className="header-container">
-        <h2 className="header-title">CONTRACT</h2>
+        <h2 className="contract-header-title">CONTRACT</h2>
         <div className="header-right">
           <input
             type="text"
             placeholder="Search..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="search-input"
+            style={{
+              width: "200px",
+              borderRadius: "5px",
+              border: "1px solid gray",
+              padding: "5px",
+              marginRight: "10px",
+            }}
           />
 
           <button
@@ -877,6 +960,7 @@ const Contract = () => {
             <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
           {filteredContracts.length > 0 ? (
             filteredContracts.map((contract) => (

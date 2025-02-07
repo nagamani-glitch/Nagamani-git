@@ -11,34 +11,6 @@ import {
   FaTrash
 } from "react-icons/fa";
 
-// const deductionsData = [
-//   {
-//     id: 1,
-//     code: "ESI",
-//     name: "ESI",
-//     amount: 200.0,
-//     employerRate: "6.25% of Gross Pay",
-//     employeeRate: "7.75% of Gross Pay",
-//     oneTimeDeduction: "No",
-//     taxable: "Yes",
-//     fixed: false,
-//   },
-//   {
-//     id: 2,
-//     code: "SS",
-//     name: "Social Security (FICA)",
-//     amount: 1000.0,
-//     employerRate: "3.25% of Gross Pay",
-//     employeeRate: "0.75% of Gross Pay",
-//     oneTimeDeduction: "No",
-//     taxable: "Yes",
-//     fixed: true,
-//     pretax: "Yes",
-//   },
-
-//   // Add more allowance data here
-// ];
-
 const Deductions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("card"); // 'card' or 'list'

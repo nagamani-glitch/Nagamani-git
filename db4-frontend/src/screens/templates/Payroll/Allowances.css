@@ -313,8 +313,9 @@ td.sticky-column {
 
 .filter-popup {
   position: absolute;
-  top: 34%; /* Adjust based on your header */
+  top: 40%; /* Adjust based on your header */
   right: 50px; /* Adjust for alignment */
+  left: 75%;
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 8px;
