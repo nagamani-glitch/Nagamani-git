@@ -46,12 +46,39 @@ const ProfilePage = () => {
     setLoading(true);
     try {
       const response = await axios.get(`/api/employees/${id}`);
-      const { personalInfo, bankInfo, workInfo, name, email, phone,img } = response.data;
-      setPersonalInfo({ ...personalInfo, name, email, phone });
-      setBankInfo(bankInfo || {});
-      setWorkInfo(workInfo || {});
+      const { 
+        personalInfo, 
+        addressInfo, 
+        joiningDetails, 
+        educationDetails,
+        trainingDetails,
+        familyDetails,
+        serviceHistory,
+        nominationDetails,
+        bankInfo,
+        name, 
+        email, 
+        phone,
+        img 
+      } = response.data;
+      
+      setPersonalInfo({ 
+        ...personalInfo, 
+        addressInfo,
+        joiningDetails,
+        educationDetails,
+        trainingDetails,
+        familyDetails,
+        serviceHistory,
+        nominationDetails,
+        bankInfo,
+        name, 
+        email, 
+        phone 
+      });
+      
       const imageUrl = img ? `${process.env.REACT_APP_API_URL}/uploads/${img}` : null;
-    setProfileImage(imageUrl);
+      setProfileImage(imageUrl);
     } catch (error) {
       console.error('Error fetching profile data:', error);
     } finally {
@@ -74,6 +101,9 @@ const ProfilePage = () => {
     fetchProfileData();
     fetchContracts();
   }, [fetchProfileData, fetchContracts]);
+
+ 
+  
 
   const handleDelete = async (contractId) => {
     if (window.confirm('Are you sure you want to delete this contract?')) {
@@ -158,6 +188,15 @@ const ProfilePage = () => {
     return `${process.env.REACT_APP_API_URL}/uploads/${imagePath}`;
   };
 
+  const updateBankInfo = async () => {
+    try {
+      await axios.put(`/api/employees/${id}/bank-info`, bankInfo);
+      setEditMode(false);
+    } catch (error) {
+      console.error('Error updating bank info:', error);
+    }
+  };
+
   return (
     <Container fluid className="profile-page-container">
       <Card style={{borderRadius: "10px", width:"100%"}} >
@@ -179,7 +218,9 @@ const ProfilePage = () => {
     />
   ) : (
     personalInfo?.name ? (
-      `${personalInfo.name[0]}${personalInfo.name.split(" ")[1]?.[0] || ''}`
+      <span className="avatar-initials">
+        {personalInfo.name[0]}{personalInfo.name.split(" ")[1]?.[0] || ''}
+      </span>
     ) : ''
   )}
 </div>
@@ -344,7 +385,7 @@ const ProfilePage = () => {
       </Form.Select>
     ) : personalInfo.maritalStatus}
   </ListGroup.Item>
-  <ListGroup.Item>
+  {/* <ListGroup.Item>
     <strong>Present Address:</strong> {editMode ? (
       <Form.Control
         as="textarea"
@@ -353,6 +394,16 @@ const ProfilePage = () => {
         onChange={(e) => handleInputChange(e, 'personal')}
       />
     ) : personalInfo.presentAddress}
+  </ListGroup.Item>
+  <ListGroup.Item>
+    <strong>City:</strong> {editMode ? (
+      <Form.Control
+        type="text"
+        name="district"
+        value={personalInfo.district || ''}
+        onChange={(e) => handleInputChange(e, 'personal')}
+      />
+    ) : personalInfo.city}
   </ListGroup.Item>
   <ListGroup.Item>
     <strong>District:</strong> {editMode ? (
@@ -374,6 +425,37 @@ const ProfilePage = () => {
       />
     ) : personalInfo.state}
   </ListGroup.Item>
+  <ListGroup.Item>
+    <strong>Pin Code:</strong> {editMode ? (
+      <Form.Control
+        type="text"
+        name="pinCode"
+        value={personalInfo.state || ''}
+        onChange={(e) => handleInputChange(e, 'personal')}
+      />
+    ) : personalInfo.state}
+  </ListGroup.Item> */}
+  <ListGroup.Item>
+    <strong>Pan Number:</strong> {editMode ? (
+      <Form.Control
+        type="text"
+        name="panNumber"
+        value={personalInfo.panNumber || ''}
+        onChange={(e) => handleInputChange(e, 'personal')}
+      />
+    ) : personalInfo.panNumber}
+  </ListGroup.Item>
+  <ListGroup.Item>
+    <strong>AAdhar Number:</strong> {editMode ? (
+      <Form.Control
+        type="text"
+        name="aadharNumber"
+        value={personalInfo.aadharNumber || ''}
+        onChange={(e) => handleInputChange(e, 'personal')}
+      />
+    ) : personalInfo.panNumber}
+  </ListGroup.Item>
+
 
     </ListGroup>
   </Card.Body>
@@ -393,37 +475,198 @@ const ProfilePage = () => {
                             <Nav.Link eventKey="workInfo">Work Information</Nav.Link>
                           </Nav.Item>
                           <Nav.Item>
+                            <Nav.Link eventKey="bankInfo">Bank Information</Nav.Link>
+                          </Nav.Item>
+                          <Nav.Item>
                             <Nav.Link eventKey="contractDetails">Contract Details</Nav.Link>
                           </Nav.Item>
                           
                         </Nav>
+
+
  
                         <Tab.Content>
+
+                          {/* Contact Details Tab */}
+                          <Tab.Pane eventKey="contactDetails">
+  <Row>
+    <Col md={12}>
+      <h6>Contact Details</h6>
+      <ListGroup variant="flush">
+        <ListGroup.Item>
+          <strong>Present Address:</strong> {personalInfo.addressInfo?.presentAddress}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Present City:</strong> {personalInfo.addressInfo?.presentCity}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Present District:</strong> {personalInfo.addressInfo?.presentDistrict}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Present State:</strong> {personalInfo.addressInfo?.presentState}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Present Pin Code:</strong> {personalInfo.addressInfo?.presentPinCode}
+        </ListGroup.Item>
+        {/* <ListGroup.Item>
+          <strong>Present Country:</strong> {personalInfo.addressInfo?.presentCountry}
+        </ListGroup.Item> */}
+        <ListGroup.Item>
+          <strong>Permanent Address:</strong> {personalInfo.addressInfo?.permanentAddress}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Permanent City:</strong> {personalInfo.addressInfo?.permanentCity}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Permanent District:</strong> {personalInfo.addressInfo?.permanentDistrict}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Permanent State:</strong> {personalInfo.addressInfo?.permanentState}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Permanent Pin Code:</strong> {personalInfo.addressInfo?.permanentPinCode}
+        </ListGroup.Item>
+        {/* <ListGroup.Item>
+          <strong>Permanent Country:</strong> {personalInfo.addressInfo?.permanentCountry}
+        </ListGroup.Item> */}
+      </ListGroup>
+    </Col>
+  </Row>
+</Tab.Pane>
+
                           {/* Work Information Tab */}
                           <Tab.Pane eventKey="workInfo">
-                            <Row>
-                              <Col md={12}>
-                                <h6>Work Information</h6>
-                                <ListGroup variant="flush">
-                                  {Object.keys(workInfo).map((key) => (
-                                    <ListGroup.Item key={key}>
-                                      <strong>{key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}:</strong>{' '}
-                                      {editMode ? (
-                                        <Form.Control
-                                          type="text"
-                                          name={key}
-                                          value={workInfo[key] || ''}
-                                          onChange={(e) => handleInputChange(e, 'work')}
-                                        />
-                                      ) : (
-                                        workInfo[key] || 'Need to Update'
-                                      )}
-                                    </ListGroup.Item>
-                                  ))}
-                                </ListGroup>
-                              </Col>
-                            </Row>
-                          </Tab.Pane>
+  <Row>
+    <Col md={12}>
+      <h6>Work Information</h6>
+      <ListGroup variant="flush">
+        <ListGroup.Item>
+          <strong>Date of Appointment:</strong> {personalInfo.joiningDetails?.dateOfAppointment && 
+            new Date(personalInfo.joiningDetails.dateOfAppointment).toLocaleDateString()}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Department:</strong> {personalInfo.joiningDetails?.department}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Date of Joining:</strong> {personalInfo.joiningDetails?.dateOfJoining && 
+            new Date(personalInfo.joiningDetails.dateOfJoining).toLocaleDateString()}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Initial Designation:</strong> {personalInfo.joiningDetails?.initialDesignation}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Mode of Recruitment:</strong> {personalInfo.joiningDetails?.modeOfRecruitment}
+        </ListGroup.Item>
+        <ListGroup.Item>
+          <strong>Employee Type:</strong> {personalInfo.joiningDetails?.employeeType}
+        </ListGroup.Item>
+      </ListGroup>
+    </Col>
+  </Row>
+</Tab.Pane>
+
+                          {/* Bank Information Tab */}
+
+                          <Tab.Pane eventKey="bankInfo">
+  <Row>
+    <Col md={12}>
+      <Card>
+        <Card.Body>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h6>Bank Information</h6>
+            <Button variant="primary" size="sm" onClick={() => setEditMode(!editMode)}>
+              {editMode ? 'Save' : 'Edit'}
+            </Button>
+          </div>
+          <ListGroup variant="flush">
+            <ListGroup.Item>
+              <strong>Bank Name:</strong>
+              {editMode ? (
+                <Form.Control
+                  type="text"
+                  name="bankName"
+                  value={bankInfo.bankName || ''}
+                  onChange={(e) => handleInputChange(e, 'bank')}
+                />
+              ) : (
+                bankInfo.bankName || 'Not Available'
+              )}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Account Number:</strong>
+              {editMode ? (
+                <Form.Control
+                  type="text"
+                  name="accountNumber"
+                  value={bankInfo.accountNumber || ''}
+                  onChange={(e) => handleInputChange(e, 'bank')}
+                />
+              ) : (
+                bankInfo.accountNumber || 'Not Available'
+              )}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>IFSC Code:</strong>
+              {editMode ? (
+                <Form.Control
+                  type="text"
+                  name="ifscCode"
+                  value={bankInfo.ifscCode || ''}
+                  onChange={(e) => handleInputChange(e, 'bank')}
+                />
+              ) : (
+                bankInfo.ifscCode || 'Not Available'
+              )}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Branch Name:</strong>
+              {editMode ? (
+                <Form.Control
+                  type="text"
+                  name="branchName"
+                  value={bankInfo.branchName || ''}
+                  onChange={(e) => handleInputChange(e, 'bank')}
+                />
+              ) : (
+                bankInfo.branchName || 'Not Available'
+              )}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Branch Address:</strong>
+              {editMode ? (
+                <Form.Control
+                  type="text"
+                  name="branchAddress"
+                  value={bankInfo.branchAddress || ''}
+                  onChange={(e) => handleInputChange(e, 'bank')}
+                />
+              ) : (
+                bankInfo.branchAddress || 'Not Available'
+              )}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Account Type:</strong>
+              {editMode ? (
+                <Form.Select
+                  name="accountType"
+                  value={bankInfo.accountType || ''}
+                  onChange={(e) => handleInputChange(e, 'bank')}
+                >
+                  <option value="">Select Account Type</option>
+                  <option value="Savings">Savings</option>
+                  <option value="Current">Current</option>
+                </Form.Select>
+              ) : (
+                bankInfo.accountType || 'Not Available'
+              )}
+            </ListGroup.Item>
+          </ListGroup>
+        </Card.Body>
+      </Card>
+    </Col>
+  </Row>
+</Tab.Pane>
+
  
                           {/* Contract Details Tab */}
                           <Tab.Pane eventKey="contractDetails">
@@ -563,80 +806,10 @@ const ProfilePage = () => {
                       </Tab.Container>
                     </Card.Body>
                   </Card>
-                  <Card className='mt-3' style={{borderRadius: "10px", width:"100%"}}>
-  <Card.Body>
-    <h6>BANK INFORMATION</h6>
-    <ListGroup variant="flush">
-      <ListGroup.Item>
-        <strong>BANK NAME:</strong> {editMode ? (
-          <Form.Control
-            type="text"
-            name="bankName"
-            value={bankInfo.bankName || ''}
-            onChange={(e) => handleInputChange(e, 'bank')}
-          />
-        ) : getDisplayValue(bankInfo.bankName)}
-      </ListGroup.Item>
-      <ListGroup.Item>
-        <strong>ACCOUNT NUMBER:</strong> {editMode ? (
-          <Form.Control
-            type="text"
-            name="accountNumber"
-            value={bankInfo.accountNumber || ''}
-            onChange={(e) => handleInputChange(e, 'bank')}
-          />
-        ) : getDisplayValue(bankInfo.accountNumber)}
-      </ListGroup.Item>
-      <ListGroup.Item>
-        <strong>IFSC CODE:</strong> {editMode ? (
-          <Form.Control
-            type="text"
-            name="ifscCode"
-            value={bankInfo.ifscCode || ''}
-            onChange={(e) => handleInputChange(e, 'bank')}
-          />
-        ) : getDisplayValue(bankInfo.ifscCode)}
-      </ListGroup.Item>
-      <ListGroup.Item>
-        <strong>BRANCH NAME:</strong> {editMode ? (
-          <Form.Control
-            type="text"
-            name="branchName"
-            value={bankInfo.branchName || ''}
-            onChange={(e) => handleInputChange(e, 'bank')}
-          />
-        ) : getDisplayValue(bankInfo.branchName)}
-      </ListGroup.Item>
-      <ListGroup.Item>
-        <strong>BRANCH ADDRESS:</strong> {editMode ? (
-          <Form.Control
-            type="text"
-            name="branchAddress"
-            value={bankInfo.branchAddress || ''}
-            onChange={(e) => handleInputChange(e, 'bank')}
-          />
-        ) : getDisplayValue(bankInfo.branchAddress)}
-      </ListGroup.Item>
-      <ListGroup.Item>
-        <strong>ACCOUNT TYPE:</strong> {editMode ? (
-          <Form.Select
-            name="accountType"
-            value={bankInfo.accountType || ''}
-            onChange={(e) => handleInputChange(e, 'bank')}
-          >
-            <option value="">Select Account Type</option>
-            <option value="Savings">SAVINGS</option>
-            <option value="Current">CURRENT</option>
-          </Form.Select>
-        ) : getDisplayValue(bankInfo.accountType)}
-      </ListGroup.Item>
-    </ListGroup>
-  </Card.Body>
-</Card>
-
-                </Col>
+                  </Col>
               </Row>
             </Tab.Pane>
+                  
  
             <Tab.Pane eventKey="workTypeShift">
               <Card style={{borderRadius: "10px", width:"100%"}}>

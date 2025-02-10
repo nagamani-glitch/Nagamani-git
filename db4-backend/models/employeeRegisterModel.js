@@ -28,11 +28,13 @@ const employeeRegisterSchema = new mongoose.Schema({
   addressInfo: {
     presentAddress: { type: String, required: true },
     presentCity: { type: String, required: true },
+    presentDistrict: { type: String, required: true },
     presentState: { type: String, required: true },
     presentPinCode: { type: String, required: true },
     presentCountry: { type: String, required: true },
     permanentAddress: { type: String, required: true },
     permanentCity: { type: String, required: true },
+    permanentDistrict: { type: String, required: true },
     permanentState: { type: String, required: true },
     permanentPinCode: { type: String, required: true },
     permanentCountry: { type: String, required: true }
@@ -40,7 +42,7 @@ const employeeRegisterSchema = new mongoose.Schema({
 
   joiningDetails: {
     dateOfAppointment: { type: Date, required: true },
-    officeName: { type: String, required: true },
+    department: { type: String, required: true },
     dateOfJoining: { type: Date, required: true },
     initialDesignation: { type: String, required: true },
     modeOfRecruitment: { type: String, required: true },
@@ -125,13 +127,22 @@ const employeeRegisterSchema = new mongoose.Schema({
     nominationPercentage: { type: Number, required: true },
     nomineeAge: { type: Number, required: true },
     presentAddress: { type: String, required: true },
-    block: { type: String },
-    panchayatMandal: { type: String },
+    city: { type: String },    
     district: { type: String, required: true },
     state: { type: String, required: true },
     pinCode: { type: String, required: true },
     phoneNumber: { type: String, required: true }
-  }
+  },
+
+  bankInfo: {
+    bankName: { type: String },
+    accountNumber: { type: String },
+    ifscCode: { type: String },
+    branchName: { type: String },
+    branchAddress: { type: String },
+    accountType: { type: String }
+  },
+  
 }, {
   timestamps: true
 });

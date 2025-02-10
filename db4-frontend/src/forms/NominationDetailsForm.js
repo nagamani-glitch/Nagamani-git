@@ -60,7 +60,8 @@ const validationSchema = Yup.object().shape({
     .required('Age is required')
     .positive('Age must be positive')
     .integer('Age must be a whole number'),
-  presentAddress: Yup.string().required('Present address is required'),
+  presentAddress: Yup.string().required('Address is required'),
+  city: Yup.string().required('City is required'),
   district: Yup.string().required('District is required'),
   state: Yup.string().required('State is required'),
   pinCode: Yup.string()
@@ -79,8 +80,7 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
     nominationPercentage: '',
     nomineeAge: '',
     presentAddress: '',
-    block: '',
-    panchayatMandal: '',
+    City: '',    
     district: '',
     state: '',
     pinCode: '',
@@ -142,9 +142,9 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
                     onBlur={handleBlur}
                     error={touched.name && Boolean(errors.name)}
                     helperText={touched.name && errors.name}
-                    InputProps={{
-                      startAdornment: <Badge sx={{ mr: 1, color: 'primary.main' }} />
-                    }}
+                    // InputProps={{
+                    //   startAdornment: <Badge sx={{ mr: 1, color: 'primary.main' }} />
+                    // }}
                   />
                 </Grid>
 
@@ -158,9 +158,9 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
     onBlur={handleBlur}
     error={touched.relation && Boolean(errors.relation)}
     helperText={touched.relation && errors.relation}
-    InputProps={{
-      startAdornment: <PersonAdd sx={{ mr: 1, color: 'primary.main' }} />
-    }}
+    // InputProps={{
+    //   startAdornment: <PersonAdd sx={{ mr: 1, color: 'primary.main' }} />
+    // }}
   />
 </Grid>
 
@@ -174,9 +174,9 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
     onBlur={handleBlur}
     error={touched.typeOfNomination && Boolean(errors.typeOfNomination)}
     helperText={touched.typeOfNomination && errors.typeOfNomination}
-    InputProps={{
-      startAdornment: <Badge sx={{ mr: 1, color: 'primary.main' }} />
-    }}
+    // InputProps={{
+    //   startAdornment: <Badge sx={{ mr: 1, color: 'primary.main' }} />
+    // }}
   />
 </Grid>
 
@@ -191,10 +191,10 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
     onBlur={handleBlur}
     error={touched.nominationPercentage && Boolean(errors.nominationPercentage)}
     helperText={touched.nominationPercentage && errors.nominationPercentage}
-    InputProps={{
-      startAdornment: <Percent sx={{ mr: 1, color: 'primary.main' }} />,
-      inputProps: { min: 0, max: 100 }
-    }}
+    // InputProps={{
+    //   startAdornment: <Percent sx={{ mr: 1, color: 'primary.main' }} />,
+    //   inputProps: { min: 0, max: 100 }
+    // }}
   />
 </Grid>
 
@@ -209,26 +209,14 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
     onBlur={handleBlur}
     error={touched.nomineeAge && Boolean(errors.nomineeAge)}
     helperText={touched.nomineeAge && errors.nomineeAge}
-    InputProps={{
-      startAdornment: <CalendarToday sx={{ mr: 1, color: 'primary.main' }} />,
-      inputProps: { min: 0 }
-    }}
+    // InputProps={{
+    //   startAdornment: <CalendarToday sx={{ mr: 1, color: 'primary.main' }} />,
+    //   inputProps: { min: 0 }
+    // }}
   />
 </Grid>
 
-<Grid item xs={12} sm={6}>
-  <TextField
-    fullWidth
-    name="block"
-    label="Block"
-    value={values.block}
-    onChange={handleChange}
-    onBlur={handleBlur}
-    InputProps={{
-      startAdornment: <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
-    }}
-  />
-</Grid>
+
 
 <Grid item xs={12}>
                   <TextField
@@ -242,26 +230,25 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
                     onBlur={handleBlur}
                     error={touched.presentAddress && Boolean(errors.presentAddress)}
                     helperText={touched.presentAddress && errors.presentAddress}
-                    InputProps={{
-                      startAdornment: <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
-                    }}
+                    // InputProps={{
+                    //   startAdornment: <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
+                    // }}
                   />
                 </Grid>
-              
 
-<Grid item xs={12} sm={6}>
-  <TextField
-    fullWidth
-    name="panchayatMandal"
-    label="Panchayat/Mandal"
-    value={values.panchayatMandal}
-    onChange={handleChange}
-    onBlur={handleBlur}
-    InputProps={{
-      startAdornment: <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
-    }}
-  />
-</Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    name="city"
+                    label="City"
+                    value={values.city}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                  // InputProps={{
+                  //   startAdornment: <LocationOn sx={{ mr: 1, color: 'primary.main' }} />
+                  // }}
+                  />
+                </Grid>              
 
 <Grid item xs={12} sm={6}>
   <TextField

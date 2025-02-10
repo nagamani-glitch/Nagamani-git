@@ -14,7 +14,9 @@ const validationSchema = Yup.object().shape({
   permanentCity: Yup.string().required('City is required'),
   permanentState: Yup.string().required('State is required'),
   permanentPinCode: Yup.string().matches(/^[0-9]{6}$/, 'Pin code must be 6 digits').required('Pin code is required'),
-  permanentCountry: Yup.string().required('Country is required')
+  permanentCountry: Yup.string().required('Country is required'),
+  presentDistrict: Yup.string().required('District is required'),
+  permanentDistrict: Yup.string().required('District is required'),
 });
 
 const AnimatedTextField = ({ field, form, label, ...props }) => {
@@ -52,7 +54,9 @@ const AddressDetailsForm = ({ nextStep, prevStep, handleFormDataChange }) => {
     permanentCity: '',
     permanentState: '',
     permanentPinCode: '',
-    permanentCountry: ''
+    permanentCountry: '',
+    presentDistrict:'',
+    permanentDistrict:''
   };
 
   return (
@@ -98,6 +102,17 @@ const AddressDetailsForm = ({ nextStep, prevStep, handleFormDataChange }) => {
 
               <Grid item xs={12} sm={6}>
                 <Field
+                  name="presentDistrict"
+                  component={AnimatedTextField}
+                  label="District"
+                  fullWidth
+                  error={touched.presentDistrict && errors.presentDistrict}
+                  helperText={touched.presentDistrict && errors.presentDistrict}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Field
                   name="presentState"
                   component={AnimatedTextField}
                   label="State"
@@ -138,6 +153,7 @@ const AddressDetailsForm = ({ nextStep, prevStep, handleFormDataChange }) => {
                           setFieldValue('permanentAddress', values.presentAddress);
                           setFieldValue('permanentCity', values.presentCity);
                           setFieldValue('permanentState', values.presentState);
+                          setFieldValue('permanentDistrict', values.presentDistrict);
                           setFieldValue('permanentPinCode', values.presentPinCode);
                           setFieldValue('permanentCountry', values.presentCountry);
                         }
@@ -175,6 +191,17 @@ const AddressDetailsForm = ({ nextStep, prevStep, handleFormDataChange }) => {
                   fullWidth
                   error={touched.permanentCity && errors.permanentCity}
                   helperText={touched.permanentCity && errors.permanentCity}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Field
+                  name="permanentDistrict"
+                  component={AnimatedTextField}
+                  label="District"
+                  fullWidth
+                  error={touched.permanentDistrict && errors.permanentDistrict}
+                  helperText={touched.permanentDistrict && errors.permanentDistrict}
                 />
               </Grid>
 

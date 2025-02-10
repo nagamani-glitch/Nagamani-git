@@ -3,6 +3,7 @@
   min-height: 100vh;
   width: 100%;
   overflow: hidden;
+  display: flex;
 }
 
 .novatrix-container {
@@ -22,64 +23,112 @@
 .hrms-content-container {
   position: relative;
   z-index: 1;
-  padding-top: 120px;
-  text-align: center;
+  display: flex;
+  width: 100%;
+  padding: 40px;
+  gap: 40px;
+  align-items: center;
 }
 
-.hrms-icon-container {
+/* Left side - Introduction */
+.hrms-intro-container {
+  flex: 0 0 60%;
+  padding: 40px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+}
+
+.hrms-intro-title {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.company-name {
+  color: #ff0000;
+  font-weight: 700;
+}
+
+
+.hrms-intro-text {
+  font-size: 1.2rem;
+  color: #34495e;
+  line-height: 1.8;
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+/* Right side - Icons */
+.hrms-icon-container {
+  flex: 0 0 40%;
+  display: flex;
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 40px;
 }
 
 .hrms-icon-wrapper {
-  display: inline-block;
   text-align: center;
   padding: 20px;
   animation: hrms-jump 1.5s ease infinite alternate;
 }
 
 .hrms-icon-circle {
-  width: 160px;
-  height: 160px;
+  width: 180px;
+  height: 180px;
   border-radius: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 15px;
   transition: transform 0.3s ease;
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .hrms-icon-circle svg {
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   color: #2c3e50;
 }
 
 .hrms-icon-wrapper:hover .hrms-icon-circle {
   transform: scale(1.1);
-  background-color: transparent;
 }
 
 .hrms-icon-label {
   font-weight: 600;
   color: #2c3e50;
   margin-top: 12px;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 @keyframes hrms-jump {
   0%, 100% {
-      transform: translateY(0);
+    transform: translateY(0);
   }
   50% {
-      transform: translateY(-12px);
+    transform: translateY(-12px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .hrms-content-container {
+    flex-direction: column;
+    padding: 20px;
+  }
+  
+  .hrms-icon-container,
+  .hrms-intro-container {
+    flex: 0 0 100%;
   }
 }

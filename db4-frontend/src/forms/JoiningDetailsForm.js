@@ -29,7 +29,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const validationSchema = Yup.object().shape({
   dateOfAppointment: Yup.date().required('Date of appointment is required'),
-  officeName: Yup.string().required('Office name is required'),
+  department: Yup.string().required('Department is required'),
   dateOfJoining: Yup.date().required('Date of joining is required'),
   initialDesignation: Yup.string().required('Initial designation is required'),
   modeOfRecruitment: Yup.string().required('Mode of recruitment is required'),
@@ -83,9 +83,9 @@ const AnimatedTextField = ({ field, form, label, ...props }) => {
 
 const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoiningDetails }) => {
   const initialValues = savedJoiningDetails || {
-    dateOfAppointment: '',
-    officeName: '',
-    dateOfJoining: '',
+    dateOfAppointment: new Date().toISOString().split('T')[0],
+    department: '',
+    dateOfJoining: new Date().toISOString().split('T')[0],
     initialDesignation: '',
     modeOfRecruitment: '',
     employeeType: ''
@@ -128,9 +128,9 @@ const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoi
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <Field
-                      name="officeName"
+                      name="department"
                       component={AnimatedTextField}
-                      label="Office Name"
+                      label="Department"
                       fullWidth
                       error={touched.officeName && errors.officeName}
                       helperText={touched.officeName && errors.officeName}
