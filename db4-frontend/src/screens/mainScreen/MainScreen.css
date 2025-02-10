@@ -1,51 +1,85 @@
-/* Main Container */
-.main-container {
-    background-color: #ffffff;
-    text-align: center;
-    padding-top: 50px;
-    min-height: 100vh;
+.hrms-main-wrapper {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.novatrix-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.novatrix-container canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.hrms-content-container {
+  position: relative;
+  z-index: 1;
+  padding-top: 120px;
+  text-align: center;
+}
+
+.hrms-icon-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.hrms-icon-wrapper {
+  display: inline-block;
+  text-align: center;
+  padding: 20px;
+  animation: hrms-jump 1.5s ease infinite alternate;
+}
+
+.hrms-icon-circle {
+  width: 160px;
+  height: 160px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  transition: transform 0.3s ease;
+  background-color: transparent;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.hrms-icon-circle svg {
+  width: 60px;
+  height: 60px;
+  color: #2c3e50;
+}
+
+.hrms-icon-wrapper:hover .hrms-icon-circle {
+  transform: scale(1.1);
+  background-color: transparent;
+}
+
+.hrms-icon-label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-top: 12px;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@keyframes hrms-jump {
+  0%, 100% {
+      transform: translateY(0);
   }
-   
-  /* Icon Grid */
-  .icon-grid {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
+  50% {
+      transform: translateY(-12px);
   }
-   
-  /* Icon Item */
-  .icon-item {
-    display: inline-block;
-    text-align: center;
-    padding: 20px;
-    animation: jump 1s ease infinite alternate;
-  }
-   
-  /* Icon Circle and Hover */
-  .icon-circle {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-    transition: transform 0.3s ease, background-color 0.3s ease;
-  }
-   
-  .icon-item:hover .icon-circle {
-    transform: scale(1.2);
-    background-color: #f39c12;
-  }
-   
-  /* Jump Animation */
-  @keyframes jump {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-15px);
-    }
-  }
+}

@@ -1,15 +1,20 @@
 /* src/components/Header.css */
-
-.custom-navbar {
-    background-color: cadetblue;
-    padding: 0.5rem 1rem;
+  .custom-navbar {
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      padding: 0.5rem 1rem;
+      height: 60px;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1001;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   }
-  
-  .brand {
+.brand {
     font-size: 1.5rem;
     margin-right: 1rem;
     color: white !important;
-  }
+}
   
   .path-indicator {
     color: white;
@@ -56,32 +61,40 @@
     right: 0;
     transform: translate(50%, -50%);
   }
+      .dropdown-menu.show {
+        display: block;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        z-index: 1000;
+        float: left;
+        min-width: 10rem;
+        padding: 0.5rem 0;
+        margin: 0.125rem 0 0;
+        font-size: 1rem;
+        color: #ffffff;
+        text-align: left;
+        list-style: none;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.25rem;
+      }
   
-  .dropdown-menu.show {
-    display: block;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    z-index: 1000;
-    float: left;
-    min-width: 10rem;
-    padding: 0.5rem 0;
-    margin: 0.125rem 0 0;
-    font-size: 1rem;
-    color: #212529;
-    text-align: left;
-    list-style: none;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 0.25rem;
-  }
+      .profile-dropdown .dropdown-header {
+        background-color: rgba(0, 0, 0, 0.9);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+      }
   
-  .profile-dropdown .dropdown-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-  }
+      .dropdown-menu .dropdown-item {
+        color: #ffffff;
+      }
   
+      .dropdown-menu .dropdown-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+      }
   .logout-item {
     cursor: pointer;
   }

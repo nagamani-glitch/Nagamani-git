@@ -25,13 +25,13 @@
   margin-bottom: 16px;
 }
 
-.allowance-search {
+/* .allowance-search {
   padding: 8px;
   border: 1px solid #dc0f0f;
   border-radius: 4px;
   flex: 1;
   max-width: 300px;
-}
+} */
 
 .view-toggle, .allowance-create-btn {
   background: none;
@@ -180,18 +180,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  /* font-size: 20px;
-  font-weight: bold;
-  background: #e0e0e0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  margin-bottom: 10px; */
-  
+  font-weight: bold;  
 }
 
 .card-content {
@@ -324,8 +313,9 @@ td.sticky-column {
 
 .filter-popup {
   position: absolute;
-  top: 34%; /* Adjust based on your header */
+  top: 40%; /* Adjust based on your header */
   right: 50px; /* Adjust for alignment */
+  left: 75%;
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -400,12 +390,6 @@ td.sticky-column {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  /* position: relative; 
-  z-index: 10;
-  padding: 10px;
-  padding-right: 20px;
-  background-color: white;
-  font-size: 17px; */
 }
 
 .allowance-card-edit-button{
@@ -494,3 +478,60 @@ button {
 
 
  
+
+@media screen and (max-width: 1200px) {
+  .card-view {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .allowances-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .allowance-search {
+    max-width: 100%;
+  }
+
+  .table-container {
+    overflow-x: scroll;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .card-view {
+    grid-template-columns: 1fr;
+  }
+
+  .allowance-card {
+    margin: 10px;
+  }
+
+  .filter-popup {
+    width: 90%;
+    right: 5%;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .controls {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .allowances-container {
+    padding: 10px;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 15px;
+  }
+}

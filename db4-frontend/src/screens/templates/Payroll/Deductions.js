@@ -11,34 +11,6 @@ import {
   FaTrash
 } from "react-icons/fa";
 
-// const deductionsData = [
-//   {
-//     id: 1,
-//     code: "ESI",
-//     name: "ESI",
-//     amount: 200.0,
-//     employerRate: "6.25% of Gross Pay",
-//     employeeRate: "7.75% of Gross Pay",
-//     oneTimeDeduction: "No",
-//     taxable: "Yes",
-//     fixed: false,
-//   },
-//   {
-//     id: 2,
-//     code: "SS",
-//     name: "Social Security (FICA)",
-//     amount: 1000.0,
-//     employerRate: "3.25% of Gross Pay",
-//     employeeRate: "0.75% of Gross Pay",
-//     oneTimeDeduction: "No",
-//     taxable: "Yes",
-//     fixed: true,
-//     pretax: "Yes",
-//   },
-
-//   // Add more allowance data here
-// ];
-
 const Deductions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("card"); // 'card' or 'list'
@@ -237,19 +209,32 @@ const Deductions = () => {
     fetchDeductions(); // This will refresh the deductions list
   };
 
+  const resetFilters = () => {
+    setFilterOptions({
+      taxable: "",
+      fixed: "",
+      oneTimeDeduction: "",
+      amount: ""
+    });
+    setFilteredData(deductions);
+    setIsFilterVisible(false);
+  };
+  
+
 
   return (
     <div className="deduction-container">
       <div className="deduction-sub-container">
       <header className="deduction-header">
-        <h2>Deductions</h2>
-        <div className="controls">
+        <h1>Deductions</h1>
+        <div className="deduction-controls">
           <input
             type="text"
             placeholder="Search"
             value={searchTerm}
             onChange={handleSearch}
-            className="search-input"
+            // className="deduction-search-input"
+            style={{border: '1px solid gray', padding: '8px', borderRadius: '4px', marginRight: '8px'}}
           />
           <button
             className={`view-toggle ${view === "list" ? "active" : ""}`}
@@ -263,9 +248,175 @@ const Deductions = () => {
           >
             <FaTh />
           </button>
-          <button className="deduction-filter-btn" onClick={toggleFilterVisibility}>
+          {/* <button className="deduction-filter-btn" onClick={toggleFilterVisibility}>
             <FaFilter /> Filter
-          </button>
+          </button> */}
+
+
+<div style={{ position: 'relative', display: 'inline-block' }} ref={filterRef}>
+  <button onClick={toggleFilterVisibility} style={{
+    padding: '8px 16px',
+    background: 'linear-gradient(45deg, #3498db, #2980b9)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 2px 8px rgba(52, 152, 219, 0.2)',
+    fontSize: '14px',
+    fontWeight: '500'
+  }}>
+    <FaFilter /> Filter
+  </button>
+  {isFilterVisible && (
+    <div style={{
+      position: 'absolute',
+      top: 'calc(100% + 10px)',
+      right: 0,
+      width: '600px',
+      background: 'linear-gradient(to bottom, #ffffff, #f8fafc)',
+      borderRadius: '12px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+      border: '1px solid rgba(255,255,255,0.8)',
+      zIndex: 1000,
+      padding: '16px'
+    }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '12px'
+      }}>
+        <div>
+          <label style={{
+            display: 'block',
+            color: '#2c3e50',
+            fontWeight: '600',
+            fontSize: '14px',
+            marginBottom: '6px'
+          }}>Pretax</label>
+          <select name="taxable" value={filterOptions.taxable} onChange={handleFilterChange} style={{
+            width: '100%',
+            padding: '8px',
+            borderRadius: '8px',
+            border: '2px solid #e0e7ff',
+            fontSize: '14px',
+            background: 'white',
+            outline: 'none'
+          }}>
+            <option value="">All</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div>
+          <label style={{
+            display: 'block',
+            color: '#2c3e50',
+            fontWeight: '600',
+            fontSize: '14px',
+            marginBottom: '6px'
+          }}>Fixed</label>
+          <select name="fixed" value={filterOptions.fixed} onChange={handleFilterChange} style={{
+            width: '100%',
+            padding: '8px',
+            borderRadius: '8px',
+            border: '2px solid #e0e7ff',
+            fontSize: '14px',
+            background: 'white',
+            outline: 'none'
+          }}>
+            <option value="">All</option>
+            <option value="Yes">Fixed</option>
+            <option value="No">Variable</option>
+          </select>
+        </div>
+        <div>
+          <label style={{
+            display: 'block',
+            color: '#2c3e50',
+            fontWeight: '600',
+            fontSize: '14px',
+            marginBottom: '6px'
+          }}>One Time Deduction</label>
+          <select name="oneTimeDeduction" value={filterOptions.oneTimeDeduction} onChange={handleFilterChange} style={{
+            width: '100%',
+            padding: '8px',
+            borderRadius: '8px',
+            border: '2px solid #e0e7ff',
+            fontSize: '14px',
+            background: 'white',
+            outline: 'none'
+          }}>
+            <option value="">All</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div>
+          <label style={{
+            display: 'block',
+            color: '#2c3e50',
+            fontWeight: '600',
+            fontSize: '14px',
+            marginBottom: '6px'
+          }}>Amount Range</label>
+          <select name="amount" value={filterOptions.amount} onChange={handleFilterChange} style={{
+            width: '100%',
+            padding: '8px',
+            borderRadius: '8px',
+            border: '2px solid #e0e7ff',
+            fontSize: '14px',
+            background: 'white',
+            outline: 'none'
+          }}>
+            <option value="">All</option>
+            <option value="lessThan1000">Less than 1000</option>
+            <option value="1000to5000">1000 to 5000</option>
+            <option value="moreThan5000">More than 5000</option>
+          </select>
+        </div>
+        <div style={{
+          gridColumn: '1 / -1',
+          display: 'flex',
+          gap: '12px',
+          marginTop: '8px'
+        }}>
+          <button onClick={applyFilter} style={{
+            flex: 1,
+            padding: '10px',
+            background: 'linear-gradient(45deg, #3498db, #2980b9)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}>Apply Filter</button>
+          <button onClick={resetFilters} style={{
+            flex: 1,
+            padding: '10px',
+            background: 'linear-gradient(45deg, #e74c3c, #c0392b)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}>Reset</button>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
+
+
+
           <button className="create-btn" onClick={handleCreateAllowance}>
              Create
           </button>
@@ -310,7 +461,7 @@ const Deductions = () => {
           </span>
         ))}
       </div>
-      {isFilterVisible && (
+      {/* {isFilterVisible && (
         <div className="deduction-filter-popup" ref={filterRef}>
           <div className="filter-form">
             <div className="filter-row">
@@ -353,7 +504,7 @@ const Deductions = () => {
             <button onClick={applyFilter}>Apply Filter</button>
           </div>
         </div>
-      )}
+      )} */}
 
       <div className="status-indicators">
         <span className="dot not-fixed">Not Fixed</span>

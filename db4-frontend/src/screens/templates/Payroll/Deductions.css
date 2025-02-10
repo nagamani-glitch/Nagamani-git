@@ -28,14 +28,14 @@
   font-size: 24px;
 }
  
-.controls {
+.deduction-controls {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
  
-.search-input {
+.deduction-search-input {
   padding: 8px;
   border: 1px solid #e80505;
   border-radius: 4px;

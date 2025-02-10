@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import { IoFilterOutline } from "react-icons/io5";
 import axios from "axios";
-import './CreateDeduction.css'
- 
- 
+import "./CreateDeduction.css";
+
 const CreateDeduction = ({ onClose, editData, onUpdate }) => {
   const [isTaxable, setIsTaxable] = useState(false);
   const [isFixed, setIsFixed] = useState(false);
@@ -12,7 +11,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
   const [selectedEmployee, setSelectedEmployee] = useState([]);
   const [filterText, setFilterText] = useState(""); // State for filtering input
   const [showFilterModal, setShowFilterModal] = useState(false); // State for modal visibility
- 
+
   // Sample employee data
   const employees = [
     { id: 1, name: "John Doe", role: "Software Engineer" },
@@ -23,45 +22,43 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
     { id: 6, name: "Charles babbage", role: "Developer" },
     { id: 7, name: "Ravijith Aggarwal", role: "Computer Engineer" },
   ];
- 
+
   // Initialize state with edit data if available
   const [formData, setFormData] = useState({
-    title: editData?.name || '',
-    oneTimeDate: editData?.oneTimeDeduction || '',
-    amount: editData?.amount || '',
-    isTaxable: editData?.taxable === 'Yes',
+    title: editData?.name || "",
+    oneTimeDate: editData?.oneTimeDeduction || "",
+    amount: editData?.amount || "",
+    isTaxable: editData?.taxable === "Yes",
     isFixed: editData?.fixed || false,
     isConditionBased: editData?.isConditionBased || false,
-    selectedEmployees: editData?.specificEmployees || []
+    selectedEmployees: editData?.specificEmployees || [],
   });
- 
- 
+
   // Filter employee data based on the search input
   const filteredEmployees = employees.filter(
     (employee) =>
       employee.name.toLowerCase().includes(filterText.toLowerCase()) ||
       employee.role.toLowerCase().includes(filterText.toLowerCase())
   );
- 
+
   // Extract initials from the employee name
   const getInitials = (name) => {
-    if (!name) return '';
+    if (!name) return "";
     return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
- 
- 
+
   // Handle selecting an employee
   const handleEmployeeSelect = (employeeName) => {
     if (employeeName && !selectedEmployee.includes(employeeName)) {
       setSelectedEmployee([...selectedEmployee, employeeName]);
     }
   };
- 
+
   // Handle removing an employee from the selection
   const handleRemoveEmployee = (employeeName) => {
     setSelectedEmployee(
@@ -69,42 +66,51 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
     );
   };
 
- 
   const validateForm = () => {
-    const title = document.querySelector("input[placeholder='Enter title']").value;
+    const title = document.querySelector(
+      "input[placeholder='Enter title']"
+    ).value;
     const amount = document.querySelector("input[type='number']").value;
-   
+
     if (!title || !amount) {
       alert("Please fill all required fields");
       return false;
     }
     return true;
   };
- 
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-   
+
     if (!validateForm()) return;
-   
+
     const formData = {
       code: document.querySelector("input[placeholder='Enter title']").value,
       name: document.querySelector("input[placeholder='Enter title']").value,
       amount: Number(document.querySelector("input[type='number']").value),
-      taxable: isTaxable ? 'Yes' : 'No',
+      taxable: isTaxable ? "Yes" : "No",
       fixed: isFixed,
-      oneTimeDeduction: document.querySelector("input[type='date']").value ? 'Yes' : 'No',
+      oneTimeDeduction: document.querySelector("input[type='date']").value
+        ? "Yes"
+        : "No",
       specificEmployees: selectedEmployee,
       employerRate: "6.25% of Gross Pay",
-      employeeRate: "7.75% of Gross Pay"
+      employeeRate: "7.75% of Gross Pay",
     };
- 
+
     try {
       if (editData) {
-        const response = await axios.put(`http://localhost:5000/api/deductions/${editData._id}`, formData);
+        const response = await axios.put(
+          `http://localhost:5000/api/deductions/${editData._id}`,
+          formData
+        );
         console.log("Deduction updated:", response.data);
         alert("Deduction updated successfully!");
       } else {
-        const response = await axios.post('http://localhost:5000/api/deductions', formData);
+        const response = await axios.post(
+          "http://localhost:5000/api/deductions",
+          formData
+        );
         console.log("Deduction created:", response.data);
         alert("Deduction created successfully!");
       }
@@ -114,13 +120,14 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
       alert("Please fill all required fields");
     }
   };
- 
- 
+
   return (
-    <div className="main-container">
-      <div className="create-allowance-container">
+    <div className="create-deduction-container">
+      <div className="create-deduction-container">
         <div className="deduction-row">
-          <h2 className="deduction-heading">{editData ? 'Edit Deduction' : 'Create Deduction'}</h2>
+          <h2 className="deduction-heading">
+            {editData ? "Edit Deduction" : "Create Deduction"}
+          </h2>
         </div>
         <hr />
         <form>
@@ -147,7 +154,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
               <input type="date" />
             </div>
           </div>
- 
+
           {/* Include all active employees and Specific Employees */}
           <div className="form-row">
             <div className="form-group">
@@ -165,7 +172,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
             </div>
             <div className="form-group">
               <label>Specific Employees *</label>
- 
+
               {/* Select employees as shown tags */}
               <div className="multi-select-box">
                 {selectedEmployee.map((employeeName) => (
@@ -180,8 +187,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                   </div>
                 ))}
               </div>
- 
- 
+
               <select
                 value={selectedEmployee}
                 onChange={(e) => handleEmployeeSelect(e.target.value)}
@@ -198,7 +204,10 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                   <option>No employees found</option>
                 )}
               </select>
-              <div className="filter-icons" onClick={() => setShowFilterModal(true)}>
+              <div
+                className="filter-icons"
+                onClick={() => setShowFilterModal(true)}
+              >
                 {[...Array(1)].map((_, i) => (
                   <IoFilterOutline key={i} className="small-filter-icon" />
                 ))}{" "}
@@ -216,14 +225,16 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
               </div>
             </div>
           </div>
- 
- 
+
           {/* Modal Popup */}
           {showFilterModal && (
-            <div className="modal">
-              <div className="modal-content">
+            <div className="create-deduction-modal">
+              <div className="create-deduction-modal-content">
                 <h3>Specific Employees</h3>
-                <button className="close-modal" onClick={() => setShowFilterModal(false)}>
+                <button
+                  className="close-modal"
+                  onClick={() => setShowFilterModal(false)}
+                >
                   &times;
                 </button>
                 <input
@@ -236,8 +247,12 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                 <div className="employee-list">
                   {filteredEmployees.map((employee) => (
                     <div key={employee.id} className="employee-item">
-                      <span className="avatar">{getInitials(employee.name)}</span>
-                      <span>{employee.name} - {employee.role}</span>
+                      <span className="avatar">
+                        {getInitials(employee.name)}
+                      </span>
+                      <span>
+                        {employee.name} - {employee.role}
+                      </span>
                       <button
                         className="add-employee"
                         onClick={() => handleEmployeeSelect(employee.name)}
@@ -250,10 +265,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
               </div>
             </div>
           )}
- 
- 
- 
- 
+
           {/* Is taxable and Is condition based */}
           <div className="form-row">
             <div className="form-group">
@@ -261,7 +273,8 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                 Is tax
                 <FaInfoCircle
                   className="info-icon"
-                  title="The specify the deduction is tax or normal deduction " />
+                  title="The specify the deduction is tax or normal deduction "
+                />
               </label>
               <label className="toggle-switch">
                 <input
@@ -269,10 +282,10 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                   checked={isTaxable}
                   onChange={() => setIsTaxable(!isTaxable)}
                 />
-                <span className="slider"></span> 
+                <span className="slider"></span>
               </label>
             </div>
- 
+
             <div className="form-group">
               <label>
                 Is condition based
@@ -291,7 +304,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
               </label>
             </div>
           </div>
- 
+
           {/* Is fixed and Amount */}
           <div className="form-row">
             <div className="form-group">
@@ -321,7 +334,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
               />
             </div>
           </div>
- 
+
           {/* If choice and If condition */}
           <div className="form-row">
             <div className="form-group">
@@ -354,9 +367,9 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
               </select>
             </div>
           </div>
- 
+
           {/* If amount and Save button */}
-          <div className="form-row" >
+          <div className="form-row">
             <div className="form-group ">
               <label>
                 If amount <span>*</span>
@@ -367,8 +380,7 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
               </label>
               <input type="number" placeholder="0.0" required />
             </div>
- 
- 
+
             <div className="form-group">
               <label>
                 Update compensation <span>*</span>
@@ -384,25 +396,33 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
               </select>
             </div>
           </div>
- 
-          <div className="form-group save-btn-container" style={{ display: "flex", alignItems: "end" }}>
- 
- 
-            <button onClick={handleSubmit} className="create-deduction-save-btn">
-              {editData ? 'Update' : 'Save'}
+
+          <div
+            className="form-group save-btn-container"
+            style={{ display: "flex", alignItems: "end" }}
+          >
+            <button
+              onClick={handleSubmit}
+              className="create-deduction-save-btn"
+            >
+              {editData ? "Update" : "Save"}
             </button>
           </div>
         </form>
- 
- 
+
         {showFilterModal && (
           <div className="modal">
             <div className="modal-content">
               <h3>Specific Employees</h3>
-              <button className="close-modal" onClick={() => setShowFilterModal(false)}>&times;</button>
+              <button
+                className="close-modal"
+                onClick={() => setShowFilterModal(false)}
+              >
+                &times;
+              </button>
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Search....."
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
                 className="filter-create-search-bar"
@@ -411,19 +431,24 @@ const CreateDeduction = ({ onClose, editData, onUpdate }) => {
                 {filteredEmployees.map((employee) => (
                   <div key={employee.id} className="employee-item">
                     <span className="avatar">{getInitials(employee.name)}</span>
-                    <span>{employee.name} - {employee.role}</span>
-                    <button className="add-employee" onClick={() => handleEmployeeSelect(employee.name)}>Add</button>
+                    <span>
+                      {employee.name} - {employee.role}
+                    </span>
+                    <button
+                      className="add-employee"
+                      onClick={() => handleEmployeeSelect(employee.name)}
+                    >
+                      Add
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
           </div>
         )}
- 
       </div>
- 
     </div>
   );
 };
- 
+
 export default CreateDeduction;

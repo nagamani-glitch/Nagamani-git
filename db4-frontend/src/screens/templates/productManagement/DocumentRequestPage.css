@@ -11,11 +11,25 @@
     margin-bottom: 20px;
   }
   
-  .search-bar input {
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+  .document-request-search-bar input {
+    padding: 8px 12px;
+    border: 1.5px solid #94a3b8;
+    border-radius: 6px;
+    width: 250px;
+    font-size: 14px;
+    transition: all 0.2s ease;
   }
+  
+  .document-request-search-bar input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
+  
+  .document-request-search-bar input:hover {
+    border-color: #64748b;
+  }
+  
   
   .header-buttons button {
     margin-left: 10px;
@@ -74,7 +88,7 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    background: none;
+    background: green;
     border: none;
     font-size: 20px;
     cursor: pointer;
@@ -84,6 +98,7 @@
   .close-button:hover {
     color: #e74c3c;
   }
+  
   
   .modal-content h3 {
     margin-top: 0;
@@ -106,6 +121,11 @@
     margin-left: 10px;
     padding: 5px 10px;
     font-size: 14px;
+    border: 1px solid round green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    background-color: green;
   }
   
   

@@ -110,14 +110,25 @@ const FederalTax = () => {
         <div className="filing-status">
             <div className="header">
                 <h2>Filing Status</h2>
+
                 <div className="actions">
+                    
                     <input
-                        type="text"
-                        placeholder="Search"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="search-input"
-                    />
+                    type="text"
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                        padding: '8px 12px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px', 
+                        width: '250px',
+                        fontSize: '14px',
+                        outline: 'none'
+                    }}
+                />
+
+
                     <button className="federal-tax-create-button" onClick={handleCreateButtonClick}>
                         Create
                     </button>
@@ -174,7 +185,19 @@ const FederalTax = () => {
             {showModal && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h3>{editId ? "Edit Tax Rate" : "Add Tax Rate"}</h3>
+                        <h3 style={{
+                            backgroundColor: 'green',
+                            padding: '12px 20px',
+                            margin: '0',
+                            borderRadius: '4px',
+                            color: 'white',
+                            fontSize: '18px',
+                            fontWeight: '500',
+                            textAlign: 'center'
+                        }}>
+                            {editId ? "Edit Tax Rate" : "Add Tax Rate"}
+                        </h3>
+                        
                         <label>
                             Tax Rate:
                             <input
@@ -205,14 +228,24 @@ const FederalTax = () => {
                                 placeholder="Max. Income"
                             />
                         </label>
+
+
                         <label>
                             Python Code:
                             <input
-                                type="checkbox"
-                                name="pythonCode"
-                                checked={newEntry.pythonCode}
-                                onChange={handleInputChange}
-                            />
+                            type="checkbox"
+                            name="pythonCode"
+                            checked={newEntry.pythonCode}
+                            onChange={handleInputChange}
+                            style={{
+                                height: '12px',
+                                width: '12px',
+                                cursor: 'pointer',
+                                marginLeft: '10px'
+                            }}
+                        />
+
+
                         </label>
                         <label>
                             Description:
@@ -225,12 +258,43 @@ const FederalTax = () => {
                             />
                         </label>
                         <div className="modal-buttons">
-                            <button onClick={handleSaveEntry} className="save-button">
-                                {editId ? "Update" : "Save"}
-                            </button>
-                            <button onClick={handleModalClose} className="close-button">
-                            <IoIosClose />
-                            </button>
+                            <button 
+                            onClick={handleSaveEntry} 
+                            className="save-button"
+                            style={{
+                                backgroundColor: 'green',
+                                color: 'white',
+                                padding: '8px 16px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                marginRight: '10px'
+                            }}
+                        >
+                            {editId ? "Update" : "Save"}
+                        </button>
+                            
+
+
+                            <button 
+                            onClick={() => window.location.reload()}
+                            style={{
+                                backgroundColor: 'red',
+                                color: 'white',
+                                padding: '8px 16px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Cancel
+                        </button>
+
+
+
+        
+
+                            
                         </div>
                     </div>
                 </div>
