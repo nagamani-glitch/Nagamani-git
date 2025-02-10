@@ -18,11 +18,11 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
 
   // State to manage training details
   const [trainingInIndia, setTrainingInIndia] = useState(savedEducationDetails?.trainingInIndia || [
-    { type: '', topic: '', institute: '', sponsor: '', from: '', to: '' },
+    { type: '', topic: '', institute: '', sponsor: '', from: new Date().toIDOString().split('T')[0], to: new Date().toISOString().split('T')[0] },
   ]);
 
   const [trainingAbroad, setTrainingAbroad] = useState(savedEducationDetails?.trainingAbroad || [
-    { type: '', topic: '', institute: '', sponsor: '', from: '', to: '' },
+    { type: '', topic: '', institute: '', sponsor: '', from: new Date().toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] },
   ]);
 
   // Validation state
@@ -65,6 +65,8 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
   //   });
   //   return newErrors;
   // };
+
+  
 
   // Handle input change for education
   const handleEducationChange = (category, index, e) => {
@@ -110,7 +112,7 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
 
   // Add a new training row for Training in India
   const addTrainingInIndiaRow = () => {
-    const newRow = { type: '', topic: '', institute: '', sponsor: '', from: '', to: '' };
+    const newRow = { type: '', topic: '', institute: '', sponsor: '', from: new Date().toISOString().split('T')[0], to: Date().toISOString().split('T')[0] };
     setTrainingInIndia((prevRows) => [...prevRows, newRow]);
   };
 
@@ -122,7 +124,7 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
 
   // Add a new training row for Training Abroad
   const addTrainingAbroadRow = () => {
-    const newRow = { type: '', topic: '', institute: '', sponsor: '', from: '', to: '' };
+    const newRow = { type: '', topic: '', institute: '', sponsor: '', from: new Date().toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] };
     setTrainingAbroad((prevRows) => [...prevRows, newRow]);
   };
 
@@ -368,13 +370,21 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
                     {errors[`training_in_india_sponsor_${index}`] && <span className="error">{errors[`training_in_india_sponsor_${index}`]}</span>}
                   </td>
                   <td>
-                    <input type="text" name="from" value={train.from} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
-                    {errors[`training_in_india_from_${index}`] && <span className="error">{errors[`training_in_india_from_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="to" value={train.to} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
-                    {errors[`training_in_india_to_${index}`] && <span className="error">{errors[`training_in_india_to_${index}`]}</span>}
-                  </td>
+  <input 
+    type="date" 
+    name="from" 
+    value={train.from} 
+    onChange={(e) => handleTrainingInIndiaChange(index, e)} 
+  />
+</td>
+<td>
+  <input 
+    type="date" 
+    name="to" 
+    value={train.to} 
+    onChange={(e) => handleTrainingInIndiaChange(index, e)} 
+  />
+</td>
                   <td>
                     <button type="button" className='remvingButton' onClick={() => removeTrainingInIndiaRow(index)}>x</button>
                   </td>
@@ -421,13 +431,21 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
                     {errors[`training_abroad_sponsor_${index}`] && <span className="error">{errors[`training_abroad_sponsor_${index}`]}</span>}
                   </td>
                   <td>
-                    <input type="text" name="from" value={train.from} onChange={(e) => handleTrainingAbroadChange(index, e)} />
-                    {errors[`training_abroad_from_${index}`] && <span className="error">{errors[`training_abroad_from_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="to" value={train.to} onChange={(e) => handleTrainingAbroadChange(index, e)} />
-                    {errors[`training_abroad_to_${index}`] && <span className="error">{errors[`training_abroad_to_${index}`]}</span>}
-                  </td>
+  <input 
+    type="date" 
+    name="from" 
+    value={train.from} 
+    onChange={(e) => handleTrainingAbroadChange(index, e)} 
+  />
+</td>
+<td>
+  <input 
+    type="date" 
+    name="to" 
+    value={train.to} 
+    onChange={(e) => handleTrainingAbroadChange(index, e)} 
+  />
+</td>
                   <td>
                     <button type="button" className='remvingButton' onClick={() => removeTrainingAbroadRow(index)}>x</button>
                   </td>
