@@ -23,6 +23,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 const Resignation = () => {
   const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
+
   const [cards, setCards] = useState([
     {
       name: "Hussam R",
@@ -49,6 +52,7 @@ const Resignation = () => {
   });
 
   const handleOpen = () => setOpen(true);
+  
   const handleClose = () => {
     setFormData({
       name: "",
@@ -57,6 +61,8 @@ const Resignation = () => {
       status: "Requested",
       comments: "",
     });
+    setEditMode(false);
+    setEditIndex(null);
     setOpen(false);
   };
 
@@ -66,8 +72,19 @@ const Resignation = () => {
   };
 
   const handleSave = () => {
-    setCards((prev) => [...prev, formData]);
+    if (editMode) {
+      setCards((prev) => prev.map((card, index) => (index === editIndex ? formData : card)));
+    } else {
+      setCards((prev) => [...prev, formData]);
+    }
     handleClose();
+  };
+
+  const handleEdit = (index) => {
+    setEditMode(true);
+    setEditIndex(index);
+    setFormData(cards[index]);
+    setOpen(true);
   };
 
   const handleDelete = (index) => {
@@ -94,13 +111,7 @@ const Resignation = () => {
           <Grid item xs={12} sm={6} md={4} key={index}>
             <Card sx={{ border: "1px solid #e0e0e0", borderRadius: 2 }}>
               <CardContent>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    mb: 2,
-                  }}
-                >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                   <Avatar sx={{ mr: 2 }}>HR</Avatar>
                   <Box>
                     <Typography variant="h6">{card.name}</Typography>
@@ -135,8 +146,9 @@ const Resignation = () => {
                     size="small"
                     startIcon={<EditIcon />}
                     color="warning"
+                    onClick={() => handleEdit(index)}
                   >
-                   
+                    Edit
                   </Button>
                   <Button
                     size="small"
@@ -144,7 +156,7 @@ const Resignation = () => {
                     color="error"
                     onClick={() => handleDelete(index)}
                   >
-                 
+                    Delete
                   </Button>
                 </Box>
               </CardActions>
@@ -153,64 +165,22 @@ const Resignation = () => {
         ))}
       </Grid>
 
-      {/* Dialog for Adding Resignation */}
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-        <DialogTitle>Add Resignation</DialogTitle>
+        <DialogTitle>{editMode ? "Edit Resignation" : "Add Resignation"}</DialogTitle>
         <DialogContent>
-          <TextField
-            label="Name"
-            name="name"
-            fullWidth
-            margin="normal"
-            value={formData.name}
-            onChange={handleChange}
-          />
-          <TextField
-            label="Department"
-            name="department"
-            fullWidth
-            margin="normal"
-            value={formData.department}
-            onChange={handleChange}
-          />
-          <TextField
-            label="Designation"
-            name="designation"
-            fullWidth
-            margin="normal"
-            value={formData.designation}
-            onChange={handleChange}
-          />
-          <Select
-            name="status"
-            fullWidth
-            value={formData.status}
-            onChange={handleChange}
-            margin="normal"
-            sx={{ mt: 2 }}
-          >
+          <TextField label="Name" name="name" fullWidth margin="normal" value={formData.name} onChange={handleChange} />
+          <TextField label="Department" name="department" fullWidth margin="normal" value={formData.department} onChange={handleChange} />
+          <TextField label="Designation" name="designation" fullWidth margin="normal" value={formData.designation} onChange={handleChange} />
+          <Select name="status" fullWidth value={formData.status} onChange={handleChange} sx={{ mt: 2 }}>
             <MenuItem value="Requested">Requested</MenuItem>
             <MenuItem value="Approved">Approved</MenuItem>
             <MenuItem value="Rejected">Rejected</MenuItem>
           </Select>
-          <TextField
-            label="Comments"
-            name="comments"
-            fullWidth
-            margin="normal"
-            multiline
-            rows={3}
-            value={formData.comments}
-            onChange={handleChange}
-          />
+          <TextField label="Comments" name="comments" fullWidth margin="normal" multiline rows={3} value={formData.comments} onChange={handleChange} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="inherit">
-            Cancel
-          </Button>
-          <Button onClick={handleSave} variant="contained" color="primary">
-            Save
-          </Button>
+          <Button onClick={handleClose} color="inherit">Cancel</Button>
+          <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
     </Box>
@@ -218,4 +188,3 @@ const Resignation = () => {
 };
 
 export default Resignation;
-
