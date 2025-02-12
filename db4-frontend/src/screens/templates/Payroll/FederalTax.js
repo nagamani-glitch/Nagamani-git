@@ -281,7 +281,7 @@ const FederalTax = () => {
                             style={{
                                 backgroundColor: 'red',
                                 color: 'white',
-                                padding: '8px 16px',
+                                padding: '7px 13px',
                                 border: 'none',
                                 borderRadius: '4px',
                                 cursor: 'pointer'

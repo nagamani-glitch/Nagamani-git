@@ -223,14 +223,29 @@ const Objectives = () => {
     <div className="objectives">
       <div className="header-row">
         <h2>Objectives</h2>
+
         <div className="obj-toolbar">
-          <input
+
+         <input
             type="text"
-            placeholder="Search"
+            placeholder="Search objectives..."
             value={searchTerm}
             onChange={handleSearch}
-            className="search-input"
+            style={{
+              padding: "12px 18px", // Adjust padding
+              margin: "10px", // Add margin
+              height: "40px", // Set height
+              width: "300px", // Set width
+              border: "2px solid #e0e0e0",
+              borderRadius: "6px",
+              fontSize: "14px",
+              outline: "none",
+              transition: "border-color 0.3s ease",
+            }}
           />
+
+        
+
           <button
             className="obj-filter-button"
             onClick={() => setIsFilterModalOpen(true)}
@@ -447,6 +462,7 @@ const Objectives = () => {
             <th>Actions</th>
           </tr>
         </thead>
+        
         <tbody>
           {filteredObjectives
             .filter((obj) => !obj.archived)
@@ -467,6 +483,8 @@ const Objectives = () => {
               </tr>
             ))}
         </tbody>
+
+
       </table>
 
       {/* {showArchivedTable && (
@@ -522,6 +540,7 @@ const Objectives = () => {
                 <th>Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {objectives
                 .filter((obj) => obj.archived)
@@ -540,7 +559,9 @@ const Objectives = () => {
                     </td>
                   </tr>
                 ))}
+
             </tbody>
+
           </table>
         </div>
       )}
