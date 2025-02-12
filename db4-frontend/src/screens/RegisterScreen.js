@@ -112,6 +112,9 @@ const RegisterScreen = () => {
         };
     
         formDataToSend.append('data', JSON.stringify(mappedData));
+        console.log('Form Data to Send:', formDataToSend);
+        console.log(JSON.stringify(formData, null, 2))
+
         
         const response = await axios.post(
           `http://localhost:5000/api/employees/register`,
@@ -130,6 +133,7 @@ const RegisterScreen = () => {
         console.log('Profile Image:', profileImage);
         console.log('Error Response:', error.response?.data);
         toast.error(`Registration failed: ${error.response?.data?.error || error.message}`);
+        
       }
     };    
     

@@ -18,7 +18,7 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
 
   // State to manage training details
   const [trainingInIndia, setTrainingInIndia] = useState(savedEducationDetails?.trainingInIndia || [
-    { type: '', topic: '', institute: '', sponsor: '', from: new Date().toIDOString().split('T')[0], to: new Date().toISOString().split('T')[0] },
+    { type: '', topic: '', institute: '', sponsor: '', from: new Date().toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] },
   ]);
 
   const [trainingAbroad, setTrainingAbroad] = useState(savedEducationDetails?.trainingAbroad || [

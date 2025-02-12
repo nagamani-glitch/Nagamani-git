@@ -12,7 +12,7 @@ const validationSchema = Yup.object().shape({
   maritalStatus: Yup.string().required('Marital status is required'),
   bloodGroup: Yup.string().required('Blood group is required'),
   nationality: Yup.string().required('Nationality is required'),
-  aadharNumber: Yup.string().length(12, 'Aadhar number must be 12 digits').required('Aadhar number is required'),
+  aadharNumber: Yup.string().matches(/^[0-9]{12}$/, 'Aadhar number must be 12 digits').required('Aadhar number is required'),
   panNumber: Yup.string().length(10, 'PAN number must be 10 characters').required('PAN number is required'),
   mobileNumber: Yup.string().matches(/^[0-9]{10}$/, 'Mobile number must be 10 digits').required('Mobile number is required'),
   email: Yup.string().email('Invalid email format').required('Email is required'),
@@ -44,12 +44,19 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, handleImageUp
 
   const AnimatedTextField = ({ field, form, label, ...props }) => {
     const handleChange = (e) => {
-      // Skip sentence case for email field
+      // Handle email field normally
       if (field.name === 'email') {
         form.setFieldValue(field.name, e.target.value);
         return;
       }
       
+      // Handle PAN number in uppercase
+      if (field.name === 'panNumber') {
+        form.setFieldValue(field.name, e.target.value.toUpperCase());
+        return;
+      }
+      
+      // Handle other fields in sentence case
       const sentenceCaseValue = e.target.value
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -96,6 +103,7 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, handleImageUp
     );
   };
   
+  
 
   return (
     <Formik
@@ -114,28 +122,47 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, handleImageUp
             </Typography>
             
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <Field
-                  name="firstName"
-                  as={TextField}
-                  label="First Name"
-                  fullWidth
-                  error={touched.firstName && errors.firstName}
-                  helperText={touched.firstName && errors.firstName}
-                />
-              </Grid>
+  <Grid item xs={12} sm={6}>
+    <Field name="firstName">
+      {({ field, form }) => (
+        <TextField
+          {...field}
+          label="First Name"
+          fullWidth
+          onChange={(e) => {
+            const sentenceCaseValue = e.target.value
+              .split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join(' ');
+            form.setFieldValue(field.name, sentenceCaseValue);
+          }}
+          error={touched.firstName && errors.firstName}
+          helperText={touched.firstName && errors.firstName}
+        />
+      )}
+    </Field>
+  </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Field
-                  name="lastName"
-                  as={TextField}
-                  label="Last Name"
-                  fullWidth
-                  error={touched.lastName && errors.lastName}
-                  helperText={touched.lastName && errors.lastName}
-                />
-              </Grid>
-
+  <Grid item xs={12} sm={6}>
+    <Field name="lastName">
+      {({ field, form }) => (
+        <TextField
+          {...field}
+          label="Last Name"
+          fullWidth
+          onChange={(e) => {
+            const sentenceCaseValue = e.target.value
+              .split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join(' ');
+            form.setFieldValue(field.name, sentenceCaseValue);
+          }}
+          error={touched.lastName && errors.lastName}
+          helperText={touched.lastName && errors.lastName}
+        />
+      )}
+    </Field>
+  </Grid>
               <Grid item xs={12} sm={6}>
                 <Field
                   name="dob"
@@ -211,58 +238,93 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, handleImageUp
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <Field
-                  name="nationality"
-                  as={TextField}
-                  label="Nationality"
-                  fullWidth
-                  error={touched.nationality && errors.nationality}
-                  helperText={touched.nationality && errors.nationality}
-                />
-              </Grid>
+    <Field name="nationality">
+      {({ field, form }) => (
+        <TextField
+          {...field}
+          label="Nationality"
+          fullWidth
+          onChange={(e) => {
+            const sentenceCaseValue = e.target.value
+              .split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join(' ');
+            form.setFieldValue(field.name, sentenceCaseValue);
+          }}
+          error={touched.nationality && errors.nationality}
+          helperText={touched.nationality && errors.nationality}
+        />
+      )}
+    </Field>
+  </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Field
-                  name="aadharNumber"
-                  as={TextField}
-                  label="Aadhar Number"
-                  fullWidth
-                  error={touched.aadharNumber && errors.aadharNumber}
-                  helperText={touched.aadharNumber && errors.aadharNumber}
-                />
-              </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Field
-                  name="panNumber"
-                  as={TextField}
-                  label="PAN Number"
-                  fullWidth
-                  error={touched.panNumber && errors.panNumber}
-                  helperText={touched.panNumber && errors.panNumber}
-                />
-              </Grid>
+  <Grid item xs={12} sm={6}>
+    <Field name="aadharNumber">
+      {({ field, form }) => (
+        <TextField
+          {...field}
+          label="Aadhar Number"
+          fullWidth
+          onChange={(e) => {
+            form.setFieldValue(field.name, e.target.value);
+          }}
+          error={touched.aadharNumber && errors.aadharNumber}
+          helperText={touched.aadharNumber && errors.aadharNumber}
+        />
+      )}
+    </Field>
+  </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Field
-                  name="mobileNumber"
-                  as={TextField}
-                  label="Mobile Number"
-                  fullWidth
-                  error={touched.mobileNumber && errors.mobileNumber}
-                  helperText={touched.mobileNumber && errors.mobileNumber}
-                />
-              </Grid>
+  <Grid item xs={12} sm={6}>
+    <Field name="panNumber">
+      {({ field, form }) => (
+        <TextField
+          {...field}
+          label="PAN Number"
+          fullWidth
+          onChange={(e) => {
+            form.setFieldValue(field.name, e.target.value.toUpperCase());
+          }}
+          error={touched.panNumber && errors.panNumber}
+          helperText={touched.panNumber && errors.panNumber}
+        />
+      )}
+    </Field>
+  </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Field
-                  name="email"
-                  as={TextField}
-                  label="Email"
-                  fullWidth
-                  error={touched.email && errors.email}
-                  helperText={touched.email && errors.email}
-                />
+  <Grid item xs={12} sm={6}>
+    <Field name="mobileNumber">
+      {({ field, form }) => (
+        <TextField
+          {...field}
+          label="Mobile Number"
+          fullWidth
+          onChange={(e) => {
+            form.setFieldValue(field.name, e.target.value);
+          }}
+          error={touched.mobileNumber && errors.mobileNumber}
+          helperText={touched.mobileNumber && errors.mobileNumber}
+        />
+      )}
+    </Field>
+  </Grid>
+
+  <Grid item xs={12} sm={6}>
+    <Field name="email">
+      {({ field, form }) => (
+        <TextField
+          {...field}
+          label="Email"
+          fullWidth
+          onChange={(e) => {
+            form.setFieldValue(field.name, e.target.value);
+          }}
+          error={touched.email && errors.email}
+          helperText={touched.email && errors.email}
+        />
+      )}
+      </Field>
               </Grid>
               <Grid item xs={12}>
   <InputLabel required>Employee Image</InputLabel>

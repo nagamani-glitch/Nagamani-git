@@ -80,7 +80,7 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
     nominationPercentage: '',
     nomineeAge: '',
     presentAddress: '',
-    City: '',    
+    city: '',    
     district: '',
     state: '',
     pinCode: '',
@@ -88,15 +88,42 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
   };
 
   const handleFinalSubmit = (values) => {
-    // First update the nomination details
-    handleFormDataChange("nominationDetails", {
-      ...values,
+    // Format nomination details with proper data types and validation
+    const formattedNominationDetails = {
+      name: values.name.trim(),
+      relation: values.relation.trim(),
+      typeOfNomination: values.typeOfNomination.trim(),
+      nominationPercentage: parseInt(values.nominationPercentage),
       nomineeAge: parseInt(values.nomineeAge),
-      nominationPercentage: parseInt(values.nominationPercentage)
-    });
-    // Then trigger the final submission
-    handleSubmit();
+      presentAddress: values.presentAddress.trim(),
+      city: values.city.trim(),
+      district: values.district.trim(),
+      state: values.state.trim(),
+      pinCode: values.pinCode.trim(),
+      phoneNumber: values.phoneNumber.trim()
+    };
+  
+    // Validate all required fields have values
+    const isValid = Object.values(formattedNominationDetails).every(value => 
+      value !== null && value !== undefined && value !== ''
+    );
+  
+    if (isValid) {
+      handleFormDataChange("nominationDetails", formattedNominationDetails);
+      handleSubmit();
+    }
   };
+  
+  // const handleFinalSubmit = (values) => {
+  //   // First update the nomination details
+  //   handleFormDataChange("nominationDetails", {
+  //     ...values,
+  //     nomineeAge: parseInt(values.nomineeAge),
+  //     nominationPercentage: parseInt(values.nominationPercentage)
+  //   });
+  //   // Then trigger the final submission
+  //   handleSubmit();
+  // };
 
   return (
     <Container 
