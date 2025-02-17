@@ -9,6 +9,8 @@ import NominationDetailsForm from "../forms/NominationDetailsForm";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import DocumentManagement from '../forms/DocumentManagement';
+
 
 const RegisterScreen = () => {
   const navigate = useNavigate();
@@ -198,11 +200,23 @@ const RegisterScreen = () => {
         return (
           <NominationDetailsForm
             prevStep={prevStep}
+            nextStep={nextStep}
             handleFormDataChange={handleFormDataChange}
-            handleSubmit={handleSubmit}
+            // handleSubmit={handleSubmit}
             savedNominationDetails={formData.nominationDetails} // Send saved data
           />
         );
+
+        case 8:
+          return (
+            <DocumentManagement
+              prevStep={prevStep}
+              handleFormDataChange={handleFormDataChange}
+              handleSubmit={handleSubmit}
+              savedDocuments={formData.documents}
+            />
+          );
+        
       default:
         return null;
     }

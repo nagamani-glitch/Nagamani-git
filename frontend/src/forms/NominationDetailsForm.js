@@ -72,7 +72,7 @@ const validationSchema = Yup.object().shape({
     .required('Phone number is required')
 });
 
-const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, savedNominationDetails }) => {
+const NominationDetailsForm = ({ handleSubmit, prevStep,nextStep, handleFormDataChange, savedNominationDetails }) => {
   const initialValues = savedNominationDetails || {
     name: '',
     relation: '',
@@ -110,7 +110,7 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
   
     if (isValid) {
       handleFormDataChange("nominationDetails", formattedNominationDetails);
-      handleSubmit();
+      nextStep();
     }
   };
   
@@ -365,7 +365,7 @@ const NominationDetailsForm = ({ handleSubmit, prevStep, handleFormDataChange, s
                     color="primary"
                     endIcon={<Send />}
                   >
-                    Submit
+                    Next
                   </StyledButton>
                 </Tooltip>
               </Box>
