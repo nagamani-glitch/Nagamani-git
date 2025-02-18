@@ -405,7 +405,7 @@ function OnboardingView() {
   </div>
 )} */}
 
-
+{/* 
 {showCreateForm && (
   <div className="modal-overlay"
   style={{
@@ -601,7 +601,272 @@ function OnboardingView() {
       </form>
     </div>
   </div>
+)} */}
+
+{showCreateForm && (
+  <div className="modal-overlay"
+    style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      backdropFilter: 'blur(5px)'
+    }}
+  >
+    <div className="modal-content" 
+      style={{
+        width: '650px',
+        maxWidth: '95%',
+        maxHeight: '90vh',
+        overflow: 'auto',
+        borderRadius: '24px',
+        backgroundColor: '#ffffff',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+        animation: 'slideIn 0.3s ease-out'
+      }}
+    >
+      <h2 style={{
+        background: 'linear-gradient(135deg, #1976d2, #2196f3)',
+        color: 'white',
+        fontSize: '1.75rem',
+        fontWeight: 600,
+        padding: '28px 35px',
+        margin: 0,
+        borderTopLeftRadius: '24px',
+        borderTopRightRadius: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        Add New Candidate
+      </h2>
+
+      <form onSubmit={handleCreateCandidate} 
+        style={{
+          padding: '35px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '24px',
+          backgroundColor: '#f8fafc'
+        }}>
+        
+        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '8px',
+            color: '#374151',
+            fontWeight: 500
+          }}>Full Name</label>
+          <input
+            type="text"
+            placeholder="Enter candidate's full name"
+            value={newCandidate.name}
+            onChange={(e) => handleInputChange(e, "name")}
+            required
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: '2px solid #e2e8f0',
+              backgroundColor: 'white',
+              fontSize: '15px',
+              transition: 'all 0.2s ease',
+              outline: 'none',
+              '&:focus': {
+                borderColor: '#1976d2',
+                boxShadow: '0 0 0 3px rgba(25, 118, 210, 0.1)'
+              }
+            }}
+          />
+        </div>
+
+        <div className="form-group">
+          <label style={{
+            display: 'block',
+            marginBottom: '8px',
+            color: '#374151',
+            fontWeight: 500
+          }}>Email Address</label>
+          <input
+            type="email"
+            placeholder="email@example.com"
+            value={newCandidate.email}
+            onChange={(e) => handleInputChange(e, "email")}
+            required
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: '2px solid #e2e8f0',
+              backgroundColor: 'white',
+              fontSize: '15px'
+            }}
+          />
+          {validationErrors.email && (
+            <span style={{ 
+              color: '#dc2626',
+              fontSize: '13px',
+              marginTop: '6px',
+              display: 'block'
+            }}>
+              {validationErrors.email}
+            </span>
+          )}
+        </div>
+
+        <div className="form-group">
+          <label style={{
+            display: 'block',
+            marginBottom: '8px',
+            color: '#374151',
+            fontWeight: 500
+          }}>Mobile Number</label>
+          <input
+            type="tel"
+            placeholder="Enter 10-digit number"
+            value={newCandidate.mobile}
+            onChange={(e) => handleInputChange(e, "mobile")}
+            required
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: '2px solid #e2e8f0',
+              backgroundColor: 'white',
+              fontSize: '15px'
+            }}
+          />
+        </div>
+
+        <div className="form-group">
+          <label style={{
+            display: 'block',
+            marginBottom: '8px',
+            color: '#374151',
+            fontWeight: 500
+          }}>Job Position</label>
+          <input
+            type="text"
+            placeholder="Enter job position"
+            value={newCandidate.jobPosition}
+            onChange={(e) => handleInputChange(e, "jobPosition")}
+            required
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: '2px solid #e2e8f0',
+              backgroundColor: 'white',
+              fontSize: '15px'
+            }}
+          />
+        </div>
+
+        <div className="form-group">
+          <label style={{
+            display: 'block',
+            marginBottom: '8px',
+            color: '#374151',
+            fontWeight: 500
+          }}>Joining Date</label>
+          <input
+            type="date"
+            value={newCandidate.joiningDate}
+            onChange={(e) => handleInputChange(e, "joiningDate")}
+            required
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: '2px solid #e2e8f0',
+              backgroundColor: 'white',
+              fontSize: '15px'
+            }}
+          />
+        </div>
+
+        <div className="form-group">
+          <label style={{
+            display: 'block',
+            marginBottom: '8px',
+            color: '#374151',
+            fontWeight: 500
+          }}>Stage</label>
+          <select
+            value={newCandidate.stage}
+            onChange={(e) => handleInputChange(e, "stage")}
+            required
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: '2px solid #e2e8f0',
+              backgroundColor: 'white',
+              fontSize: '15px'
+            }}
+          >
+            <option value="" disabled>Select Stage</option>
+            <option value="Test">Test</option>
+            <option value="Interview">Interview</option>
+            <option value="Offer">Offer</option>
+          </select>
+        </div>
+
+        <div className="form-actions" style={{
+          gridColumn: '1 / -1',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '16px',
+          padding: '24px 0 0',
+          borderTop: '2px solid #e2e8f0',
+          marginTop: '16px'
+        }}>
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(false)}
+            style={{
+              border: '2px solid #1976d2',
+              color: '#1976d2',
+              backgroundColor: 'white',
+              padding: '12px 28px',
+              borderRadius: '10px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              fontSize: '15px'
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            style={{
+              background: 'linear-gradient(135deg, #1976d2, #2196f3)',
+              color: 'white',
+              border: 'none',
+              padding: '12px 32px',
+              borderRadius: '10px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
+              transition: 'all 0.2s ease',
+              fontSize: '15px'
+            }}
+          >
+            Add Candidate
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 )}
+
 
  
       
