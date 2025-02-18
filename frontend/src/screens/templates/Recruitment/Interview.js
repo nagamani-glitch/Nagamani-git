@@ -304,7 +304,7 @@ const Interview = () => {
         />
       </Box>
 
-      <Dialog
+      {/* <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
         maxWidth="sm"
@@ -385,7 +385,187 @@ const Interview = () => {
             Save
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
+
+<Dialog
+  open={openDialog}
+  onClose={() => setOpenDialog(false)}
+  PaperProps={{
+    sx: {
+      width: '600px',
+      borderRadius: '20px',
+      overflow: 'hidden'
+    }
+  }}
+>
+  <DialogTitle
+    sx={{
+      background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+      color: 'white',
+      fontSize: '1.5rem',
+      fontWeight: 600,
+      padding: '24px 32px'
+    }}
+  >
+    {editMode ? "Edit Interview" : "Add Interview"}
+  </DialogTitle>
+
+  <DialogContent sx={{ padding: '32px', backgroundColor: '#f8fafc' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <TextField
+        label="Candidate"
+        value={candidate}
+        onChange={(e) => setCandidate(e.target.value)}
+        fullWidth
+        sx={{
+          mt: 2,
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          },
+          "& .MuiInputLabel-root.Mui-focused": {
+            color: "#1976d2",
+          }
+        }}
+      />
+
+      <TextField
+        label="Interviewer"
+        value={interviewer}
+        onChange={(e) => setInterviewer(e.target.value)}
+        fullWidth
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      />
+
+      <TextField
+        label="Date"
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        fullWidth
+        InputLabelProps={{ shrink: true }}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      />
+
+      <TextField
+        label="Time"
+        type="time"
+        value={time}
+        onChange={(e) => setTime(e.target.value)}
+        fullWidth
+        InputLabelProps={{ shrink: true }}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      />
+
+      <TextField
+        label="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        fullWidth
+        multiline
+        rows={3}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      />
+
+      <FormControl fullWidth>
+        <Select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          displayEmpty
+          sx={{
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "& .MuiOutlinedInput-notchedOutline": {
+              "&:hover": {
+                borderColor: "#1976d2",
+              },
+            },
+          }}
+        >
+          <MenuItem value="Scheduled">Scheduled</MenuItem>
+          <MenuItem value="Completed">Completed</MenuItem>
+          <MenuItem value="Cancelled">Cancelled</MenuItem>
+        </Select>
+      </FormControl>
+    </Box>
+  </DialogContent>
+
+  <DialogActions sx={{ padding: '24px 32px', backgroundColor: '#f8fafc', borderTop: '1px solid #e0e0e0', gap: 2 }}>
+    <Button
+      onClick={() => setOpenDialog(false)}
+      sx={{
+        border: '2px solid #1976d2',
+        color: '#1976d2',
+        '&:hover': {
+          border: '2px solid #64b5f6',
+          backgroundColor: '#e3f2fd',
+          color: '#1976d2'
+        },
+        textTransform: 'none',
+        borderRadius: '8px',
+        px: 3,
+        fontWeight: 600
+      }}
+    >
+      Cancel
+    </Button>
+
+    <Button
+      onClick={handleSave}
+      variant="contained"
+      sx={{
+        background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+        fontSize: '0.95rem',
+        textTransform: 'none',
+        padding: '8px 32px',
+        borderRadius: '10px',
+        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
+        '&:hover': {
+          background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+        }
+      }}
+    >
+      {editMode ? 'Save Changes' : 'Create Interview'}
+    </Button>
+  </DialogActions>
+</Dialog>
+
+
     </Box>
   );
 };

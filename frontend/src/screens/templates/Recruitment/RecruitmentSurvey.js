@@ -3,6 +3,7 @@ import {
   Box,
   Typography,
   IconButton,
+  
   Button,
   Dialog,
   DialogActions,
@@ -316,144 +317,155 @@ const RecruitmentSurvey = () => {
         ))}
       </Paper>
 
-        <Dialog
-          open={open}
-          onClose={handleClose}
-          PaperProps={{
-            sx: {
-              width: '600px',
-              borderRadius: '20px',
-              overflow: 'hidden'
-            }
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        PaperProps={{
+          sx: {
+            width: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #3498db, #2980b9)",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
           }}
         >
-          <DialogTitle sx={{
-            background: 'linear-gradient(45deg, #3498db, #2980b9)',
-            color: 'white',
-            fontSize: '1.5rem',
-            fontWeight: 600,
-            padding: '24px 32px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2
-          }}>
-            {editing ? 'Edit Question' : 'Add Recruitment Template'}
-          </DialogTitle>
+          {editing ? "Edit Question" : "Add Recruitment Template"}
+        </DialogTitle>
 
-          <DialogContent sx={{ 
-            padding: '32px',
-            backgroundColor: '#f8fafc'
-          }}>
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: 3 
-            }}>
-              <TextField
-                label="Template Name"
-                value={newTemplateName}
-                onChange={(e) => setNewTemplateName(e.target.value)}
-                fullWidth
-                disabled={editing}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    borderRadius: '12px',
-                    '&:hover fieldset': {
-                      borderColor: '#3498db'
-                    }
+        <DialogContent
+          sx={{
+            padding: "32px",
+            backgroundColor: "#f8fafc",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+            }}
+          >
+            <TextField
+              label="Template Name"
+              value={newTemplateName}
+              onChange={(e) => setNewTemplateName(e.target.value)}
+              fullWidth
+              disabled={editing}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#3498db",
                   },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#3498db'
-                  }
-                }}
-                sx={{marginTop: '16px'}}
-                
-              />
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#3498db",
+                },
+              }}
+              sx={{ marginTop: "16px" }}
+            />
 
-              <TextField
-                label="Question"
-                value={newQuestion}
-                onChange={(e) => setNewQuestion(e.target.value)}
-                fullWidth
-                multiline
-                rows={3}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    borderRadius: '12px',
-                    '&:hover fieldset': {
-                      borderColor: '#3498db'
-                    }
-                  }
-                }}
-              />
-
-              <TextField
-                label="Type"
-                value={newType}
-                onChange={(e) => setNewType(e.target.value)}
-                select
-                fullWidth
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    borderRadius: '12px',
-                    '&:hover fieldset': {
-                      borderColor: '#3498db'
-                    }
-                  }
-                }}
-              >
-                <MenuItem value="Text">Text</MenuItem>
-                <MenuItem value="Multiple Choice">Multiple Choice</MenuItem>
-                <MenuItem value="Checkbox">Checkbox</MenuItem>
-                <MenuItem value="Rating">Rating</MenuItem>
-              </TextField>
-            </Box>
-          </DialogContent>
-
-          <DialogActions sx={{
-            padding: '24px 32px',
-            backgroundColor: '#f8fafc',
-            borderTop: '1px solid #e0e0e0',
-            gap: 2
-          }}>
-            <Button 
-              onClick={handleClose}
+            <TextField
+              label="Question"
+              value={newQuestion}
+              onChange={(e) => setNewQuestion(e.target.value)}
+              fullWidth
+              multiline
+              rows={3}
               sx={{
-                color: '#64748b',
-                fontSize: '0.95rem',
-                textTransform: 'none',
-                padding: '8px 24px',
-                borderRadius: '10px',
-                '&:hover': {
-                  backgroundColor: '#f1f5f9'
-                }
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#3498db",
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              label="Type"
+              value={newType}
+              onChange={(e) => setNewType(e.target.value)}
+              select
+              fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#3498db",
+                  },
+                },
               }}
             >
-              Cancel
-            </Button>
-            <Button
-              onClick={editing ? handleSaveEdit : handleAddTemplate}
-              variant="contained"
-              sx={{
-                background: 'linear-gradient(45deg, #3498db, #2980b9)',
-                fontSize: '0.95rem',
-                textTransform: 'none',
-                padding: '8px 32px',
-                borderRadius: '10px',
-                boxShadow: '0 4px 12px rgba(52, 152, 219, 0.2)',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #2980b9, #3498db)'
-                }
-              }}
-            >
-              {editing ? 'Save Changes' : 'Add Template'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
+              <MenuItem value="Text">Text</MenuItem>
+              <MenuItem value="Multiple Choice">Multiple Choice</MenuItem>
+              <MenuItem value="Checkbox">Checkbox</MenuItem>
+              <MenuItem value="Rating">Rating</MenuItem>
+            </TextField>
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={handleClose}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={editing ? handleSaveEdit : handleAddTemplate}
+            variant="contained"
+            sx={{
+              background: "linear-gradient(45deg, #3498db, #2980b9)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(52, 152, 219, 0.2)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #2980b9, #3498db)",
+              },
+            }}
+          >
+            {editing ? "Save Changes" : "Add Template"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 
