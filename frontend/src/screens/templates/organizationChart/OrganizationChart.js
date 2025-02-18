@@ -354,7 +354,7 @@ const OrganizationChart = () => {
         )}
       </AnimatePresence>
 
-      <Dialog
+      {/* <Dialog
         open={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         TransitionComponent={Zoom}
@@ -421,6 +421,160 @@ const OrganizationChart = () => {
             disabled={
               !newEmployee.name || !newEmployee.title || !newEmployee.parentId
             }
+          >
+            Add Position
+          </Button>
+        </DialogActions>
+      </Dialog> */}
+
+      <Dialog
+        open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        TransitionComponent={Zoom}
+        PaperProps={{
+          sx: {
+            width: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
+          }}
+        >
+          Add New Position
+        </DialogTitle>
+
+        <DialogContent
+          sx={{
+            padding: "32px",
+            backgroundColor: "#f8fafc",
+            marginTop: "20px",
+          }}
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
+            <TextField
+              label="Name"
+              value={newEmployee.name}
+              onChange={(e) =>
+                setNewEmployee({ ...newEmployee, name: e.target.value })
+              }
+              fullWidth
+              required
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#1976d2",
+                },
+              }}
+            />
+
+            <TextField
+              label="Title"
+              value={newEmployee.title}
+              onChange={(e) =>
+                setNewEmployee({ ...newEmployee, title: e.target.value })
+              }
+              fullWidth
+              required
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            <FormControl fullWidth required>
+              <InputLabel sx={{ "&.Mui-focused": { color: "#1976d2" } }}>
+                Select Manager
+              </InputLabel>
+              <Select
+                value={newEmployee.parentId}
+                onChange={(e) =>
+                  setNewEmployee({ ...newEmployee, parentId: e.target.value })
+                }
+                label="Select Manager"
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    "&:hover": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
+                {treeData &&
+                  getAllNodes(treeData).map((node) => (
+                    <MenuItem key={node._id} value={node._id}>
+                      {node.name} - {node.title}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setIsDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAddEmployee}
+            variant="contained"
+            disabled={
+              !newEmployee.name || !newEmployee.title || !newEmployee.parentId
+            }
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
           >
             Add Position
           </Button>

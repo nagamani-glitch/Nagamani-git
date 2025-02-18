@@ -478,165 +478,371 @@ const RotatingWorktypeAssign = () => {
       </TableContainer>
 
       {/* Create Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {tabValue === 0 ? "Create Worktype Request" : "Create Allocated Worktype"}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
-            <TextField
-              label="Employee"
-              name="employee"
-              fullWidth
-              select
-              value={formData.employee}
-              onChange={handleFormChange}
-            >
-              {employees.map((emp) => (
-                <MenuItem key={emp.id} value={emp.name}>
-                  {emp.name} ({emp.employeeCode})
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              label="Request Work Type"
-              name="requestWorktype"
-              value={formData.requestWorktype}
-              onChange={handleFormChange}
-              fullWidth
-              select
-            >
-              <MenuItem value="Full Time">Full Time</MenuItem>
-              <MenuItem value="Part Time">Part Time</MenuItem>
-              <MenuItem value="Contract">Contract</MenuItem>
-            </TextField>
-            <TextField
-              label="Requested Date"
-              name="requestedDate"
-              type="date"
-              value={formData.requestedDate}
-              onChange={handleFormChange}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
+
+      <Dialog 
+  open={createDialogOpen} 
+  onClose={() => setCreateDialogOpen(false)}
+  PaperProps={{
+    sx: {
+      width: '600px',
+      borderRadius: '20px',
+      overflow: 'hidden'
+    }
+  }}
+>
+  <DialogTitle sx={{
+    background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+    color: 'white',
+    fontSize: '1.5rem',
+    fontWeight: 600,
+    padding: '24px 32px'
+  }}>
+    {tabValue === 0 ? "Create Worktype Request" : "Create Allocated Worktype"}
+  </DialogTitle>
+
+  <DialogContent sx={{ padding: '32px', backgroundColor: '#f8fafc' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <TextField
+        label="Employee"
+        name="employee"
+        fullWidth
+        select
+        value={formData.employee}
+        onChange={handleFormChange}
+        sx={{
+          mt: 2,
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          },
+          "& .MuiInputLabel-root.Mui-focused": {
+            color: "#1976d2",
+          }
+        }}
+      >
+        {employees.map((emp) => (
+          <MenuItem key={emp.id} value={emp.name}>
+            {emp.name} ({emp.employeeCode})
+          </MenuItem>
+        ))}
+      </TextField>
+
+      <TextField
+        label="Request Work Type"
+        name="requestWorktype"
+        value={formData.requestWorktype}
+        onChange={handleFormChange}
+        fullWidth
+        select
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      >
+        <MenuItem value="Full Time">Full Time</MenuItem>
+        <MenuItem value="Part Time">Part Time</MenuItem>
+        <MenuItem value="Contract">Contract</MenuItem>
+      </TextField>
+
+      <TextField
+        label="Requested Date"
+        name="requestedDate"
+        type="date"
+        value={formData.requestedDate}
+        onChange={handleFormChange}
+        fullWidth
+        InputLabelProps={{ shrink: true }}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      />
+
+      <TextField
+        label="Requested Till"
+        name="requestedTill"
+        type="date"
+        value={formData.requestedTill}
+        onChange={handleFormChange}
+        fullWidth
+        InputLabelProps={{ shrink: true }}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      />
+
+      <TextField
+        label="Description"
+        name="description"
+        value={formData.description}
+        onChange={handleFormChange}
+        fullWidth
+        multiline
+        rows={4}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      />
+
+      {tabValue === 0 && (
+        <FormControlLabel
+          control={
+            <Switch
+              checked={isPermanentRequest}
+              onChange={(e) => setIsPermanentRequest(e.target.checked)}
             />
-            <TextField
-              label="Requested Till"
-              name="requestedTill"
-              type="date"
-              value={formData.requestedTill}
-              onChange={handleFormChange}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleFormChange}
-              fullWidth
-              multiline
-              rows={4}
-            />
-            {tabValue === 0 && (
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={isPermanentRequest}
-                    onChange={(e) => setIsPermanentRequest(e.target.checked)}
-                  />
-                }
-                label="Permanent Request"
-              />
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={handleCreateWorktype}
-            disabled={!formData.employee || !formData.requestWorktype || !formData.requestedDate}
-          >
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
+          }
+          label="Permanent Request"
+        />
+      )}
+    </Box>
+  </DialogContent>
+
+  <DialogActions sx={{ padding: '24px 32px', backgroundColor: '#f8fafc', borderTop: '1px solid #e0e0e0', gap: 2 }}>
+    <Button 
+      onClick={() => setCreateDialogOpen(false)}
+      sx={{
+        border: '2px solid #1976d2',
+        color: '#1976d2',
+        '&:hover': {
+          border: '2px solid #64b5f6',
+          backgroundColor: '#e3f2fd',
+          color: '#1976d2'
+        },
+        textTransform: 'none',
+        borderRadius: '8px',
+        px: 3,
+        fontWeight: 600
+      }}
+    >
+      Cancel
+    </Button>
+
+    <Button
+      onClick={handleCreateWorktype}
+      variant="contained"
+      disabled={!formData.employee || !formData.requestWorktype || !formData.requestedDate}
+      sx={{
+        background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+        fontSize: '0.95rem',
+        textTransform: 'none',
+        padding: '8px 32px',
+        borderRadius: '10px',
+        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
+        '&:hover': {
+          background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+        }
+      }}
+    >
+      Save
+    </Button>
+  </DialogActions>
+</Dialog>
+
 
       {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {tabValue === 0 ? "Edit Worktype Request" : "Edit Allocated Worktype"}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
-            <TextField
-              label="Employee"
-              name="employee"
-              fullWidth
-              select
-              value={formData.employee}
-              onChange={handleFormChange}
-            >
-              {employees.map((emp) => (
-                <MenuItem key={emp.id} value={emp.name}>
-                  {emp.name} ({emp.employeeCode})
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              label="Request Work Type"
-              name="requestWorktype"
-              value={formData.requestWorktype}
-              onChange={handleFormChange}
-              fullWidth
-              select
-            >
-              <MenuItem value="Full Time">Full Time</MenuItem>
-              <MenuItem value="Part Time">Part Time</MenuItem>
-              <MenuItem value="Contract">Contract</MenuItem>
-            </TextField>
-            <TextField
-              label="Requested Date"
-              name="requestedDate"
-              type="date"
-              value={formData.requestedDate}
-              onChange={handleFormChange}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="Requested Till"
-              name="requestedTill"
-              type="date"
-              value={formData.requestedTill}
-              onChange={handleFormChange}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleFormChange}
-              fullWidth
-              multiline
-              rows={4}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={handleSaveEdit}
-            disabled={!formData.employee || !formData.requestWorktype || !formData.requestedDate}
-          >
-            Save Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
+
+      <Dialog 
+  open={editDialogOpen} 
+  onClose={() => setEditDialogOpen(false)}
+  PaperProps={{
+    sx: {
+      width: '600px',
+      borderRadius: '20px',
+      overflow: 'hidden'
+    }
+  }}
+>
+  <DialogTitle sx={{
+    background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+    color: 'white',
+    fontSize: '1.5rem',
+    fontWeight: 600,
+    padding: '24px 32px'
+  }}>
+    {tabValue === 0 ? "Edit Worktype Request" : "Edit Allocated Worktype"}
+  </DialogTitle>
+
+  <DialogContent sx={{ padding: '32px', backgroundColor: '#f8fafc' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <TextField
+        label="Employee"
+        name="employee"
+        fullWidth
+        select
+        value={formData.employee}
+        onChange={handleFormChange}
+        sx={{
+          mt: 2,
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          },
+          "& .MuiInputLabel-root.Mui-focused": {
+            color: "#1976d2",
+          }
+        }}
+      >
+        {employees.map((emp) => (
+          <MenuItem key={emp.id} value={emp.name}>
+            {emp.name} ({emp.employeeCode})
+          </MenuItem>
+        ))}
+      </TextField>
+
+      <TextField
+        label="Request Work Type"
+        name="requestWorktype"
+        value={formData.requestWorktype}
+        onChange={handleFormChange}
+        fullWidth
+        select
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      >
+        <MenuItem value="Full Time">Full Time</MenuItem>
+        <MenuItem value="Part Time">Part Time</MenuItem>
+        <MenuItem value="Contract">Contract</MenuItem>
+      </TextField>
+
+      <TextField
+        label="Requested Date"
+        name="requestedDate"
+        type="date"
+        value={formData.requestedDate}
+        onChange={handleFormChange}
+        fullWidth
+        InputLabelProps={{ shrink: true }}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      />
+
+      <TextField
+        label="Requested Till"
+        name="requestedTill"
+        type="date"
+        value={formData.requestedTill}
+        onChange={handleFormChange}
+        fullWidth
+        InputLabelProps={{ shrink: true }}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      />
+
+      <TextField
+        label="Description"
+        name="description"
+        value={formData.description}
+        onChange={handleFormChange}
+        fullWidth
+        multiline
+        rows={4}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "white",
+            borderRadius: "12px",
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
+            },
+          }
+        }}
+      />
+    </Box>
+  </DialogContent>
+
+  <DialogActions sx={{ padding: '24px 32px', backgroundColor: '#f8fafc', borderTop: '1px solid #e0e0e0', gap: 2 }}>
+    <Button 
+      onClick={() => setEditDialogOpen(false)}
+      sx={{
+        border: '2px solid #1976d2',
+        color: '#1976d2',
+        '&:hover': {
+          border: '2px solid #64b5f6',
+          backgroundColor: '#e3f2fd',
+          color: '#1976d2'
+        },
+        textTransform: 'none',
+        borderRadius: '8px',
+        px: 3,
+        fontWeight: 600
+      }}
+    >
+      Cancel
+    </Button>
+
+    <Button
+      onClick={handleSaveEdit}
+      variant="contained"
+      disabled={!formData.employee || !formData.requestWorktype || !formData.requestedDate}
+      sx={{
+        background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+        fontSize: '0.95rem',
+        textTransform: 'none',
+        padding: '8px 32px',
+        borderRadius: '10px',
+        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
+        '&:hover': {
+          background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+        }
+      }}
+    >
+      Save Changes
+    </Button>
+  </DialogActions>
+</Dialog>
+
+
+
+
     </Box>
   );
 };

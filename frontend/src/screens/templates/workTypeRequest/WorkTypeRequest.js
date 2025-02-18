@@ -29,7 +29,6 @@ import {
 
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
 
-
 import {
   fetchWorkTypeRequests,
   createWorkTypeRequest,
@@ -242,7 +241,7 @@ const WorkTypeRequest = () => {
             mb: 3,
           }}
         >
-          <Typography variant="h3" fontWeight="800"  fontSize="1.5rem">
+          <Typography variant="h3" fontWeight="800" fontSize="1.5rem">
             Work Type Requests
           </Typography>
           <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
@@ -264,7 +263,7 @@ const WorkTypeRequest = () => {
             <Button variant="outlined" onClick={handleActionsClick}>
               Actions
             </Button>
-            
+
             <Button
               startIcon={<Add />}
               variant="contained"
@@ -358,22 +357,7 @@ const WorkTypeRequest = () => {
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              {/* <TableCell padding="checkbox">
-                <Checkbox
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      handleSelectAll();
-                    } else {
-                      handleUnselectAll();
-                    }
-                  }}
-                  checked={
-                    selectedAllocations.length === shiftRequests.length &&
-                    shiftRequests.length > 0
-                  }
-                />
-              </TableCell> */}
-              <TableCell>Select</TableCell> 
+              <TableCell>Select</TableCell>
               <TableCell>Employee</TableCell>
               <TableCell>Requested Work Type</TableCell>
               <TableCell>Previous/Current Work Type</TableCell>
@@ -501,7 +485,8 @@ const WorkTypeRequest = () => {
       </TableContainer>
 
       {/* Create Dialog */}
-      <Dialog
+
+      {/* <Dialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         maxWidth="sm"
@@ -584,19 +569,36 @@ const WorkTypeRequest = () => {
             Save
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
-      {/* Edit Dialog */}
+      {/* Create Dialog */}
       <Dialog
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            width: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+          },
+        }}
       >
-        <DialogTitle>Edit Work Request</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
-            {/* Same form fields as Create Dialog */}
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
+          }}
+        >
+          Create Work Request
+        </DialogTitle>
+
+        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <TextField
               label="Employee"
               name="employee"
@@ -604,6 +606,19 @@ const WorkTypeRequest = () => {
               select
               value={formData.employee}
               onChange={handleFormChange}
+              sx={{
+                mt: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#1976d2",
+                },
+              }}
             >
               {employees.map((emp) => (
                 <MenuItem key={emp.id} value={emp.name}>
@@ -611,6 +626,7 @@ const WorkTypeRequest = () => {
                 </MenuItem>
               ))}
             </TextField>
+
             <TextField
               label="Request Work Type"
               name="requestShift"
@@ -618,11 +634,21 @@ const WorkTypeRequest = () => {
               onChange={handleFormChange}
               fullWidth
               select
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             >
               <MenuItem value="Morning Shift">Morning Shift</MenuItem>
               <MenuItem value="Evening Shift">Evening Shift</MenuItem>
               <MenuItem value="Night Shift">Night Shift</MenuItem>
             </TextField>
+
             <TextField
               label="Requested Date"
               name="requestedDate"
@@ -631,7 +657,17 @@ const WorkTypeRequest = () => {
               onChange={handleFormChange}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             />
+
             <TextField
               label="Requested Till"
               name="requestedTill"
@@ -640,7 +676,17 @@ const WorkTypeRequest = () => {
               onChange={handleFormChange}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             />
+
             <TextField
               label="Description"
               name="description"
@@ -649,12 +695,334 @@ const WorkTypeRequest = () => {
               fullWidth
               multiline
               rows={4}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isPermanentRequest}
+                  onChange={(e) => setIsPermanentRequest(e.target.checked)}
+                />
+              }
+              label="Permanent Request"
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" color="primary" onClick={handleSaveEdit}>
+
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setCreateDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={handleCreateShift}
+            variant="contained"
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            width: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
+          }}
+        >
+          Edit Work Request
+        </DialogTitle>
+
+        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* Same form fields as Create Dialog with identical styling */}
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setEditDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={handleSaveEdit}
+            variant="contained"
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            width: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
+          }}
+        >
+          Edit Work Request
+        </DialogTitle>
+
+        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <TextField
+              label="Employee"
+              name="employee"
+              fullWidth
+              select
+              value={formData.employee}
+              onChange={handleFormChange}
+              sx={{
+                mt: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#1976d2",
+                },
+              }}
+            >
+              {employees.map((emp) => (
+                <MenuItem key={emp.id} value={emp.name}>
+                  {emp.name}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              label="Request Work Type"
+              name="requestShift"
+              value={formData.requestShift}
+              onChange={handleFormChange}
+              fullWidth
+              select
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            >
+              <MenuItem value="Morning Shift">Morning Shift</MenuItem>
+              <MenuItem value="Evening Shift">Evening Shift</MenuItem>
+              <MenuItem value="Night Shift">Night Shift</MenuItem>
+            </TextField>
+
+            <TextField
+              label="Requested Date"
+              name="requestedDate"
+              type="date"
+              value={formData.requestedDate}
+              onChange={handleFormChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              label="Requested Till"
+              name="requestedTill"
+              type="date"
+              value={formData.requestedTill}
+              onChange={handleFormChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleFormChange}
+              fullWidth
+              multiline
+              rows={4}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setEditDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={handleSaveEdit}
+            variant="contained"
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
+          >
             Save Changes
           </Button>
         </DialogActions>

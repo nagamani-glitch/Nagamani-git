@@ -363,6 +363,7 @@ const RecruitmentSurvey = () => {
               fullWidth
               disabled={editing}
               sx={{
+                mt: 2,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "white",
                   borderRadius: "12px",
@@ -374,7 +375,7 @@ const RecruitmentSurvey = () => {
                   color: "#3498db",
                 },
               }}
-              sx={{ marginTop: "16px" }}
+             // sx={{ marginTop: "16px" }}
             />
 
             <TextField

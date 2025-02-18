@@ -27,14 +27,9 @@ import {
   MenuItem,
   InputAdornment,
 } from "@mui/material";
-import {
-  Search,
-  Add,
-  Edit,
-  Delete,
-} from "@mui/icons-material";
+import { Search, Add, Edit, Delete } from "@mui/icons-material";
 
-const API_URL = 'http://localhost:5000/api/rotating-shift';
+const API_URL = "http://localhost:5000/api/rotating-shift";
 
 const employees = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
@@ -76,12 +71,14 @@ const RotatingShiftAssign = () => {
   const loadRotatingShiftRequests = async () => {
     try {
       <Typography variant="h3" fontWeight="800" fontSize="1.5rem">
-        {tabValue === 0 ? "Rotating Shift Requests" : "Allocated Rotating Shifts"}
-      </Typography>
+        {tabValue === 0
+          ? "Rotating Shift Requests"
+          : "Allocated Rotating Shifts"}
+      </Typography>;
       const response = await axios.get(`${API_URL}/shifts`, {
-        params: { isAllocated: tabValue === 1 }
+        params: { isAllocated: tabValue === 1 },
       });
-    
+
       if (tabValue === 0) {
         setShiftRequests(response.data);
       } else {
@@ -102,7 +99,7 @@ const RotatingShiftAssign = () => {
   const handleRowClick = (id) => {
     const currentData = tabValue === 0 ? shiftRequests : allocatedShifts;
     const newSelected = selectedAllocations.includes(id)
-      ? selectedAllocations.filter(item => item !== id)
+      ? selectedAllocations.filter((item) => item !== id)
       : [...selectedAllocations, id];
     setSelectedAllocations(newSelected);
     setShowSelectionButtons(newSelected.length > 0);
@@ -122,9 +119,9 @@ const RotatingShiftAssign = () => {
 
   const handleBulkApprove = async () => {
     try {
-      await axios.post(`${API_URL}/shifts/bulk-approve`, { 
+      await axios.post(`${API_URL}/shifts/bulk-approve`, {
         ids: selectedAllocations,
-        isAllocated: tabValue === 1 
+        isAllocated: tabValue === 1,
       });
       await loadRotatingShiftRequests();
       setSelectedAllocations([]);
@@ -137,9 +134,9 @@ const RotatingShiftAssign = () => {
 
   const handleBulkReject = async () => {
     try {
-      await axios.post(`${API_URL}/shifts/bulk-reject`, { 
+      await axios.post(`${API_URL}/shifts/bulk-reject`, {
         ids: selectedAllocations,
-        isAllocated: tabValue === 1 
+        isAllocated: tabValue === 1,
       });
       await loadRotatingShiftRequests();
       setSelectedAllocations([]);
@@ -152,9 +149,9 @@ const RotatingShiftAssign = () => {
 
   const handleBulkDelete = async () => {
     try {
-      await Promise.all(selectedAllocations.map(id => 
-        axios.delete(`${API_URL}/shifts/${id}`)
-      ));
+      await Promise.all(
+        selectedAllocations.map((id) => axios.delete(`${API_URL}/shifts/${id}`))
+      );
       await loadRotatingShiftRequests();
       setSelectedAllocations([]);
       setShowSelectionButtons(false);
@@ -168,7 +165,7 @@ const RotatingShiftAssign = () => {
     e.stopPropagation();
     try {
       await axios.put(`${API_URL}/shifts/${id}/approve`, {
-        isAllocated: tabValue === 1
+        isAllocated: tabValue === 1,
       });
       await loadRotatingShiftRequests();
     } catch (error) {
@@ -180,7 +177,7 @@ const RotatingShiftAssign = () => {
     e.stopPropagation();
     try {
       await axios.put(`${API_URL}/shifts/${id}/reject`, {
-        isAllocated: tabValue === 1
+        isAllocated: tabValue === 1,
       });
       await loadRotatingShiftRequests();
     } catch (error) {
@@ -190,19 +187,23 @@ const RotatingShiftAssign = () => {
 
   const handleCreateShift = async () => {
     try {
-      const selectedEmployee = employees.find(emp => emp.name === formData.employee);
+      const selectedEmployee = employees.find(
+        (emp) => emp.name === formData.employee
+      );
       const shiftData = {
         name: formData.employee,
-        employeeCode: selectedEmployee?.employeeCode || `EMP${Math.floor(Math.random() * 1000)}`,
+        employeeCode:
+          selectedEmployee?.employeeCode ||
+          `EMP${Math.floor(Math.random() * 1000)}`,
         requestedShift: formData.requestShift,
         currentShift: "Regular Shift",
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
         description: formData.description,
         isPermanentRequest,
-        isAllocated: tabValue === 1
+        isAllocated: tabValue === 1,
       };
-      
+
       await axios.post(`${API_URL}/shifts`, shiftData);
       await loadRotatingShiftRequests();
       setCreateDialogOpen(false);
@@ -225,8 +226,8 @@ const RotatingShiftAssign = () => {
     setFormData({
       employee: shift.name,
       requestShift: shift.requestedShift,
-      requestedDate: shift.requestedDate.split('T')[0],
-      requestedTill: shift.requestedTill.split('T')[0],
+      requestedDate: shift.requestedDate.split("T")[0],
+      requestedTill: shift.requestedTill.split("T")[0],
       description: shift.description,
     });
     setEditDialogOpen(true);
@@ -234,7 +235,9 @@ const RotatingShiftAssign = () => {
 
   const handleSaveEdit = async () => {
     try {
-      const selectedEmployee = employees.find(emp => emp.name === formData.employee);
+      const selectedEmployee = employees.find(
+        (emp) => emp.name === formData.employee
+      );
       const updatedData = {
         name: formData.employee,
         employeeCode: selectedEmployee?.employeeCode,
@@ -242,7 +245,7 @@ const RotatingShiftAssign = () => {
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
         description: formData.description,
-        isAllocated: tabValue === 1
+        isAllocated: tabValue === 1,
       };
 
       await axios.put(`${API_URL}/shifts/${editingShift._id}`, updatedData);
@@ -266,9 +269,18 @@ const RotatingShiftAssign = () => {
   return (
     <Box>
       <Box sx={{ padding: 4 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-          <Typography variant="h3" fontWeight="800"  fontSize="1.5rem">
-            {tabValue === 0 ? "Rotating Shift Requests" : "Allocated Rotating Shifts"}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <Typography variant="h3" fontWeight="800" fontSize="1.5rem">
+            {tabValue === 0
+              ? "Rotating Shift Requests"
+              : "Allocated Rotating Shifts"}
           </Typography>
           <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
             <TextField
@@ -286,8 +298,8 @@ const RotatingShiftAssign = () => {
                 ),
               }}
             />
-            <Button 
-              variant="outlined" 
+            <Button
+              variant="outlined"
               onClick={handleActionsClick}
               disabled={!selectedAllocations.length}
             >
@@ -343,13 +355,22 @@ const RotatingShiftAssign = () => {
       </Menu>
 
       <Box sx={{ display: "flex", gap: 2, mb: 2, ml: 4 }}>
-        <Button sx={{ color: "green" }} onClick={() => setFilterStatus("Approved")}>
+        <Button
+          sx={{ color: "green" }}
+          onClick={() => setFilterStatus("Approved")}
+        >
           ● Approved
         </Button>
-        <Button sx={{ color: "red" }} onClick={() => setFilterStatus("Rejected")}>
+        <Button
+          sx={{ color: "red" }}
+          onClick={() => setFilterStatus("Rejected")}
+        >
           ● Rejected
         </Button>
-        <Button sx={{ color: "orange" }} onClick={() => setFilterStatus("Pending")}>
+        <Button
+          sx={{ color: "orange" }}
+          onClick={() => setFilterStatus("Pending")}
+        >
           ● Pending
         </Button>
         <Button sx={{ color: "gray" }} onClick={() => setFilterStatus("all")}>
@@ -375,7 +396,10 @@ const RotatingShiftAssign = () => {
 
       <Divider sx={{ mb: 2 }} />
 
-      <TableContainer component={Paper} sx={{ maxHeight: 400, overflowY: "auto", mx: 4 }}>
+      <TableContainer
+        component={Paper}
+        sx={{ maxHeight: 400, overflowY: "auto", mx: 4 }}
+      >
         <Table stickyHeader>
           <TableHead>
             <TableRow>
@@ -407,8 +431,12 @@ const RotatingShiftAssign = () => {
             {(tabValue === 0 ? shiftRequests : allocatedShifts)
               .filter((request) => {
                 const employeeName = request?.name || "";
-                return employeeName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-                  (filterStatus === "all" || request.status === filterStatus);
+                return (
+                  employeeName
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase()) &&
+                  (filterStatus === "all" || request.status === filterStatus)
+                );
               })
               .map((request) => (
                 <TableRow
@@ -423,8 +451,12 @@ const RotatingShiftAssign = () => {
                       checked={selectedAllocations.includes(request._id)}
                       onClick={(e) => {
                         e.stopPropagation();
-                        const newSelected = selectedAllocations.includes(request._id)
-                          ? selectedAllocations.filter(id => id !== request._id)
+                        const newSelected = selectedAllocations.includes(
+                          request._id
+                        )
+                          ? selectedAllocations.filter(
+                              (id) => id !== request._id
+                            )
                           : [...selectedAllocations, request._id];
                         setSelectedAllocations(newSelected);
                         setShowSelectionButtons(newSelected.length > 0);
@@ -439,7 +471,10 @@ const RotatingShiftAssign = () => {
                           width: 32,
                           height: 32,
                           borderRadius: "50%",
-                          bgcolor: request._id % 2 === 0 ? "primary.main" : "secondary.main",
+                          bgcolor:
+                            request._id % 2 === 0
+                              ? "primary.main"
+                              : "secondary.main",
                           color: "white",
                           display: "flex",
                           alignItems: "center",
@@ -454,22 +489,35 @@ const RotatingShiftAssign = () => {
                   </TableCell>
                   <TableCell>{request.requestedShift}</TableCell>
                   <TableCell>{request.currentShift}</TableCell>
-                  <TableCell>{new Date(request.requestedDate).toLocaleDateString()}</TableCell>
-                  <TableCell>{new Date(request.requestedTill).toLocaleDateString()}</TableCell>
-                  <TableCell sx={{ color: request.status === "Approved" ? "green" : request.status === "Rejected" ? "red" : "orange" }}>
+                  <TableCell>
+                    {new Date(request.requestedDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(request.requestedTill).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color:
+                        request.status === "Approved"
+                          ? "green"
+                          : request.status === "Rejected"
+                          ? "red"
+                          : "orange",
+                    }}
+                  >
                     {request.status}
                   </TableCell>
                   <TableCell>{request.description}</TableCell>
                   <TableCell>
-                    <IconButton 
-                      color="success" 
+                    <IconButton
+                      color="success"
                       onClick={(e) => handleApprove(request._id, e)}
                       disabled={request.status === "Approved"}
                     >
                       ✔
                     </IconButton>
-                    <IconButton 
-                      color="error" 
+                    <IconButton
+                      color="error"
                       onClick={(e) => handleReject(request._id, e)}
                       disabled={request.status === "Rejected"}
                     >
@@ -477,10 +525,16 @@ const RotatingShiftAssign = () => {
                     </IconButton>
                   </TableCell>
                   <TableCell>
-                    <IconButton color="primary" onClick={(e) => handleEdit(request, e)}>
+                    <IconButton
+                      color="primary"
+                      onClick={(e) => handleEdit(request, e)}
+                    >
                       <Edit fontSize="small" />
                     </IconButton>
-                    <IconButton color="error" onClick={(e) => handleDelete(request._id, e)}>
+                    <IconButton
+                      color="error"
+                      onClick={(e) => handleDelete(request._id, e)}
+                    >
                       <Delete fontSize="small" />
                     </IconButton>
                   </TableCell>
@@ -491,7 +545,8 @@ const RotatingShiftAssign = () => {
       </TableContainer>
 
       {/* Create Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
+
+      {/* <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
           {tabValue === 0 ? "Create Rotating Shift Request" : "Create Allocated Rotating Shift"}
         </DialogTitle>
@@ -574,15 +629,35 @@ const RotatingShiftAssign = () => {
             Save
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {tabValue === 0 ? "Edit Rotating Shift Request" : "Edit Allocated Rotating Shift"}
+      <Dialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            width: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
+          }}
+        >
+          {tabValue === 0
+            ? "Create Rotating Shift Request"
+            : "Create Allocated Rotating Shift"}
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+
+        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <TextField
               label="Employee"
               name="employee"
@@ -590,6 +665,19 @@ const RotatingShiftAssign = () => {
               select
               value={formData.employee}
               onChange={handleFormChange}
+              sx={{
+                mt: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#1976d2",
+                },
+              }}
             >
               {employees.map((emp) => (
                 <MenuItem key={emp.id} value={emp.name}>
@@ -597,6 +685,7 @@ const RotatingShiftAssign = () => {
                 </MenuItem>
               ))}
             </TextField>
+
             <TextField
               label="Request Work Type"
               name="requestShift"
@@ -604,11 +693,21 @@ const RotatingShiftAssign = () => {
               onChange={handleFormChange}
               fullWidth
               select
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             >
               <MenuItem value="Morning Shift">Morning Shift</MenuItem>
               <MenuItem value="Evening Shift">Evening Shift</MenuItem>
               <MenuItem value="Night Shift">Night Shift</MenuItem>
             </TextField>
+
             <TextField
               label="Requested Date"
               name="requestedDate"
@@ -617,7 +716,17 @@ const RotatingShiftAssign = () => {
               onChange={handleFormChange}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             />
+
             <TextField
               label="Requested Till"
               name="requestedTill"
@@ -626,7 +735,17 @@ const RotatingShiftAssign = () => {
               onChange={handleFormChange}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             />
+
             <TextField
               label="Description"
               name="description"
@@ -635,16 +754,267 @@ const RotatingShiftAssign = () => {
               fullWidth
               multiline
               rows={4}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            {tabValue === 0 && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isPermanentRequest}
+                    onChange={(e) => setIsPermanentRequest(e.target.checked)}
+                  />
+                }
+                label="Permanent Request"
+              />
+            )}
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setCreateDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={handleCreateShift}
+            disabled={
+              !formData.employee ||
+              !formData.requestShift ||
+              !formData.requestedDate
+            }
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Dialog */}
+
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            width: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
+          }}
+        >
+          {tabValue === 0
+            ? "Edit Rotating Shift Request"
+            : "Edit Allocated Rotating Shift"}
+        </DialogTitle>
+
+        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <TextField
+              label="Employee"
+              name="employee"
+              fullWidth
+              select
+              value={formData.employee}
+              onChange={handleFormChange}
+              sx={{
+                mt: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#1976d2",
+                },
+              }}
+            >
+              {employees.map((emp) => (
+                <MenuItem key={emp.id} value={emp.name}>
+                  {emp.name} ({emp.employeeCode})
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              label="Request Work Type"
+              name="requestShift"
+              value={formData.requestShift}
+              onChange={handleFormChange}
+              fullWidth
+              select
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            >
+              <MenuItem value="Morning Shift">Morning Shift</MenuItem>
+              <MenuItem value="Evening Shift">Evening Shift</MenuItem>
+              <MenuItem value="Night Shift">Night Shift</MenuItem>
+            </TextField>
+
+            <TextField
+              label="Requested Date"
+              name="requestedDate"
+              type="date"
+              value={formData.requestedDate}
+              onChange={handleFormChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              label="Requested Till"
+              name="requestedTill"
+              type="date"
+              value={formData.requestedTill}
+              onChange={handleFormChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleFormChange}
+              fullWidth
+              multiline
+              rows={4}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button 
-            variant="contained" 
-            color="primary" 
+
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setEditDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+
+          <Button
             onClick={handleSaveEdit}
-            disabled={!formData.employee || !formData.requestShift || !formData.requestedDate}
+            variant="contained"
+            disabled={
+              !formData.employee ||
+              !formData.requestShift ||
+              !formData.requestedDate
+            }
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
           >
             Save Changes
           </Button>
