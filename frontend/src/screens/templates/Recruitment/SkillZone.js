@@ -455,7 +455,19 @@ const SkillZone = () => {
                 <Button
                   onClick={handleClose}
                   color="inherit"
-                  sx={{ fontWeight: 500 }}
+                  sx={{
+                    border: '2px solid #1976d2',
+                    color: '#1976d2',
+                    '&:hover': {
+                      border: '2px solid #64b5f6',
+                      backgroundColor: '#e3f2fd',
+                      color: '#1976d2'
+                    },
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    px: 3,
+                    fontWeight: 600
+                  }}
                 >
                   Cancel
                 </Button>

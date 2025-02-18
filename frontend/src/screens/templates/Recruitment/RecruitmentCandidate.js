@@ -488,7 +488,6 @@ const RecruitmentCandidate = () => {
                 },
                 mt: 2
               }}
-              // sx={{ mt: 2 }}
             />
 
             <TextField 
@@ -570,14 +569,17 @@ const RecruitmentCandidate = () => {
           <Button
             onClick={() => setCreateDialogOpen(false)}
             sx={{
-              color: "#64748b",
-              fontSize: "0.95rem",
-              textTransform: "none",
-              padding: "8px 24px",
-              borderRadius: "10px",
+              border: "2px solid #1976d2",
+              color: "#1976d2",
               "&:hover": {
-                backgroundColor: "#f1f5f9",
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
               },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
             }}
           >
             Cancel
@@ -644,9 +646,22 @@ const RecruitmentCandidate = () => {
         <DialogActions sx={{ p: 3, pt: 2 }}>
           <Button
             onClick={() => setDeleteDialogOpen(false)}
-            sx={styles.actionButton}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
           >
             Cancel
+
           </Button>
           <Button
             onClick={() => handleDeleteCandidate(selectedCandidate?._id)}
