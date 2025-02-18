@@ -559,7 +559,8 @@ const TimeOffRequests = () => {
         </Box>
       </Box>
       {/* Create/Edit Dialog */}
-      <Dialog
+
+      {/* <Dialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         maxWidth="md"
@@ -805,7 +806,389 @@ const TimeOffRequests = () => {
             {editMode ? "Update" : "Create"}
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
+
+<Dialog 
+  open={createOpen} 
+  onClose={() => setCreateOpen(false)}
+  maxWidth="md"
+  fullWidth
+  PaperProps={{
+    sx: {
+      width: '600px',
+      borderRadius: '20px',
+      overflow: 'hidden'
+    }
+  }}
+>
+  <DialogTitle sx={{
+    background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+    color: 'white',
+    fontSize: '1.5rem',
+    fontWeight: 600,
+    padding: '24px 32px'
+  }}>
+    {editMode ? 'Edit Request' : 'Create New Request'}
+    <IconButton
+      onClick={() => setCreateOpen(false)}
+      sx={{
+        position: 'absolute',
+        right: 8,
+        top: 8,
+        color: 'white'
+      }}
+    >
+      <Close />
+    </IconButton>
+  </DialogTitle>
+
+  <DialogContent sx={{ 
+    padding: '32px', 
+    backgroundColor: '#f8fafc',
+    marginTop: '20px'
+  }}>
+    <Grid container spacing={3} sx={{ mt: 0.5 }}>
+      <Grid item xs={12} md={6}>
+        <TextField
+          name="name"
+          label="Employee Name"
+          fullWidth
+          required
+          value={formData.name}
+          onChange={handleInputChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            },
+            "& .MuiInputLabel-root.Mui-focused": {
+              color: "#1976d2",
+            }
+          }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          name="empId"
+          label="Employee ID"
+          fullWidth
+          required
+          value={formData.empId}
+          onChange={handleInputChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          name="date"
+          label="Date"
+          type="date"
+          fullWidth
+          required
+          InputLabelProps={{ shrink: true }}
+          value={formData.date}
+          onChange={handleInputChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          name="day"
+          label="Day"
+          fullWidth
+          required
+          value={formData.day}
+          onChange={handleInputChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          name="checkIn"
+          label="Check In Time"
+          type="time"
+          fullWidth
+          required
+          InputLabelProps={{ shrink: true }}
+          value={formData.checkIn}
+          onChange={handleInputChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          name="checkOut"
+          label="Check Out Time"
+          type="time"
+          fullWidth
+          required
+          InputLabelProps={{ shrink: true }}
+          value={formData.checkOut}
+          onChange={handleInputChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          select
+          name="shift"
+          label="Shift"
+          fullWidth
+          required
+          value={formData.shift}
+          onChange={handleInputChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        >
+          {shiftOptions.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          select
+          name="workType"
+          label="Work Type"
+          fullWidth
+          required
+          value={formData.workType}
+          onChange={handleInputChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        >
+          {workTypeOptions.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Grid>
+      <Grid item xs={12} md={4}>
+        <TextField
+          name="minHour"
+          label="Minimum Hours"
+          type="number"
+          fullWidth
+          required
+          value={formData.minHour}
+          onChange={handleInputChange}
+          InputProps={{
+            endAdornment: <InputAdornment position="end">h</InputAdornment>,
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        />
+      </Grid>
+      <Grid item xs={12} md={4}>
+        <TextField
+          name="atWork"
+          label="At Work"
+          type="number"
+          fullWidth
+          required
+          value={formData.atWork}
+          onChange={handleInputChange}
+          InputProps={{
+            endAdornment: <InputAdornment position="end">h</InputAdornment>,
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        />
+      </Grid>
+      <Grid item xs={12} md={4}>
+        <TextField
+          name="overtime"
+          label="Overtime"
+          type="number"
+          fullWidth
+          value={formData.overtime}
+          onChange={handleInputChange}
+          InputProps={{
+            endAdornment: <InputAdornment position="end">h</InputAdornment>,
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          select
+          name="status"
+          label="Status"
+          fullWidth
+          required
+          value={formData.status}
+          onChange={handleInputChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        >
+          {statusOptions.filter((option) => option !== "All").map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          name="comment"
+          label="Comment"
+          fullWidth
+          multiline
+          rows={3}
+          value={formData.comment}
+          onChange={handleInputChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+              borderRadius: "12px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            }
+          }}
+        />
+      </Grid>
+    </Grid>
+  </DialogContent>
+
+  <DialogActions sx={{ 
+    padding: '24px 32px', 
+    backgroundColor: '#f8fafc', 
+    borderTop: '1px solid #e0e0e0', 
+    gap: 2 
+  }}>
+    <Button 
+      onClick={() => setCreateOpen(false)}
+      sx={{
+        border: '2px solid #1976d2',
+        color: '#1976d2',
+        '&:hover': {
+          border: '2px solid #64b5f6',
+          backgroundColor: '#e3f2fd',
+          color: '#1976d2'
+        },
+        textTransform: 'none',
+        borderRadius: '8px',
+        px: 3,
+        fontWeight: 600
+      }}
+    >
+      Cancel
+    </Button>
+
+    <Button
+      onClick={handleSave}
+      variant="contained"
+      disabled={!formData.name || !formData.empId || !formData.date}
+      sx={{
+        background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+        fontSize: '0.95rem',
+        textTransform: 'none',
+        padding: '8px 32px',
+        borderRadius: '10px',
+        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
+        color: 'white',
+        '&:hover': {
+          background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+        }
+      }}
+    >
+      {editMode ? 'Update' : 'Create'}
+    </Button>
+  </DialogActions>
+</Dialog>
+
+
+
       {/* Preview Dialog */}
       <Dialog
         open={previewOpen}

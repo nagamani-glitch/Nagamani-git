@@ -422,37 +422,33 @@ const AttendanceRecords = () => {
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: 2,
-            "& .MuiDialogContent-root": {
-              padding: 3,
-            },
+            width: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
           },
         }}
       >
         <DialogTitle
           sx={{
-            bgcolor: theme.palette.primary.main,
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
             color: "white",
-            fontSize: 18,
-            padding: 2,
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
           }}
         >
           Create Attendance Record
         </DialogTitle>
-        <DialogContent>
-          <Box
-            display="flex"
-            flexDirection="column"
-            gap={2.5}
-            sx={{
-              "& .MuiTextField-root": {
-                backgroundColor: "background.paper",
-                borderRadius: 1,
-              },
-            }}
-          >
-            <Grid container spacing={2}>
-              {/* Create Form Fields */}
+
+        <DialogContent
+          sx={{
+            padding: "32px",
+            backgroundColor: "#f8fafc",
+            marginTop: "20px",
+          }}
+        >
+          <Box display="flex" flexDirection="column" gap={3}>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="Name"
@@ -461,6 +457,18 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, name: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#1976d2",
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -471,6 +479,15 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, empId: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -483,6 +500,15 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, date: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -495,6 +521,15 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, checkIn: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -507,6 +542,15 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, checkOut: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -518,6 +562,15 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, shift: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 >
                   <MenuItem value="Morning">Morning</MenuItem>
                   <MenuItem value="Evening">Evening</MenuItem>
@@ -533,6 +586,15 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, workType: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 >
                   <MenuItem value="Regular">Regular</MenuItem>
                   <MenuItem value="Remote">Remote</MenuItem>
@@ -548,6 +610,15 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, minHour: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -558,6 +629,15 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, atWork: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -568,6 +648,15 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, overtime: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -580,168 +669,382 @@ const AttendanceRecords = () => {
                   onChange={(e) =>
                     setNewRecord({ ...newRecord, comment: e.target.value })
                   }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 />
               </Grid>
             </Grid>
           </Box>
         </DialogContent>
-            <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'flex-start' }}>
-              <Button 
-                onClick={() => setCreateOpen(false)}
-                sx={{ 
-                  bgcolor: '#1976d2',
-                  color: 'white',
-                  '&:hover': { bgcolor: '#1565c0' }
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateRecord}
-                variant="contained"
-                sx={{ 
-                  px: 4, 
-                  ml: 1,
-                  bgcolor: '#1976d2',
-                  color: 'white',
-                  '&:hover': { bgcolor: '#1565c0' }
-                }}
-              >
-                Create
-              </Button>
-            </DialogActions>
-        
+
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setCreateOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={handleCreateRecord}
+            variant="contained"
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
+          >
+            Create
+          </Button>
+        </DialogActions>
       </Dialog>
 
       {/* For edit the attendance record */}
+
       <Dialog
         open={editOpen}
         onClose={() => setEditOpen(false)}
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: { borderRadius: 2 },
+          sx: {
+            width: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+          },
         }}
       >
-        <DialogTitle>Edit Attendance Record</DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2} pt={2}>
-            {/* Edit Form Fields */}
-            <TextField
-              label="Name"
-              fullWidth
-              value={editRecord?.name || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, name: e.target.value })
-              }
-            />
-            <TextField
-              label="Employee ID"
-              fullWidth
-              value={editRecord?.empId || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, empId: e.target.value })
-              }
-            />
-            <TextField
-              label="Date"
-              type="date"
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              value={editRecord?.date || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, date: e.target.value })
-              }
-            />
-            <TextField
-              label="Check-In Time"
-              type="time"
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              value={editRecord?.checkIn || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, checkIn: e.target.value })
-              }
-            />
-            <TextField
-              label="Check-Out Time"
-              type="time"
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              value={editRecord?.checkOut || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, checkOut: e.target.value })
-              }
-            />
-            <TextField
-              select
-              label="Shift"
-              fullWidth
-              value={editRecord?.shift || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, shift: e.target.value })
-              }
-            >
-              <MenuItem value="Morning">Morning</MenuItem>
-              <MenuItem value="Evening">Evening</MenuItem>
-              <MenuItem value="Night">Night</MenuItem>
-            </TextField>
-            <TextField
-              select
-              label="Work Type"
-              fullWidth
-              value={editRecord?.workType || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, workType: e.target.value })
-              }
-            >
-              <MenuItem value="Regular">Regular</MenuItem>
-              <MenuItem value="Remote">Remote</MenuItem>
-              <MenuItem value="Hybrid">Hybrid</MenuItem>
-            </TextField>
-            <TextField
-              label="Minimum Hours"
-              type="number"
-              fullWidth
-              value={editRecord?.minHour || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, minHour: e.target.value })
-              }
-            />
-            <TextField
-              label="At Work"
-              fullWidth
-              value={editRecord?.atWork || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, atWork: e.target.value })
-              }
-            />
-            <TextField
-              label="Overtime"
-              fullWidth
-              value={editRecord?.overtime || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, overtime: e.target.value })
-              }
-            />
-            <TextField
-              label="Comment"
-              fullWidth
-              multiline
-              rows={2}
-              value={editRecord?.comment || ""}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, comment: e.target.value })
-              }
-            />
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
+          }}
+        >
+          Edit Attendance Record
+        </DialogTitle>
+
+        <DialogContent
+          sx={{
+            padding: "32px",
+            backgroundColor: "#f8fafc",
+            marginTop: "20px",
+          }}
+        >
+          <Box display="flex" flexDirection="column" gap={3}>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Name"
+                  fullWidth
+                  value={editRecord?.name || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, name: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#1976d2",
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Employee ID"
+                  fullWidth
+                  value={editRecord?.empId || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, empId: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Date"
+                  type="date"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={editRecord?.date || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, date: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Check-In Time"
+                  type="time"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={editRecord?.checkIn || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, checkIn: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Check-Out Time"
+                  type="time"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={editRecord?.checkOut || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, checkOut: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Shift"
+                  fullWidth
+                  value={editRecord?.shift || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, shift: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="Morning">Morning</MenuItem>
+                  <MenuItem value="Evening">Evening</MenuItem>
+                  <MenuItem value="Night">Night</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Work Type"
+                  fullWidth
+                  value={editRecord?.workType || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, workType: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="Regular">Regular</MenuItem>
+                  <MenuItem value="Remote">Remote</MenuItem>
+                  <MenuItem value="Hybrid">Hybrid</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Minimum Hours"
+                  type="number"
+                  fullWidth
+                  value={editRecord?.minHour || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, minHour: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="At Work"
+                  fullWidth
+                  value={editRecord?.atWork || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, atWork: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Overtime"
+                  fullWidth
+                  value={editRecord?.overtime || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, overtime: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Comment"
+                  fullWidth
+                  multiline
+                  rows={2}
+                  value={editRecord?.comment || ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, comment: e.target.value })
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+            </Grid>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
+
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setEditOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+
           <Button
             onClick={handleUpdateRecord}
             variant="contained"
-            color="primary"
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
           >
             Update
           </Button>

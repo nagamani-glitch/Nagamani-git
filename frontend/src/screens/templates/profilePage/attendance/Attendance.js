@@ -148,6 +148,7 @@ const Attendance = () => {
       </TableContainer>
 
       {/* Create Dialog */}
+
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>Create Attendance</DialogTitle>
         <DialogContent>
@@ -263,6 +264,7 @@ const Attendance = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      
     </Box>
   );
 };
