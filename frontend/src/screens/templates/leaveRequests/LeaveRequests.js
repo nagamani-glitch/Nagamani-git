@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -15,7 +14,17 @@ import {
   Tooltip,
   Snackbar,
   Alert,
+  Box,
+  Stack,
+  useTheme,
+  styled,
+  alpha,
+  Menu,
+  SearchTextField,
+  Paper,
+  InputAdornment
 } from "@mui/material";
+
 import {
   Add,
   Delete,
@@ -27,13 +36,13 @@ import {
   AddComment,
   ChatBubbleOutline,
 } from "@mui/icons-material";
+
 import "./LeaveRequests.css";
 
 const API_URL = "http://localhost:5000/api/leave-requests";
 
 const LeaveRequests = () => {
   const [leaveData, setLeaveData] = useState([]);
-  const [isFilterOpen, setFilterOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -45,6 +54,39 @@ const LeaveRequests = () => {
     message: "",
     severity: "success",
   });
+
+
+
+  // For Filter
+
+  const theme = useTheme();
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleFilterClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleFilterClose = () => {
+    setAnchorEl(null);
+  };
+
+  const FilterMenu = styled(Menu)(({ theme }) => ({
+    "& .MuiPaper-root": {
+      borderRadius: 16,
+      marginTop: 12,
+      minWidth: 280,
+      boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+      background: "linear-gradient(to bottom, #ffffff, #f8fafc)",
+      border: "1px solid rgba(25, 118, 210, 0.12)",
+    },
+    "& .MuiMenuItem-root": {
+      padding: "12px 16px",
+      transition: "background-color 0.2s ease",
+      "&:hover": {
+        backgroundColor: alpha(theme.palette.primary.light, 0.1),
+      },
+    },
+  }));
 
   const [createFormData, setCreateFormData] = useState({
     type: "",
@@ -246,9 +288,110 @@ const LeaveRequests = () => {
         leave.comment.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+        // Search
+
+        const SearchTextField = styled(TextField)(({ theme }) => ({
+          "& .MuiOutlinedInput-root": {
+            borderRadius: theme.spacing(2),
+            "&:hover fieldset": {
+              borderColor: theme.palette.primary.main,
+            },
+          },
+        }));    
+        
+        
+        const StyledPaper = styled(Paper)(({ theme }) => ({
+          padding: theme.spacing(3),
+          marginBottom: theme.spacing(3),
+          borderRadius: theme.spacing(1),
+          boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+        }));
+
+
   return (
     <div className="App">
-      <div className="headers">
+
+
+<Box sx={{ p: 4, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+  <Typography
+    variant="h4"
+    sx={{
+      mb: 4,
+      color: theme.palette.primary.main,
+      fontWeight: 600,
+      letterSpacing: 0.5,
+    }}
+  >
+    Leave Requests
+  </Typography>
+
+  <StyledPaper>
+    <Box
+      display="flex"
+      alignItems="center"
+      gap={2}
+      sx={{
+        width: "100%",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+      }}
+    >
+      <SearchTextField
+        placeholder="Search records..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        size="small"
+        sx={{
+          width: { xs: "100%", sm: "300px" },
+          marginRight: "auto",
+        }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search color="primary" />
+            </InputAdornment>
+          ),
+        }}
+      />
+
+      <Box sx={{ display: "flex", gap: 1 }}>
+      <Button
+  variant="outlined"
+  onClick={handleFilterClick}  // Changed from setFilterOpen
+  startIcon={<FilterList />}
+  sx={{
+    height: 40,
+    whiteSpace: "nowrap",
+    borderColor: theme.palette.primary.main,
+    '&:hover': {
+      borderColor: theme.palette.primary.dark,
+      backgroundColor: alpha(theme.palette.primary.main, 0.05),
+    }
+  }}
+>
+  Filter
+</Button>
+
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => setIsCreateOpen(true)}
+          sx={{
+            height: 40,
+            background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+            color: "white",
+            "&:hover": {
+              background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+            },
+          }}
+        >
+          Create Leave Request
+        </Button>
+      </Box>
+    </Box>
+  </StyledPaper>
+
+      {/* <div className="headers">
         <Typography variant="h6">Leave Requests</Typography>
         <TextField
           placeholder="Search..."
@@ -260,11 +403,21 @@ const LeaveRequests = () => {
         <div className="header-actions">
           <Button
             variant="outlined"
-            onClick={() => setFilterOpen(true)}
+            onClick={handleFilterClick} // Changed from setFilterOpen
             startIcon={<FilterList />}
+            sx={{
+              height: 40,
+              whiteSpace: "nowrap",
+              borderColor: theme.palette.primary.main,
+              "&:hover": {
+                borderColor: theme.palette.primary.dark,
+                backgroundColor: alpha(theme.palette.primary.main, 0.05),
+              },
+            }}
           >
             Filter
           </Button>
+
           <Button
             variant="contained"
             color="primary"
@@ -274,7 +427,7 @@ const LeaveRequests = () => {
             Create
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* Leave Requests Table */}
       <div className="leave-table">
@@ -426,7 +579,7 @@ const LeaveRequests = () => {
             <MenuItem value="">Select Leave Type</MenuItem>
             <MenuItem value="Annual Leave">Annual Leave</MenuItem>
             <MenuItem value="Sick Leave">Sick Leave</MenuItem>
-            <MenuItem value="Maladie">Personal Leave</MenuItem>
+            <MenuItem value="Personal Leave">Personal Leave</MenuItem>
           </Select>
 
           <TextField
@@ -594,7 +747,7 @@ const LeaveRequests = () => {
           >
             <MenuItem value="Annual Leave">Annual Leave</MenuItem>
             <MenuItem value="Sick Leave">Sick Leave</MenuItem>
-            <MenuItem value="Maladie">Maladie</MenuItem>
+            <MenuItem value="Personal Leave">Personal Leave</MenuItem>
           </Select>
 
           <TextField
@@ -710,61 +863,116 @@ const LeaveRequests = () => {
       </Dialog>
 
       {/* Filter Dialog */}
-      <Dialog open={isFilterOpen} onClose={() => setFilterOpen(false)}>
-        <DialogTitle>Filter Leave Requests</DialogTitle>
 
-        <DialogContent sx={{ padding: "20px" }}>
-          <Select
-            name="type"
-            value={filters.type}
-            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-            fullWidth
-            margin="dense"
-            sx={{ marginBottom: "20px" }}
-          >
-            <MenuItem value="">All Types</MenuItem>
-            <MenuItem value="Annual Leave">Annual Leave</MenuItem>
-            <MenuItem value="Sick Leave">Sick Leave</MenuItem>
-            <MenuItem value="Maladie">Maladie</MenuItem>
-          </Select>
 
-          <Select
-            name="status"
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            fullWidth
-            margin="dense"
-            sx={{ marginBottom: "20px" }}
-          >
-            <MenuItem value="">All Status</MenuItem>
-            <MenuItem value="Pending">Pending</MenuItem>
-            <MenuItem value="Approved">Approved</MenuItem>
-            <MenuItem value="Rejected">Rejected</MenuItem>
-          </Select>
-        </DialogContent>
+      <FilterMenu
+  anchorEl={anchorEl}
+  open={Boolean(anchorEl)}
+  onClose={handleFilterClose}
+  anchorOrigin={{
+    vertical: 'bottom',
+    horizontal: 'left',
+  }}
+  transformOrigin={{
+    vertical: 'top',
+    horizontal: 'left',
+  }}
+  PaperProps={{
+    elevation: 3,
+    sx: {
+      mt: 1.5,
+      ml:0,
+      borderRadius: 2,
+      border: '1px solid',
+      borderColor: 'divider',
+    }
+  }}
+>
+  <Box sx={{ width: 320, p: 2 }}>
+    <Typography
+      variant="subtitle1"
+      sx={{
+        mb: 2,
+        fontWeight: 600,
+        color: theme.palette.primary.main,
+        borderBottom: `2px solid ${theme.palette.primary.light}`,
+        pb: 1
+      }}
+    >
+      Filter Options
+    </Typography>
 
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setFilters({
-                type: "",
-                status: "",
-                dateRange: { start: "", end: "" },
-              });
-            }}
-            color="inherit"
-          >
-            Clear
-          </Button>
-          <Button
-            onClick={() => setFilterOpen(false)}
-            color="primary"
-            variant="contained"
-          >
-            Apply
-          </Button>
-        </DialogActions>
-      </Dialog>
+    <Stack spacing={2}>
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Leave Type"
+        value={filters.type}
+        onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'background.paper',
+            borderRadius: 1.5
+          }
+        }}
+      >
+        <MenuItem value="">All Types</MenuItem>
+        <MenuItem value="Annual Leave">Annual Leave</MenuItem>
+        <MenuItem value="Sick Leave">Sick Leave</MenuItem>
+        <MenuItem value="Maladie">Personal Leave</MenuItem>
+      </TextField>
+
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Status"
+        value={filters.status}
+        onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'background.paper',
+            borderRadius: 1.5
+          }
+        }}
+      >
+        <MenuItem value="">All Status</MenuItem>
+        <MenuItem value="Pending">Pending</MenuItem>
+        <MenuItem value="Approved">Approved</MenuItem>
+        <MenuItem value="Rejected">Rejected</MenuItem>
+      </TextField>
+
+      <Button
+        fullWidth
+        variant="contained"
+        onClick={() => {
+          setFilters({
+            type: "",
+            status: "",
+            dateRange: { start: "", end: "" }
+          });
+          handleFilterClose();
+        }}
+        sx={{
+          mt: 1,
+          py: 1,
+          background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+          borderRadius: 1.5,
+          textTransform: 'none',
+          fontWeight: 600,
+          '&:hover': {
+            background: 'linear-gradient(45deg, #1565c0, #42a5f5)'
+          }
+        }}
+      >
+        Reset Filters
+      </Button>
+    </Stack>
+  </Box>
+</FilterMenu>
+
+   
 
       {/* Comment Dialog */}
       <Dialog open={isCommentDialogOpen} onClose={handleCloseCommentDialog}>
@@ -806,7 +1014,10 @@ const LeaveRequests = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+    </Box>
+    
     </div>
+
   );
 };
 

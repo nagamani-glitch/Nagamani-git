@@ -130,6 +130,7 @@ const Policies = () => {
             }}
             sx={{ marginRight: "16px" }}
           />
+          
           <Button
             variant="contained"
             color="error"

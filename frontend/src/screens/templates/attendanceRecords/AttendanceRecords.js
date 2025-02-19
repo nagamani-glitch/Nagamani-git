@@ -56,12 +56,28 @@ const SearchTextField = styled(TextField)(({ theme }) => ({
 
 const FilterMenu = styled(Menu)(({ theme }) => ({
   "& .MuiPaper-root": {
-    borderRadius: 8,
-    marginTop: 8,
-    minWidth: 240,
-    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+    borderRadius: 16,
+    marginTop: 12,
+    minWidth: 280,
+    boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+    background: "linear-gradient(to bottom, #ffffff, #f8fafc)",
+    border: "1px solid rgba(25, 118, 210, 0.12)",
+  },
+  "& .MuiMenuItem-root": {
+    padding: "12px 16px",
+    transition: "background-color 0.2s ease",
+    "&:hover": {
+      backgroundColor: alpha(theme.palette.primary.light, 0.1),
+    },
   },
 }));
+//   "& .MuiPaper-root": {
+//     borderRadius: 8,
+//     marginTop: 8,
+//     minWidth: 240,
+//     boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+//   },
+// }));
 
 const AttendanceRecords = () => {
   const theme = useTheme();
@@ -293,7 +309,7 @@ const AttendanceRecords = () => {
                   <Search color="primary" />
                 </InputAdornment>
               ),
-            }}
+            }} 
           />
 
           <Box sx={{ display: "flex", gap: 1 }}>
@@ -1058,9 +1074,40 @@ const AttendanceRecords = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-          <Typography variant="subtitle2" color="text.secondary">
-            Filter by
+        <Box
+          sx={{
+            p: 3,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2.5,
+            "& .MuiTextField-root": {
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                backgroundColor: "#fff",
+                transition: "all 0.2s ease-in-out",
+                "&:hover": {
+                  backgroundColor: alpha(theme.palette.primary.light, 0.05),
+                },
+                "&.Mui-focused": {
+                  boxShadow: `0 0 0 2px ${alpha(
+                    theme.palette.primary.main,
+                    0.2
+                  )}`,
+                },
+              },
+            },
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              color: theme.palette.primary.main,
+              fontWeight: 600,
+              borderBottom: `2px solid ${theme.palette.primary.light}`,
+              paddingBottom: 1,
+            }}
+          >
+            Filter Options
           </Typography>
 
           <TextField
@@ -1070,6 +1117,11 @@ const AttendanceRecords = () => {
             label="Employee"
             value={filterValues.employee}
             onChange={(e) => handleFilterChange("employee", e.target.value)}
+            sx={{
+              "& .MuiSelect-select": {
+                padding: "12px 14px",
+              },
+            }}
           >
             <MenuItem value="">All Employees</MenuItem>
             {[
@@ -1090,6 +1142,11 @@ const AttendanceRecords = () => {
             label="Work Type"
             value={filterValues.workType}
             onChange={(e) => handleFilterChange("workType", e.target.value)}
+            sx={{
+              "& .MuiSelect-select": {
+                padding: "12px 14px",
+              },
+            }}
           >
             <MenuItem value="">All Types</MenuItem>
             <MenuItem value="Regular">Regular</MenuItem>
@@ -1104,6 +1161,11 @@ const AttendanceRecords = () => {
             label="Shift"
             value={filterValues.shift}
             onChange={(e) => handleFilterChange("shift", e.target.value)}
+            sx={{
+              "& .MuiSelect-select": {
+                padding: "12px 14px",
+              },
+            }}
           >
             <MenuItem value="">All Shifts</MenuItem>
             <MenuItem value="Morning">Morning</MenuItem>
@@ -1113,7 +1175,7 @@ const AttendanceRecords = () => {
 
           <Button
             fullWidth
-            variant="outlined"
+            variant="contained"
             onClick={() => {
               setFilterValues({
                 employee: "",
@@ -1122,6 +1184,18 @@ const AttendanceRecords = () => {
               });
               fetchAttendanceRecords();
               handleFilterClose();
+            }}
+            sx={{
+              mt: 2,
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              textTransform: "none",
+              borderRadius: 2,
+              padding: "10px 0",
+              fontWeight: 600,
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
             }}
           >
             Reset Filters
