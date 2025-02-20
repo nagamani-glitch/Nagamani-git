@@ -87,28 +87,6 @@ const Objectives = () => {
     }
   };
 
-  // const handleArchive = async (id) => {
-  //   try {
-  //     const response = await axios.patch(`${API_URL}/${id}/archive`, {
-  //       archived: true  // Explicitly send the archive status
-  //     }, {
-  //       headers: {
-  //         'Content-Type': 'application/json'
-  //       }
-  //     });
-
-  //     setObjectives(objectives.map(obj =>
-  //       obj._id === id ? response.data : obj
-  //     ));
-
-  //     if (!showArchivedTable) {
-  //       setShowArchivedTable(true);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error archiving objective:', error);
-  //   }
-  // };
-
   const handleArchive = async (id) => {
     try {
       const response = await axios.patch(
@@ -144,18 +122,6 @@ const Objectives = () => {
     setIsCreateModalOpen(true);
   };
 
-  // const handleCreateSubmit = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     const response = await axios.post(API_URL, currentObjective);
-  //     setObjectives([...objectives, response.data]);
-  //     setIsCreateModalOpen(false);
-  //     setCurrentObjective(null);
-  //     setSelectedTab(response.data.objectiveType);
-  //   } catch (error) {
-  //     console.error('Error creating objective:', error);
-  //   }
-  // };
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
@@ -221,10 +187,24 @@ const Objectives = () => {
 
   return (
     <div className="objectives">
-      <div className="header-row">
-        <h2>Objectives</h2>
+      <div className="header-row"
+      style={{ 
+        display: 'flex', 
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '20px',
+        gap: '20px'
+      }}
+      >
+        <h2 style={{ margin: 0 }}>Objectives</h2>
 
-        <div className="obj-toolbar">
+        <div className="obj-toolbar"
+         style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px'
+        }}
+        >
 
          <input
             type="text"
@@ -232,15 +212,23 @@ const Objectives = () => {
             value={searchTerm}
             onChange={handleSearch}
             style={{
-              padding: "12px 18px", // Adjust padding
-              margin: "10px", // Add margin
-              height: "40px", // Set height
-              width: "300px", // Set width
+              padding: "12px 18px",
+              height: "40px",
+              width: "300px",
               border: "2px solid #e0e0e0",
               borderRadius: "6px",
               fontSize: "14px",
               outline: "none",
               transition: "border-color 0.3s ease",
+              // padding: "12px 18px", // Adjust padding
+              // margin: "10px", // Add margin
+              // height: "40px", // Set height
+              // width: "300px", // Set width
+              // border: "2px solid #e0e0e0",
+              // borderRadius: "6px",
+              // fontSize: "14px",
+              // outline: "none",
+              // transition: "border-color 0.3s ease",
             }}
           />
 
@@ -249,10 +237,13 @@ const Objectives = () => {
           <button
             className="obj-filter-button"
             onClick={() => setIsFilterModalOpen(true)}
+            style={{ height: "40px" }}
           >
             Filter
           </button>
-          <button onClick={handleAdd} className="create-button">
+          <button onClick={handleAdd} className="create-button" 
+           style={{ height: "40px" }}
+           >
             Create
           </button>
         </div>

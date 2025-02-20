@@ -70,6 +70,7 @@ const LeaveRequests = () => {
     setAnchorEl(null);
   };
 
+
   const FilterMenu = styled(Menu)(({ theme }) => ({
     "& .MuiPaper-root": {
       borderRadius: 16,
@@ -354,10 +355,10 @@ const LeaveRequests = () => {
         }}
       />
 
-      <Box sx={{ display: "flex", gap: 1 }}>
+      <Box sx={{display: 'flex', gap: 1, position: 'relative' }}>
       <Button
   variant="outlined"
-  onClick={handleFilterClick}  // Changed from setFilterOpen
+  onClick={handleFilterClick}
   startIcon={<FilterList />}
   sx={{
     height: 40,
@@ -866,27 +867,29 @@ const LeaveRequests = () => {
 
 
       <FilterMenu
-  anchorEl={anchorEl}
-  open={Boolean(anchorEl)}
-  onClose={handleFilterClose}
-  anchorOrigin={{
-    vertical: 'bottom',
-    horizontal: 'left',
-  }}
-  transformOrigin={{
-    vertical: 'top',
-    horizontal: 'left',
-  }}
-  PaperProps={{
-    elevation: 3,
-    sx: {
-      mt: 1.5,
-      ml:0,
-      borderRadius: 2,
-      border: '1px solid',
-      borderColor: 'divider',
-    }
-  }}
+
+
+anchorEl={anchorEl}
+open={Boolean(anchorEl)}
+onClose={handleFilterClose}
+anchorOrigin={{
+  vertical: 'bottom',
+  horizontal: 'left',
+}}
+transformOrigin={{
+  vertical: 'top',
+  horizontal: 'left',
+}}
+sx={{
+  '& .MuiPaper-root': {
+    minWidth: 320,
+    mt: 1,
+    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+    borderRadius: 2
+  }
+}}
+  
+
 >
   <Box sx={{ width: 320, p: 2 }}>
     <Typography
@@ -920,7 +923,7 @@ const LeaveRequests = () => {
         <MenuItem value="">All Types</MenuItem>
         <MenuItem value="Annual Leave">Annual Leave</MenuItem>
         <MenuItem value="Sick Leave">Sick Leave</MenuItem>
-        <MenuItem value="Maladie">Personal Leave</MenuItem>
+        <MenuItem value="Personal Leave">Personal Leave</MenuItem>
       </TextField>
 
       <TextField
