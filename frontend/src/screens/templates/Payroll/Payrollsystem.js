@@ -102,7 +102,7 @@ const PayrollSystem = () => {
         </AppBar>
 
         <TabPanel value={tabIndex} index={0}>
-          <Stack className="header-stack">
+          <Box className="header-container">
             <Typography variant="h5" className="section-title">
               Allowance Management
               <span className="title-badge">{allowanceData.length} Total</span>
@@ -115,7 +115,7 @@ const PayrollSystem = () => {
             >
               Create Allowance
             </Button>
-          </Stack>
+          </Box>
           
           <TableContainer component={Paper} className="table-container">
             <Table>

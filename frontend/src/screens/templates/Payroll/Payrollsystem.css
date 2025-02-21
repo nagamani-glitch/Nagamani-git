@@ -57,7 +57,7 @@
     background-color: var(--background-light);
   }
   
-  .header-stack {
+  .header-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -94,6 +94,7 @@
     background: var(--primary-color) !important;
     box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2) !important;
     transition: all 0.3s ease !important;
+    margin-left: auto !important;
   }
   
   .create-button:hover {
@@ -148,6 +149,32 @@
     color: var(--text-primary);
   }
   
+  .action-cell {
+    display: flex;
+    gap: 24px !important;
+    justify-content: center;
+  }
+  
+  .edit-button, .delete-button {
+    padding: 8px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .edit-button {
+    background-color: rgba(37, 99, 235, 0.1) !important;
+    color: var(--primary-color) !important;
+  }
+  
+  .delete-button {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    color: var(--error-color) !important;
+  }
+  
+  .edit-button:hover, .delete-button:hover {
+    transform: scale(1.1);
+  }
+  
   .category-chip {
     padding: 6px 16px;
     border-radius: 20px;
@@ -180,32 +207,6 @@
   .status-chip.inactive {
     background-color: #fee2e2;
     color: #dc2626;
-  }
-  
-  .action-cell {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-  }
-  
-  .edit-button, .delete-button {
-    padding: 8px !important;
-    border-radius: 8px !important;
-    transition: all 0.2s ease !important;
-  }
-  
-  .edit-button {
-    background-color: rgba(37, 99, 235, 0.1) !important;
-    color: var(--primary-color) !important;
-  }
-  
-  .delete-button {
-    background-color: rgba(239, 68, 68, 0.1) !important;
-    color: var(--error-color) !important;
-  }
-  
-  .edit-button:hover, .delete-button:hover {
-    transform: scale(1.1);
   }
   
   .dialog-title {
@@ -252,13 +253,14 @@
   }
   
   @media (max-width: 1024px) {
-    .header-stack {
+    .header-container {
       flex-direction: column;
       gap: 16px;
     }
     
     .create-button {
       width: 100%;
+      margin-left: 0 !important;
     }
   }
   
