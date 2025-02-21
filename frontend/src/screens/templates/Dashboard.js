@@ -54,6 +54,7 @@ import Feedback from "./Performance/Feedback";
 import CreateFeedback from "./Performance/CreateFeedback";
 import ExitPage from "./Offboarding/ExitPage";
 import ResignationPage from "./Offboarding/ResignationPage";
+import PayrollSystem from "./Payroll/Payrollsystem";
 
 
 function Dashboard() {
@@ -134,6 +135,7 @@ function Dashboard() {
           <Route path="/create-feedback" element={<CreateFeedback />} />
           <Route path="/exit-process" element={<ExitPage />} />
           <Route path="/resignation-letter" element={<ResignationPage />} />
+          <Route path="/payroll-system" element={<PayrollSystem />} />
         </Routes>
       </div>
       <QuickActionButton onNavigate={handleNavigation} />

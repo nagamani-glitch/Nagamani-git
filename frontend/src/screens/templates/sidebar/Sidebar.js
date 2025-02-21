@@ -108,6 +108,7 @@ function Sidebar() {
         {activeMenu === 'payroll' && (
           <ul className="sub-menu">
             <li onClick={() => handleNavigation('/Dashboards/payroll-dashboard')}>Dashboard</li>
+            <li onClick={() => handleNavigation('/Dashboards/payroll-system')}>Payroll system</li>
             <li onClick={() => handleNavigation('/Dashboards/allowances')}>Allowances</li>
             <li onClick={() => handleNavigation('/Dashboards/contract')}>Contract</li>
             <li onClick={() => handleNavigation('/Dashboards/deductions')}>Deductions</li>
