@@ -10,20 +10,70 @@ const employeeRegisterSchema = new mongoose.Schema({
   location: String,  
   dob: Date,
   img: { type: String, required: true },
-  
-  personalInfo: {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    dob: { type: Date, required: true },
-    gender: { type: String, required: true },
-    maritalStatus: { type: String, required: true },
-    bloodGroup: { type: String, required: true },
-    nationality: { type: String, required: true },
-    aadharNumber: { type: String, required: true },
-    panNumber: { type: String, required: true },
-    mobileNumber: { type: String, required: true },
-    email: { type: String, required: true }
+
+
+  // Update the personalInfo section in employeeRegisterSchema
+personalInfo: {
+  prefix: { type: String, required: true, enum: ['Mr.', 'Ms.', 'Dr.'] },
+  firstName: { type: String, required: true, trim: true },
+  middleName: { type: String, trim: true },
+  lastName: { type: String, required: true, trim: true },
+  dob: { type: Date, required: true },
+  gender: { type: String, required: true, enum: ['Male', 'Female', 'Other'] },
+  maritalStatus: { type: String, required: true, enum: ['Single', 'Married', 'Divorced', 'Widowed'] },
+  bloodGroup: { type: String, required: true, enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] },
+  nationality: { type: String, required: true, trim: true },
+  aadharNumber: {
+    type: String,
+    required: true,
+    validate: {
+      validator: v => /^[0-9]{12}$/.test(v),
+      message: 'Aadhar number must be 12 digits'
+    }
   },
+  panNumber: {
+    type: String,
+    required: true,
+    validate: {
+      validator: v => /^[A-Z0-9]{10}$/.test(v),
+      message: 'PAN number must be 10 characters'
+    }
+  },
+  mobileNumber: {
+    type: String,
+    required: true,
+    validate: {
+      validator: v => /^[0-9]{10}$/.test(v),
+      message: 'Mobile number must be 10 digits'
+    }
+  },
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    validate: {
+      validator: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      message: 'Invalid email format'
+    }
+  },
+  employeeImage: { type: String, required: true }
+},
+
+  
+  // personalInfo: {
+  //   firstName: { type: String, required: true },
+  //   lastName: { type: String, required: true },
+  //   dob: { type: Date, required: true },
+  //   gender: { type: String, required: true },
+  //   maritalStatus: { type: String, required: true },
+  //   bloodGroup: { type: String, required: true },
+  //   nationality: { type: String, required: true },
+  //   aadharNumber: { type: String, required: true },
+  //   panNumber: { type: String, required: true },
+  //   mobileNumber: { type: String, required: true },
+  //   email: { type: String, required: true }
+  // },
 
   addressInfo: {
     presentAddress: { type: String, required: true },
