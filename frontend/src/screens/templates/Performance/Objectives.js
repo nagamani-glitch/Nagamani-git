@@ -1,5 +1,25 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Tooltip,
+  IconButton,
+  Typography,
+  Stack,
+} from "@mui/material";
+import { Edit, Delete, Search, FilterList, Add } from "@mui/icons-material";
+import Popover from "@mui/material/Popover";
+
 import "./Objectives.css";
 
 const API_URL = "http://localhost:5000/api/objectives";
@@ -20,6 +40,22 @@ const Objectives = () => {
   const [currentObjective, setCurrentObjective] = useState(null);
   const [showArchivedTable, setShowArchivedTable] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Add this inside your component, after the existing state declarations
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+
+  //  filter button click handler
+  const handleFilterClick = (event) => {
+    setFilterAnchorEl(event.currentTarget);
+    setIsFilterModalOpen(true);
+  };
+
+  // Add this new filter close handler
+  const handleFilterClose = () => {
+    setFilterAnchorEl(null);
+    setIsFilterModalOpen(false);
+  };
 
   useEffect(() => {
     loadObjectives();
@@ -122,7 +158,6 @@ const Objectives = () => {
     setIsCreateModalOpen(true);
   };
 
-
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -187,239 +222,526 @@ const Objectives = () => {
 
   return (
     <div className="objectives">
-      <div className="header-row"
-      style={{ 
-        display: 'flex', 
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '20px',
-        gap: '20px'
-      }}
-      >
-        <h2 style={{ margin: 0 }}>Objectives</h2>
-
-        <div className="obj-toolbar"
-         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px'
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+          padding: "24px 32px",
+          backgroundColor: "white",
+          borderRadius: "12px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+          marginBottom: "24px",
         }}
-        >
+      >
+        <Typography variant="h4" sx={{ fontWeight: 600, color: "#1976d2" }}>
+          Objectives
+        </Typography>
 
-         <input
-            type="text"
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            width: "100%",
+            justifyContent: "flex-end",
+          }}
+        >
+          <TextField
             placeholder="Search objectives..."
             value={searchTerm}
             onChange={handleSearch}
-            style={{
-              padding: "12px 18px",
-              height: "40px",
+            size="small"
+            sx={{
               width: "300px",
-              border: "2px solid #e0e0e0",
-              borderRadius: "6px",
-              fontSize: "14px",
-              outline: "none",
-              transition: "border-color 0.3s ease",
-              // padding: "12px 18px", // Adjust padding
-              // margin: "10px", // Add margin
-              // height: "40px", // Set height
-              // width: "300px", // Set width
-              // border: "2px solid #e0e0e0",
-              // borderRadius: "6px",
-              // fontSize: "14px",
-              // outline: "none",
-              // transition: "border-color 0.3s ease",
+              "& .MuiOutlinedInput-root": {
+                backgroundColor: "#f8fafc",
+                borderRadius: "8px",
+                "&:hover fieldset": {
+                  borderColor: "#1976d2",
+                },
+              },
+            }}
+            InputProps={{
+              startAdornment: <Search sx={{ color: "action.active", mr: 1 }} />,
             }}
           />
 
-        
-
-          <button
-            className="obj-filter-button"
+          {/* <Button
+            variant="outlined"
             onClick={() => setIsFilterModalOpen(true)}
-            style={{ height: "40px" }}
+            startIcon={<FilterList />}
+            sx={{
+              borderColor: "#1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                borderColor: "#1565c0",
+                backgroundColor: "#e3f2fd",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              height: "40px",
+            }}
           >
             Filter
-          </button>
-          <button onClick={handleAdd} className="create-button" 
-           style={{ height: "40px" }}
-           >
+          </Button> */}
+          <Button
+            variant="outlined"
+            onClick={handleFilterClick}
+            startIcon={<FilterList />}
+            sx={{
+              borderColor: "#1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                borderColor: "#1565c0",
+                backgroundColor: "#e3f2fd",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              height: "40px",
+            }}
+          >
+            Filter
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={handleAdd}
+            startIcon={<Add />}
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              height: "40px",
+              boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
+            }}
+          >
             Create
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Box>
+      </Box>
+
+      {/*** Create Modal ***/}
 
       {isCreateModalOpen && (
-        <div className="filter-modal">
-          <div className="filter-modal-content">
-            <h3 className="create-objective-heading">Create New Objective</h3>
-            <hr />
+        <Dialog
+          open={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              width: "600px",
+              borderRadius: "20px",
+              overflow: "hidden",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              color: "white",
+              fontSize: "1.5rem",
+              fontWeight: 600,
+              padding: "24px 32px",
+              zIndex: 1,
+              position: "relative",
+              marginBottom: "0",
+              marginTop: "0",
+            }}
+          >
+            Create New Objective
+          </DialogTitle>
+
+          <DialogContent
+            sx={{
+              padding: "32px",
+              backgroundColor: "f8fafc",
+              marginTop: "20px",
+            }}
+          >
             <form onSubmit={handleCreateSubmit}>
-              <div className="group">
-                <label>
-                  Title:
-                  <input
-                    type="text"
-                    name="title"
-                    value={currentObjective.title}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </label>
-                <label>
-                  Duration:
-                  <input
-                    type="text"
-                    name="duration"
-                    value={currentObjective.duration}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </label>
-              </div>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2.5,
+                  mt: 2,
+                }}
+              >
+                <TextField
+                  name="title"
+                  label="Title"
+                  value={currentObjective.title}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
 
-              <div className="group">
-                <label>
-                  Managers:
-                  <input
-                    type="text"
-                    name="managers"
-                    value={currentObjective.managers}
-                    onChange={handleInputChange}
-                  />
-                </label>
-                <label>
-                  Key Results:
-                  <input
-                    type="text"
-                    name="keyResults"
-                    value={currentObjective.keyResults}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
+                <TextField
+                  name="duration"
+                  label="Duration"
+                  value={currentObjective.duration}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
 
-              <div className="group">
-                <label>
-                  Objective Type:
-                  <select
+                <TextField
+                  name="managers"
+                  label="Managers"
+                  value={currentObjective.managers}
+                  onChange={handleInputChange}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+
+                <TextField
+                  name="keyResults"
+                  label="Key Results"
+                  value={currentObjective.keyResults}
+                  onChange={handleInputChange}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+
+                <FormControl fullWidth>
+                  <InputLabel>Objective Type</InputLabel>
+                  <Select
                     name="objectiveType"
                     value={currentObjective.objectiveType}
                     onChange={handleInputChange}
                     required
+                    sx={{
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    }}
                   >
-                    <option value="">Select Type</option>
-                    <option value="self">Self Objective</option>
-                    <option value="all">All Objective</option>
-                  </select>
-                </label>
-              </div>
+                    <MenuItem value="">Select Type</MenuItem>
+                    <MenuItem value="self">Self Objective</MenuItem>
+                    <MenuItem value="all">All Objective</MenuItem>
+                  </Select>
+                </FormControl>
 
-              <div className="group">
-                <label>
-                  Description:
-                  <textarea
-                    name="description"
-                    value={currentObjective.description}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </label>
-              </div>
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button type="submit">Create</button>
-                <button
-                  type="button"
+                <TextField
+                  name="description"
+                  label="Description"
+                  value={currentObjective.description}
+                  onChange={handleInputChange}
+                  required
+                  multiline
+                  rows={4}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Box>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: "10px",
+                  mt: 4,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <Button
                   onClick={() => setIsCreateModalOpen(false)}
+                  sx={{
+                    border: "2px solid #1976d2",
+                    color: "#1976d2",
+                    "&:hover": {
+                      border: "2px solid #64b5f6",
+                      backgroundColor: "#e3f2fd",
+                      color: "#1976d2",
+                    },
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    px: 3,
+                    fontWeight: 600,
+                  }}
                 >
                   Cancel
-                </button>
-              </div>
+                </Button>
+
+                <Button
+                  type="submit"
+                  sx={{
+                    background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                    color: "white",
+                    "&:hover": {
+                      background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                    },
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    px: 4,
+                    py: 1,
+                    fontWeight: 600,
+                  }}
+                >
+                  Create
+                </Button>
+              </Box>
             </form>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
+      {/*** Edit Modal ***/}
+
       {isEditModalOpen && (
-        <div className="filter-modal">
-          <div className="filter-modal-content">
-            <h3>Edit Objective</h3>
+        <Dialog
+          open={isEditModalOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              width: "600px",
+              borderRadius: "20px",
+              overflow: "hidden",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              color: "white",
+              fontSize: "1.5rem",
+              fontWeight: 600,
+              padding: "24px 32px",
+              zIndex: 1,
+              position: "relative",
+              marginBottom: "0",
+              marginTop: "100",
+            }}
+          >
+            Edit Objective
+          </DialogTitle>
+
+          <DialogContent
+            sx={{
+              padding: "32px",
+              backgroundColor: "#f8fafc",
+              marginTop: "20px",
+            }}
+          >
             <form onSubmit={handleEditSubmit}>
-              <div className="group">
-                <label>
-                  Title:
-                  <input
-                    type="text"
-                    name="title"
-                    value={currentObjective.title}
-                    onChange={handleInputChange}
-                  />
-                </label>
-                <label>
-                  Duration:
-                  <input
-                    type="text"
-                    name="duration"
-                    value={currentObjective.duration}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2.5,
+                  mt: 2,
+                }}
+              >
+                <TextField
+                  name="title"
+                  label="Title"
+                  value={currentObjective.title}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
 
-              <div className="group">
-                <label>
-                  Managers:
-                  <input
-                    type="text"
-                    name="managers"
-                    value={currentObjective.managers}
-                    onChange={handleInputChange}
-                  />
-                </label>
-                <label>
-                  Key Results:
-                  <input
-                    type="text"
-                    name="keyResults"
-                    value={currentObjective.keyResults}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
+                <TextField
+                  name="duration"
+                  label="Duration"
+                  value={currentObjective.duration}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
 
-              <div className="group">
-                <label>
-                  Objective Type:
-                  <select
+                <TextField
+                  name="managers"
+                  label="Managers"
+                  value={currentObjective.managers}
+                  onChange={handleInputChange}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+
+                <TextField
+                  name="keyResults"
+                  label="Key Results"
+                  value={currentObjective.keyResults}
+                  onChange={handleInputChange}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+
+                <FormControl fullWidth>
+                  <InputLabel>Objective Type</InputLabel>
+                  <Select
                     name="objectiveType"
                     value={currentObjective.objectiveType}
                     onChange={handleInputChange}
+                    required
+                    sx={{
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    }}
                   >
-                    <option value="self">Self Objective</option>
-                    <option value="all">All Objective</option>
-                  </select>
-                </label>
-              </div>
+                    <MenuItem value="self">Self Objective</MenuItem>
+                    <MenuItem value="all">All Objective</MenuItem>
+                  </Select>
+                </FormControl>
 
-              <div className="group">
-                <label>
-                  Description:
-                  <textarea
-                    name="description"
-                    value={currentObjective.description}
-                    onChange={handleInputChange}
-                  />
-                </label>
-              </div>
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button type="submit">Save Changes</button>
-                <button type="button" onClick={() => setIsEditModalOpen(false)}>
+                <TextField
+                  name="description"
+                  label="Description"
+                  value={currentObjective.description}
+                  onChange={handleInputChange}
+                  required
+                  multiline
+                  rows={4}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Box>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: "10px",
+                  mt: 4,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <Button
+                  onClick={() => setIsEditModalOpen(false)}
+                  sx={{
+                    border: "2px solid #1976d2",
+                    color: "#1976d2",
+                    "&:hover": {
+                      border: "2px solid #64b5f6",
+                      backgroundColor: "#e3f2fd",
+                      color: "#1976d2",
+                    },
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    px: 3,
+                    fontWeight: 600,
+                  }}
+                >
                   Cancel
-                </button>
-              </div>
+                </Button>
+
+                <Button
+                  type="submit"
+                  sx={{
+                    background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                    color: "white",
+                    "&:hover": {
+                      background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                    },
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    px: 4,
+                    py: 1,
+                    fontWeight: 600,
+                  }}
+                >
+                  Save Changes
+                </Button>
+              </Box>
             </form>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       <div className="tabs">
@@ -440,95 +762,289 @@ const Objectives = () => {
         </button>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Managers</th>
-            <th>Key Results</th>
-            <th>Assignees</th>
-            <th>Duration</th>
-            <th>Description</th>
-            <th>Type</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        
-        <tbody>
-          {filteredObjectives
-            .filter((obj) => !obj.archived)
-            .map((obj) => (
-              <tr key={obj._id}>
-                <td>{obj.title}</td>
-                <td>{obj.managers} Managers</td>
-                <td>{obj.keyResults} Key results</td>
-                <td>{obj.assignees} Assignees</td>
-                <td>{obj.duration}</td>
-                <td>{obj.description}</td>
-                <td>{obj.objectiveType}</td>
-                <td>
-                  <button onClick={() => handleEdit(obj)}>✎</button>
-                  <button onClick={() => handleArchive(obj._id)}>📥</button>
-                  <button onClick={() => handleDelete(obj._id)}>🗑️</button>
-                </td>
-              </tr>
-            ))}
-        </tbody>
+      <Box
+        sx={{
+          backgroundColor: "white",
+          borderRadius: "12px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+          overflow: "hidden",
+          margin: "24px 32px",
+        }}
+      >
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "14px",
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                backgroundColor: "#f8fafc",
+                borderBottom: "2px solid #e2e8f0",
+              }}
+            >
+              <th
+                style={{
+                  padding: "16px",
+                  textAlign: "left",
+                  color: "#475569",
+                  fontWeight: 600,
+                }}
+              >
+                Title
+              </th>
+              <th
+                style={{
+                  padding: "16px",
+                  textAlign: "left",
+                  color: "#475569",
+                  fontWeight: 600,
+                }}
+              >
+                Managers
+              </th>
+              <th
+                style={{
+                  padding: "16px",
+                  textAlign: "left",
+                  color: "#475569",
+                  fontWeight: 600,
+                }}
+              >
+                Key Results
+              </th>
+              <th
+                style={{
+                  padding: "16px",
+                  textAlign: "left",
+                  color: "#475569",
+                  fontWeight: 600,
+                }}
+              >
+                Assignees
+              </th>
+              <th
+                style={{
+                  padding: "16px",
+                  textAlign: "left",
+                  color: "#475569",
+                  fontWeight: 600,
+                }}
+              >
+                Duration
+              </th>
+              <th
+                style={{
+                  padding: "16px",
+                  textAlign: "left",
+                  color: "#475569",
+                  fontWeight: 600,
+                }}
+              >
+                Description
+              </th>
+              <th
+                style={{
+                  padding: "16px",
+                  textAlign: "left",
+                  color: "#475569",
+                  fontWeight: 600,
+                }}
+              >
+                Type
+              </th>
+              <th
+                style={{
+                  padding: "16px",
+                  textAlign: "left",
+                  color: "#475569",
+                  fontWeight: 600,
+                }}
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredObjectives
+              .filter((obj) => !obj.archived)
+              .map((obj) => (
+                <tr
+                  key={obj._id}
+                  style={{
+                    borderBottom: "1px solid #e2e8f0",
+                    "&:hover": {
+                      backgroundColor: "#f8fafc",
+                    },
+                  }}
+                >
+                  <td style={{ padding: "16px" }}>{obj.title}</td>
+                  <td style={{ padding: "16px" }}>{obj.managers} Managers</td>
+                  <td style={{ padding: "16px" }}>
+                    {obj.keyResults} Key results
+                  </td>
+                  <td style={{ padding: "16px" }}>{obj.assignees} Assignees</td>
+                  <td style={{ padding: "16px" }}>{obj.duration}</td>
+                  <td style={{ padding: "16px" }}>{obj.description}</td>
+                  <td style={{ padding: "16px" }}>{obj.objectiveType}</td>
+                  <td style={{ padding: "16px" }}>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <Tooltip title="Edit">
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleEdit(obj)}
+                          size="small"
+                          sx={{
+                            backgroundColor: "info.lighter",
+                            "&:hover": { backgroundColor: "info.light" },
+                          }}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <button onClick={() => handleArchive(obj._id)}>📥</button>
 
-
-      </table>
-
-      {/* {showArchivedTable && (
-        <div className="archived-objectives">
-          <h3>Archived Objectives</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Managers</th>
-                <th>Key Results</th>
-                <th>Assignees</th>
-                <th>Duration</th>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {objectives.filter(obj => obj.archived).map(obj => (
-                <tr key={obj.id}>
-                  <td>{obj.title}</td>
-                  <td>{obj.managers} Managers</td>
-                  <td>{obj.keyResults} Key results</td>
-                  <td>{obj.assignees} Assignees</td>
-                  <td>{obj.duration}</td>
-                  <td>{obj.description}</td>
-                  <td>{obj.objectiveType}</td>
-                  <td>
-                    <button onClick={() => handleArchive(obj.id)}>🔄</button>
-                    <button onClick={() => handleDelete(obj.id)}>🗑️</button>
+                      <Tooltip title="Delete">
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDelete(obj._id)}
+                          size="small"
+                          sx={{
+                            backgroundColor: "error.lighter",
+                            "&:hover": { backgroundColor: "error.light" },
+                          }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </div>
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )} */}
+          </tbody>
+        </table>
+      </Box>
+
+      {/* Archive tABLE */}
 
       {showArchivedTable && (
-        <div className="archived-objectives">
-          <h3>Archived Objectives</h3>
-          <table>
+        <Box
+          sx={{
+            backgroundColor: "white",
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+            overflow: "hidden",
+            margin: "24px 32px",
+          }}
+        >
+          <Typography
+            variant="h5"
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              color: "white",
+              padding: "16px 24px",
+              fontWeight: 600,
+            }}
+          >
+            Archived Objectives
+          </Typography>
+
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "14px",
+            }}
+          >
             <thead>
-              <tr>
-                <th>Title</th>
-                <th>Managers</th>
-                <th>Key Results</th>
-                <th>Assignees</th>
-                <th>Duration</th>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Actions</th>
+              <tr
+                style={{
+                  backgroundColor: "#f8fafc",
+                  borderBottom: "2px solid #e2e8f0",
+                }}
+              >
+                <th
+                  style={{
+                    padding: "16px",
+                    textAlign: "left",
+                    color: "#475569",
+                    fontWeight: 600,
+                  }}
+                >
+                  Title
+                </th>
+                <th
+                  style={{
+                    padding: "16px",
+                    textAlign: "left",
+                    color: "#475569",
+                    fontWeight: 600,
+                  }}
+                >
+                  Managers
+                </th>
+                <th
+                  style={{
+                    padding: "16px",
+                    textAlign: "left",
+                    color: "#475569",
+                    fontWeight: 600,
+                  }}
+                >
+                  Key Results
+                </th>
+                <th
+                  style={{
+                    padding: "16px",
+                    textAlign: "left",
+                    color: "#475569",
+                    fontWeight: 600,
+                  }}
+                >
+                  Assignees
+                </th>
+                <th
+                  style={{
+                    padding: "16px",
+                    textAlign: "left",
+                    color: "#475569",
+                    fontWeight: 600,
+                  }}
+                >
+                  Duration
+                </th>
+                <th
+                  style={{
+                    padding: "16px",
+                    textAlign: "left",
+                    color: "#475569",
+                    fontWeight: 600,
+                  }}
+                >
+                  Description
+                </th>
+                <th
+                  style={{
+                    padding: "16px",
+                    textAlign: "left",
+                    color: "#475569",
+                    fontWeight: 600,
+                  }}
+                >
+                  Type
+                </th>
+                <th
+                  style={{
+                    padding: "16px",
+                    textAlign: "left",
+                    color: "#475569",
+                    fontWeight: 600,
+                  }}
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
 
@@ -536,92 +1052,241 @@ const Objectives = () => {
               {objectives
                 .filter((obj) => obj.archived)
                 .map((obj) => (
-                  <tr key={obj._id}>
-                    <td>{obj.title}</td>
-                    <td>{obj.managers} Managers</td>
-                    <td>{obj.keyResults} Key results</td>
-                    <td>{obj.assignees} Assignees</td>
-                    <td>{obj.duration}</td>
-                    <td>{obj.description}</td>
-                    <td>{obj.objectiveType}</td>
-                    <td>
-                      <button onClick={() => handleArchive(obj._id)}>🔄</button>
-                      <button onClick={() => handleDelete(obj._id)}>🗑️</button>
+                  <tr
+                    key={obj._id}
+                    style={{
+                      borderBottom: "1px solid #e2e8f0",
+                      "&:hover": {
+                        backgroundColor: "#f8fafc",
+                      },
+                    }}
+                  >
+                    <td style={{ padding: "16px" }}>{obj.title}</td>
+                    <td style={{ padding: "16px" }}>{obj.managers} Managers</td>
+                    <td style={{ padding: "16px" }}>
+                      {obj.keyResults} Key results
+                    </td>
+                    <td style={{ padding: "16px" }}>
+                      {obj.assignees} Assignees
+                    </td>
+                    <td style={{ padding: "16px" }}>{obj.duration}</td>
+                    <td style={{ padding: "16px" }}>{obj.description}</td>
+                    <td style={{ padding: "16px" }}>{obj.objectiveType}</td>
+                    <td style={{ padding: "16px" }}>
+                      <Box sx={{ display: "flex", gap: "8px" }}>
+                        <Tooltip title="Unarchive">
+                          <IconButton
+                            onClick={() => handleArchive(obj._id)}
+                            size="small"
+                            sx={{
+                              backgroundColor: "info.lighter",
+                              "&:hover": { backgroundColor: "info.light" },
+                            }}
+                          >
+                            {/* <FilterList fontSize="small" /> */}
+                            <button onClick={() => handleArchive(obj._id)}>
+                              🔄
+                            </button>
+                          </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title="Delete">
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDelete(obj._id)}
+                            size="small"
+                            sx={{
+                              backgroundColor: "error.lighter",
+                              "&:hover": { backgroundColor: "error.light" },
+                            }}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </td>
                   </tr>
                 ))}
-
             </tbody>
-
           </table>
-        </div>
+        </Box>
       )}
 
       {isFilterModalOpen && (
-        <div className="filter-modal">
-          <div className="filter-modal-content">
-            <h3>Filter Objectives</h3>
-            <div className="group">
-              <label>
-                Managers:
-                <input
-                  type="text"
-                  value={filter.managers}
-                  onChange={(e) =>
-                    handleFilterChange("managers", e.target.value)
-                  }
-                />
-              </label>
-              <label>
-                Assignees:
-                <input
-                  type="text"
-                  value={filter.assignees}
-                  onChange={(e) =>
-                    handleFilterChange("assignees", e.target.value)
-                  }
-                />
-              </label>
-            </div>
-            <div className="group">
-              <label>
-                Key Results:
-                <input
-                  type="number"
-                  value={filter.keyResults}
-                  onChange={(e) =>
-                    handleFilterChange("keyResults", e.target.value)
-                  }
-                />
-              </label>
-              <label>
-                Duration:
-                <input
-                  type="text"
-                  value={filter.duration}
-                  onChange={(e) =>
-                    handleFilterChange("duration", e.target.value)
-                  }
-                />
-              </label>
-            </div>
-            <label>
-              Archived:
-              <select
+        <Popover
+          open={Boolean(filterAnchorEl)}
+          anchorEl={filterAnchorEl}
+          onClose={handleFilterClose}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
+          PaperProps={{
+            sx: {
+              width: "400px",
+              borderRadius: "16px",
+              mt: 1,
+              overflow: "hidden",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+            },
+          }}
+        >
+          <Box
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              color: "white",
+              p: 3,
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Filter Objectives
+            </Typography>
+          </Box>
+
+          <Box sx={{ p: 3 }}>
+            <Stack spacing={3}>
+              <Select
+                value={filter.managers}
+                onChange={(e) => handleFilterChange("managers", e.target.value)}
+                fullWidth
+                displayEmpty
+                sx={{
+                  height: "56px",
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#e0e7ff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#1976d2",
+                  },
+                }}
+                renderValue={(selected) => selected || "Select Managers"}
+              >
+                <MenuItem value="">All Managers</MenuItem>
+                <MenuItem value="1">1 Manager</MenuItem>
+                <MenuItem value="2">2 Managers</MenuItem>
+                <MenuItem value="3">3 Managers</MenuItem>
+              </Select>
+
+              <Select
+                value={filter.assignees}
+                onChange={(e) =>
+                  handleFilterChange("assignees", e.target.value)
+                }
+                fullWidth
+                displayEmpty
+                sx={{
+                  height: "56px",
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#e0e7ff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#1976d2",
+                  },
+                }}
+                renderValue={(selected) => selected || "Select Assignees"}
+              >
+                <MenuItem value="">All Assignees</MenuItem>
+                <MenuItem value="1">1 Assignee</MenuItem>
+                <MenuItem value="2">2 Assignees</MenuItem>
+                <MenuItem value="3">3 Assignees</MenuItem>
+              </Select>
+
+              <Select
+                value={filter.keyResults}
+                onChange={(e) =>
+                  handleFilterChange("keyResults", e.target.value)
+                }
+                fullWidth
+                displayEmpty
+                sx={{
+                  height: "56px",
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#e0e7ff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#1976d2",
+                  },
+                }}
+                renderValue={(selected) => selected || "Select Key Results"}
+              >
+                <MenuItem value="">All Results</MenuItem>
+                <MenuItem value="1">1 Result</MenuItem>
+                <MenuItem value="2">2 Results</MenuItem>
+                <MenuItem value="3">3 Results</MenuItem>
+              </Select>
+
+              <Select
                 value={filter.archived}
                 onChange={(e) => handleFilterChange("archived", e.target.value)}
+                fullWidth
+                displayEmpty
+                sx={{
+                  height: "56px",
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#e0e7ff",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#1976d2",
+                  },
+                }}
+                renderValue={(selected) => selected || "Archive Status"}
               >
-                <option value="">All</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </label>
-            <div style={{ display: "flex", marginRight: "20px" }}>
-              <button onClick={applyFilter}>Apply</button>
-              <button onClick={resetFilter}>Reset</button>
-            </div>
-          </div>
-        </div>
+                <MenuItem value="">All Status</MenuItem>
+                <MenuItem value="true">Archived</MenuItem>
+                <MenuItem value="false">Not Archived</MenuItem>
+              </Select>
+            </Stack>
+
+            <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
+              <Button
+                fullWidth
+                onClick={resetFilter}
+                sx={{
+                  border: "2px solid #1976d2",
+                  color: "#1976d2",
+                  "&:hover": {
+                    border: "2px solid #64b5f6",
+                    backgroundColor: "#e3f2fd",
+                  },
+                  borderRadius: "8px",
+                  py: 1,
+                  fontWeight: 600,
+                }}
+              >
+                Clear All
+              </Button>
+
+              <Button
+                fullWidth
+                onClick={applyFilter}
+                sx={{
+                  background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                  color: "white",
+                  "&:hover": {
+                    background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                  },
+                  borderRadius: "8px",
+                  py: 1,
+                  fontWeight: 600,
+                }}
+              >
+                Apply Filters
+              </Button>
+            </Stack>
+          </Box>
+        </Popover>
       )}
     </div>
   );
