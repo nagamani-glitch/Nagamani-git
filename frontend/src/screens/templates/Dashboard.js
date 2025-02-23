@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import Sidebar from './sidebar/Sidebar';
 import { useSidebar } from "../../Context";
 import QuickActionButton from './QuickActionButton';
+import TimesheetDashboard from '../../components/TimesheetDashboard';
 import "./Dashboard.css";
 import axios from 'axios';
 
@@ -82,6 +83,7 @@ function Dashboard() {
       <div className="main-content">
         <Routes>
           <Route path="/" element={<MainDashboard />} />
+          <Route path="/timesheet" element={<TimesheetDashboard />} />
           <Route path="/onboarding-view" element={<OnboardingView />} />
           <Route path="/onboarding-form" element={<OnboardingForms />} />
           <Route path="/recruitment-dashboard" element={<RecruitmentDashboard />} />

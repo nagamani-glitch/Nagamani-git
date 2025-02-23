@@ -27,7 +27,7 @@ import shiftRequestRoutes from './routes/shiftRequestRoutes.js';
 import workTypeRequestRoutes from './routes/workTypeRequestRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 import hiredEmployeeRoutes from './routes/hiredEmployeeRoutes.js';
-
+import timesheetRoutes from './routes/timesheetRoutes.js';
 
 
 
@@ -116,7 +116,7 @@ app.use('/api/faqCategories', faqCategoryRoutes);
 app.use('/api/hired-employees', hiredEmployeeRoutes);
 app.use('/api/shift-request', shiftRequestRoutes);
 app.use('/api/work-type-requests', workTypeRequestRoutes);
-
+app.use('/api/timesheet', timesheetRoutes);
 
 
  
