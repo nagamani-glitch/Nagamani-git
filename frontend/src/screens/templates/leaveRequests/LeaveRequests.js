@@ -34,10 +34,8 @@ import { Stack } from "@mui/material";
 const API_URL = "http://localhost:5000/api/leave-requests";
 
 const LeaveRequests = () => {
-  // Add this state for anchor element
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [leaveData, setLeaveData] = useState([]);
-  // const [isFilterOpen, setFilterOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
