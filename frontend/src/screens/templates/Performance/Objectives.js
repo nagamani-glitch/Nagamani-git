@@ -245,6 +245,7 @@ const Objectives = () => {
             gap: "16px",
             width: "100%",
             justifyContent: "flex-end",
+            position: "relative",
           }}
         >
           <TextField
@@ -266,25 +267,6 @@ const Objectives = () => {
               startAdornment: <Search sx={{ color: "action.active", mr: 1 }} />,
             }}
           />
-
-          {/* <Button
-            variant="outlined"
-            onClick={() => setIsFilterModalOpen(true)}
-            startIcon={<FilterList />}
-            sx={{
-              borderColor: "#1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                borderColor: "#1565c0",
-                backgroundColor: "#e3f2fd",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              height: "40px",
-            }}
-          >
-            Filter
-          </Button> */}
           <Button
             variant="outlined"
             onClick={handleFilterClick}
@@ -1132,6 +1114,8 @@ const Objectives = () => {
               mt: 1,
               overflow: "hidden",
               boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+              position: "relative", // Added position relative
+              zIndex: 1300, // Added higher z-index
             },
           }}
         >
@@ -1288,6 +1272,9 @@ const Objectives = () => {
           </Box>
         </Popover>
       )}
+
+
+      
     </div>
   );
 };
