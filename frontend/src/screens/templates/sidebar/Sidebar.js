@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartPie,
+  faChartBar,
   faClockRotateLeft,
   faBullseye,
   faRocket,
@@ -106,6 +107,18 @@ function Sidebar() {
             </li>
             <li onClick={() => handleNavigation("/Dashboards/onboarding-form")}>
               Onboarding Form
+            </li>
+          </ul>
+        )}
+
+        <li onClick={() => handleMainClick("reports")}>
+          <FontAwesomeIcon icon={faChartBar} />
+          <span>Reports</span>
+        </li>
+        {activeMenu === "reports" && (
+          <ul className="sub-menu">
+            <li onClick={() => handleNavigation("/Dashboards/employee-report")}>
+              Employee Report
             </li>
           </ul>
         )}
