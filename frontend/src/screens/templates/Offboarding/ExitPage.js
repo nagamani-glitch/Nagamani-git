@@ -166,7 +166,8 @@ const ExitPage = () => {
             variant="h4"
             sx={{
               fontWeight: 600,
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              // background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              background: '#1976d2',
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}

@@ -4,8 +4,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import SearchIcon from '@mui/icons-material/Search';
-import { IconButton, InputAdornment, TextField, Box, Typography, Container, Paper } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent,TableCell, Chip, TableHead, TableRow, TableBody, Table,IconButton, InputAdornment, TextField, Box, Typography, Container, Paper, Stack, Button } from '@mui/material';
 import { motion } from 'framer-motion';
+import { Search, Add, Edit, Delete, Close } from '@mui/icons-material';
+
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -105,232 +107,305 @@ function AssetBatch() {
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: 3, borderRadius: 2, backgroundColor: '#ffffff' }}>
-        <Typography 
-          variant="h4" 
-          align="center" 
-          sx={{ 
-            mb: 4, 
-            fontWeight: 600,
-            color: '#1a1a1a' 
-          }}
-        >
-          Asset Batch
-        </Typography>
 
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 2, 
-          mb: 4,
-          alignItems: 'center',
-          justifyContent: 'space-between'
+
+<Box sx={{
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    padding: '24px 32px',
+    marginBottom: '24px'
+}}>
+    <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography variant="h4" sx={{ 
+            fontWeight: 600, 
+            // background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+            background: "#1976d2",
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
         }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search asset batch..."
-            value={searchQuery}
-            onChange={handleSearch}
-            sx={{
-              maxWidth: '70%',
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                '&:hover fieldset': {
-                  borderColor: '#3b82f6',
-                },
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: '#6b7280' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <IconButton
-              onClick={() => {
-                setFormData({ batchNumber: '', description: '', numberOfAssets: '' });
-                setShowForm(true);
-                setIsEditing(false);
-              }}
-              sx={{
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                borderRadius: 2,
-                px: 3,
-                py: 1,
-                '&:hover': {
-                  backgroundColor: '#2563eb',
-                },
-                display: 'flex',
-                gap: 1,
-                alignItems: 'center'
-              }}
+            Asset Batch
+        </Typography>
+        
+        <Stack direction="row" spacing={2} alignItems="center">
+            <TextField 
+                placeholder="Search asset batch..." 
+                value={searchQuery}
+                onChange={handleSearch}
+                size="small"
+                sx={{
+                    width: '300px',
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        '&:hover fieldset': {
+                            borderColor: '#1976d2',
+                        }
+                    }
+                }}
+                InputProps={{
+                    startAdornment: <Search sx={{ color: 'action.active', mr: 1 }} />
+                }}
+            />
+            
+            <Button
+                onClick={() => {
+                    setFormData({ batchNumber: '', description: '', numberOfAssets: '' });
+                    setShowForm(true);
+                    setIsEditing(false);
+                }}
+                startIcon={<Add />}
+                sx={{
+                    background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+                    color: 'white',
+                    '&:hover': {
+                        background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+                    },
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    height: '40px',
+                    boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)'
+                }}
+                variant="contained"
             >
-              <AddCircleIcon />
-              <Typography sx={{ ml: 1 }}>Create Asset Batch</Typography>
-            </IconButton>
-          </motion.div>
-        </Box>
+                Create Batch
+            </Button>
+        </Stack>
+    </Stack>
+</Box>
+
 
         <Paper elevation={1} sx={{ overflow: 'auto' }}>
-          <Box sx={{ minWidth: 800 }}>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <table style={{ 
-                width: '100%', 
-                borderCollapse: 'separate', 
-                borderSpacing: '0 8px' 
-              }}>
-                <thead>
-                  <tr>
-                    <th style={{ 
-                      padding: '16px', 
-                      backgroundColor: '#f1f5f9',
-                      color: '#475569',
-                      fontWeight: 600,
-                      textAlign: 'left',
-                      borderBottom: '2px solid #e2e8f0'
-                    }}>Batch Number</th>
-                    <th style={{ padding: '16px', backgroundColor: '#f1f5f9', textAlign: 'left' }}>Description</th>
-                    <th style={{ padding: '16px', backgroundColor: '#f1f5f9', textAlign: 'left' }}>Number of Assets</th>
-                    <th style={{ padding: '16px', backgroundColor: '#f1f5f9', textAlign: 'center' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assetBatches.map((batch) => (
-                    <motion.tr
-                      key={batch._id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      whileHover={{ backgroundColor: '#f1f5f9' }}
-                      style={{ transition: 'background-color 0.2s' }}
-                    >
-                      <td style={{ padding: '16px' }}>{batch.batchNumber}</td>
-                      <td style={{ padding: '16px' }}>{batch.description}</td>
-                      <td style={{ padding: '16px' }}>{batch.numberOfAssets}</td>
-                      <td style={{ 
-                        padding: '16px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        gap: '8px'
-                      }}>
-                        <IconButton
-                          onClick={() => handleEdit(batch)}
-                          sx={{
-                            backgroundColor: '#3b82f6',
-                            color: '#ffffff',
-                            '&:hover': { backgroundColor: '#2563eb' }
-                          }}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => handleDelete(batch._id)}
-                          sx={{
-                            backgroundColor: '#ef4444',
-                            color: '#ffffff',
-                            '&:hover': { backgroundColor: '#dc2626' }
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </motion.div>
-          </Box>
+        
+
+<Box sx={{
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    overflow: 'hidden',
+    margin: '24px 0'
+}}>
+    <Table sx={{ minWidth: 650 }}>
+        <TableHead>
+            <TableRow sx={{ backgroundColor: '#f8fafc' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>Batch Number</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>Description</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>Number of Assets</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600, color: '#475569', py: 2 }}>Actions</TableCell>
+            </TableRow>
+        </TableHead>
+        <TableBody>
+            {assetBatches.map((batch) => (
+                <TableRow 
+                    key={batch._id}
+                    sx={{ 
+                        '&:hover': { backgroundColor: '#f8fafc' },
+                        transition: 'background-color 0.2s ease'
+                    }}
+                >
+                    <TableCell sx={{ color: '#d013d1', fontWeight: 500 }}>
+                        {batch.batchNumber}
+                    </TableCell>
+                    <TableCell sx={{ 
+                        color: '#64748b',
+                        maxWidth: '400px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                    }}>
+                        {batch.description}
+                    </TableCell>
+                    <TableCell sx={{ 
+                        color: '#64748b',
+                        maxWidth: '400px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                    }}>
+                        {batch.numberOfAssets}
+                    </TableCell>
+                    {/* <TableCell>
+                        <Chip 
+                            label={`${batch.numberOfAssets} Assets`}
+                            variant="outlined"
+                            size="small"
+                            sx={{ 
+                                fontWeight: 500,
+                                borderColor: '#e2e8f0',
+                                color: '#2563eb',
+                                backgroundColor: '#f0f7ff'
+                            }}
+                        />
+                    </TableCell> */}
+                    <TableCell>
+                        <Stack direction="row" spacing={1} justifyContent="center">
+                            <IconButton 
+                                onClick={() => handleEdit(batch)}
+                                size="small"
+                                sx={{ 
+                                    color: '#1976d2',
+                                    '&:hover': { 
+                                        backgroundColor: '#e3f2fd',
+                                        transform: 'translateY(-1px)'
+                                    },
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                <Edit fontSize="small" />
+                            </IconButton>
+                            <IconButton 
+                                onClick={() => handleDelete(batch._id)}
+                                size="small"
+                                sx={{ 
+                                    color: '#ef4444',
+                                    '&:hover': { 
+                                        backgroundColor: '#fee2e2',
+                                        transform: 'translateY(-1px)'
+                                    },
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                <Delete fontSize="small" />
+                            </IconButton>
+                        </Stack>
+                    </TableCell>
+                </TableRow>
+            ))}
+        </TableBody>
+    </Table>
+</Box>
+
         </Paper>
 
-        {showForm && (
-          <Box sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <Paper sx={{
-              p: 3,
-              borderRadius: 2,
-              width: '400px',
-              backgroundColor: '#ffffff'
-            }}>
-              <form onSubmit={handleCreateBatch}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  {isEditing ? 'Edit Asset Batch' : 'Create Asset Batch'}
-                </Typography>
-                
-                <TextField
-                  fullWidth
-                  label="Batch Number"
-                  name="batchNumber"
-                  value={formData.batchNumber}
-                  onChange={handleInputChange}
-                  required
-                  sx={{ mb: 2 }}
-                />
+      
 
-                <TextField
-                  fullWidth
-                  label="Description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  required
-                  sx={{ mb: 2 }}
-                />
+<Dialog 
+    open={showForm} 
+    maxWidth="md"
+    fullWidth
+    PaperProps={{
+        sx: {
+            width: '700px',
+            maxWidth: '90vw',
+            borderRadius: '20px',
+            overflow: 'hidden'
+        }
+    }}
+>
+    <DialogTitle
+        sx={{
+            background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+            color: 'white',
+            fontSize: '1.5rem',
+            fontWeight: 600,
+            padding: '24px 32px',
+            position: 'relative'
+        }}
+    >
+        {isEditing ? 'Edit Asset Batch' : 'Create Asset Batch'}
+        <IconButton
+            onClick={() => setShowForm(false)}
+            sx={{
+                position: 'absolute',
+                right: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'white'
+            }}
+        >
+            <Close />
+        </IconButton>
+    </DialogTitle>
 
+    <DialogContent sx={{ padding: '32px' }}>
+        <form onSubmit={handleCreateBatch}>
+            <Stack spacing={3} sx={{mt:2}}>
                 <TextField
-                  fullWidth
-                  type="number"
-                  label="Number of Assets"
-                  name="numberOfAssets"
-                  value={formData.numberOfAssets}
-                  onChange={handleInputChange}
-                  required
-                  sx={{ mb: 3 }}
-                />
-
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                  <IconButton
-                    onClick={() => setShowForm(false)}
+                    label="Batch Number"
+                    name="batchNumber"
+                    value={formData.batchNumber}
+                    onChange={handleInputChange}
+                    required
+                    fullWidth
                     sx={{
-                      backgroundColor: '#e5e7eb',
-                      color: '#374151',
-                      '&:hover': { backgroundColor: '#d1d5db' }
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px'
+                        }
                     }}
-                  >
-                    Cancel
-                  </IconButton>
-                  <IconButton
-                    type="submit"
+                />
+
+                <TextField
+                    label="Description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    fullWidth
+                    multiline
+                    rows={3}
                     sx={{
-                      backgroundColor: '#3b82f6',
-                      color: '#ffffff',
-                      '&:hover': { backgroundColor: '#2563eb' }
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px'
+                        }
                     }}
-                  >
-                    {isEditing ? 'Update' : 'Submit'}
-                  </IconButton>
-                </Box>
-              </form>
-            </Paper>
-          </Box>
-        )}
+                />
+
+                <TextField
+                    label="Number of Assets"
+                    name="numberOfAssets"
+                    type="number"
+                    value={formData.numberOfAssets}
+                    onChange={handleInputChange}
+                    required
+                    fullWidth
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px'
+                        }
+                    }}
+                />
+
+                <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 4 }}>
+                    <Button
+                        onClick={() => setShowForm(false)}
+                        sx={{
+                            border: '2px solid #1976d2',
+                            color: '#1976d2',
+                            '&:hover': {
+                                border: '2px solid #64b5f6',
+                                backgroundColor: '#e3f2fd',
+                            },
+                            borderRadius: '8px',
+                            px: 4,
+                            py: 1,
+                            fontWeight: 600
+                        }}
+                    >
+                        Cancel
+                    </Button>
+
+                    <Button
+                        type="submit"
+                        sx={{
+                            background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+                            color: 'white',
+                            '&:hover': {
+                                background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+                            },
+                            borderRadius: '8px',
+                            px: 4,
+                            py: 1,
+                            fontWeight: 600
+                        }}
+                    >
+                        {isEditing ? 'Update' : 'Save'}
+                    </Button>
+                </Stack>
+            </Stack>
+        </form>
+    </DialogContent>
+</Dialog>
+
       </Paper>
     </Container>
   );

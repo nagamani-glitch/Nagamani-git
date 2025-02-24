@@ -13,6 +13,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { Box, Typography, Grid } from '@mui/material';
+
 
 // Register the components
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -74,32 +76,161 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="dashboard">
-      {error && <div className="error-message">{error}</div>}
 
-      <div className="dashboard-stats">
-        <div className="stat-card">
-          <h3>Assets</h3>
-          <p>{totalAssets}</p>
-        </div>
-        <div className="stat-card">
-          <h3>Assets in Use</h3>
-          <p>{assetsInUse}</p>
-        </div>
-      </div>
-
-      <div className="charts">
-        <div className="chart-container">
-          <h3>Asset Status Distribution</h3>
-          {statusData.length ? <Pie data={statusChartData} /> : <p>Loading status data...</p>}
-        </div>
-
-        <div className="chart-container">
-          <h3>Assets by Category</h3>
-          {categoryData.length ? <Bar data={categoryChartData} /> : <p>Loading category data...</p>}
-        </div>
-      </div>
-    </div>
+    <Box sx={{
+      padding: '24px',
+      backgroundColor: '#f8fafc'
+  }}>
+      {/* Header Section */}
+      <Typography variant="h4" sx={{ 
+          fontWeight: 600, 
+          color: '#1976d2',
+          background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          mb: 4
+      }}>
+          Asset Dashboard
+      </Typography>
+  
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6}>
+              <Box sx={{
+                  backgroundColor: 'white',
+                  borderRadius: '16px',
+                  padding: '24px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                  height: '100%'
+              }}>
+                  <Typography variant="h6" sx={{ color: '#64748b', mb: 1 }}>
+                      Total Assets
+                  </Typography>
+                  <Typography variant="h3" sx={{ 
+                      color: '#1976d2',
+                      fontWeight: 600 
+                  }}>
+                      {totalAssets}
+                  </Typography>
+              </Box>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+              <Box sx={{
+                  backgroundColor: 'white',
+                  borderRadius: '16px',
+                  padding: '24px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                  height: '100%'
+              }}>
+                  <Typography variant="h6" sx={{ color: '#64748b', mb: 1 }}>
+                      Assets in Use
+                  </Typography>
+                  <Typography variant="h3" sx={{ 
+                      color: '#1976d2',
+                      fontWeight: 600 
+                  }}>
+                      {assetsInUse}
+                  </Typography>
+              </Box>
+          </Grid>
+      </Grid>
+  
+      {/* Charts Section */}
+      <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+              <Box sx={{
+                  backgroundColor: 'white',
+                  borderRadius: '16px',
+                  padding: '24px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                  height: '100%'
+              }}>
+                  <Typography variant="h6" sx={{ 
+                      color: '#475569',
+                      mb: 3,
+                      fontWeight: 600
+                  }}>
+                      Asset Status Distribution
+                  </Typography>
+                  {statusData.length ? (
+                      <Box sx={{ height: 300 }}>
+                          <Pie 
+                              data={statusChartData}
+                              options={{
+                                  responsive: true,
+                                  maintainAspectRatio: false,
+                                  plugins: {
+                                      legend: {
+                                          position: 'bottom',
+                                          labels: {
+                                              padding: 20,
+                                              usePointStyle: true
+                                          }
+                                      }
+                                  }
+                              }}
+                          />
+                      </Box>
+                  ) : (
+                      <Typography sx={{ color: '#64748b', textAlign: 'center' }}>
+                          Loading status data...
+                      </Typography>
+                  )}
+              </Box>
+          </Grid>
+          <Grid item xs={12} md={6}>
+              <Box sx={{
+                  backgroundColor: 'white',
+                  borderRadius: '16px',
+                  padding: '24px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                  height: '100%'
+              }}>
+                  <Typography variant="h6" sx={{ 
+                      color: '#475569',
+                      mb: 3,
+                      fontWeight: 600
+                  }}>
+                      Assets by Category
+                  </Typography>
+                  {categoryData.length ? (
+                      <Box sx={{ height: 300 }}>
+                          <Bar 
+                              data={categoryChartData}
+                              options={{
+                                  responsive: true,
+                                  maintainAspectRatio: false,
+                                  plugins: {
+                                      legend: {
+                                          display: false
+                                      }
+                                  },
+                                  scales: {
+                                      y: {
+                                          beginAtZero: true,
+                                          grid: {
+                                              drawBorder: false
+                                          }
+                                      },
+                                      x: {
+                                          grid: {
+                                              display: false
+                                          }
+                                      }
+                                  }
+                              }}
+                          />
+                      </Box>
+                  ) : (
+                      <Typography sx={{ color: '#64748b', textAlign: 'center' }}>
+                          Loading category data...
+                      </Typography>
+                  )}
+              </Box>
+          </Grid>
+      </Grid>
+  </Box>
+  
   );
 };
 
