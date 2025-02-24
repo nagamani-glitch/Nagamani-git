@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, RadioGroup, FormControlLabel, Radio, Paper, FormControl, Button, Typography, Grid, Select, MenuItem , InputLabel} from '@mui/material';
+import { TextField, RadioGroup, FormControlLabel, Radio, Paper, FormControl, Button, Typography, Grid, Select, MenuItem , InputLabel, FormHelperText} from '@mui/material';
 import { motion } from 'framer-motion';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -16,6 +16,7 @@ const validationSchema = Yup.object().shape({
   panNumber: Yup.string().length(10, 'PAN number must be 10 characters').required('PAN number is required'),
   mobileNumber: Yup.string().matches(/^[0-9]{10}$/, 'Mobile number must be 10 digits').required('Mobile number is required'),
   email: Yup.string().email('Invalid email format').required('Email is required'),
+  prefix: Yup.string().required('Prefix is required'),
   employeeImage: Yup.mixed()
     .required('Profile photo is required')
     .test('fileFormat', 'Only image formats are allowed', value => {
@@ -25,12 +26,38 @@ const validationSchema = Yup.object().shape({
 });
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const prefixOptions = [{value: 'Mr.' , gender : 'Male'},
+                       {value: 'Ms.' , gender : 'Female'},
+                       {value: 'Dr.' , gender : 'Null'}];
+const days = Array.from({ length: 31 }, (_, i) => i + 1);
+const months = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+
+const genderOptions = {
+  'Mr.': ['Male'],
+  'Ms.': ['Female'],
+  // 'Mrs.': ['Female'],
+  'Dr.': ['Male', 'Female', 'Other']
+};
+
+const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
+
+
 
 const PersonalInformationForm = ({ nextStep, handleFormDataChange, handleImageUpload }) => {
   const initialValues = {
+    prefix:'',
     firstName: '',
+    middleName: '',
     lastName: '',
     dob: '',
+    dobDay: '',
+    dobMonth: '',
+    dobYear: '',
     gender: '',
     maritalStatus: '',
     bloodGroup: '',
@@ -120,99 +147,252 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, handleImageUp
             <Typography variant="h5" gutterBottom color="primary">
               Personal Information
             </Typography>
-            
-            <Grid container spacing={3}>
+
+        <Grid container spacing={3}>
+  {/* Name fields in single line */}
+  <Grid item container spacing={2}>
+    <Grid item xs={2}>
+      <FormControl fullWidth>
+        <Field name="prefix">
+  {({ field, form }) => (
+    <Select
+      {...field}
+      label="Title"
+      displayEmpty
+      error={touched.prefix && errors.prefix}
+      onChange={(e) => {
+        const selectedPrefix = prefixOptions.find(p => p.value === e.target.value);
+        form.setFieldValue('prefix', e.target.value);
+        
+        // Set gender automatically if prefix has defined gender
+        if (selectedPrefix.gender) {
+          form.setFieldValue('gender', selectedPrefix.gender);
+        }
+      }}
+    >
+      <MenuItem value="" disabled>
+        <em>Title</em>
+      </MenuItem>
+      {prefixOptions.map(prefix => (
+        <MenuItem key={prefix.value} value={prefix.value}>{prefix.value}</MenuItem>
+      ))}
+    </Select>
+  )}
+</Field>
+      </FormControl>
+    </Grid>
+    
+    <Grid item xs={3}>
+      <Field name="firstName">
+        {({ field, form }) => (
+          <TextField
+            {...field}
+            label="First Name"
+            fullWidth
+            onChange={(e) => {
+              const sentenceCaseValue = e.target.value
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+              form.setFieldValue(field.name, sentenceCaseValue);
+            }}
+            error={touched.firstName && errors.firstName}
+            helperText={touched.firstName && errors.firstName}
+          />
+        )}
+      </Field>
+    </Grid>
+
+    <Grid item xs={3}>
+      <Field name="middleName">
+        {({ field, form }) => (
+          <TextField
+            {...field}
+            label="Middle Name"
+            fullWidth
+            onChange={(e) => {
+              const sentenceCaseValue = e.target.value
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+              form.setFieldValue(field.name, sentenceCaseValue);
+            }}
+          />
+        )}
+      </Field>
+    </Grid>
+
+    <Grid item xs={4}>
+      <Field name="lastName">
+        {({ field, form }) => (
+          <TextField
+            {...field}
+            label="Last Name"
+            fullWidth
+            onChange={(e) => {
+              const sentenceCaseValue = e.target.value
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+              form.setFieldValue(field.name, sentenceCaseValue);
+            }}
+            error={touched.lastName && errors.lastName}
+            helperText={touched.lastName && errors.lastName}
+          />
+        )}
+      </Field>
+    </Grid>
+  </Grid>            
+          
   <Grid item xs={12} sm={6}>
-    <Field name="firstName">
-      {({ field, form }) => (
-        <TextField
-          {...field}
-          label="First Name"
-          fullWidth
-          onChange={(e) => {
-            const sentenceCaseValue = e.target.value
-              .split(' ')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join(' ');
-            form.setFieldValue(field.name, sentenceCaseValue);
-          }}
-          error={touched.firstName && errors.firstName}
-          helperText={touched.firstName && errors.firstName}
-        />
+  <Typography variant="body1" gutterBottom>Date of Birth</Typography>
+  <Grid container spacing={2}>
+    <Grid item xs={4}>
+      <FormControl fullWidth>
+        <InputLabel>Date</InputLabel>
+        <Field name="dobDay">
+          {({ field, form }) => (
+            <Select
+              {...field}
+              label="Date"
+              onChange={(e) => {
+                form.setFieldValue('dobDay', e.target.value);
+                const newDate = new Date(
+                  form.values.dobYear,
+                  months.indexOf(form.values.dobMonth),
+                  e.target.value
+                );
+                form.setFieldValue('dob', newDate);
+              }}
+            >
+              {days.map(day => (
+                <MenuItem key={day} value={day}>{day}</MenuItem>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </FormControl>
+    </Grid>
+
+    <Grid item xs={4}>
+      <FormControl fullWidth>
+        <InputLabel>Month</InputLabel>
+        <Field name="dobMonth">
+          {({ field, form }) => (
+            <Select
+              {...field}
+              label="Month"
+              onChange={(e) => {
+                form.setFieldValue('dobMonth', e.target.value);
+                const newDate = new Date(
+                  form.values.dobYear,
+                  months.indexOf(e.target.value),
+                  form.values.dobDay
+                );
+                form.setFieldValue('dob', newDate);
+              }}
+            >
+              {months.map(month => (
+                <MenuItem key={month} value={month}>{month}</MenuItem>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </FormControl>
+    </Grid>
+
+    <Grid item xs={4}>
+      <FormControl fullWidth>
+        <InputLabel>Year</InputLabel>
+        <Field name="dobYear">
+          {({ field, form }) => (
+            <Select
+              {...field}
+              label="Year"
+              onChange={(e) => {
+                form.setFieldValue('dobYear', e.target.value);
+                const newDate = new Date(
+                  e.target.value,
+                  months.indexOf(form.values.dobMonth),
+                  form.values.dobDay
+                );
+                form.setFieldValue('dob', newDate);
+              }}
+            >
+              {years.map(year => (
+                <MenuItem key={year} value={year}>{year}</MenuItem>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </FormControl>
+    </Grid>
+  </Grid>
+  {touched.dob && errors.dob && (
+    <Typography color="error" variant="caption">
+      {errors.dob}
+    </Typography>
+  )}
+</Grid>
+              
+              <Grid item container spacing={2}>
+  <Grid item xs={6}>
+    <FormControl fullWidth>
+      <InputLabel>Gender</InputLabel>
+      <Field name="gender">
+        {({ field, form }) => (
+          <Select
+            {...field}
+            label="Gender"
+            displayEmpty
+            error={touched.gender && errors.gender}
+          >
+            <MenuItem value="" disabled>
+              <em>Select Gender</em>
+            </MenuItem>
+            {genderOptions[form.values.prefix]?.map(gender => (
+              <MenuItem key={gender} value={gender}>
+                {gender}
+              </MenuItem>
+            ))}
+          </Select>
+        )}
+      </Field>
+      {touched.gender && errors.gender && (
+        <FormHelperText error>{errors.gender}</FormHelperText>
       )}
-    </Field>
+    </FormControl>
   </Grid>
 
-  <Grid item xs={12} sm={6}>
-    <Field name="lastName">
-      {({ field, form }) => (
-        <TextField
-          {...field}
-          label="Last Name"
-          fullWidth
-          onChange={(e) => {
-            const sentenceCaseValue = e.target.value
-              .split(' ')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join(' ');
-            form.setFieldValue(field.name, sentenceCaseValue);
-          }}
-          error={touched.lastName && errors.lastName}
-          helperText={touched.lastName && errors.lastName}
-        />
+  <Grid item xs={6}>
+    <FormControl fullWidth>
+      <InputLabel>Marital Status</InputLabel>
+      <Field name="maritalStatus">
+        {({ field, form }) => (
+          <Select
+            {...field}
+            label="Marital Status"
+            displayEmpty
+            error={touched.maritalStatus && errors.maritalStatus}
+          >
+            <MenuItem value="" disabled>
+              <em>Select Marital Status</em>
+            </MenuItem>
+            {maritalStatusOptions.map(status => (
+              <MenuItem key={status} value={status}>
+                {status}
+              </MenuItem>
+            ))}
+          </Select>
+        )}
+      </Field>
+      {touched.maritalStatus && errors.maritalStatus && (
+        <FormHelperText error>{errors.maritalStatus}</FormHelperText>
       )}
-    </Field>
+    </FormControl>
   </Grid>
-              <Grid item xs={12} sm={6}>
-                <Field
-                  name="dob"
-                  component={AnimatedTextField}
-                  type="date"
-                  label="Date of Birth"
-                  fullWidth
-                  InputLabelProps={{ 
-                    shrink: true,
-                    sx: { 
-                    color: 'rgba(0, 0, 0, 0.87)',
-                    '&.Mui-focused': {
-                      color: 'primary.main'
-                    }
-                  }
-                }}
-                  error={touched.dob && errors.dob}
-                  helperText={touched.dob && errors.dob}
-                />
-              </Grid>
+</Grid>
 
-              <Grid item xs={12} sm={6}>
-                <FormControl component="fieldset" fullWidth>
-                  <Typography variant="body1">Gender</Typography>
-                  <Field name="gender">
-                    {({ field }) => (
-                      <RadioGroup {...field} row>
-                        <FormControlLabel value="Male" control={<Radio />} label="Male" />
-                        <FormControlLabel value="Female" control={<Radio />} label="Female" />
-                        <FormControlLabel value="Other" control={<Radio />} label="Other" />
-                      </RadioGroup>
-                    )}
-                  </Field>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <FormControl component="fieldset" fullWidth>
-                  <Typography variant="body1">Marital Status</Typography>
-                  <Field name="maritalStatus">
-                    {({ field }) => (
-                      <RadioGroup {...field} row>
-                        <FormControlLabel value="Single" control={<Radio />} label="Single" />
-                        <FormControlLabel value="Married" control={<Radio />} label="Married" />
-                        <FormControlLabel value="Divorced" control={<Radio />} label="Divorced" />
-                      </RadioGroup>
-                    )}
-                  </Field>
-                </FormControl>
-              </Grid>
 
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
