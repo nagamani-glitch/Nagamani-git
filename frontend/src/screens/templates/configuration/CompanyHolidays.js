@@ -6,13 +6,13 @@ import * as Yup from 'yup';
 import { 
     Container, Paper, Typography, TextField, IconButton, Box,
     Button, Modal, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, MenuItem
+    TableHead, TableRow, MenuItem, Stack,FormHelperText, Select, FormControl, InputLabel, Dialog, DialogTitle, DialogContent
 } from '@mui/material';
 import {
-    Add as AddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Search as SearchIcon
+    Add,
+    Edit,
+    Delete,
+    Search,Close
 } from '@mui/icons-material';
 
 const apiBaseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
@@ -104,54 +104,149 @@ export default function CompanyHolidays() {
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 2, backgroundColor: '#ffffff' }}>
-                <Typography variant="h4" align="center" sx={{ mb: 4, fontWeight: 600, color: '#1a1a1a' }}>
-                    Company Holidays
-                </Typography>
 
-                <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center', justifyContent: 'space-between' }}>
-                    <TextField
-                        fullWidth
-                        variant="outlined"
-                        placeholder="Search holidays..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        InputProps={{
-                            startAdornment: <SearchIcon sx={{ color: '#6b7280', mr: 1 }} />
+<Box sx={{
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    padding: '24px 32px',
+    marginBottom: '24px'
+}}>
+    <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography variant="h4" sx={{ 
+            fontWeight: 600, 
+            // background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+            background: "#1976d2",
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+        }}>
+            Company Holidays
+        </Typography>
+        
+        <Stack direction="row" spacing={2} alignItems="center">
+            <TextField 
+                placeholder="Search holidays..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                size="small"
+                sx={{
+                    width: '300px',
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        '&:hover fieldset': {
+                            borderColor: '#1976d2',
+                        }
+                    }
+                }}
+                InputProps={{
+                    startAdornment: <Search sx={{ color: 'action.active', mr: 1 }} />
+                }}
+            />
+            
+            <Button
+                onClick={() => {
+                    setIsEditing(false);
+                    setInitialValues({ week: '', day: '' });
+                    setIsAddModalOpen(true);
+                }}
+                startIcon={<Add />}
+                sx={{
+                    background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+                    color: 'white',
+                    '&:hover': {
+                        background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+                    },
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    height: '40px',
+                    boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)'
+                }}
+                variant="contained"
+            >
+                Add Holiday
+            </Button>
+        </Stack>
+    </Stack>
+</Box>
+
+{/* table */}
+
+<Box sx={{
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    overflow: 'hidden',
+    margin: '24px 0'
+}}>
+    <Table sx={{ minWidth: 650 }}>
+        <TableHead>
+            <TableRow sx={{ backgroundColor: '#f8fafc' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>Week</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#475569', py: 2 }}>Day</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', py: 2 }}>Actions</TableCell>
+            </TableRow>
+        </TableHead>
+        <TableBody>
+            {companyHolidays
+                .filter(holiday =>
+                    holiday.week.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    holiday.day.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .map((holiday) => (
+                    <TableRow 
+                        key={holiday._id}
+                        sx={{ 
+                            '&:hover': { backgroundColor: '#f8fafc' },
+                            transition: 'background-color 0.2s ease'
                         }}
-                        sx={{
-                            maxWidth: '70%',
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&:hover fieldset': {
-                                    borderColor: '#3b82f6'
-                                }
-                            }
-                        }}
-                    />
+                    >
+                        <TableCell sx={{ color: '#d013d1', fontWeight: 500 }}>
+                            {holiday.week}
+                        </TableCell>
+                        <TableCell sx={{ color: '#2563eb', fontWeight: 500 }}>
+                            {holiday.day}
+                        </TableCell>
+                        <TableCell align="right">
+                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                                <IconButton 
+                                    onClick={() => handleEdit(holiday)}
+                                    size="small"
+                                    sx={{ 
+                                        color: '#1976d2',
+                                        '&:hover': { 
+                                            backgroundColor: '#e3f2fd',
+                                            transform: 'translateY(-1px)'
+                                        },
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <Edit fontSize="small" />
+                                </IconButton>
+                                <IconButton 
+                                    onClick={() => handleDelete(holiday._id)}
+                                    size="small"
+                                    sx={{ 
+                                        color: '#ef4444',
+                                        '&:hover': { 
+                                            backgroundColor: '#fee2e2',
+                                            transform: 'translateY(-1px)'
+                                        },
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <Delete fontSize="small" />
+                                </IconButton>
+                            </Stack>
+                        </TableCell>
+                    </TableRow>
+                ))}
+        </TableBody>
+    </Table>
+</Box>
 
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => {
-                                setIsEditing(false);
-                                setInitialValues({ week: '', day: '' });
-                                setIsAddModalOpen(true);
-                            }}
-                            sx={{
-                                backgroundColor: '#3b82f6',
-                                '&:hover': { backgroundColor: '#2563eb' },
-                                borderRadius: 2,
-                                px: 3,
-                                py: 1
-                            }}
-                        >
-                            Add Holiday
-                        </Button>
-                    </motion.div>
-                </Box>
 
-                <TableContainer component={Paper} elevation={0}>
+                {/* <TableContainer component={Paper} elevation={0}>
                     <Table>
                         <TableHead>
                             <TableRow>
@@ -205,9 +300,145 @@ export default function CompanyHolidays() {
                                 ))}
                         </TableBody>
                     </Table>
-                </TableContainer>
+                </TableContainer> */}
 
-                <Modal 
+
+{/* create holiday */}
+
+<Dialog 
+    open={isAddModalOpen} 
+    maxWidth="md"
+    fullWidth
+    PaperProps={{
+        sx: {
+            width: '700px',
+            maxWidth: '90vw',
+            borderRadius: '20px',
+            overflow: 'hidden'
+        }
+    }}
+>
+    <DialogTitle
+        sx={{
+            background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+            color: 'white',
+            fontSize: '1.5rem',
+            fontWeight: 600,
+            padding: '24px 32px',
+            position: 'relative'
+        }}
+    >
+        {isEditing ? 'Edit Holiday' : 'Add Holiday'}
+        <IconButton
+            onClick={() => {
+                setIsAddModalOpen(false);
+                setIsEditing(false);
+                setEditId(null);
+            }}
+            sx={{
+                position: 'absolute',
+                right: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'white'
+            }}
+        >
+            <Close />
+        </IconButton>
+    </DialogTitle>
+
+    <DialogContent sx={{ padding: '32px' }}>
+        <Formik
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+            enableReinitialize
+        >
+            {({ isSubmitting, errors, touched }) => (
+                <Form>
+                    <Stack spacing={3} sx={{mt:2}}>
+                        <FormControl fullWidth error={touched.week && errors.week}>
+                            <InputLabel>Week</InputLabel>
+                            <Field
+                                as={Select}
+                                name="week"
+                                label="Week"
+                                sx={{ borderRadius: '8px' }}
+                            >
+                                {['First', 'Second', 'Third', 'Fourth', 'Fifth', 'All Weeks'].map((option) => (
+                                    <MenuItem key={option} value={option}>
+                                        {option}
+                                    </MenuItem>
+                                ))}
+                            </Field>
+                            {touched.week && errors.week && (
+                                <FormHelperText>{errors.week}</FormHelperText>
+                            )}
+                        </FormControl>
+
+                        <FormControl fullWidth error={touched.day && errors.day}>
+                            <InputLabel>Day</InputLabel>
+                            <Field
+                                as={Select}
+                                name="day"
+                                label="Day"
+                                sx={{ borderRadius: '8px' }}
+                            >
+                                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((option) => (
+                                    <MenuItem key={option} value={option}>
+                                        {option}
+                                    </MenuItem>
+                                ))}
+                            </Field>
+                            {touched.day && errors.day && (
+                                <FormHelperText>{errors.day}</FormHelperText>
+                            )}
+                        </FormControl>
+
+                        <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 4 }}>
+                            <Button 
+                                onClick={() => setIsAddModalOpen(false)}
+                                sx={{
+                                    border: '2px solid #1976d2',
+                                    color: '#1976d2',
+                                    '&:hover': {
+                                        border: '2px solid #64b5f6',
+                                        backgroundColor: '#e3f2fd',
+                                    },
+                                    borderRadius: '8px',
+                                    px: 4,
+                                    py: 1,
+                                    fontWeight: 600
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button 
+                                type="submit"
+                                disabled={isSubmitting}
+                                sx={{
+                                    background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+                                    color: 'white',
+                                    '&:hover': {
+                                        background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+                                    },
+                                    borderRadius: '8px',
+                                    px: 4,
+                                    py: 1,
+                                    fontWeight: 600
+                                }}
+                            >
+                                {isEditing ? 'Update' : 'Add'}
+                            </Button>
+                        </Stack>
+                    </Stack>
+                </Form>
+            )}
+        </Formik>
+    </DialogContent>
+</Dialog>
+
+                {/* <Modal 
                     open={isAddModalOpen} 
                     onClose={() => {
                         setIsAddModalOpen(false);
@@ -278,7 +509,7 @@ export default function CompanyHolidays() {
                             )}
                         </Formik>
                     </Box>
-                </Modal>
+                </Modal> */}
             </Paper>
         </Container>
     );
