@@ -237,20 +237,6 @@ const MyLeaveRequests = () => {
     }
   };
 
-  // const handleDeleteLeave = async (id) => {
-  //   try {
-  //     setLoading(true);
-  //     await axios.delete(`${API_URL}/${id}`);
-  //     setLeaves(leaves.filter(leave => leave._id !== id));
-  //     setSuccess('Leave request deleted successfully');
-  //   } catch (err) {
-  //     setError('Failed to delete leave request');
-  //     console.error(err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleDeleteLeave = async (id) => {
     try {
       setLoading(true);
@@ -446,8 +432,12 @@ const MyLeaveRequests = () => {
               <TableCell>End Date</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Reason</TableCell>
-              <TableCell align="center">Approve</TableCell>
-              <TableCell align="center">Reject</TableCell>
+              {filteredLeaves.some((leave) => leave.status === "pending") && (
+                <>
+                  <TableCell align="center">Approve</TableCell>
+                  <TableCell align="center">Reject</TableCell>
+                </>
+              )}
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -481,31 +471,35 @@ const MyLeaveRequests = () => {
                   />
                 </TableCell>
                 <TableCell>{leave.reason}</TableCell>
-                <TableCell align="center">
-                  {leave.status === "pending" && (
-                    <IconButton
-                      size="small"
-                      color="success"
-                      onClick={() => handleApproveLeave(leave._id)}
-                    >
-                      <CheckIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                </TableCell>
-                <TableCell align="center">
-                  {leave.status === "pending" && (
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => {
-                        setSelectedLeave(leave);
-                        setRejectDialogOpen(true);
-                      }}
-                    >
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                </TableCell>
+                {filteredLeaves.some((l) => l.status === "pending") && (
+                  <>
+                    <TableCell align="center">
+                      {leave.status === "pending" && (
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={() => handleApproveLeave(leave._id)}
+                        >
+                          <CheckIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {leave.status === "pending" && (
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => {
+                            setSelectedLeave(leave);
+                            setRejectDialogOpen(true);
+                          }}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </TableCell>
+                  </>
+                )}
                 <TableCell align="center">
                   <Box
                     sx={{ display: "flex", justifyContent: "center", gap: 1 }}
