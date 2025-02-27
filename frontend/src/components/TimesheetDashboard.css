@@ -51,17 +51,16 @@
   font-size: 3rem;
   color: white;
 }
-
-.header-text h1 {
-  font-size: 4rem;
-  font-weight: 800;
-  background: linear-gradient(to right, #ffffff, #e0e0e0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 0.5rem;
-  letter-spacing: -1px;
-}
-
+  .header-text h1 {
+    font-size: 4rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #ffffff, #e0e0e0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+    letter-spacing: -1px;
+  }
 .header-subtitle {
   font-size: 1.3rem;
   color: rgba(255, 255, 255, 0.9);
