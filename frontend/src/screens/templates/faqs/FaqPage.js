@@ -4,14 +4,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Container, Paper, Typography, TextField, IconButton, Box,
-    Button, Modal, Card, CardContent
+    Button, Modal, Card, CardContent, Stack, Dialog, DialogTitle, DialogContent
 } from '@mui/material';
 import {
     ArrowBack as ArrowBackIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Add as AddIcon,
-    Search as SearchIcon
+    Edit,
+    Delete,
+    Add,
+    Search, Close
 } from '@mui/icons-material';
 import { 
     ViewList as ViewListIcon,
@@ -186,163 +186,193 @@ export default function FaqPage() {
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 2, backgroundColor: '#ffffff' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    {/* <Button 
-                        startIcon={<ArrowBackIcon />}
-                        onClick={() => navigate('/Dashboards/faq-category')}
-                        sx={{ mr: 2 }}
-                    >
-                        Back to Categories
-                    </Button> */}
-                    <Typography variant="h4" sx={{ fontWeight: 600 }}>
-                        {categoryTitle || 'Loading...'} - FAQs
-                    </Typography>
-                </Box>
 
-                <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center', justifyContent: 'space-between' }}>
-                    <TextField
-                        fullWidth
-                        variant="outlined"
-                        placeholder="Search FAQs..."
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                        InputProps={{
-                            startAdornment: <SearchIcon sx={{ color: '#6b7280', mr: 1 }} />
-                        }}
-                        sx={{
-                            maxWidth: '70%',
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&:hover fieldset': {
-                                    borderColor: '#3b82f6'
-                                }
+
+<Box sx={{
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    padding: '24px 32px',
+    marginBottom: '24px'
+}}>
+    <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography variant="h4" sx={{ 
+            fontWeight: 600, 
+            // background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+            background: "#1976d2",
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+        }}>
+            {categoryTitle || 'Loading...'} - FAQs
+        </Typography>
+        
+        <Stack direction="row" spacing={2} alignItems="center">
+            <TextField 
+                placeholder="Search FAQs..." 
+                value={searchQuery}
+                onChange={handleSearchChange}
+                size="small"
+                sx={{
+                    width: '300px',
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        '&:hover fieldset': {
+                            borderColor: '#1976d2',
+                        }
+                    }
+                }}
+                InputProps={{
+                    startAdornment: <Search sx={{ color: 'action.active', mr: 1 }} />
+                }}
+            />
+
+            <ToggleButtonGroup
+                value={viewType}
+                exclusive
+                onChange={handleViewChange}
+                sx={{
+                    '& .MuiToggleButton-root': {
+                        border: '1px solid #e2e8f0',
+                        '&.Mui-selected': {
+                            background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+                            color: 'white',
+                            '&:hover': {
+                                background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
                             }
-                        }}
-                    />
-                    
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <ToggleButtonGroup
-                            value={viewType}
-                            exclusive
-                            onChange={handleViewChange}
-                            sx={{ mr: 2 }}
-                        >
-                            <ToggleButton 
-                                value="list" 
-                                aria-label="list view"
-                                sx={{
-                                    '&.Mui-selected': {
-                                        backgroundColor: '#3b82f6',
-                                        color: 'white',
-                                        '&:hover': {
-                                            backgroundColor: '#2563eb'
-                                        }
-                                    }
-                                }}
-                            >
-                                <ViewListIcon />
-                            </ToggleButton>
-                            <ToggleButton 
-                                value="grid" 
-                                aria-label="grid view"
-                                sx={{
-                                    '&.Mui-selected': {
-                                        backgroundColor: '#3b82f6',
-                                        color: 'white',
-                                        '&:hover': {
-                                            backgroundColor: '#2563eb'
-                                        }
-                                    }
-                                }}
-                            >
-                                <ViewModuleIcon />
-                            </ToggleButton>
-                        </ToggleButtonGroup>
-                        
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <Button
-                                variant="contained"
-                                startIcon={<AddIcon />}
-                                onClick={() => setIsAddModalOpen(true)}
-                                sx={{
-                                    backgroundColor: '#3b82f6',
-                                    '&:hover': { backgroundColor: '#2563eb' },
-                                    borderRadius: 2,
-                                    px: 3,
-                                    py: 1
-                                }}
-                            >
-                                Add FAQ
-                            </Button>
-                        </motion.div>
-                    </Box>
-                </Box>
+                        }
+                    }
+                }}
+            >
+                <ToggleButton value="list" aria-label="list view">
+                    <ViewListIcon />
+                </ToggleButton>
+                <ToggleButton value="grid" aria-label="grid view">
+                    <ViewModuleIcon />
+                </ToggleButton>
+            </ToggleButtonGroup>
+            
+            <Button
+                onClick={() => setIsAddModalOpen(true)}
+                startIcon={<Add />}
+                sx={{
+                    background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+                    color: 'white',
+                    '&:hover': {
+                        background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+                    },
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    height: '40px',
+                    boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)'
+                }}
+                variant="contained"
+            >
+                Add FAQ
+            </Button>
+        </Stack>
+    </Stack>
+</Box>
+
 
                 {loading && <Typography sx={{ textAlign: 'center' }}>Loading...</Typography>}
                 {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
 
-                <Box sx={{ 
-                    display: viewType === 'grid' ? 'grid' : 'flex',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                    flexDirection: viewType === 'grid' ? 'unset' : 'column',
-                    gap: 2 
-                }}>
-                    {filteredFaqs.map((faq) => (
-                        <motion.div
-                            key={faq._id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <Card 
-                                sx={{ 
-                                    height: '100%',
-                                    '&:hover': { boxShadow: 6 },
-                                    transition: 'box-shadow 0.3s'
-                                }}
-                            >
-                                <CardContent>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <Typography variant="h6">{faq.question}</Typography>
-                                        <Box sx={{ display: 'flex', gap: 1 }}>
-                                            <IconButton
-                                                onClick={() => {
-                                                    setEditingFaq(faq);
-                                                    setIsEditModalOpen(true);
-                                                }}
-                                                sx={{
-                                                    backgroundColor: '#3b82f6',
-                                                    color: 'white',
-                                                    '&:hover': { backgroundColor: '#2563eb' }
-                                                }}
-                                            >
-                                                <EditIcon fontSize="small" />
-                                            </IconButton>
-                                            <IconButton
-                                                onClick={() => handleDelete(faq._id)}
-                                                sx={{
-                                                    backgroundColor: '#ef4444',
-                                                    color: 'white',
-                                                    '&:hover': { backgroundColor: '#dc2626' }
-                                                }}
-                                            >
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        </Box>
-                                    </Box>
-                                    <Typography 
-                                        variant="body1" 
-                                        sx={{ mt: 2, color: 'text.secondary' }}
-                                    >
-                                        {faq.answer}
-                                    </Typography>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    ))}
-                </Box>
 
-                <Modal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
+
+<Box sx={{ 
+    display: viewType === 'grid' ? 'grid' : 'flex',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+    flexDirection: viewType === 'grid' ? 'unset' : 'column',
+    gap: 3
+}}>
+    {filteredFaqs.map((faq) => (
+        <motion.div
+            key={faq._id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+        >
+            <Card sx={{ 
+                height: '100%',
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': { 
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                }
+            }}>
+                <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'flex-start',
+                        mb: 2.5
+                    }}>
+                        <Typography 
+                            variant="h6" 
+                            sx={{ 
+                                color: '#1e293b',
+                                fontWeight: 600,
+                                lineHeight: 1.4
+                            }}
+                        >
+                            {faq.question}
+                        </Typography>
+                        <Stack direction="row" spacing={1}>
+                            <IconButton
+                                onClick={() => {
+                                    setEditingFaq(faq);
+                                    setIsEditModalOpen(true);
+                                }}
+                                sx={{
+                                    color: '#1976d2',
+                                  //  backgroundColor: '#e3f2fd',
+                                    '&:hover': { 
+                                        backgroundColor: '#bae6fd',
+                                        transform: 'translateY(-2px)'
+                                    },
+                                    transition: 'all 0.2s ease'
+                                }}
+                                size="small"
+                            >
+                                <Edit fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                                onClick={() => handleDelete(faq._id)}
+                                sx={{
+                                    color: '#ef4444',
+                                   // backgroundColor: '#fee2e2',
+                                    '&:hover': { 
+                                        backgroundColor: '#fecaca',
+                                        transform: 'translateY(-2px)'
+                                    },
+                                    transition: 'all 0.2s ease'
+                                }}
+                                size="small"
+                            >
+                                <Delete fontSize="small" />
+                            </IconButton>
+                        </Stack>
+                    </Box>
+                    <Typography 
+                        variant="body1" 
+                        sx={{ 
+                            color: '#64748b',
+                            lineHeight: 1.6
+                        }}
+                    >
+                        {faq.answer}
+                    </Typography>
+                </CardContent>
+            </Card>
+        </motion.div>
+    ))}
+</Box>
+
+
+                {/* <Modal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
                     <Box sx={modalStyle}>
                         <Typography variant="h6" sx={{ mb: 2 }}>Add FAQ</Typography>
                         <form onSubmit={handleAddSubmit}>
@@ -376,9 +406,134 @@ export default function FaqPage() {
                             </Box>
                         </form>
                     </Box>
-                </Modal>
+                </Modal> */}
 
-                <Modal open={isEditModalOpen && !!editingFaq} onClose={() => setIsEditModalOpen(false)}>
+
+{/* Create and Edit Dialog  */}
+
+<Dialog 
+    open={isAddModalOpen || isEditModalOpen} 
+    maxWidth="md"
+    fullWidth
+    PaperProps={{
+        sx: {
+            width: '700px',
+            maxWidth: '90vw',
+            borderRadius: '20px',
+            overflow: 'hidden'
+        }
+    }}
+>
+    <DialogTitle
+        sx={{
+            background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+            color: 'white',
+            fontSize: '1.5rem',
+            fontWeight: 600,
+            padding: '24px 32px',
+            position: 'relative'
+        }}
+    >
+        {editingFaq ? 'Edit FAQ' : 'Add New FAQ'}
+        <IconButton
+            onClick={() => {
+                setIsAddModalOpen(false);
+                setIsEditModalOpen(false);
+                setEditingFaq(null);
+            }}
+            sx={{
+                position: 'absolute',
+                right: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'white'
+            }}
+        >
+            <Close />
+        </IconButton>
+    </DialogTitle>
+
+    <DialogContent sx={{ padding: '32px' }}>
+        <form onSubmit={editingFaq ? handleEditSubmit : handleAddSubmit}>
+            <Stack spacing={3} sx={{mt:2}}>
+                <TextField
+                    label="Question"
+                    name="question"
+                    value={editingFaq ? editingFaq.question : formData.question}
+                    onChange={editingFaq ? handleEditChange : handleAddChange}
+                    required
+                    fullWidth
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px'
+                        }
+                    }}
+                />
+
+                <TextField
+                    label="Answer"
+                    name="answer"
+                    value={editingFaq ? editingFaq.answer : formData.answer}
+                    onChange={editingFaq ? handleEditChange : handleAddChange}
+                    required
+                    multiline
+                    rows={4}
+                    fullWidth
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px'
+                        }
+                    }}
+                />
+
+                <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 4 }}>
+                    <Button
+                        onClick={() => {
+                            setIsAddModalOpen(false);
+                            setIsEditModalOpen(false);
+                            setEditingFaq(null);
+                        }}
+                        sx={{
+                            border: '2px solid #1976d2',
+                            color: '#1976d2',
+                            '&:hover': {
+                                border: '2px solid #64b5f6',
+                                backgroundColor: '#e3f2fd',
+                            },
+                            borderRadius: '8px',
+                            px: 4,
+                            py: 1,
+                            fontWeight: 600
+                        }}
+                    >
+                        Cancel
+                    </Button>
+
+                    <Button
+                        type="submit"
+                        sx={{
+                            background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+                            color: 'white',
+                            '&:hover': {
+                                background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+                            },
+                            borderRadius: '8px',
+                            px: 4,
+                            py: 1,
+                            fontWeight: 600
+                        }}
+                    >
+                        {editingFaq ? 'Update' : 'Save'}
+                    </Button>
+                </Stack>
+            </Stack>
+        </form>
+    </DialogContent>
+</Dialog>
+
+
+
+                {/* <Modal open={isEditModalOpen && !!editingFaq} onClose={() => setIsEditModalOpen(false)}>
                     <Box sx={modalStyle}>
                         <Typography variant="h6" sx={{ mb: 2 }}>Edit FAQ</Typography>
                         <form onSubmit={handleEditSubmit}>
@@ -412,7 +567,7 @@ export default function FaqPage() {
                             </Box>
                         </form>
                     </Box>
-                </Modal>
+                </Modal> */}
             </Paper>
         </Container>
     );

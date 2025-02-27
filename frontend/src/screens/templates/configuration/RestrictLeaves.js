@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
     Container, Paper, Typography, TextField, IconButton, Box,
-    Button, Modal, Card, CardContent, Grid, FormControl,
-    InputLabel, Select, MenuItem
+    Button, Card, CardContent, Grid, FormControl,
+    InputLabel, Select, MenuItem, Stack, Dialog, DialogTitle, DialogContent
 } from '@mui/material';
 import {
     Add as AddIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
     Search as SearchIcon,
-    Event as EventIcon
+    Event as EventIcon,
+    Close
 } from '@mui/icons-material';
 
 const apiBaseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
@@ -156,59 +157,80 @@ function RestrictLeaves() {
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 2, backgroundColor: '#ffffff' }}>
-                <Typography variant="h4" align="center" sx={{ mb: 4, fontWeight: 600, color: '#1a1a1a' }}>
-                    Restricted Leaves Management
-                </Typography>
+             
 
-                <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center', justifyContent: 'space-between' }}>
-                    <TextField
-                        fullWidth
-                        variant="outlined"
-                        placeholder="Search restricted leaves..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        InputProps={{
-                            startAdornment: <SearchIcon sx={{ color: '#6b7280', mr: 1 }} />
-                        }}
-                        sx={{
-                            maxWidth: '70%',
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&:hover fieldset': {
-                                    borderColor: '#3b82f6'
-                                }
-                            }
-                        }}
-                    />
 
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => {
-                                setFormData({
-                                    title: '',
-                                    startDate: '',
-                                    endDate: '',
-                                    department: '',
-                                    jobPosition: '',
-                                    description: ''
-                                });
-                                setIsAddModalOpen(true);
-                                setIsEditing(false);
-                            }}
-                            sx={{
-                                backgroundColor: '#3b82f6',
-                                '&:hover': { backgroundColor: '#2563eb' },
-                                borderRadius: 2,
-                                px: 3,
-                                py: 1
-                            }}
-                        >
-                            Add Restricted Leave
-                        </Button>
-                    </motion.div>
-                </Box>
+<Box sx={{
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    padding: '24px 32px',
+    marginBottom: '24px'
+}}>
+    <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography variant="h4" sx={{ 
+            fontWeight: 600, 
+            background: "#1976d2",
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+        }}>
+            Restricted Leaves Management
+        </Typography>
+        
+        <Stack direction="row" spacing={2} alignItems="center">
+            <TextField 
+                placeholder="Search restricted leaves..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                size="small"
+                sx={{
+                    width: '300px',
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        '&:hover fieldset': {
+                            borderColor: '#1976d2',
+                        }
+                    }
+                }}
+                InputProps={{
+                    startAdornment: <SearchIcon sx={{ color: 'action.active', mr: 1 }} />
+                }}
+            />
+            
+            <Button
+                onClick={() => {
+                    setFormData({
+                        title: '',
+                        startDate: '',
+                        endDate: '',
+                        department: '',
+                        jobPosition: '',
+                        description: ''
+                    });
+                    setIsAddModalOpen(true);
+                    setIsEditing(false);
+                }}
+                startIcon={<AddIcon />}
+                sx={{
+                    background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+                    color: 'white',
+                    '&:hover': {
+                        background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+                    },
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    height: '40px',
+                    boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)'
+                }}
+                variant="contained"
+            >
+                Add Restricted Leave
+            </Button>
+        </Stack>
+    </Stack>
+</Box>
+
 
                 <Grid container spacing={3}>
                     {restrictLeaves
@@ -280,7 +302,191 @@ function RestrictLeaves() {
                         ))}
                 </Grid>
 
-                <Modal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
+
+                <Dialog
+    open={isAddModalOpen}
+    maxWidth="md"
+    fullWidth
+    PaperProps={{
+        sx: {
+            width: '700px',
+            maxWidth: '90vw',
+            borderRadius: '20px',
+            overflow: 'hidden',
+        },
+    }}
+>
+    <DialogTitle
+        sx={{
+            background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+            color: 'white',
+            fontSize: '1.5rem',
+            fontWeight: 600,
+            padding: '24px 32px',
+            position: 'relative',
+        }}
+    >
+        {isEditing ? 'Edit Restricted Leave' : 'Add Restricted Leave'}
+        <IconButton
+            onClick={() => setIsAddModalOpen(false)}
+            sx={{
+                position: 'absolute',
+                right: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'white',
+            }}
+        >
+            <Close />
+        </IconButton>
+    </DialogTitle>
+
+    <DialogContent sx={{ padding: '32px' }}>
+        <form onSubmit={handleSubmit}>
+            <Stack spacing={3} sx={{mt:2}}>
+                <TextField
+                    fullWidth
+                    label="Title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    required
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
+                        }
+                    }}
+                />
+
+                <Stack direction="row" spacing={2}>
+                    <TextField
+                        fullWidth
+                        type="date"
+                        label="Start Date"
+                        name="startDate"
+                        value={formData.startDate}
+                        onChange={handleChange}
+                        InputLabelProps={{ shrink: true }}
+                        required
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                            }
+                        }}
+                    />
+
+                    <TextField
+                        fullWidth
+                        type="date"
+                        label="End Date"
+                        name="endDate"
+                        value={formData.endDate}
+                        onChange={handleChange}
+                        InputLabelProps={{ shrink: true }}
+                        required
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                            }
+                        }}
+                    />
+                </Stack>
+
+                <FormControl fullWidth>
+                    <InputLabel>Department</InputLabel>
+                    <Select
+                        name="department"
+                        value={formData.department}
+                        onChange={handleChange}
+                        required
+                        sx={{
+                            borderRadius: '8px',
+                        }}
+                    >
+                        <MenuItem value="Cloud team">Cloud team</MenuItem>
+                        <MenuItem value="Development team">Development team</MenuItem>
+                        <MenuItem value="HR team">HR team</MenuItem>
+                        <MenuItem value="All team">All team</MenuItem>
+                    </Select>
+                </FormControl>
+
+                <FormControl fullWidth>
+                    <InputLabel>Job Position</InputLabel>
+                    <Select
+                        name="jobPosition"
+                        value={formData.jobPosition}
+                        onChange={handleChange}
+                        required
+                        sx={{
+                            borderRadius: '8px',
+                        }}
+                    >
+                        <MenuItem value="Associate Engineer">Associate Engineer</MenuItem>
+                        <MenuItem value="Senior Engineer">Senior Engineer</MenuItem>
+                        <MenuItem value="Manager">Manager</MenuItem>
+                        <MenuItem value="Hr">HR</MenuItem>
+                        <MenuItem value="All">For All</MenuItem>
+                    </Select>
+                </FormControl>
+
+                <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label="Description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    required
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
+                        }
+                    }}
+                />
+
+                <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 4 }}>
+                    <Button
+                        onClick={() => setIsAddModalOpen(false)}
+                        sx={{
+                            border: '2px solid #1976d2',
+                            color: '#1976d2',
+                            '&:hover': {
+                                border: '2px solid #64b5f6',
+                                backgroundColor: '#e3f2fd',
+                            },
+                            borderRadius: '8px',
+                            px: 4,
+                            py: 1,
+                            fontWeight: 600,
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        sx={{
+                            background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+                            color: 'white',
+                            '&:hover': {
+                                background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+                            },
+                            borderRadius: '8px',
+                            px: 4,
+                            py: 1,
+                            fontWeight: 600,
+                        }}
+                    >
+                        {isEditing ? 'Update' : 'Create'}
+                    </Button>
+                </Stack>
+            </Stack>
+        </form>
+    </DialogContent>
+</Dialog>
+
+
+                {/* <Modal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
                     <Box sx={modalStyle}>
                         <Typography variant="h6" sx={{ mb: 2 }}>
                             {isEditing ? 'Edit Restricted Leave' : 'Add Restricted Leave'}
@@ -380,7 +586,7 @@ function RestrictLeaves() {
                             </Box>
                         </form>
                     </Box>
-                </Modal>
+                </Modal> */}
             </Paper>
         </Container>
     );

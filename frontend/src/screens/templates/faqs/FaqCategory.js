@@ -432,48 +432,7 @@ export default function FaqCategory() {
           </DialogContent>
         </Dialog>
 
-        {/* <Modal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
-                    <Box sx={modalStyle}>
-                        <Typography variant="h6" sx={{ mb: 2 }}>
-                            {editingCategoryId ? 'Edit Category' : 'Add New Category'}
-                        </Typography>
-                        <form onSubmit={handleSubmit}>
-                            {errorMessage && (
-                                <Typography color="error" sx={{ mb: 2 }}>
-                                    {errorMessage}
-                                </Typography>
-                            )}
-                            <TextField
-                                fullWidth
-                                label="Title"
-                                name="title"
-                                value={formData.title}
-                                onChange={handleChange}
-                                sx={{ mb: 2 }}
-                                required
-                            />
-                            <TextField
-                                fullWidth
-                                label="Description"
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                multiline
-                                rows={4}
-                                sx={{ mb: 3 }}
-                                required
-                            />
-                            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                                <Button variant="outlined" onClick={() => setIsAddModalOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button variant="contained" type="submit">
-                                    {editingCategoryId ? 'Update' : 'Create'}
-                                </Button>
-                            </Box>
-                        </form>
-                    </Box>
-                </Modal> */}
+       
       </Paper>
     </Container>
   );
