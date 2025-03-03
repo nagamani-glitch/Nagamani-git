@@ -33,6 +33,7 @@ import {
   Delete as DeleteIcon,
   Check as CheckIcon,
   Close as CloseIcon,
+  Close
 } from "@mui/icons-material";
 import { format } from "date-fns";
 
@@ -330,6 +331,8 @@ const MyLeaveRequests = () => {
       return matchesSearch && matchesStatus && matchesType;
     });
   }, [leaves, filters]);
+
+
   return (
     <Box sx={styles.mainContainer}>
       <Box sx={styles.headerSection}>
@@ -365,7 +368,7 @@ const MyLeaveRequests = () => {
         ))}
       </Grid>
 
-      <Paper sx={{ p: 3, mb: 3 }}>
+      {/* <Paper sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={4}>
             <TextField
@@ -420,7 +423,98 @@ const MyLeaveRequests = () => {
             </TextField>
           </Grid>
         </Grid>
-      </Paper>
+      </Paper>   */}
+
+
+<Paper sx={{ 
+    p: 3, 
+    mb: 3,
+    borderRadius: '12px',
+    backgroundColor: 'white',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+}}>
+    <Grid container spacing={3}>
+        <Grid item xs={12} sm={4}>
+            <TextField 
+                fullWidth
+                size="small"
+                placeholder="Search by reason or employee..."
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        '&:hover fieldset': {
+                            borderColor: '#1976d2',
+                        },
+                        '& .MuiOutlinedInput-input': {
+                            padding: '10px 14px',
+                        }
+                    }
+                }}
+                InputProps={{
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            <SearchIcon sx={{ color: 'action.active' }} />
+                        </InputAdornment>
+                    ),
+                }}
+            />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+            <TextField
+                select
+                fullWidth
+                size="small"
+                label="Status"
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        '&:hover fieldset': {
+                            borderColor: '#1976d2',
+                        }
+                    }
+                }}
+            >
+                <MenuItem value="all">All Status</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="approved">Approved</MenuItem>
+                <MenuItem value="rejected">Rejected</MenuItem>
+            </TextField>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+            <TextField
+                select
+                fullWidth
+                size="small"
+                label="Leave Type"
+                value={filters.type}
+                onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        '&:hover fieldset': {
+                            borderColor: '#1976d2',
+                        }
+                    }
+                }}
+            >
+                <MenuItem value="all">All Types</MenuItem>
+                {leaveTypes.map((type) => (
+                    <MenuItem key={type.id} value={type.id}>
+                        {type.label}
+                    </MenuItem>
+                ))}
+            </TextField>
+        </Grid>
+    </Grid>
+</Paper>
+
 
       <TableContainer component={Paper}>
         <Table>
@@ -528,6 +622,8 @@ const MyLeaveRequests = () => {
         </Table>
       </TableContainer>
 
+
+{/*Create leave request dialog */}
       <Dialog
         open={openDialog}
         onClose={() => {
@@ -792,17 +888,51 @@ const MyLeaveRequests = () => {
         </DialogActions>
       </Dialog>
 
+
+      {/*Reject Dialog box */}
       <Dialog
-        open={rejectDialogOpen}
-        onClose={() => setRejectDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Reject Leave Request</DialogTitle>
-        <DialogContent>
-          <TextField
+    open={rejectDialogOpen}
+    onClose={() => setRejectDialogOpen(false)}
+    maxWidth="sm"
+    fullWidth
+    PaperProps={{
+        sx: {
+            width: '500px',
+            maxWidth: '90vw',
+            borderRadius: '20px',
+            overflow: 'hidden',
+        },
+    }}
+>
+    <DialogTitle
+        sx={{
+            background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
+            color: 'white',
+            fontSize: '1.5rem',
+            fontWeight: 600,
+            padding: '24px 32px',
+            position: 'relative',
+            
+        }}
+    >
+        Reject Leave Request
+        <IconButton
+            onClick={() => setRejectDialogOpen(false)}
+            sx={{
+                position: 'absolute',
+                right: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'white',
+            }}
+        >
+            <Close />
+        </IconButton>
+    </DialogTitle>
+
+    <DialogContent sx={{ padding: '32px' }}>
+        <TextField
             autoFocus
-            margin="dense"
             label="Rejection Reason"
             fullWidth
             multiline
@@ -810,20 +940,63 @@ const MyLeaveRequests = () => {
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
             required
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="error"
+            sx={{
+              mt:2,
+                '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                    backgroundColor: '#f8fafc',
+                    '&:hover fieldset': {
+                        borderColor: '#1976d2',
+                    }
+                }
+            }}
+        />
+    </DialogContent>
+
+    <DialogActions sx={{ padding: '24px 32px', gap: 2 }}>
+        <Button
+            onClick={() => setRejectDialogOpen(false)}
+            sx={{
+                border: '2px solid #1976d2',
+                color: '#1976d2',
+                '&:hover': {
+                    border: '2px solid #64b5f6',
+                    backgroundColor: '#e3f2fd',
+                },
+                borderRadius: '8px',
+                px: 4,
+                py: 1,
+                fontWeight: 600,
+            }}
+        >
+            Cancel
+        </Button>
+        <Button
             onClick={() => handleRejectLeave(selectedLeave._id)}
             disabled={!rejectionReason.trim() || loading}
-          >
+            sx={{
+                background: 'linear-gradient(45deg, #ef4444, #dc2626)',
+                color: 'white',
+                '&:hover': {
+                    background: 'linear-gradient(45deg, #dc2626, #b91c1c)',
+                },
+                borderRadius: '8px',
+                px: 4,
+                py: 1,
+                fontWeight: 600,
+                '&.Mui-disabled': {
+                    background: '#f3f4f6',
+                    color: '#9ca3af'
+                }
+            }}
+        >
             Reject
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Button>
+    </DialogActions>
+</Dialog>
+
+
+     
 
       <Snackbar
         open={!!success || !!error}
