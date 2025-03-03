@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import employeesRouter from './routes/employeesRouter.js'
 import authRouter from './routes/authRouter.js'
@@ -42,6 +43,7 @@ import offboardingRoutes from './routes/offboardingRoutes.js';
 import resignationRoutes from './routes/resignationRoutes.js';
 import Feedback from './routes/feedbackRoutes.js';
 import payrollContractRoutes from './routes/payrollContractRoutes.js';
+import payrollRoutes from './routes/PayrollRoutes.js';
 
 // Harish
 import attendanceRoutes from './routes/attendanceRoutes.js';
@@ -55,6 +57,9 @@ import rotatingWorktypeRoutes from './routes/rotatingWorktypeRoutes.js';
 import myLeaveRequestRoutes from './routes/myLeaveRequestRoutes.js';
 import leaveRequestRoutes from './routes/leaveRequestRoutes.js';
 import documentRoute from './routes/documentRoutes-1.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config()
 connectDB()
@@ -132,6 +137,7 @@ app.use('/api/objectives', objectiveRoutes);
 app.use('/api/feedback', Feedback);
 app.use('/api/offboarding', offboardingRoutes);
 app.use('/api/resignations', resignationRoutes);
+app.use('/api/payroll', payrollRoutes);
 
 
 // Harish
