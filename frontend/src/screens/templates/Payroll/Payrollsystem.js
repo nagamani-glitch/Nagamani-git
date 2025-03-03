@@ -1608,25 +1608,70 @@ const PayrollSystem = () => {
         return null;
       }
 
+      // const payslipData = {
+      //   empId,
+      //   empName: employee.empName,
+      //   month: new Date().getMonth() + 1,
+      //   year: new Date().getFullYear(),
+      //   basicPay: employee.basicPay,
+      //   payableDays: employee.payableDays,
+      //   lopDays: employee.lop,
+      //   grossSalary: calculateGrossSalary(empId),
+      //   totalDeductions: calculateTotalDeductions(empId),
+      //   netSalary: calculateNetSalary(empId),
+      //   bankDetails: {
+      //     bankName: employee.bankName,
+      //     accountNo: employee.bankAccountNo,
+      //   },
+      //   allowances: allowanceData
+      //     .filter((a) => a.empId === empId && a.status === "Active")
+      //     .map((allowance) => ({
+      //       ...allowance,
+      //       amount: calculateAllowanceAmount(
+      //         calculateAttendanceBasedPay(
+      //           employee.basicPay,
+      //           employee.payableDays,
+      //           employee.lop
+      //         ),
+      //         allowance.percentage
+      //       ).toString(),
+      //     })),
+      //   deductions: deductions
+      //     .filter((d) => d.empId === empId && d.status === "Active")
+      //     .map((deduction) => ({
+      //       ...deduction,
+      //       amount: calculateDeductionAmount(
+      //         calculateAttendanceBasedPay(
+      //           employee.basicPay,
+      //           employee.payableDays,
+      //           employee.lop
+      //         ),
+      //         deduction.percentage
+      //       ).toString(),
+      //     })),
+      // };
       const payslipData = {
         empId,
         empName: employee.empName,
+        department: employee.department,
+        designation: employee.designation,
+        email: employee.email,
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
         basicPay: employee.basicPay,
         payableDays: employee.payableDays,
         lopDays: employee.lop,
-        grossSalary: calculateGrossSalary(empId),
-        totalDeductions: calculateTotalDeductions(empId),
-        netSalary: calculateNetSalary(empId),
+        pfNo: employee.pfNo,
+        uanNo: employee.uanNo,
+        panNo: employee.panNo,
         bankDetails: {
           bankName: employee.bankName,
-          accountNo: employee.bankAccountNo,
+          accountNo: employee.bankAccountNo
         },
         allowances: allowanceData
-          .filter((a) => a.empId === empId && a.status === "Active")
-          .map((allowance) => ({
-            ...allowance,
+          .filter(a => a.empId === empId && a.status === "Active")
+          .map(allowance => ({
+            name: allowance.name,
             amount: calculateAllowanceAmount(
               calculateAttendanceBasedPay(
                 employee.basicPay,
@@ -1635,11 +1680,13 @@ const PayrollSystem = () => {
               ),
               allowance.percentage
             ).toString(),
+            percentage: allowance.percentage,
+            category: allowance.category
           })),
         deductions: deductions
-          .filter((d) => d.empId === empId && d.status === "Active")
-          .map((deduction) => ({
-            ...deduction,
+          .filter(d => d.empId === empId && d.status === "Active")
+          .map(deduction => ({
+            name: deduction.name,
             amount: calculateDeductionAmount(
               calculateAttendanceBasedPay(
                 employee.basicPay,
@@ -1648,8 +1695,14 @@ const PayrollSystem = () => {
               ),
               deduction.percentage
             ).toString(),
+            percentage: deduction.percentage,
+            category: deduction.category
           })),
+        grossSalary: calculateGrossSalary(empId),
+        totalDeductions: calculateTotalDeductions(empId),
+        netSalary: calculateNetSalary(empId)
       };
+      
 
       const response = await axios.post(
         `${API_URL}/payslips/generate`,
@@ -1667,6 +1720,7 @@ const PayrollSystem = () => {
     }
   };
 
+  
   const downloadPayslip = async (payslipId) => {
     try {
       const response = await axios.get(
