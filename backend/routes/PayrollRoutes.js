@@ -9,6 +9,10 @@ router.post('/employees', PayrollController.createEmployee);
 router.put('/employees/:empId', PayrollController.updateEmployee);
 router.delete('/employees/:empId', PayrollController.deleteEmployee);
 
+// Add the LOP update route with the controller method
+router.put('/employees/:empId/lop', PayrollController.updateEmployeeLOP);
+
+
 // Allowance routes
 router.get('/allowances', PayrollController.getAllAllowances);
 router.post('/allowances', PayrollController.createAllowance);

@@ -6,9 +6,33 @@ import { PayrollPDFService } from '../services/PayrollPDFService.js';
 
 export class PayrollController {
   // Employee Management
+  // static async createEmployee(req, res) {
+  //   try {
+  //     const employee = new EmployeePayroll(req.body);
+  //     await employee.save();
+  //     res.status(201).json({
+  //       success: true,
+  //       data: employee,
+  //       message: 'Employee created successfully'
+  //     });
+  //   } catch (error) {
+  //     res.status(400).json({
+  //       success: false,
+  //       message: error.message
+  //     });
+  //   }
+  // }
+
+
   static async createEmployee(req, res) {
     try {
-      const employee = new EmployeePayroll(req.body);
+      const employeeData = {
+        ...req.body,
+        lop: parseFloat(req.body.lop) || 0,
+        payableDays: parseFloat(req.body.payableDays) || 30
+      };
+      
+      const employee = new EmployeePayroll(employeeData);
       await employee.save();
       res.status(201).json({
         success: true,
@@ -39,11 +63,46 @@ export class PayrollController {
     }
   }
 
+  // static async updateEmployee(req, res) {
+  //   try {
+  //     const employee = await EmployeePayroll.findOneAndUpdate(
+  //       { empId: req.params.empId },
+  //       req.body,
+  //       { new: true, runValidators: true }
+  //     );
+      
+  //     if (!employee) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: 'Employee not found'
+  //       });
+  //     }
+
+  //     res.status(200).json({
+  //       success: true,
+  //       data: employee,
+  //       message: 'Employee updated successfully'
+  //     });
+  //   } catch (error) {
+  //     res.status(400).json({
+  //       success: false,
+  //       message: error.message
+  //     });
+  //   }
+  // }
+
+
   static async updateEmployee(req, res) {
     try {
+      const updateData = {
+        ...req.body,
+        lop: Math.round(parseFloat(req.body.lop) * 2) / 2, // Rounds to nearest 0.5
+        payableDays: parseFloat(req.body.payableDays)
+      };
+  
       const employee = await EmployeePayroll.findOneAndUpdate(
         { empId: req.params.empId },
-        req.body,
+        updateData,
         { new: true, runValidators: true }
       );
       
@@ -53,7 +112,7 @@ export class PayrollController {
           message: 'Employee not found'
         });
       }
-
+  
       res.status(200).json({
         success: true,
         data: employee,
@@ -67,6 +126,39 @@ export class PayrollController {
     }
   }
 
+
+  static async updateEmployeeLOP(req, res) {
+    try {
+      const { lop } = req.body;
+      const roundedLOP = Math.round(parseFloat(lop) * 2) / 2;
+  
+      const employee = await EmployeePayroll.findOneAndUpdate(
+        { empId: req.params.empId },
+        { lop: roundedLOP },
+        { new: true, runValidators: true }
+      );
+  
+      if (!employee) {
+        return res.status(404).json({
+          success: false,
+          message: 'Employee not found'
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        data: employee,
+        message: 'LOP updated successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+  
+  
   static async deleteEmployee(req, res) {
     try {
       const employee = await EmployeePayroll.findOneAndDelete({ empId: req.params.empId });

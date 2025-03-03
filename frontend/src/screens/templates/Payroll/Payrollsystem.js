@@ -1119,8 +1119,6 @@ import {
   Select,
   MenuItem,
   IconButton,
-  Stack,
-  Divider,
   Chip,
   Tooltip,
   Grid,
@@ -1193,7 +1191,7 @@ const PayrollSystem = () => {
     uanNo: "",
     panNo: "",
     payableDays: 30,
-    lop: 0,
+    lop: 0.0,
     department: "",
     designation: "",
     email: "",
@@ -1296,18 +1294,56 @@ const PayrollSystem = () => {
     });
   };
 
+  // // const calculatePerDayPay = (basicPay, payableDays) => {
+  // //   const pay = parseFloat(basicPay) || 0;
+  // //   const days = parseInt(payableDays) || 30;
+  // //   return pay / days;
+  // // };
+  // const calculatePerDayPay = (basicPay, payableDays) => {
+  //   const pay = parseFloat(basicPay) || 0;
+  //   const days = parseFloat(payableDays) || 30;
+  //   return pay / days;
+  // };
+
+  // // const calculateAttendanceBasedPay = (basicPay, payableDays, lop) => {
+  // //   const perDayPay = calculatePerDayPay(basicPay, payableDays);
+  // //   const actualPayableDays =
+  // //     (parseInt(payableDays) || 30) - (parseInt(lop) || 0);
+  // //   return perDayPay * actualPayableDays;
+  // // };
+  // const calculateAttendanceBasedPay = (basicPay, payableDays, lop) => {
+  //   const perDayPay = calculatePerDayPay(basicPay, payableDays);
+  //   const actualPayableDays = (parseFloat(payableDays) || 30) - (parseFloat(lop) || 0);
+  //   return perDayPay * actualPayableDays;
+  // };
+
+
+
+
   const calculatePerDayPay = (basicPay, payableDays) => {
     const pay = parseFloat(basicPay) || 0;
-    const days = parseInt(payableDays) || 30;
-    return pay / days;
+    const days = parseFloat(payableDays) || 30;
+    return Number((pay / days).toFixed(2));
   };
-
+  
   const calculateAttendanceBasedPay = (basicPay, payableDays, lop) => {
     const perDayPay = calculatePerDayPay(basicPay, payableDays);
-    const actualPayableDays =
-      (parseInt(payableDays) || 30) - (parseInt(lop) || 0);
-    return perDayPay * actualPayableDays;
+    const actualPayableDays = (parseFloat(payableDays) || 30) - (parseFloat(lop) || 0);
+    return Number((perDayPay * actualPayableDays).toFixed(2));
   };
+
+
+  const handleLOPChange = (e) => {
+    const value = parseFloat(e.target.value);
+    if (isNaN(value)) {
+      setNewEmployee({ ...newEmployee, lop: 0 });
+      return;
+    }
+    
+    const roundedValue = Math.round(value * 2) / 2;
+    setNewEmployee({ ...newEmployee, lop: roundedValue });
+  };
+
 
   const calculateAllowanceAmount = (basicPay, percentage) => {
     const pay = parseFloat(basicPay) || 0;
@@ -1682,6 +1718,7 @@ const PayrollSystem = () => {
     }
   };
   return (
+
     <Container className="payroll-container">
       <Snackbar
         open={alert.open}
@@ -1742,6 +1779,8 @@ const PayrollSystem = () => {
           </Tabs>
         </AppBar>
 
+
+
         {/* Employees Tab */}
         <TabPanel value={tabIndex} index={0}>
           <Box className="header-container">
@@ -1781,6 +1820,8 @@ const PayrollSystem = () => {
                 <TableRow className="table-header">
                   <TableCell>Emp ID</TableCell>
                   <TableCell>Name</TableCell>
+                  <TableCell>Department</TableCell>  
+  <TableCell>Designation</TableCell>
                   <TableCell>Basic Pay</TableCell>
                   <TableCell>Bank Details</TableCell>
                   <TableCell>PF/UAN</TableCell>
@@ -1789,11 +1830,14 @@ const PayrollSystem = () => {
                   <TableCell align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
                 {employeeData.map((item) => (
                   <TableRow key={item.empId} className="table-row">
                     <TableCell>{item.empId}</TableCell>
                     <TableCell>{item.empName}</TableCell>
+                    <TableCell>{item.department}</TableCell>  {/* New cell */}
+  <TableCell>{item.designation}</TableCell>
                     <TableCell className="amount-cell">
                       ₹{item.basicPay}
                     </TableCell>
@@ -1840,6 +1884,7 @@ const PayrollSystem = () => {
             </Table>
           </TableContainer>
         </TabPanel>
+
 
         {/* Allowances Tab */}
         <TabPanel value={tabIndex} index={1}>
@@ -2115,6 +2160,9 @@ const PayrollSystem = () => {
             </Paper>
           ))}
         </TabPanel> */}
+
+
+
         {/* Payslips Tab */}
         <TabPanel value={tabIndex} index={3}>
           {employeeData.map((emp) => (
@@ -2343,7 +2391,9 @@ const PayrollSystem = () => {
           ))}
         </TabPanel>
 
-        {/* Employee Dialog */}
+
+
+        {/* Create Employee Dialog */}
         <Dialog
           open={openEmployeeDialog}
           onClose={handleCloseEmployeeDialog}
@@ -2382,6 +2432,24 @@ const PayrollSystem = () => {
                   required
                 />
               </Grid>
+              <Grid item xs={12} md={6}>
+  <TextField
+    label="Department"
+    fullWidth
+    value={newEmployee.department}
+    onChange={(e) => setNewEmployee({ ...newEmployee, department: e.target.value })}
+    required
+  />
+</Grid>
+<Grid item xs={12} md={6}>
+  <TextField
+    label="Designation" 
+    fullWidth
+    value={newEmployee.designation}
+    onChange={(e) => setNewEmployee({ ...newEmployee, designation: e.target.value })}
+    required
+  />
+</Grid>
               <Grid item xs={12} md={6}>
                 <TextField
                   label="Basic Pay"
@@ -2472,7 +2540,7 @@ const PayrollSystem = () => {
                   required
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              {/* <Grid item xs={12} md={6}>
                 <TextField
                   label="LOP Days"
                   type="number"
@@ -2482,7 +2550,22 @@ const PayrollSystem = () => {
                     setNewEmployee({ ...newEmployee, lop: e.target.value })
                   }
                 />
-              </Grid>
+              </Grid> */}
+           <Grid item xs={12} md={6}>
+  <TextField
+  label="LOP Days"
+  type="number"
+  fullWidth
+  value={newEmployee.lop}
+  onChange={handleLOPChange}
+  inputProps={{
+    step: 0.5,
+    min: 0
+  }}
+  helperText="Enter values in 0.5 day increments"
+/>
+  
+</Grid>
             </Grid>
           </DialogContent>
           <DialogActions className="dialog-actions">
@@ -2503,7 +2586,7 @@ const PayrollSystem = () => {
           </DialogActions>
         </Dialog>
 
-        {/* Allowance Dialog */}
+        {/* Create Allowance Dialog */}
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
@@ -2632,7 +2715,7 @@ const PayrollSystem = () => {
           </DialogActions>
         </Dialog>
 
-        {/* Deduction Dialog */}
+        {/* Create Deduction Dialog */}
         <Dialog
           open={openDeductionDialog}
           onClose={handleCloseDeductionDialog}
