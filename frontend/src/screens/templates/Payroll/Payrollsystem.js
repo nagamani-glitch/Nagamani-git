@@ -1294,31 +1294,6 @@ const PayrollSystem = () => {
     });
   };
 
-  // // const calculatePerDayPay = (basicPay, payableDays) => {
-  // //   const pay = parseFloat(basicPay) || 0;
-  // //   const days = parseInt(payableDays) || 30;
-  // //   return pay / days;
-  // // };
-  // const calculatePerDayPay = (basicPay, payableDays) => {
-  //   const pay = parseFloat(basicPay) || 0;
-  //   const days = parseFloat(payableDays) || 30;
-  //   return pay / days;
-  // };
-
-  // // const calculateAttendanceBasedPay = (basicPay, payableDays, lop) => {
-  // //   const perDayPay = calculatePerDayPay(basicPay, payableDays);
-  // //   const actualPayableDays =
-  // //     (parseInt(payableDays) || 30) - (parseInt(lop) || 0);
-  // //   return perDayPay * actualPayableDays;
-  // // };
-  // const calculateAttendanceBasedPay = (basicPay, payableDays, lop) => {
-  //   const perDayPay = calculatePerDayPay(basicPay, payableDays);
-  //   const actualPayableDays = (parseFloat(payableDays) || 30) - (parseFloat(lop) || 0);
-  //   return perDayPay * actualPayableDays;
-  // };
-
-
-
 
   const calculatePerDayPay = (basicPay, payableDays) => {
     const pay = parseFloat(basicPay) || 0;
@@ -2166,7 +2141,13 @@ const PayrollSystem = () => {
         {/* Payslips Tab */}
         <TabPanel value={tabIndex} index={3}>
           {employeeData.map((emp) => (
-            <Paper key={emp.empId} className="payslip-card">
+            <Paper key={emp.empId} className="payslip-card"
+            sx={{ 
+              marginBottom: '2rem',  // Adds space between payslip cards
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+            >
               <Grid container spacing={3}>
                 {/* Employee Details Section */}
                 <Grid item xs={12}>
@@ -2265,7 +2246,7 @@ const PayrollSystem = () => {
                 </Grid>
 
                 {/* Earnings Section */}
-                <Grid item xs={12} md={6}>
+                {/* <Grid item xs={12} md={6}>
                   <Paper className="earnings-section">
                     <Typography variant="h6" className="section-header">
                       Earnings
@@ -2309,10 +2290,10 @@ const PayrollSystem = () => {
                       </Box>
                     </Box>
                   </Paper>
-                </Grid>
+                </Grid> */}
 
                 {/* Deductions Section */}
-                <Grid item xs={12} md={6}>
+                {/* <Grid item xs={12} md={6}>
                   <Paper className="deductions-section">
                     <Typography variant="h6" className="section-header">
                       Deductions
@@ -2352,7 +2333,84 @@ const PayrollSystem = () => {
                       </Box>
                     </Box>
                   </Paper>
-                </Grid>
+                </Grid> */}
+
+
+
+<Grid container spacing={3}>
+  {/* Left Column - Earnings */}
+  <Grid item xs={12} md={6}>
+    <Paper className="earnings-section">
+      <Typography variant="h6" className="section-header">
+        Earnings
+      </Typography>
+      <Box className="amount-list">
+        <Box className="amount-row">
+          <Typography>Basic Pay</Typography>
+          <Typography>Rs. {emp.basicPay}</Typography>
+        </Box>
+        {allowanceData
+          .filter(a => a.empId === emp.empId && a.status === "Active")
+          .map(allowance => (
+            <Box key={allowance._id} className="amount-row">
+              <Typography>{allowance.name}</Typography>
+              <Typography>
+                Rs. {calculateAllowanceAmount(
+                  calculateAttendanceBasedPay(
+                    emp.basicPay,
+                    emp.payableDays,
+                    emp.lop
+                  ),
+                  allowance.percentage
+                ).toFixed(2)}
+              </Typography>
+            </Box>
+          ))}
+        <Box className="amount-row total">
+          <Typography><strong>Total Earnings</strong></Typography>
+          <Typography>
+            <strong>Rs. {calculateGrossSalary(emp.empId).toFixed(2)}</strong>
+          </Typography>
+        </Box>
+      </Box>
+    </Paper>
+  </Grid>
+
+  {/* Right Column - Deductions */}
+  <Grid item xs={12} md={6}>
+    <Paper className="deductions-section">
+      <Typography variant="h6" className="section-header">
+        Deductions
+      </Typography>
+      <Box className="amount-list">
+        {deductions
+          .filter(d => d.empId === emp.empId && d.status === "Active")
+          .map(deduction => (
+            <Box key={deduction._id} className="amount-row">
+              <Typography>{deduction.name}</Typography>
+              <Typography>
+                Rs. {calculateDeductionAmount(
+                  calculateAttendanceBasedPay(
+                    emp.basicPay,
+                    emp.payableDays,
+                    emp.lop
+                  ),
+                  deduction.percentage
+                ).toFixed(2)}
+              </Typography>
+            </Box>
+          ))}
+        <Box className="amount-row total">
+          <Typography><strong>Total Deductions</strong></Typography>
+          <Typography>
+            <strong>Rs. {calculateTotalDeductions(emp.empId).toFixed(2)}</strong>
+          </Typography>
+        </Box>
+      </Box>
+    </Paper>
+  </Grid>
+</Grid>
+
 
                 {/* Net Salary Section */}
                 <Grid item xs={12}>

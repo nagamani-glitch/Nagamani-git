@@ -7,10 +7,8 @@ const router = express.Router();
 router.get('/employees', PayrollController.getAllEmployees);
 router.post('/employees', PayrollController.createEmployee);
 router.put('/employees/:empId', PayrollController.updateEmployee);
+router.put('/employees/:empId/lop', PayrollController.updateEmployeeLOP); // LOP route
 router.delete('/employees/:empId', PayrollController.deleteEmployee);
-
-// Add the LOP update route with the controller method
-router.put('/employees/:empId/lop', PayrollController.updateEmployeeLOP);
 
 
 // Allowance routes
