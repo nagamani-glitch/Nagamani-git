@@ -22,6 +22,12 @@
   font-size: 1rem;
 }
 
+.path-link:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+
 .path-indicator span {
   margin-right: 5px;
 }
