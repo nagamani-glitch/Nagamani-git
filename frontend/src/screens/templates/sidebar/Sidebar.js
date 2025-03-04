@@ -33,11 +33,15 @@ function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div>
-        <h5 style={{ color: "white" }}>DB4Cloud</h5>
-        <p style={{ color: "white" }}>My Company</p>
-        <hr />
-      </div>
+      {/* <div>
+      <img src="https://res.cloudinary.com/dfl9rotoy/image/upload/v1741065300/logo2-removebg-preview_p6juhh.png" alt="Logo" 
+       style={{ width: "auto", height: "100px", marginLeft: "10px", marginTop: "10px" }} 
+       />
+      
+         <h5 style={{ color: "white" }}>DB4Cloud</h5>
+        <p style={{ color: "white" }}>My Company</p> 
+         <hr /> 
+      </div> */}
       <ul>
         <li onClick={() => handleNavigation("/Dashboards")}>
           <FontAwesomeIcon icon={faChartPie} />
