@@ -119,7 +119,7 @@ export class PayrollPDFService {
        .strokeColor('#000080')
        .stroke();
 
-    doc.fontSize(14)
+    doc.fontSize(10)
        .font('Helvetica-Bold')
        .fillColor('#000080')
        .text('Attendance Details', leftMargin + 10, attendanceBoxY + 10);
