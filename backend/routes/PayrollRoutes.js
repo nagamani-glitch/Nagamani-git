@@ -7,7 +7,9 @@ const router = express.Router();
 router.get('/employees', PayrollController.getAllEmployees);
 router.post('/employees', PayrollController.createEmployee);
 router.put('/employees/:empId', PayrollController.updateEmployee);
+router.put('/employees/:empId/lop', PayrollController.updateEmployeeLOP); // LOP route
 router.delete('/employees/:empId', PayrollController.deleteEmployee);
+
 
 // Allowance routes
 router.get('/allowances', PayrollController.getAllAllowances);

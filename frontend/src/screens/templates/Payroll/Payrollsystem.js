@@ -1119,8 +1119,6 @@ import {
   Select,
   MenuItem,
   IconButton,
-  Stack,
-  Divider,
   Chip,
   Tooltip,
   Grid,
@@ -1193,7 +1191,7 @@ const PayrollSystem = () => {
     uanNo: "",
     panNo: "",
     payableDays: 30,
-    lop: 0,
+    lop: 0.0,
     department: "",
     designation: "",
     email: "",
@@ -1296,18 +1294,31 @@ const PayrollSystem = () => {
     });
   };
 
+
   const calculatePerDayPay = (basicPay, payableDays) => {
     const pay = parseFloat(basicPay) || 0;
-    const days = parseInt(payableDays) || 30;
-    return pay / days;
+    const days = parseFloat(payableDays) || 30;
+    return Number((pay / days).toFixed(2));
   };
-
+  
   const calculateAttendanceBasedPay = (basicPay, payableDays, lop) => {
     const perDayPay = calculatePerDayPay(basicPay, payableDays);
-    const actualPayableDays =
-      (parseInt(payableDays) || 30) - (parseInt(lop) || 0);
-    return perDayPay * actualPayableDays;
+    const actualPayableDays = (parseFloat(payableDays) || 30) - (parseFloat(lop) || 0);
+    return Number((perDayPay * actualPayableDays).toFixed(2));
   };
+
+
+  const handleLOPChange = (e) => {
+    const value = parseFloat(e.target.value);
+    if (isNaN(value)) {
+      setNewEmployee({ ...newEmployee, lop: 0 });
+      return;
+    }
+    
+    const roundedValue = Math.round(value * 2) / 2;
+    setNewEmployee({ ...newEmployee, lop: roundedValue });
+  };
+
 
   const calculateAllowanceAmount = (basicPay, percentage) => {
     const pay = parseFloat(basicPay) || 0;
@@ -1597,25 +1608,70 @@ const PayrollSystem = () => {
         return null;
       }
 
+      // const payslipData = {
+      //   empId,
+      //   empName: employee.empName,
+      //   month: new Date().getMonth() + 1,
+      //   year: new Date().getFullYear(),
+      //   basicPay: employee.basicPay,
+      //   payableDays: employee.payableDays,
+      //   lopDays: employee.lop,
+      //   grossSalary: calculateGrossSalary(empId),
+      //   totalDeductions: calculateTotalDeductions(empId),
+      //   netSalary: calculateNetSalary(empId),
+      //   bankDetails: {
+      //     bankName: employee.bankName,
+      //     accountNo: employee.bankAccountNo,
+      //   },
+      //   allowances: allowanceData
+      //     .filter((a) => a.empId === empId && a.status === "Active")
+      //     .map((allowance) => ({
+      //       ...allowance,
+      //       amount: calculateAllowanceAmount(
+      //         calculateAttendanceBasedPay(
+      //           employee.basicPay,
+      //           employee.payableDays,
+      //           employee.lop
+      //         ),
+      //         allowance.percentage
+      //       ).toString(),
+      //     })),
+      //   deductions: deductions
+      //     .filter((d) => d.empId === empId && d.status === "Active")
+      //     .map((deduction) => ({
+      //       ...deduction,
+      //       amount: calculateDeductionAmount(
+      //         calculateAttendanceBasedPay(
+      //           employee.basicPay,
+      //           employee.payableDays,
+      //           employee.lop
+      //         ),
+      //         deduction.percentage
+      //       ).toString(),
+      //     })),
+      // };
       const payslipData = {
         empId,
         empName: employee.empName,
+        department: employee.department,
+        designation: employee.designation,
+        email: employee.email,
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
         basicPay: employee.basicPay,
         payableDays: employee.payableDays,
         lopDays: employee.lop,
-        grossSalary: calculateGrossSalary(empId),
-        totalDeductions: calculateTotalDeductions(empId),
-        netSalary: calculateNetSalary(empId),
+        pfNo: employee.pfNo,
+        uanNo: employee.uanNo,
+        panNo: employee.panNo,
         bankDetails: {
           bankName: employee.bankName,
-          accountNo: employee.bankAccountNo,
+          accountNo: employee.bankAccountNo
         },
         allowances: allowanceData
-          .filter((a) => a.empId === empId && a.status === "Active")
-          .map((allowance) => ({
-            ...allowance,
+          .filter(a => a.empId === empId && a.status === "Active")
+          .map(allowance => ({
+            name: allowance.name,
             amount: calculateAllowanceAmount(
               calculateAttendanceBasedPay(
                 employee.basicPay,
@@ -1624,11 +1680,13 @@ const PayrollSystem = () => {
               ),
               allowance.percentage
             ).toString(),
+            percentage: allowance.percentage,
+            category: allowance.category
           })),
         deductions: deductions
-          .filter((d) => d.empId === empId && d.status === "Active")
-          .map((deduction) => ({
-            ...deduction,
+          .filter(d => d.empId === empId && d.status === "Active")
+          .map(deduction => ({
+            name: deduction.name,
             amount: calculateDeductionAmount(
               calculateAttendanceBasedPay(
                 employee.basicPay,
@@ -1637,8 +1695,14 @@ const PayrollSystem = () => {
               ),
               deduction.percentage
             ).toString(),
+            percentage: deduction.percentage,
+            category: deduction.category
           })),
+        grossSalary: calculateGrossSalary(empId),
+        totalDeductions: calculateTotalDeductions(empId),
+        netSalary: calculateNetSalary(empId)
       };
+      
 
       const response = await axios.post(
         `${API_URL}/payslips/generate`,
@@ -1656,6 +1720,7 @@ const PayrollSystem = () => {
     }
   };
 
+  
   const downloadPayslip = async (payslipId) => {
     try {
       const response = await axios.get(
@@ -1682,6 +1747,7 @@ const PayrollSystem = () => {
     }
   };
   return (
+
     <Container className="payroll-container">
       <Snackbar
         open={alert.open}
@@ -1742,6 +1808,8 @@ const PayrollSystem = () => {
           </Tabs>
         </AppBar>
 
+
+
         {/* Employees Tab */}
         <TabPanel value={tabIndex} index={0}>
           <Box className="header-container">
@@ -1781,6 +1849,8 @@ const PayrollSystem = () => {
                 <TableRow className="table-header">
                   <TableCell>Emp ID</TableCell>
                   <TableCell>Name</TableCell>
+                  <TableCell>Department</TableCell>  
+  <TableCell>Designation</TableCell>
                   <TableCell>Basic Pay</TableCell>
                   <TableCell>Bank Details</TableCell>
                   <TableCell>PF/UAN</TableCell>
@@ -1789,11 +1859,14 @@ const PayrollSystem = () => {
                   <TableCell align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
                 {employeeData.map((item) => (
                   <TableRow key={item.empId} className="table-row">
                     <TableCell>{item.empId}</TableCell>
                     <TableCell>{item.empName}</TableCell>
+                    <TableCell>{item.department}</TableCell>  {/* New cell */}
+  <TableCell>{item.designation}</TableCell>
                     <TableCell className="amount-cell">
                       ₹{item.basicPay}
                     </TableCell>
@@ -1840,6 +1913,7 @@ const PayrollSystem = () => {
             </Table>
           </TableContainer>
         </TabPanel>
+
 
         {/* Allowances Tab */}
         <TabPanel value={tabIndex} index={1}>
@@ -2115,10 +2189,19 @@ const PayrollSystem = () => {
             </Paper>
           ))}
         </TabPanel> */}
+
+
+
         {/* Payslips Tab */}
         <TabPanel value={tabIndex} index={3}>
           {employeeData.map((emp) => (
-            <Paper key={emp.empId} className="payslip-card">
+            <Paper key={emp.empId} className="payslip-card"
+            sx={{ 
+              marginBottom: '2rem',  // Adds space between payslip cards
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+            >
               <Grid container spacing={3}>
                 {/* Employee Details Section */}
                 <Grid item xs={12}>
@@ -2217,7 +2300,7 @@ const PayrollSystem = () => {
                 </Grid>
 
                 {/* Earnings Section */}
-                <Grid item xs={12} md={6}>
+                {/* <Grid item xs={12} md={6}>
                   <Paper className="earnings-section">
                     <Typography variant="h6" className="section-header">
                       Earnings
@@ -2261,10 +2344,10 @@ const PayrollSystem = () => {
                       </Box>
                     </Box>
                   </Paper>
-                </Grid>
+                </Grid> */}
 
                 {/* Deductions Section */}
-                <Grid item xs={12} md={6}>
+                {/* <Grid item xs={12} md={6}>
                   <Paper className="deductions-section">
                     <Typography variant="h6" className="section-header">
                       Deductions
@@ -2304,7 +2387,84 @@ const PayrollSystem = () => {
                       </Box>
                     </Box>
                   </Paper>
-                </Grid>
+                </Grid> */}
+
+
+
+<Grid container spacing={3}>
+  {/* Left Column - Earnings */}
+  <Grid item xs={12} md={6}>
+    <Paper className="earnings-section">
+      <Typography variant="h6" className="section-header">
+        Earnings
+      </Typography>
+      <Box className="amount-list">
+        <Box className="amount-row">
+          <Typography>Basic Pay</Typography>
+          <Typography>Rs. {emp.basicPay}</Typography>
+        </Box>
+        {allowanceData
+          .filter(a => a.empId === emp.empId && a.status === "Active")
+          .map(allowance => (
+            <Box key={allowance._id} className="amount-row">
+              <Typography>{allowance.name}</Typography>
+              <Typography>
+                Rs. {calculateAllowanceAmount(
+                  calculateAttendanceBasedPay(
+                    emp.basicPay,
+                    emp.payableDays,
+                    emp.lop
+                  ),
+                  allowance.percentage
+                ).toFixed(2)}
+              </Typography>
+            </Box>
+          ))}
+        <Box className="amount-row total">
+          <Typography><strong>Total Earnings</strong></Typography>
+          <Typography>
+            <strong>Rs. {calculateGrossSalary(emp.empId).toFixed(2)}</strong>
+          </Typography>
+        </Box>
+      </Box>
+    </Paper>
+  </Grid>
+
+  {/* Right Column - Deductions */}
+  <Grid item xs={12} md={6}>
+    <Paper className="deductions-section">
+      <Typography variant="h6" className="section-header">
+        Deductions
+      </Typography>
+      <Box className="amount-list">
+        {deductions
+          .filter(d => d.empId === emp.empId && d.status === "Active")
+          .map(deduction => (
+            <Box key={deduction._id} className="amount-row">
+              <Typography>{deduction.name}</Typography>
+              <Typography>
+                Rs. {calculateDeductionAmount(
+                  calculateAttendanceBasedPay(
+                    emp.basicPay,
+                    emp.payableDays,
+                    emp.lop
+                  ),
+                  deduction.percentage
+                ).toFixed(2)}
+              </Typography>
+            </Box>
+          ))}
+        <Box className="amount-row total">
+          <Typography><strong>Total Deductions</strong></Typography>
+          <Typography>
+            <strong>Rs. {calculateTotalDeductions(emp.empId).toFixed(2)}</strong>
+          </Typography>
+        </Box>
+      </Box>
+    </Paper>
+  </Grid>
+</Grid>
+
 
                 {/* Net Salary Section */}
                 <Grid item xs={12}>
@@ -2343,7 +2503,9 @@ const PayrollSystem = () => {
           ))}
         </TabPanel>
 
-        {/* Employee Dialog */}
+
+
+        {/* Create Employee Dialog */}
         <Dialog
           open={openEmployeeDialog}
           onClose={handleCloseEmployeeDialog}
@@ -2382,6 +2544,24 @@ const PayrollSystem = () => {
                   required
                 />
               </Grid>
+              <Grid item xs={12} md={6}>
+  <TextField
+    label="Department"
+    fullWidth
+    value={newEmployee.department}
+    onChange={(e) => setNewEmployee({ ...newEmployee, department: e.target.value })}
+    required
+  />
+</Grid>
+<Grid item xs={12} md={6}>
+  <TextField
+    label="Designation" 
+    fullWidth
+    value={newEmployee.designation}
+    onChange={(e) => setNewEmployee({ ...newEmployee, designation: e.target.value })}
+    required
+  />
+</Grid>
               <Grid item xs={12} md={6}>
                 <TextField
                   label="Basic Pay"
@@ -2472,7 +2652,7 @@ const PayrollSystem = () => {
                   required
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              {/* <Grid item xs={12} md={6}>
                 <TextField
                   label="LOP Days"
                   type="number"
@@ -2482,7 +2662,22 @@ const PayrollSystem = () => {
                     setNewEmployee({ ...newEmployee, lop: e.target.value })
                   }
                 />
-              </Grid>
+              </Grid> */}
+           <Grid item xs={12} md={6}>
+  <TextField
+  label="LOP Days"
+  type="number"
+  fullWidth
+  value={newEmployee.lop}
+  onChange={handleLOPChange}
+  inputProps={{
+    step: 0.5,
+    min: 0
+  }}
+  helperText="Enter values in 0.5 day increments"
+/>
+  
+</Grid>
             </Grid>
           </DialogContent>
           <DialogActions className="dialog-actions">
@@ -2503,7 +2698,7 @@ const PayrollSystem = () => {
           </DialogActions>
         </Dialog>
 
-        {/* Allowance Dialog */}
+        {/* Create Allowance Dialog */}
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
@@ -2632,7 +2827,7 @@ const PayrollSystem = () => {
           </DialogActions>
         </Dialog>
 
-        {/* Deduction Dialog */}
+        {/* Create Deduction Dialog */}
         <Dialog
           open={openDeductionDialog}
           onClose={handleCloseDeductionDialog}
