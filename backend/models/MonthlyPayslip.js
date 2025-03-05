@@ -3,6 +3,11 @@ import mongoose from 'mongoose';
 const monthlyPayslipSchema = new mongoose.Schema({
   empId: { type: String, required: true },
   empName: { type: String, required: true },
+  department: { type: String, required: true },
+  designation: { type: String, required: true },
+  pfNo: { type: String, required: true },
+  uanNo: { type: String, required: true },
+  panNo: { type: String, required: true },
   month: { type: String, required: true },
   year: { type: Number, required: true },
   generatedDate: { type: Date, default: Date.now },
