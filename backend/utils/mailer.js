@@ -150,7 +150,6 @@ export const sendOtpEmail = async (email, otp) => {
     html: `
       <p>Thank you for registering with us. Please use the OTP below to verify your email:</p>
       <h3>${otp}</h3>
-      <p>Or click <a href="${verifyLink}">here</a> to verify your email directly.</p>
       <p>This OTP will expire in 10 minutes.</p>
     `
   };
