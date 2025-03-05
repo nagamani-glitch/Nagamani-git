@@ -241,9 +241,12 @@ const Header = () => {
                 onClick={handleNotificationsToggle}
               >
                 <FaBell size={28} title="Notifications" />
-                <Badge bg="danger" pill className="notification-badge">
-                  3
-                </Badge>
+              
+              <Badge bg="danger" pill className="notification-badge" style={{ marginTop: "10px", marginRight: "30px" }}>
+                3
+              </Badge>
+
+
               </Nav.Link>
 
               <Nav.Link
