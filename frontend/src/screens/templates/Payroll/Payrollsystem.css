@@ -128,9 +128,15 @@
   transition: var(--transition-base) !important;
 }
 
-.create-button:hover, .import-button:hover, .export-button:hover {
+.create-button:hover, .export-button:hover {
   transform: translateY(-3px) scale(1.02);
   background: linear-gradient(135deg, var(--sky-dark), var(--sky-dark)) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.import-button:hover{
+  transform: translateY(-3px) scale(1.02);
+  /* background: linear-gradient(135deg, var(--sky-dark), var(--sky-dark)) !important; */
   box-shadow: var(--shadow-lg) !important;
 }
 
@@ -189,6 +195,7 @@
   display: flex;
   gap: 0.75rem;
   justify-content: center;
+align-content: space-around;
 }
 
 .edit-button, .delete-button {
@@ -198,12 +205,12 @@
 }
 
 .edit-button {
-  background-color: rgba(56, 189, 248, 0.1) !important;
+  /* background-color: rgba(56, 189, 248, 0.1) !important; */
   color: var(--sky-dark) !important;
 }
 
 .delete-button {
-  background-color: rgba(239, 68, 68, 0.1) !important;
+  /* background-color: rgba(239, 68, 68, 0.1) !important; */
   color: var(--error-color) !important;
 }
 
