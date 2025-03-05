@@ -118,7 +118,7 @@
 }
 
 /* Buttons */
-.create-button {
+.create-button, .import-button, .export-button {
   padding: 0.75rem 2rem !important;
   border-radius: 12px !important;
   font-weight: 600 !important;
@@ -128,7 +128,7 @@
   transition: var(--transition-base) !important;
 }
 
-.create-button:hover {
+.create-button:hover, .import-button:hover, .export-button:hover {
   transform: translateY(-3px) scale(1.02);
   background: linear-gradient(135deg, var(--sky-dark), var(--sky-dark)) !important;
   box-shadow: var(--shadow-lg) !important;
@@ -211,7 +211,58 @@
   transform: scale(1.1);
 }
 
+/* Excel Import/Export Button Styles */
+.excel-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.import-button,
+.export-button {
+  padding: 0.75rem 2rem !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  transition: var(--transition-base) !important;
+}
+
+.import-button {
+  background: linear-gradient(135deg, var(--sky-light), var(--sky-medium)) !important;
+  color: var(--sky-dark) !important;
+}
+
+.export-button {
+  background: linear-gradient(135deg, var(--sky-medium), var(--sky-dark)) !important;
+  color: white !important;
+}
+
+.import-button:hover,
+.export-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* File Input Styling */
+.file-input-label {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.file-input-label:hover .import-button {
+  background: linear-gradient(135deg, var(--sky-medium), var(--sky-dark)) !important;
+  color: white !important;
+}
+
 /* Enhanced Payslip Styles */
+.payslip-card {
+  padding: 2rem;
+  margin-bottom: 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  animation: fadeIn 0.5s ease-out;
+}
+
 .payslip-header {
   display: flex;
   align-items: center;
@@ -219,7 +270,13 @@
   padding-bottom: 1.5rem;
   margin-bottom: 1.5rem;
   border-bottom: 2px solid var(--border-color);
-  padding: 20px;
+}
+
+.emp-id-chip {
+  background: var(--sky-light) !important;
+  color: var(--sky-dark) !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
 }
 
 .details-grid {
@@ -268,7 +325,6 @@
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
   border-bottom: 2px solid var(--border-color);
-  padding: 20px;
 }
 
 .amount-list {
@@ -305,6 +361,7 @@
   border-radius: 16px;
   color: white;
   box-shadow: var(--shadow-lg);
+  margin-top: 2rem;
 }
 
 .download-button {
@@ -321,30 +378,6 @@
   box-shadow: var(--shadow-md) !important;
   background: var(--sky-light) !important;
 }
-
-.attendance-grid {
-  margin: 1.5rem 0;
-}
-
-/* Status and Category Chips */
-.category-chip,
-.status-chip {
-  padding: 0.5rem 1rem !important;
-  border-radius: 20px !important;
-  font-weight: 500 !important;
-  font-size: 0.875rem !important;
-  transition: var(--transition-base) !important;
-}
-
-.category-chip.regular { background-color: var(--sky-light); color: var(--sky-dark); }
-.category-chip.travel { background-color: #fef3c7; color: #d97706; }
-.category-chip.special { background-color: #fce7f3; color: #db2777; }
-.category-chip.tax { background-color: #fee2e2; color: #dc2626; }
-.category-chip.insurance { background-color: #dbeafe; color: #2563eb; }
-.category-chip.loan { background-color: #f3e8ff; color: #7c3aed; }
-
-.status-chip.active { background-color: #dcfce7; color: #16a34a; }
-.status-chip.inactive { background-color: #fee2e2; color: #dc2626; }
 
 /* Dialog Styles */
 .dialog-paper {
@@ -373,7 +406,28 @@
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(4px);
   border-radius: 12px;
+  margin-bottom: 1rem !important;
 }
+
+/* Status and Category Chips */
+.category-chip,
+.status-chip {
+  padding: 0.5rem 1rem !important;
+  border-radius: 20px !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  transition: var(--transition-base) !important;
+}
+
+.category-chip.regular { background-color: var(--sky-light) !important; color: var(--sky-dark) !important; }
+.category-chip.travel { background-color: #fef3c7 !important; color: #d97706 !important; }
+.category-chip.special { background-color: #fce7f3 !important; color: #db2777 !important; }
+.category-chip.tax { background-color: #fee2e2 !important; color: #dc2626 !important; }
+.category-chip.insurance { background-color: #dbeafe !important; color: #2563eb !important; }
+.category-chip.loan { background-color: #f3e8ff !important; color: #7c3aed !important; }
+
+.status-chip.active { background-color: #dcfce7 !important; color: #16a34a !important; }
+.status-chip.inactive { background-color: #fee2e2 !important; color: #dc2626 !important; }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
@@ -388,7 +442,12 @@
     padding: 1rem;
   }
 
-  .create-button {
+  .excel-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .create-button, .import-button, .export-button {
     width: 100%;
   }
 
@@ -435,9 +494,10 @@
     padding: 0.75rem 1rem;
   }
 
-  .payslip-title {
+  .payslip-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 1rem;
   }
 
   .action-cell {
@@ -449,12 +509,6 @@
     padding: 1rem !important;
   }
 
-  .payslip-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
   .details-grid {
     padding: 1rem;
   }
@@ -463,4 +517,56 @@
     width: 100%;
     margin-top: 1rem;
   }
+
+  .tab-item {
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .title-badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+  }
 }
+
+/* Print Styles */
+@media print {
+  .payroll-container {
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .header-container,
+  .action-cell,
+  .create-button,
+  .import-button,
+  .export-button,
+  .download-button {
+    display: none !important;
+  }
+
+  .payslip-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    box-shadow: none;
+  }
+
+  .table-container {
+    overflow: visible;
+    box-shadow: none;
+  }
+
+  .details-grid,
+  .earnings-section,
+  .deductions-section,
+  .net-salary-section {
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+  }
+}
+
