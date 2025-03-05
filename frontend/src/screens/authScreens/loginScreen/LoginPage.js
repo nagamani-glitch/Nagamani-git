@@ -27,7 +27,7 @@
 
 //     const handleSubmit = async (e) => {
 //       e.preventDefault();
-  
+
 //       const config = {
 //         headers: {
 //           'Content-Type': 'application/json'
@@ -41,7 +41,7 @@
 //           formData,
 //           config
 //         );
-    
+
 //         localStorage.setItem('token', response.data.token);
 //         navigate('/Dashboards');
 //       } catch (error) {
@@ -175,11 +175,11 @@ const LoginPage = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:5000/api/auth/login', 
+        'http://localhost:5000/api/auth/login',
         formData,
         config
       );
-  
+
       localStorage.setItem('token', response.data.token);
       navigate('/Dashboards');
     } catch (error) {
@@ -201,6 +201,36 @@ const LoginPage = () => {
         <Container
           component="main"
           maxWidth="xs"
+          // sx={{
+          //   mt: 8,
+          //   p: 4,
+          //   boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+          //   borderRadius: '20px',
+          //   backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          //   backdropFilter: 'blur(15px)',
+          //   border: '1px solid rgba(255, 255, 255, 0.18)',
+          //   '& .MuiTextField-root': {
+          //     '& .MuiOutlinedInput-root': {
+          //       '& fieldset': {
+          //         borderColor: 'rgba(255, 255, 255, 0.3)',
+          //       },
+          //       '&:hover fieldset': {
+          //         borderColor: 'rgba(255, 255, 255, 0.5)',
+          //       },
+          //     },
+          //     '& .MuiInputLabel-root': {
+          //       color: 'rgba(255, 255, 255, 0.7)',
+          //     },
+          //     '& .MuiOutlinedInput-input': {
+          //       color: 'white',
+          //       backgroundColor:'#000',
+
+          //     },
+          //   },
+          // }}
+
+          // Update the Container sx prop styling:
+
           sx={{
             mt: 8,
             p: 4,
@@ -211,27 +241,32 @@ const LoginPage = () => {
             border: '1px solid rgba(255, 255, 255, 0.18)',
             '& .MuiTextField-root': {
               '& .MuiOutlinedInput-root': {
+                backgroundColor: 'black', // Add this line
                 '& fieldset': {
                   borderColor: 'rgba(255, 255, 255, 0.3)',
                 },
                 '&:hover fieldset': {
                   borderColor: 'rgba(255, 255, 255, 0.5)',
                 },
+                '& input': { // Add this block
+                  color: 'white',
+                  '&::placeholder': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }
+                }
               },
               '& .MuiInputLabel-root': {
                 color: 'rgba(255, 255, 255, 0.7)',
-              },
-              '& .MuiOutlinedInput-input': {
-                color: 'white',
-              },
-            },
+              }
+            }
           }}
+
         >
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            sx={{ 
-              mb: 2, 
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{
+              mb: 2,
               textAlign: 'center',
               color: 'white',
               fontWeight: 600,
@@ -285,8 +320,8 @@ const LoginPage = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ 
-                  mt: 3, 
+                sx={{
+                  mt: 3,
                   mb: 2,
                   backgroundColor: '#4a90e2',
                   '&:hover': {
@@ -300,10 +335,10 @@ const LoginPage = () => {
                 Login
               </Button>
             </motion.div>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                mt: 2, 
+            <Typography
+              variant="body2"
+              sx={{
+                mt: 2,
                 textAlign: 'center',
                 color: 'rgba(255, 255, 255, 0.8)',
                 '& a': {
