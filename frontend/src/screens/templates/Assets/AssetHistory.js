@@ -11,99 +11,190 @@ import {
 } from '@mui/icons-material';
 
 
-// Add toSentenceCase helper function at the top
-const toSentenceCase = (str) => {
-  if (!str) return '';
-  return str
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
 
-const AssetHistory = () => {
-  const [assets, setAssets] = useState([]);
-  const [editingAssetId, setEditingAssetId] = useState(null);
-  const [editData, setEditData] = useState({ status: '', returnDate: '' });
-  const [newAssetData, setNewAssetData] = useState({ assetName: '', category: '', status: '', returnDate: '', allottedDate: '' });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  useEffect(() => {
-    fetchAssets();
-  }, []);
+// const AssetHistory = () => {
+//   const [assets, setAssets] = useState([]);
+//   const [editingAssetId, setEditingAssetId] = useState(null);
+//   const [editData, setEditData] = useState({ status: '', returnDate: '' });
+//   const [newAssetData, setNewAssetData] = useState({ assetName: '', category: '', status: '', returnDate: '', allottedDate: '' });
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const fetchAssets = async () => {
-    try {
-      const response = await getAssets();
-      setAssets(response.data);
-    } catch (error) {
-      console.error('Error fetching asset history:', error);
-    }
+//   useEffect(() => {
+//     fetchAssets();
+//   }, []);
+
+//   const fetchAssets = async () => {
+//     try {
+//       const response = await getAssets();
+//       setAssets(response.data);
+//     } catch (error) {
+//       console.error('Error fetching asset history:', error);
+//     }
+//   };
+
+//   const handleDelete = async (id) => {
+//     try {
+//       await deleteAsset(id);
+//       fetchAssets();
+//     } catch (error) {
+//       console.error('Error deleting asset:', error);
+//     }
+//   };
+
+//   const handleEditClick = (asset) => {
+//     setEditingAssetId(asset._id);
+//     setEditData({
+//       status: asset.status,
+//       returnDate: asset.returnDate ? new Date(asset.returnDate).toISOString().split('T')[0] : '',
+//     });
+//   };
+
+//   const handleAddAsset = async (e) => {
+//     e.preventDefault();
+//     try {
+//       const formattedData = {
+//         ...newAssetData,
+//         assetName: toSentenceCase(newAssetData.assetName),
+//         category: toSentenceCase(newAssetData.category)
+//       };
+//       await createAsset(formattedData);
+//       fetchAssets();
+//       setNewAssetData({ assetName: '', category: '', status: '', returnDate: '', allottedDate: '' });
+//       setIsAddModalOpen(false);
+//     } catch (error) {
+//       console.error('Error adding new asset:', error);
+//     }
+//   };
+
+//   const handleUpdate = async (e) => {
+//     e.preventDefault();
+//     try {
+//       await updateAsset(editingAssetId, editData);
+//       setEditingAssetId(null);
+//       fetchAssets();
+//     } catch (error) {
+//       console.error('Error updating asset:', error);
+//     }
+//   };
+
+//   const filteredAssets = assets.filter(asset =>
+//     asset.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     asset.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     asset.category.toLowerCase().includes(searchTerm.toLowerCase())
+//   );
+
+//   const modalStyle = {
+//     position: 'absolute',
+//     top: '50%',
+//     left: '50%',
+//     transform: 'translate(-50%, -50%)',
+//     width: 400,
+//     bgcolor: 'background.paper',
+//     borderRadius: 2,
+//     boxShadow: 24,
+//     p: 4,
+//   };
+
+// Add toSentenceCase helper function at the top  HISTORY
+const  toSentenceCase= (str) => {
+    if (!str) return '';
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
-
-  const handleDelete = async (id) => {
-    try {
-      await deleteAsset(id);
+   
+  const AssetHistory = () => {
+    const [assets, setAssets] = useState([]);
+    const [editingAssetId, setEditingAssetId] = useState(null);
+    const [editData, setEditData] = useState({ status: '', returnDate: '' });
+    const [newAssetData, setNewAssetData] = useState({ assetName: '', category: '', status: '', returnDate: '', allottedDate: '' });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+   
+    useEffect(() => {
       fetchAssets();
-    } catch (error) {
-      console.error('Error deleting asset:', error);
-    }
-  };
+    }, []);
+   
+    const fetchAssets = async () => {
+      try {
+        const response = await getAssets();
+        setAssets(response.data);
+      } catch (error) {
+        console.error('Error fetching asset history:', error);
+      }
+    };
+   
+    const handleDelete = async (id) => {
+      try {
+        await deleteAsset(id);
+        fetchAssets();
+      } catch (error) {
+        console.error('Error deleting asset:', error);
+      }
+    };
+   
+    const handleEditClick = (asset) => {
+      setEditingAssetId(asset._id);
+      setEditData({
+        status: asset.status,
+        returnDate: asset.returnDate ? new Date(asset.returnDate).toISOString().split('T')[0] : '',
+      });
+    };
+   
+    const handleAddAsset = async (e) => {
+      e.preventDefault();
+      try {
+        const formattedData = {
+          ...newAssetData,
+          assetName: (newAssetData.assetName),
+          category: (newAssetData.category)
+        };
+        await createAsset(formattedData);
+        fetchAssets();
+        setNewAssetData({ assetName: '', category: '', status: '', returnDate: '', allottedDate: '' });
+        setIsAddModalOpen(false);
+      } catch (error) {
+        console.error('Error adding new asset:', error);
+      }
+    };
+   
+    const handleUpdate = async (e) => {
+      e.preventDefault();
+      try {
+        await updateAsset(editingAssetId, editData);
+        setEditingAssetId(null);
+        fetchAssets();
+      } catch (error) {
+        console.error('Error updating asset:', error);
+      }
+    };
+   
+    const filteredAssets = assets.filter(asset =>
+      asset.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      asset.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      asset.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+   
+    const modalStyle = {
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: 400,
+      bgcolor: 'background.paper',
+      borderRadius: 2,
+      boxShadow: 24,
+      p: 4,
+    };
+   
+   
+ 
+   
 
-  const handleEditClick = (asset) => {
-    setEditingAssetId(asset._id);
-    setEditData({
-      status: asset.status,
-      returnDate: asset.returnDate ? new Date(asset.returnDate).toISOString().split('T')[0] : '',
-    });
-  };
-
-  const handleAddAsset = async (e) => {
-    e.preventDefault();
-    try {
-      const formattedData = {
-        ...newAssetData,
-        assetName: toSentenceCase(newAssetData.assetName),
-        category: toSentenceCase(newAssetData.category)
-      };
-      await createAsset(formattedData);
-      fetchAssets();
-      setNewAssetData({ assetName: '', category: '', status: '', returnDate: '', allottedDate: '' });
-      setIsAddModalOpen(false);
-    } catch (error) {
-      console.error('Error adding new asset:', error);
-    }
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      await updateAsset(editingAssetId, editData);
-      setEditingAssetId(null);
-      fetchAssets();
-    } catch (error) {
-      console.error('Error updating asset:', error);
-    }
-  };
-
-  const filteredAssets = assets.filter(asset =>
-    asset.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    asset.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    asset.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const modalStyle = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: 'background.paper',
-    borderRadius: 2,
-    boxShadow: 24,
-    p: 4,
-  };
 
   return (   
      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -200,8 +291,8 @@ const AssetHistory = () => {
                       component={motion.tr}
                       whileHover={{ backgroundColor: '#f8fafc' }}
                     >
-                      <TableCell>{toSentenceCase(asset.assetName)}</TableCell>
-                      <TableCell>{toSentenceCase(asset.category)}</TableCell>
+                      <TableCell>{(asset.assetName)}</TableCell>
+                      <TableCell>{(asset.category)}</TableCell>
                       <TableCell>{new Date(asset.allottedDate).toLocaleDateString()}</TableCell>
                       <TableCell>{asset.returnDate ? new Date(asset.returnDate).toLocaleDateString() : 'N/A'}</TableCell>
                       <TableCell>{asset.status}</TableCell>
@@ -264,10 +355,10 @@ const AssetHistory = () => {
                     }}
                 >
                     <TableCell sx={{ color: '#d013d1', fontWeight: 500 }}>
-                        {toSentenceCase(asset.assetName)}
+                        {(asset.assetName)}
                     </TableCell>
                     <TableCell sx={{ color: '#64748b' }}>
-                        {toSentenceCase(asset.category)}
+                        {(asset.category)}
                     </TableCell>
                     <TableCell sx={{ color: '#64748b' }}>
                         {new Date(asset.allottedDate).toLocaleDateString()}

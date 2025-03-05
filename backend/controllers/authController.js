@@ -56,42 +56,6 @@ export const loginAuth = async (req, res) => {
 };
 
 
-
-
-
-
-
-
-
-// export const forgotPassword = async (req, res) => {
-//     const { email } = req.body;
-//     try {
-//         const user = await User.findOne({ email });
-//         if (!user) {
-//             return res.status(404).json({ message: 'Email not found' });
-//         }
-
-//         // Generate reset token
-//         const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { 
-//             expiresIn: '1h' 
-//         });
-
-//         // Save token to user
-//         user.resetPasswordToken = resetToken;
-//         user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
-//         await user.save();
-
-//         // Send reset email
-//         await sendResetEmail(email);
-//         res.status(200).json({ message: 'Reset link sent successfully' });
-        
-//     } catch (error) {
-//         console.error('Reset password error:', error);
-//         res.status(500).json({ message: 'Server error' });
-//     }
-// };
-
-
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
@@ -115,37 +79,6 @@ export const forgotPassword = async (req, res) => {
       res.status(500).json({ message: 'Failed to send reset link' });
   }
 };
-
-
-
-
-
-// export const resetPassword = async (req, res) => {
-//   const { token, newPassword } = req.body;
-//   try {
-//     const user = await User.findOne({
-//       resetPasswordToken: token,
-//       resetPasswordExpires: { $gt: Date.now() }
-//     });
-
-//     if (!user) {
-//       return res.status(400).json({ message: 'Invalid or expired token' });
-//     }
-
-//     const salt = await bcrypt.genSalt(10);
-//     user.password = await bcrypt.hash(newPassword, salt);
-//     user.resetPasswordToken = undefined;
-//     user.resetPasswordExpires = undefined;
-//     await user.save();
-
-//     res.status(200).json({ message: 'Password reset successful' });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-
-
 
 export const resetPassword = async (req, res) => {
   const { token } = req.params;
@@ -174,14 +107,6 @@ export const resetPassword = async (req, res) => {
       res.status(400).json({ message: 'Invalid or expired token' });
   }
 };
-
-
-
-
-
-
-
-
 
 // Add this export function for OTP verification
 export const verifyOtp = async (req, res) => {
