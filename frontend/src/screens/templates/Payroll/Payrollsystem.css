@@ -198,26 +198,6 @@
 align-content: space-around;
 }
 
-.edit-button, .delete-button {
-  padding: 0.5rem !important;
-  border-radius: 8px !important;
-  transition: var(--transition-base) !important;
-}
-
-.edit-button {
-  /* background-color: rgba(56, 189, 248, 0.1) !important; */
-  color: var(--sky-dark) !important;
-}
-
-.delete-button {
-  /* background-color: rgba(239, 68, 68, 0.1) !important; */
-  color: var(--error-color) !important;
-}
-
-.edit-button:hover, .delete-button:hover {
-  transform: scale(1.1);
-}
-
 /* Excel Import/Export Button Styles */
 .excel-buttons {
   display: flex;

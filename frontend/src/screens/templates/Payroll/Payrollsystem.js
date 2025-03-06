@@ -849,7 +849,16 @@ const PayrollSystem = () => {
                             setOpenEmployeeDialog(true);
                           }}
                         >
-                          <EditIcon />
+                          <EditIcon 
+                          sx={{
+                            color: "#007bff",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              color: "#0056b3",
+                              transform: "scale(1.1)"
+                            }
+                          }}
+                          />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
@@ -857,7 +866,16 @@ const PayrollSystem = () => {
                           className="delete-button"
                           onClick={() => handleDeleteEmployee(item.empId)}
                         >
-                          <DeleteIcon />
+                          <DeleteIcon 
+                           sx={{ 
+                            color: "#d32f2f",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              color: "#ff1744",
+                              transform: "scale(1.1)"
+                            }
+                          }}
+                          />
                         </IconButton>
                       </Tooltip>
                     </TableCell>
@@ -950,12 +968,29 @@ const PayrollSystem = () => {
                             setOpenDialog(true);
                           }}
                         >
-                          <EditIcon />
+                          <EditIcon 
+                          sx={{ color: "#1976d2 ",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              color: "#1565c0",
+                              transform: "scale(1.1)"
+                            }
+                           }} 
+                          />
                         </IconButton>
                         <IconButton
                           onClick={() => handleDeleteAllowance(item._id)}
                         >
-                          <DeleteIcon />
+                          <DeleteIcon 
+                          sx={{ 
+                            color: "#d32f2f",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              color: "#ff1744",
+                              transform: "scale(1.1)"
+                            }
+                          }}
+                          />
                         </IconButton>
                       </TableCell>
                     </TableRow>
@@ -1049,12 +1084,29 @@ const PayrollSystem = () => {
                             setOpenDeductionDialog(true);
                           }}
                         >
-                          <EditIcon />
+                          <EditIcon 
+                           sx={{ color: "#1976d2 ",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              color: "#1565c0",
+                              transform: "scale(1.1)"
+                            }
+                           }} 
+                          />
                         </IconButton>
                         <IconButton
                           onClick={() => handleDeleteDeduction(item._id)}
                         >
-                          <DeleteIcon />
+                          <DeleteIcon 
+                           sx={{ 
+                            color: "#d32f2f",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              color: "#ff1744",
+                              transform: "scale(1.1)"
+                            }
+                          }}
+                          />
                         </IconButton>
                       </TableCell>
                     </TableRow>
