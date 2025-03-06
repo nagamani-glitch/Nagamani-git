@@ -9,7 +9,7 @@ import axios from 'axios';
 
 // All component imports remain the same as in previous code...
 import MainDashboard from "./MainDashboard";
-import DocumentRequestPage from './productManagement/DocumentRequestPage';
+// import DocumentRequestPage from './productManagement/DocumentRequestPage';
 import RecruitmentDashboard from "./Recruitment/RecruitmentDashboard";
 import RecruitmentPipeline from "./Recruitment/RecruitmentPipeline";
 import RecruitmentSurvey from "./Recruitment/RecruitmentSurvey";
@@ -103,7 +103,7 @@ function Dashboard() {
 
           {/* <Route path="/profile/:Id" element={<ProfilePage />} /> */}
           <Route path="/employees" element={<EmployeeListing onNavigate={handleNavigation} />} />
-          <Route path="/document-request" element={<DocumentRequestPage />} />
+          {/* <Route path="/document-request" element={<DocumentRequestPage />} /> */}
           <Route path="/work-type-request" element={<WorkTypeRequest />} />
           <Route path="/shift-requests" element={<ShiftRequests />} />
           <Route path="/rotating-shift-assign" element={<RotatingShiftAssign />} />

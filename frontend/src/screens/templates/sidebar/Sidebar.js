@@ -139,11 +139,11 @@ function Sidebar() {
             <li onClick={() => handleNavigation("/Dashboards/employees")}>
               Employees
             </li>
-            <li
+            {/* <li
               onClick={() => handleNavigation("/Dashboards/document-request")}
             >
               Document Requests
-            </li>
+            </li> */}
             <li onClick={() => handleNavigation("/Dashboards/shift-requests")}>
               Shift Requests
             </li>

@@ -151,7 +151,7 @@ app.use('/api/rotating-shift', rotatingShiftRoutes);
 app.use('/api/rotating-worktype', rotatingWorktypeRoutes);
 app.use('/api/my-leave-requests', myLeaveRequestRoutes);
 app.use('/api/leave-requests', leaveRequestRoutes);
-app.use('/api/documents', documentRoute);
+// app.use('/api/documents', documentRoute);
 
 
 const PORT = process.env.PORT || 5000;
