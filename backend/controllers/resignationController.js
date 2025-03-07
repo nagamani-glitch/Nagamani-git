@@ -57,3 +57,13 @@ export const deleteResignation = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+// Add this new controller function
+export const sendEmail = async (req, res) => {
+  try {
+    await sendResignationEmail(req.body);
+    res.status(200).json({ message: 'Email sent successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+

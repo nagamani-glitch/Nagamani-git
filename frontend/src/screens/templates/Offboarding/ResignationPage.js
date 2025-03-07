@@ -152,21 +152,37 @@ const ResignationPage = () => {
     });
   };
 
+  // const handleSendEmail = async (employee) => {
+  //   try {
+  //     await axios.post("http://localhost:5000/api/resignations", {
+  //       name: employee.name,
+  //       email: employee.email,
+  //       position: employee.position,
+  //       status: employee.status,
+  //       description: employee.description,
+  //     });
+  //     alert(`Resignation email sent successfully from ${employee.email}`);
+  //   } catch (error) {
+  //     console.error("Error sending email:", error);
+  //     setError("Failed to send email");
+  //   }
+  // };
   const handleSendEmail = async (employee) => {
     try {
-      await axios.post("http://localhost:5000/api/resignations", {
+      await axios.post("http://localhost:5000/api/resignations/email", {
         name: employee.name,
         email: employee.email,
         position: employee.position,
         status: employee.status,
         description: employee.description,
       });
-      alert(`Resignation email sent successfully from ${employee.email}`);
+      alert(`Resignation email sent successfully to ${employee.email}`);
     } catch (error) {
       console.error("Error sending email:", error);
       setError("Failed to send email");
     }
   };
+  
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);

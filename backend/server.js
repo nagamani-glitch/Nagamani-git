@@ -33,11 +33,11 @@ import timesheetRoutes from './routes/timesheetRoutes.js';
 
 
 
-// Sangeeta 
-import allowanceRoutes from './routes/allowanceRoutes.js';
-import deductionRoutes from './routes/deductionRoutes.js';
-import payslipRoutes from './routes/payslipRoutes.js';
-import federalTaxRoutes from './routes/federalTaxRoutes.js';
+// // Sangeeta 
+// import allowanceRoutes from './routes/allowanceRoutes.js';
+// import deductionRoutes from './routes/deductionRoutes.js';
+// import payslipRoutes from './routes/payslipRoutes.js';
+// import federalTaxRoutes from './routes/federalTaxRoutes.js';
 import objectiveRoutes from './routes/objectiveRoutes.js';
 import offboardingRoutes from './routes/offboardingRoutes.js';
 import resignationRoutes from './routes/resignationRoutes.js';
@@ -128,11 +128,11 @@ app.use('/api/timesheet', timesheetRoutes);
 
 // Sangeeta integration
 
-app.use('/api/deductions', deductionRoutes);
-app.use('/api/allowances', allowanceRoutes);
+// app.use('/api/deductions', deductionRoutes);
+// app.use('/api/allowances', allowanceRoutes);
 app.use('/api/payroll-contracts', payrollContractRoutes);
-app.use('/api/payslips', payslipRoutes);
-app.use('/api/federal-tax', federalTaxRoutes);
+// app.use('/api/payslips', payslipRoutes);
+// app.use('/api/federal-tax', federalTaxRoutes);
 app.use('/api/objectives', objectiveRoutes);
 app.use('/api/feedback', Feedback);
 app.use('/api/offboarding', offboardingRoutes);
@@ -151,7 +151,7 @@ app.use('/api/rotating-shift', rotatingShiftRoutes);
 app.use('/api/rotating-worktype', rotatingWorktypeRoutes);
 app.use('/api/my-leave-requests', myLeaveRequestRoutes);
 app.use('/api/leave-requests', leaveRequestRoutes);
-app.use('/api/documents', documentRoute);
+// app.use('/api/documents', documentRoute);
 
 
 const PORT = process.env.PORT || 5000;

@@ -25,22 +25,98 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { Search, Add, Edit, Delete, Close } from "@mui/icons-material";
+import AddAsset from "./AddAsset";
+
+
 
 const AssetView = () => {
   const [assets, setAssets] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setModalOpen] = useState(false);
   const [editAsset, setEditAsset] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [assetData, setAssetData] = useState({
+    const [assetData, setAssetData] = useState({
     name: "",
     category: "",
     status: "",
     currentEmployee: "",
     previousEmployees: [],
   });
+ 
+  useEffect(() => {
+    fetchAssets();
+  }, []);
+ 
+  const API_URL = process.env.REACT_APP_API_URL;
+ 
+  const fetchAssets = () => {
+    setLoading(true);
+    axios
+      .get(`${API_URL}/api/assets`)
+      .then((response) => {
+        setAssets(response.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching assets:', error);
+        setError('Failed to load assets');
+        setLoading(false);
+      });
+  };
+ 
+  const handleAddAssetClick = () => {
+    setEditAsset(null);
+    setModalOpen(true);
+  };
+ 
+  const handleEditClick = (asset) => {
+    setEditAsset(asset);
+    setModalOpen(true);
+  };
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSearchTerm('');
+  };
+ 
+  const filteredAssets = assets.filter((asset) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return (
+      asset.name.toLowerCase().includes(searchTermLower) ||
+      asset.category.toLowerCase().includes(searchTermLower) ||
+      asset.status.toLowerCase().includes(searchTermLower) ||
+      (asset.currentEmployee && asset.currentEmployee.toLowerCase().includes(searchTermLower))
+    );
+  });
+ 
+  const handleDelete = (assetId) => {
+    if (window.confirm('Are you sure you want to delete this asset?')) {
+      setLoading(true);
+      axios
+        .delete(`${API_URL}/api/assets/${assetId}`)
+        .then(() => {
+          fetchAssets();
+        })
+        .catch((error) => {
+          console.error('Error deleting asset:', error);
+          setError('Failed to delete asset');
+          setLoading(false);
+        });
+    }
+  };
+ 
+  const toSentenceCase = (str) => {
+    if (!str) return '';
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+ 
+ 
+
 
   const onClose = () => {
     setModalOpen(false);
@@ -83,96 +159,7 @@ const AssetView = () => {
     }
   };
 
-  useEffect(() => {
-    fetchAssets();
-  }, []);
 
-  useEffect(() => {
-    if (editAsset) {
-      setAssetData({
-        name: editAsset.name,
-        category: editAsset.category,
-        status: editAsset.status,
-        currentEmployee: editAsset.currentEmployee || "",
-        previousEmployees: editAsset.previousEmployees || [],
-      });
-    }
-  }, [editAsset]);
-
-  const API_URL = process.env.REACT_APP_API_URL;
-
-  const fetchAssets = () => {
-    setLoading(true);
-    axios
-      .get(`${API_URL}/api/assets`)
-      .then((response) => {
-        setAssets(response.data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching assets:", error);
-        setError("Failed to load assets");
-        setLoading(false);
-      });
-  };
-
-  const handleAddAssetClick = () => {
-    setEditAsset(null);
-    setModalOpen(true);
-  };
-
-  const handleEditClick = (asset) => {
-    setEditAsset(asset);
-    setAssetData({
-      name: asset.name,
-      category: asset.category,
-      status: asset.status,
-      currentEmployee: asset.currentEmployee || "",
-      previousEmployees: asset.previousEmployees || [],
-    });
-    setModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setSearchTerm("");
-  };
-
-  const filteredAssets = assets.filter((asset) => {
-    const searchTermLower = searchTerm.toLowerCase();
-    return (
-      asset.name.toLowerCase().includes(searchTermLower) ||
-      asset.category.toLowerCase().includes(searchTermLower) ||
-      asset.status.toLowerCase().includes(searchTermLower) ||
-      (asset.currentEmployee &&
-        asset.currentEmployee.toLowerCase().includes(searchTermLower))
-    );
-  });
-
-  const handleDelete = (assetId) => {
-    if (window.confirm("Are you sure you want to delete this asset?")) {
-      setLoading(true);
-      axios
-        .delete(`${API_URL}/api/assets/${assetId}`)
-        .then(() => {
-          fetchAssets();
-        })
-        .catch((error) => {
-          console.error("Error deleting asset:", error);
-          setError("Failed to delete asset");
-          setLoading(false);
-        });
-    }
-  };
-
-  const toSentenceCase = (str) => {
-    if (!str) return "";
-    return str
-      .toLowerCase()
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  };
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>

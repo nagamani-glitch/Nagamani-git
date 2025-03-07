@@ -253,7 +253,7 @@ const ResetPassword = () => {
                                     <IconButton
                                         onClick={() => setShowPassword(!showPassword)}
                                         edge="end"
-                                        sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                        sx={{ color: 'rgba(255, 255, 255, 0.7)'}}
                                     >
                                         {showPassword ? <VisibilityOff /> : <Visibility />}
                                     </IconButton>

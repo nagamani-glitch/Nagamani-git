@@ -139,11 +139,11 @@ function Sidebar() {
             <li onClick={() => handleNavigation("/Dashboards/employees")}>
               Employees
             </li>
-            <li
+            {/* <li
               onClick={() => handleNavigation("/Dashboards/document-request")}
             >
               Document Requests
-            </li>
+            </li> */}
             <li onClick={() => handleNavigation("/Dashboards/shift-requests")}>
               Shift Requests
             </li>
@@ -226,21 +226,21 @@ function Sidebar() {
         </li>
         {activeMenu === "payroll" && (
           <ul className="sub-menu">
-            <li
+            {/* <li
               onClick={() => handleNavigation("/Dashboards/payroll-dashboard")}
             >
               Dashboard
-            </li>
+            </li> */}
             <li onClick={() => handleNavigation("/Dashboards/payroll-system")}>
               Payroll system
             </li>
-            <li onClick={() => handleNavigation("/Dashboards/allowances")}>
+            {/* <li onClick={() => handleNavigation("/Dashboards/allowances")}>
               Allowances
-            </li>
+            </li> */}
             <li onClick={() => handleNavigation("/Dashboards/contract")}>
               Contract
             </li>
-            <li onClick={() => handleNavigation("/Dashboards/deductions")}>
+            {/* <li onClick={() => handleNavigation("/Dashboards/deductions")}>
               Deductions
             </li>
             <li onClick={() => handleNavigation("/Dashboards/payslips")}>
@@ -248,7 +248,7 @@ function Sidebar() {
             </li>
             <li onClick={() => handleNavigation("/Dashboards/federal-tax")}>
               Federal Tax
-            </li>
+            </li> */}
           </ul>
         )}
 
