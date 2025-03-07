@@ -678,7 +678,7 @@ const Header = () => {
                   <FaCog size={28} title="Settings" />
                 </Nav.Link>
 
-                <Nav.Link
+                {/* <Nav.Link
                   className="icon-link ms-3"
                   onClick={() => {
                     setShowNotificationPopup(!showNotificationPopup);
@@ -694,9 +694,26 @@ const Header = () => {
                   >
                     {unreadCount}
                   </Badge>
-                </Nav.Link>
+                </Nav.Link> */}
+                <Nav.Link
+  className="icon-link ms-3"
+  onClick={() => {
+    setShowNotificationSidebar(true);
+  }}
+>
+  <FaBell size={28} title="Notifications" />
+  <Badge
+    bg="danger"
+    pill
+    className="notification-badge"
+    style={{ marginTop: "10px", marginRight: "30px" }}
+  >
+    {unreadCount}
+  </Badge>
+</Nav.Link>
 
-                {showNotificationPopup && (
+
+                {/* {showNotificationPopup && (
                   <div
                     style={{
                       position: "absolute",
@@ -771,7 +788,7 @@ const Header = () => {
                       </Toast>
                     </div>
                   </div>
-                )}
+                )} */}
 
                 <Nav.Link className="icon-link ms-3" onClick={handleCompaniesToggle}>
                   <FaBuilding size={28} title="Companies" />
