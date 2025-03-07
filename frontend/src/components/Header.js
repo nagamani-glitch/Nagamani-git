@@ -19,25 +19,29 @@ import {
   FaSignOutAlt,
   FaSignInAlt,
   FaHome,
+  FaVolumeUp
 } from "react-icons/fa";
 import { timesheetService } from "../services/timesheetService";
 import "./Header.css";
 import { useSidebar } from "../Context";
+import NotificationSidebar from './NotificationSidebar';
 
 const Header = () => {
   const { toggleSidebar } = useSidebar();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
   const [showCompanies, setShowCompanies] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [showNotificationSidebar, setShowNotificationSidebar] = useState(false);
   const profileMenuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem("token");
   const employeeId = localStorage.getItem("employeeId") || "EMP123";
 
-  // Timesheet states with refs for cleanup
+  // Timesheet states
   const [timer, setTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
@@ -59,7 +63,9 @@ const Header = () => {
         startTimerWithTime(checkInTime);
       }
     } catch (error) {
+      console.error(error); // Log the actual error for debugging
       showToastMessage("Failed to load timesheet status");
+
     }
   };
 
@@ -103,7 +109,9 @@ const Header = () => {
         showToastMessage("Successfully checked in");
       }
     } catch (error) {
+      console.error(error); // Log the actual error for debugging
       showToastMessage("Operation failed. Please try again.");
+
     }
   };
 
@@ -144,15 +152,14 @@ const Header = () => {
     navigate("/login");
   };
 
-
   const getPathIndicator = () => {
     const path = location.pathname.split("/").filter(Boolean);
     return path.map((segment, index) => (
       <span key={index}>
-        <span 
-          className="path-link" 
+        <span
+          className="path-link"
           onClick={() => navigate(`/${path.slice(0, index + 1).join('/')}`)}
-          style={{ 
+          style={{
             cursor: 'pointer',
             color: '#fff',
             textDecoration: 'none',
@@ -167,153 +174,220 @@ const Header = () => {
       </span>
     ));
   };
-  
 
-  
-  
   return (
-    <header className="mb-5">
-      <Navbar className="custom-navbar" expand="lg" variant="dark" fixed="top">
-        <Container fluid>
-          <Button variant="link" className="me-3" onClick={toggleSidebar}>
-            <FaBars size={28} color="white" />
-          </Button>
+    <>
+      <NotificationSidebar
+        show={showNotificationSidebar}
+        onClose={() => setShowNotificationSidebar(false)}
+      />
+      <header className="mb-5">
+        <Navbar className="custom-navbar" expand="lg" variant="dark" fixed="top">
+          <Container fluid>
+            <Button variant="link" className="me-3" onClick={toggleSidebar}>
+              <FaBars size={28} color="white" />
+            </Button>
 
-          <LinkContainer to="/">
-            <Navbar.Brand className="brand">
-              <img
-                src="https://res.cloudinary.com/dfl9rotoy/image/upload/v1741065300/logo2-removebg-preview_p6juhh.png"
-                alt="Logo"
-                style={{
-                  width: "auto",
-                  height: "120px", // Increased from 100px to 120px
-                  marginLeft: "10px",
-                  marginTop: "-5px", // Adjusted from 10px to 5px
-                  verticalAlign: "middle", // Changed from inherit to middle
-                }}
-              />
-            </Navbar.Brand>
-          </LinkContainer>
+            <LinkContainer to="/">
+              <Navbar.Brand className="brand">
+                <img
+                  src="https://res.cloudinary.com/dfl9rotoy/image/upload/v1741065300/logo2-removebg-preview_p6juhh.png"
+                  alt="Logo"
+                  style={{
+                    width: "auto",
+                    height: "120px",
+                    marginLeft: "10px",
+                    marginTop: "-5px",
+                    verticalAlign: "middle",
+                  }}
+                />
+              </Navbar.Brand>
+            </LinkContainer>
 
-          <div className="path-indicator" >{getPathIndicator()}</div>
+            <div className="path-indicator" >{getPathIndicator()}</div>
 
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ms-auto align-items-center">
-              <div className="check-in-out-box">
-                <Button
-                  className={`timer-button ${isTimerRunning ? "active" : ""}`}
-                  onClick={handleTimerClick}
-                  title={
-                    isTimerRunning ? "Click to check-out" : "Click to check-in"
-                  }
-                >
-                  {isTimerRunning ? (
-                    <>
-                      <FaSignOutAlt className="me-2 rotate" />
-                      <span>{`Checked in ${formatTime(timer)}`}</span>
-                    </>
-                  ) : (
-                    <>
-                      <FaSignInAlt className="me-2 beat" />
-                      <span>Check-in</span>
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              <Nav.Link
-                className="icon-link ms-3"
-                onClick={() => navigate("/")}
-              >
-                <FaHome size={32} title="Home" />
-              </Nav.Link>
-
-              <Nav.Link
-                className="icon-link ms-3"
-                onClick={() => navigate("/settings")}
-              >
-                <FaCog size={28} title="Settings" />
-              </Nav.Link>
-
-              <Nav.Link
-                className="icon-link ms-3"
-                onClick={handleNotificationsToggle}
-              >
-                <FaBell size={28} title="Notifications" />
-              
-              <Badge bg="danger" pill className="notification-badge" style={{ marginTop: "10px", marginRight: "30px" }}>
-                3
-              </Badge>
-
-
-              </Nav.Link>
-
-              <Nav.Link
-                className="icon-link ms-3"
-                onClick={handleCompaniesToggle}
-              >
-                <FaBuilding size={28} title="Companies" />
-              </Nav.Link>
-
-              <NavDropdown
-                title={<FaUserCircle size={28} color="white" />}
-                id="profile-dropdown"
-                show={showProfileMenu}
-                onClick={handleProfileToggle}
-                ref={profileMenuRef}
-                align="end"
-                className="profile-dropdown ms-3"
-              >
-                <div className="dropdown-header d-flex align-items-center px-3 py-2">
-                  <strong>{employeeId}</strong>
+            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+            <Navbar.Collapse id="basic-navbar-nav">
+              <Nav className="ms-auto align-items-center">
+                <div className="check-in-out-box">
+                  <Button
+                    className={`timer-button ${isTimerRunning ? "active" : ""}`}
+                    onClick={handleTimerClick}
+                    title={isTimerRunning ? "Click to check-out" : "Click to check-in"}
+                    aria-label={isTimerRunning ? "Check out" : "Check in"} // Enhanced accessibility
+                  >
+                    {isTimerRunning ? (
+                      <>
+                        <FaSignOutAlt className="me-2 rotate" />
+                        <span>{`Checked in ${formatTime(timer)}`}</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaSignInAlt className="me-2 beat" />
+                        <span>Check-in</span>
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <NavDropdown.Item onClick={() => navigate("/profile")}>
-                  My Profile
-                </NavDropdown.Item>
-                <NavDropdown.Item onClick={() => navigate("/change-password")}>
-                  Change Password
-                </NavDropdown.Item>
-                <NavDropdown.Divider />
-                {token ? (
-                  <NavDropdown.Item
-                    onClick={handleLogout}
-                    className="logout-item"
-                  >
-                    <FaSignOutAlt className="me-2" /> Logout
-                  </NavDropdown.Item>
-                ) : (
-                  <NavDropdown.Item
-                    onClick={() => navigate("/login")}
-                    className="login-item"
-                  >
-                    <FaSignInAlt className="me-2" /> Login
-                  </NavDropdown.Item>
-                )}
-              </NavDropdown>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
 
-      <Toast
-        show={showToast}
-        onClose={() => setShowToast(false)}
-        delay={3000}
-        autohide
-        style={{
-          position: "fixed",
-          top: 20,
-          right: 20,
-          zIndex: 9999,
-        }}
-      >
-        <Toast.Header>
-          <strong className="me-auto">Notification</strong>
-        </Toast.Header>
-        <Toast.Body>{toastMessage}</Toast.Body>
-      </Toast>
-    </header>
+                <Nav.Link
+                  className="icon-link ms-3"
+                  onClick={() => navigate("/")}
+                >
+                  <FaHome size={32} title="Home" />
+                </Nav.Link>
+
+                <Nav.Link
+                  className="icon-link ms-3"
+                  onClick={() => navigate("/settings")}
+                >
+                  <FaCog size={28} title="Settings" />
+                </Nav.Link>
+
+                <Nav.Link
+                  className="icon-link ms-3"
+                  onClick={() => {
+                    setShowNotificationPopup(!showNotificationPopup)
+                    setShowNotifications(false); // Close other notification states
+                  }}
+                >
+                  <FaBell size={28} title="Notifications" />
+                  <Badge bg="danger" pill className="notification-badge" style={{ marginTop: "10px", marginRight: "30px" }}>0</Badge>
+                </Nav.Link>
+                {showNotificationPopup && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '70px',
+                    right: '150px',
+                    width: '300px',
+                    backgroundColor: 'white',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                    zIndex: 1000
+                  }}>
+
+                    <Toast
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                      style={{
+                        borderTopLeftRadius: '8px',
+                        borderTopRightRadius: '8px',
+                        backgroundColor: '#f8f9fa',
+                        padding: '20px 35px',
+                        border: '1.8px solid #111',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <strong
+                        className="me-auto"
+                        style={{
+                          color: '#333',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          transition: 'color 0.3s ease'
+                        }}
+                      >
+                        Notifications
+                      </strong>
+                    </Toast>
+
+                    <div style={{ padding: '40px' }}>
+                      <p style={{ textAlign: 'center', color: '#6c757d' }}>No new notifications</p>
+                        <Toast
+                          onClick={() => {
+                            setShowNotificationPopup(false); // Close the popup
+                            setShowNotificationSidebar(true); // Open the sidebar
+                          }}
+                          style={{
+                            borderTopLeftRadius: '8px',
+                            borderTopRightRadius: '8px',
+                            backgroundColor: '#f8f9fa',
+                            padding: '5px 10px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            cursor: 'pointer'
+                          }}>
+                          <strong style={{
+                            color: '#ff0000',
+                            textAlign: 'center',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}>
+                            View all Notifications
+                            <FaVolumeUp size={16} />
+                          </strong>
+                        </Toast>
+                      </div>
+                  </div>
+                )}
+
+                <Nav.Link
+                  className="icon-link ms-3"
+                  onClick={handleCompaniesToggle}
+                >
+                  <FaBuilding size={28} title="Companies" />
+                </Nav.Link>
+
+                <NavDropdown
+                  title={<FaUserCircle size={28} color="white" />}
+                  id="profile-dropdown"
+                  show={showProfileMenu}
+                  onClick={handleProfileToggle}
+                  ref={profileMenuRef}
+                  align="end"
+                  className="profile-dropdown ms-3"
+                >
+                  <div className="dropdown-header d-flex align-items-center px-3 py-2">
+                    <strong>{employeeId}</strong>
+                  </div>
+                  <NavDropdown.Item onClick={() => navigate("/profile")}>
+                    My Profile
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => navigate("/change-password")}>
+                    Change Password
+                  </NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  {token ? (
+                    <NavDropdown.Item
+                      onClick={handleLogout}
+                      className="logout-item"
+                    >
+                      <FaSignOutAlt className="me-2" /> Logout
+                    </NavDropdown.Item>
+                  ) : (
+                    <NavDropdown.Item
+                      onClick={() => navigate("/login")}
+                      className="login-item"
+                    >
+                      <FaSignInAlt className="me-2" /> Login
+                    </NavDropdown.Item>
+                  )}
+                </NavDropdown>
+              </Nav>
+            </Navbar.Collapse>
+          </Container>
+        </Navbar>
+
+        <Toast
+          show={showToast}
+          onClose={() => setShowToast(false)}
+          delay={3000}
+          autohide
+          style={{
+            position: "fixed",
+            top: 20,
+            right: 20,
+            zIndex: 9999,
+          }}
+        >
+          <Toast.Body>{toastMessage}</Toast.Body>
+        </Toast>
+      </header>
+    </>
   );
 };
 
