@@ -1,9 +1,12 @@
 import React from 'react';
-import { TextField, Button, Box, Typography, Divider, Grid, Paper } from '@mui/material';
+import { TextField, Button, Box, Typography, Divider, Grid, Paper, MenuItem, FormControl, InputLabel,Select } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { styled } from '@mui/material/styles';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -27,14 +30,25 @@ const StyledButton = styled(Button)(({ theme }) => ({
   }
 }));
 
+const days = Array.from({length: 31}, (_, i) => i + 1);
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const years = Array.from({length: 50}, (_, i) => new Date().getFullYear() - i);
+
+
 const validationSchema = Yup.object().shape({
-  dateOfAppointment: Yup.date().required('Date of appointment is required'),
+  appointmentDay: Yup.number().required('Day is required'),
+  appointmentMonth: Yup.string().required('Month is required'),
+  appointmentYear: Yup.number().required('Year is required'),
   department: Yup.string().required('Department is required'),
-  dateOfJoining: Yup.date().required('Date of joining is required'),
+  joiningDay: Yup.number().required('Day is required'),
+  joiningMonth: Yup.string().required('Month is required'),
+  joiningYear: Yup.number().required('Year is required'),
   initialDesignation: Yup.string().required('Initial designation is required'),
   modeOfRecruitment: Yup.string().required('Mode of recruitment is required'),
   employeeType: Yup.string().required('Employee type is required')
 });
+
+
 
 const AnimatedTextField = ({ field, form, label, ...props }) => {
   const handleChange = (e) => {
@@ -81,15 +95,68 @@ const AnimatedTextField = ({ field, form, label, ...props }) => {
   );
 };
 
-const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoiningDetails }) => {
+const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoiningDetails, employeeId }) => {
   const initialValues = savedJoiningDetails || {
-    dateOfAppointment: new Date().toISOString().split('T')[0],
+    appointmentDay: new Date().getDate(),
+    appointmentMonth: months[new Date().getMonth()],
+    appointmentYear: new Date().getFullYear(),
     department: '',
-    dateOfJoining: new Date().toISOString().split('T')[0],
+    joiningDay: new Date().getDate(),
+    joiningMonth: months[new Date().getMonth()],
+    joiningYear: new Date().getFullYear(),
     initialDesignation: '',
     modeOfRecruitment: '',
     employeeType: ''
   };
+
+  const handleSubmit = async (values) => {
+    try {
+      const formattedData = {
+        dateOfAppointment: {
+          day: parseInt(values.appointmentDay),
+          month: values.appointmentMonth,
+          year: parseInt(values.appointmentYear)
+        },
+        department: values.department,
+        dateOfJoining: {
+          day: parseInt(values.joiningDay),
+          month: values.joiningMonth,
+          year: parseInt(values.joiningYear)
+        },
+        initialDesignation: values.initialDesignation,
+        modeOfRecruitment: values.modeOfRecruitment,
+        employeeType: values.employeeType
+      };
+  
+      console.log('Request payload:', {
+        employeeId,
+        joiningDetails: formattedData
+      });
+  
+      const response = await axios.post(
+        'http://localhost:5000/api/employees/joining-details',
+        {
+          employeeId,
+          joiningDetails: formattedData
+        },
+        {
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+  
+      console.log('Server response:', response.data);
+  
+      if (response.data.success) {
+        console.log('Joining details saved successfully:', response.data);
+        toast.success('Joining details saved successfully');
+        nextStep();
+      }
+    } catch (error) {
+      console.log('Error details:', error.response?.data);
+      toast.error('Failed to save joining details');
+    }
+  };
+    
 
   return (
     <AnimatePresence mode='wait'>
@@ -99,14 +166,14 @@ const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoi
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.5 }}
       >
-        <Formik
-          initialValues={initialValues}
-          validationSchema={validationSchema}
-          onSubmit={(values) => {
-            handleFormDataChange("joiningDetails", values);
-            nextStep();
-          }}
-        >
+      
+<Formik
+  initialValues={initialValues}
+  validationSchema={validationSchema}
+  enableReinitialize={true}
+  onSubmit={handleSubmit}
+>
+
           {({ errors, touched }) => (
             <Form>
               <StyledPaper>
@@ -114,18 +181,176 @@ const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoi
                   Joining Details
                 </Typography>
                 <Grid container spacing={3}>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      name="dateOfAppointment"
-                      component={AnimatedTextField}
-                      label="Date of Appointment"
-                      type="date"
-                      fullWidth
-                      InputLabelProps={{ shrink: true }}
-                      error={touched.dateOfAppointment && errors.dateOfAppointment}
-                      helperText={touched.dateOfAppointment && errors.dateOfAppointment}
-                    />
-                  </Grid>
+                <Grid item xs={12} sm={6}>
+  <Typography variant="body1" gutterBottom>Date of Appointment</Typography>
+  <Grid container spacing={2}>
+    <Grid item xs={4}>
+      <FormControl fullWidth>
+        <InputLabel>Date</InputLabel>
+        <Field name="appointmentDay">
+          {({ field, form }) => (
+            <Select
+              {...field}
+              label="Date"
+              onChange={(e) => {
+                form.setFieldValue('appointmentDay', e.target.value);
+                const newDate = new Date(
+                  form.values.appointmentYear,
+                  months.indexOf(form.values.appointmentMonth),
+                  e.target.value
+                );
+                form.setFieldValue('dateOfAppointment', newDate);
+              }}
+            >
+              {days.map(day => (
+                <MenuItem key={day} value={day}>{day}</MenuItem>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </FormControl>
+    </Grid>
+    <Grid item xs={4}>
+      <FormControl fullWidth>
+        <InputLabel>Month</InputLabel>
+        <Field name="appointmentMonth">
+          {({ field, form }) => (
+            <Select
+              {...field}
+              label="Month"
+              onChange={(e) => {
+                form.setFieldValue('appointmentMonth', e.target.value);
+                const newDate = new Date(
+                  form.values.appointmentYear,
+                  months.indexOf(e.target.value),
+                  form.values.appointmentDay
+                );
+                form.setFieldValue('dateOfAppointment', newDate);
+              }}
+            >
+              {months.map(month => (
+                <MenuItem key={month} value={month}>{month}</MenuItem>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </FormControl>
+    </Grid>
+    <Grid item xs={4}>
+      <FormControl fullWidth>
+        <InputLabel>Year</InputLabel>
+        <Field name="appointmentYear">
+          {({ field, form }) => (
+            <Select
+              {...field}
+              label="Year"
+              onChange={(e) => {
+                form.setFieldValue('appointmentYear', e.target.value);
+                const newDate = new Date(
+                  e.target.value,
+                  months.indexOf(form.values.appointmentMonth),
+                  form.values.appointmentDay
+                );
+                form.setFieldValue('dateOfAppointment', newDate);
+              }}
+            >
+              {years.map(year => (
+                <MenuItem key={year} value={year}>{year}</MenuItem>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </FormControl>
+    </Grid>
+  </Grid>
+</Grid>
+
+
+<Grid item xs={12} sm={6}>
+  <Typography variant="body1" gutterBottom>Date of Joining</Typography>
+  <Grid container spacing={2}>
+    <Grid item xs={4}>
+      <FormControl fullWidth>
+        <InputLabel>Date</InputLabel>
+        <Field name="joiningDay">
+          {({ field, form }) => (
+            <Select
+              {...field}
+              label="Date"
+              onChange={(e) => {
+                form.setFieldValue('joiningDay', e.target.value);
+                const newDate = new Date(
+                  form.values.joiningYear,
+                  months.indexOf(form.values.joiningMonth),
+                  e.target.value
+                );
+                form.setFieldValue('dateOfJoining', newDate);
+              }}
+            >
+              {days.map(day => (
+                <MenuItem key={day} value={day}>{day}</MenuItem>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </FormControl>
+    </Grid>
+    <Grid item xs={4}>
+      <FormControl fullWidth>
+        <InputLabel>Month</InputLabel>
+        <Field name="joiningMonth">
+          {({ field, form }) => (
+            <Select
+              {...field}
+              label="Month"
+              onChange={(e) => {
+                form.setFieldValue('joiningMonth', e.target.value);
+                const newDate = new Date(
+                  form.values.joiningYear,
+                  months.indexOf(e.target.value),
+                  form.values.joiningDay
+                );
+                form.setFieldValue('dateOfJoining', newDate);
+              }}
+            >
+              {months.map(month => (
+                <MenuItem key={month} value={month}>{month}</MenuItem>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </FormControl>
+    </Grid>
+    <Grid item xs={4}>
+      <FormControl fullWidth>
+        <InputLabel>Year</InputLabel>
+        <Field name="joiningYear">
+          {({ field, form }) => (
+            <Select
+              {...field}
+              label="Year"
+              onChange={(e) => {
+                form.setFieldValue('joiningYear', e.target.value);
+                const newDate = new Date(
+                  e.target.value,
+                  months.indexOf(form.values.joiningMonth),
+                  form.values.joiningDay
+                );
+                form.setFieldValue('dateOfJoining', newDate);
+              }}
+            >
+              {years.map(year => (
+                <MenuItem key={year} value={year}>{year}</MenuItem>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </FormControl>
+    </Grid>
+  </Grid>
+</Grid>
+
+
                   <Grid item xs={12} sm={6}>
                     <Field
                       name="department"
@@ -134,18 +359,6 @@ const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoi
                       fullWidth
                       error={touched.officeName && errors.officeName}
                       helperText={touched.officeName && errors.officeName}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      name="dateOfJoining"
-                      component={AnimatedTextField}
-                      label="Date of Joining"
-                      type="date"
-                      fullWidth
-                      InputLabelProps={{ shrink: true }}
-                      error={touched.dateOfJoining && errors.dateOfJoining}
-                      helperText={touched.dateOfJoining && errors.dateOfJoining}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>

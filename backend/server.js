@@ -29,6 +29,9 @@ import onboardingRoutes from './routes/onboardingRoutes.js';
 import hiredEmployeeRoutes from './routes/hiredEmployeeRoutes.js';
 import timesheetRoutes from './routes/timesheetRoutes.js';
 
+import { fileURLToPath } from 'url';
+
+
 
 
 
@@ -55,6 +58,9 @@ import rotatingWorktypeRoutes from './routes/rotatingWorktypeRoutes.js';
 import myLeaveRequestRoutes from './routes/myLeaveRequestRoutes.js';
 import leaveRequestRoutes from './routes/leaveRequestRoutes.js';
 import documentRoute from './routes/documentRoutes-1.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config()
 connectDB()
@@ -89,11 +95,14 @@ app.use((err, req, res, next) => {
 });
 
 
+
+
+
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
 app.use("/api/employees", employeesRouter);
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/auth", authRouter);
 app.use("/api/profiles", profileRouter);
 app.use("/api/contracts", contractRouter);

@@ -3,6 +3,8 @@ import { TextField, Paper, FormControl, Button, Typography, Grid, Checkbox, Form
 import { motion } from 'framer-motion';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const validationSchema = Yup.object().shape({
   presentAddress: Yup.string().required('Present address is required'),
@@ -19,31 +21,7 @@ const validationSchema = Yup.object().shape({
   permanentDistrict: Yup.string().required('District is required'),
 });
 
-const AnimatedTextField = ({ field, form, label, ...props }) => {
-  const handleChange = (e) => {
-    const sentenceCaseValue = e.target.value
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
-    form.setFieldValue(field.name, sentenceCaseValue);
-  };
-
-  return (
-    <TextField
-      {...field}
-      {...props}
-      label={label}
-      onChange={handleChange}
-      sx={{
-        '& .MuiInputBase-input': {
-          color: '#000000',
-        }
-      }}
-    />
-  );
-};
-
-const AddressDetailsForm = ({ nextStep, prevStep, handleFormDataChange }) => {
+const AddressDetailsForm = ({ nextStep, prevStep, employeeId, handleFormDataChange }) => {
   const initialValues = {
     presentAddress: '',
     presentCity: '',
@@ -55,17 +33,89 @@ const AddressDetailsForm = ({ nextStep, prevStep, handleFormDataChange }) => {
     permanentState: '',
     permanentPinCode: '',
     permanentCountry: '',
-    presentDistrict:'',
-    permanentDistrict:''
+    presentDistrict: '',
+    permanentDistrict: ''
+  };
+
+  const handleSubmit = async (values) => {
+    try {
+      console.log('Submitting address details:', values);
+      const addressData = {
+        currentAddress: {
+          street: values.currentStreet,
+          city: values.currentCity,
+          state: values.currentState,
+          pincode: values.currentPincode
+        },
+        permanentAddress: {
+          street: values.permanentStreet,
+          city: values.permanentCity,
+          state: values.permanentState,
+          pincode: values.permanentPincode
+        }
+      };
+  
+      const response = await axios.post(
+        'http://localhost:5000/api/employees/address-info',
+        addressData,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('API Response:', response.data);
+  
+      // Only navigate to next step if submission is successful
+      if (response.data.success) {
+        toast.success('Address information saved successfully');
+        nextStep(); // Navigation happens here after success
+      } else {
+        toast.error('Failed to save address information');
+      }
+    } catch (error) {
+      console.log('API Error:', error.response?.data);
+      toast.error('Failed to save address information');
+      // No navigation on error
+    }
+  };
+  
+  
+
+  const AnimatedTextField = ({ field, form, label, ...props }) => {
+    const handleChange = (e) => {
+      const sentenceCaseValue = e.target.value
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+      form.setFieldValue(field.name, sentenceCaseValue);
+    };
+
+    return (
+      <TextField
+        {...field}
+        {...props}
+        label={label}
+        onChange={handleChange}
+        error={form.touched[field.name] && form.errors[field.name]}
+        helperText={form.touched[field.name] && form.errors[field.name]}
+        sx={{
+          '& .MuiInputBase-input': {
+            color: '#000000',
+          }
+        }}
+      />
+    );
   };
 
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={validationSchema}
+      enableReinitialize={true}
       onSubmit={(values) => {
-        handleFormDataChange("addressInfo", values);
-        nextStep();
+        handleSubmit("addressInfo", values);       
       }}
     >
       {({ errors, touched, values, setFieldValue }) => (

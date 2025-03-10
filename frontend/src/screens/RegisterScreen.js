@@ -1,4 +1,118 @@
-import React, { useState } from "react";
+// import React, { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { toast } from "react-toastify";
+// import axios from "axios";
+
+// import PersonalInformationForm from "../forms/PersonalInformationForm";
+// import AddressDetailsForm from "../forms/AddressDetailsForm";
+// import JoiningDetailsForm from "../forms/JoiningDetailsForm";
+// import EducationDetailsForm from "../forms/EducationDetailsForm";
+// import FamilyDetailsForm from "../forms/FamilyDetailsForm";
+// import ServiceHistoryForm from "../forms/ServiceHistoryForm";
+// import NominationDetailsForm from "../forms/NominationDetailsForm";
+
+// const RegisterScreen = () => {
+//   const navigate = useNavigate();
+//   const [currentStep, setCurrentStep] = useState(1);
+//   const [employeeId, setEmployeeId] = useState(null);
+//   const [savedData, setSavedData] = useState({});
+
+//   useEffect(() => {
+//     const storedEmpId = localStorage.getItem("Emp_ID");
+//     if (storedEmpId) {
+//       setEmployeeId(storedEmpId);
+//     }
+//   }, []);
+
+//   const nextStep = () => {
+//     console.log('Moving to next step from:', currentStep);
+//     setCurrentStep(prevStep => prevStep + 1);
+//   };
+
+//   const prevStep = () => {
+//     setCurrentStep(prevStep => Math.max(1, prevStep - 1));
+//   };
+
+//   const handleEmployeeIdUpdate = (id) => {
+//     setEmployeeId(id);
+//     localStorage.setItem("Emp_ID", id);
+//   };
+
+//   const handleSaveData = (formType, data) => {
+//     setSavedData(prevData => ({
+//       ...prevData,
+//       [formType]: data
+//     }));
+//     if (formType !== "addressDetails") {
+//       nextStep();
+//     }
+//   };
+
+//   const handleComplete = async () => {
+//     try {
+//       const response = await axios.post(
+//         "http://localhost:5000/api/employees/complete-registration",
+//         { employeeId },
+//         { headers: { "Content-Type": "application/json" } }
+//       );
+
+//       if (response.data.success) {
+//         const employeeData = await axios.get(
+//           `http://localhost:5000/api/employees/get-employee/${employeeId}`
+//         );
+//         toast.success(
+//           `Registration completed successfully! Employee Code: ${employeeData.data.data.Emp_ID}`
+//         );
+//         navigate("/dashboard");
+//       }
+//     } catch (error) {
+//       toast.error("Error completing registration");
+//     }
+//   };
+
+//   const renderForm = () => {
+//     const formProps = {
+//       nextStep,
+//       prevStep,
+//       employeeId,
+//       setEmployeeId: handleEmployeeIdUpdate,
+//       onSave: handleSaveData
+//     };
+
+//     const forms = {
+//       1: <PersonalInformationForm {...formProps} savedData={savedData.personalInformation} />,
+//       2: <AddressDetailsForm {...formProps} savedData={savedData.addressDetails} />,
+//       3: <JoiningDetailsForm {...formProps} savedData={savedData.joiningDetails} />,
+//       4: <EducationDetailsForm {...formProps} savedData={savedData.educationDetails} />,
+//       5: <FamilyDetailsForm {...formProps} savedData={savedData.familyDetails} />,
+//       6: <ServiceHistoryForm {...formProps} savedData={savedData.serviceHistory} />,
+//       7: <NominationDetailsForm {...formProps} savedData={savedData.nominationDetails} onComplete={handleComplete} />
+//     };
+  
+//     return forms[currentStep] || null;
+//   };
+
+//   return (
+//     <div className="register-screen">
+//       <div className="progress-indicator">
+//         {employeeId && <div>Employee Code: {employeeId}</div>}
+//         <div>Step {currentStep} of 7</div>
+//       </div>
+//       {renderForm()}
+//     </div>
+//   );
+// };
+
+// export default RegisterScreen;
+
+
+
+
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import axios from "axios";
+
 import PersonalInformationForm from "../forms/PersonalInformationForm";
 import AddressDetailsForm from "../forms/AddressDetailsForm";
 import JoiningDetailsForm from "../forms/JoiningDetailsForm";
@@ -6,228 +120,164 @@ import EducationDetailsForm from "../forms/EducationDetailsForm";
 import FamilyDetailsForm from "../forms/FamilyDetailsForm";
 import ServiceHistoryForm from "../forms/ServiceHistoryForm";
 import NominationDetailsForm from "../forms/NominationDetailsForm";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import DocumentManagement from '../forms/DocumentManagement';
-
 
 const RegisterScreen = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1); // Tracks the current form page
+  const [currentStep, setCurrentStep] = useState(1);
+  const [employeeId, setEmployeeId] = useState(null);
+  const [savedData, setSavedData] = useState({});
 
-  // Consolidated form data for all steps
-  const [formData, setFormData] = useState({
-    personalInfo: {},
-    addressInfo: {},
-    joiningDetails: {},
-    educationDetails: {},
-    trainingDetails: {},
-    trainingInIndia: {},
-    trainingInAbroad: {},
-    familyDetails: [],
-    serviceHistory: {},
-    nominationDetails: {}
-  });
-
-  // Move to next form page
   const nextStep = () => {
-    setCurrentStep((prevStep) => prevStep + 1);
+    setCurrentStep(prev => prev + 1);
   };
 
-  // Move to previous form page
   const prevStep = () => {
-    setCurrentStep((prevStep) => prevStep - 1);
+    setCurrentStep(prev => prev - 1);
+  };  
+
+  const handleEmployeeIdUpdate = (id) => {
+    setEmployeeId(id);
+    localStorage.setItem('Emp_ID', id);
+    console.log('Employee ID updated:', id);
   };
 
-  // Update formData with current form data
-  const handleFormDataChange = (section, data) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [section]: data, // Update the specific section data
-    }));
-  };
+  useEffect(() => {
+    const storedEmpId = localStorage.getItem('Emp_ID');
+    if (storedEmpId) {
+      setEmployeeId(storedEmpId);
+      console.log('Retrieved stored Employee ID:', storedEmpId);
+    }
+  }, []);
 
-  const generateEmployeeId = () => {
-    // Generate a unique employee ID, for example:
-    return 'EMP' + Date.now().toString().slice(-6);
-  };
-
-  const [profileImage, setProfileImage] = useState('null'); 
-
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    setProfileImage(file);
-    console.log('Image uploaded:', file);
-  };
-
+  const handleComplete = async (formData) => {
+    try {
+      // First save the nomination details
+      const nominationResponse = await axios.post(
+        'http://localhost:5000/api/employees/nomination-details',
+        {
+          employeeId,
+          nominationDetails: formData
+        }
+      );
   
-    // Submit final data
-    const handleSubmit = async () => {
-      try {
-        const formDataToSend = new FormData();
-        formDataToSend.append('img', profileImage);
-    
-        // Robust date formatting function
-        const formatDate = (dateString) => {
-          if (!dateString) return null;
-          try {
-            const date = new Date(dateString);
-            return date.toISOString();
-          } catch {
-            return null;
+      // Then complete the registration
+      const completeResponse = await axios.post(
+        'http://localhost:5000/api/employees/complete-registration',
+        {
+          employeeId,
+          registrationComplete: true,
+          allFormData: {
+            ...savedData,
+            nominationDetails: formData
           }
-        };
-    
-        // Format training dates safely
-        const formatTrainingArray = (trainings = []) => {
-          return trainings.map(training => ({
-            type: String(training.type || ''),
-            topic: String(training.topic || ''),
-            institute: String(training.institute || ''),
-            sponsor: String(training.sponsor || ''),
-            from: training.from ? new Date(training.from).toISOString() : null,
-            to: training.to ? new Date(training.to).toISOString() : null
-          }));
-        };
-    
-        const mappedData = {
-          Emp_ID: generateEmployeeId(),
-          name: `${formData.personalInfo?.firstName || ''} ${formData.personalInfo?.lastName || ''}`.trim(),
-          email: formData.personalInfo?.email || '',
-          phone: formData.personalInfo?.mobileNumber || '',
-          department: formData.joiningDetails?.officeName || '',
-          role: formData.joiningDetails?.initialDesignation || '',
-          location: formData.addressInfo?.presentAddress || '',
-          dob: formatDate(formData.personalInfo?.dob),
-          personalInfo: formData.personalInfo,
-          addressInfo: formData.addressInfo,
-          joiningDetails: formData.joiningDetails,
-          educationDetails: formData.educationDetails || {},
-          trainingDetails: {
-            trainingInIndia: formatTrainingArray(formData.trainingDetails?.trainingInIndia),
-            trainingAbroad: formatTrainingArray(formData.trainingDetails?.trainingAbroad)
-          },        
-          familyDetails: formData.familyDetails || [],
-          serviceHistory: formData.serviceHistory || [],
-          nominationDetails: formData.nominationDetails || {}
-        };
-    
-        formDataToSend.append('data', JSON.stringify(mappedData));
-        console.log('Form Data to Send:', formDataToSend);
-        console.log(JSON.stringify(formData, null, 2))
-
-        
-        const response = await axios.post(
-          `http://localhost:5000/api/employees/register`,
-          formDataToSend,
-          {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            withCredentials: true
-          }
+        },
+        {
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+  
+      if (completeResponse.data.success) {
+        // Get final employee data
+        const employeeData = await axios.get(
+          `http://localhost:5000/api/employees/get-employee/${employeeId}`
         );
-    
-        toast.success('Registration successful!');
-        navigate('/');
-    
-      } catch (error) {
-        console.log('Form Data:', formData);
-        console.log('Profile Image:', profileImage);
-        console.log('Error Response:', error.response?.data);
-        toast.error(`Registration failed: ${error.response?.data?.error || error.message}`);
+  
+        toast.success(`Registration completed successfully! Employee Code: ${employeeData.data.data.Emp_ID}`);
         
+        // Clear local storage
+        localStorage.removeItem('Emp_ID');
+        
+        // Redirect to dashboard
+        navigate('/');
       }
-    };    
-    
-  // Conditionally render the form based on current step
+    } catch (error) {
+      toast.error('Registration completion failed: ' + error.message);
+      console.error('Registration error:', error);
+    }
+  };
+  
+
   const renderForm = () => {
+    const commonProps = {
+      nextStep,
+      prevStep,
+      employeeId,
+      setEmployeeId: handleEmployeeIdUpdate
+    };
+
     switch (currentStep) {
       case 1:
         return (
           <PersonalInformationForm
-            nextStep={nextStep}
-            handleFormDataChange={handleFormDataChange}
-            handleImageUpload={handleImageUpload}
-            savedPersonalInfo={formData.personalInfo}            
-    />
+            {...commonProps}
+            savedData={savedData.personalInfo}
+            onSave={(id) => {
+              handleEmployeeIdUpdate(id);
+              setSavedData(prev => ({
+                ...prev,
+                employeeId: id
+              }));
+            }}
+          />
         );
-        case 2:
-          return (
-            <AddressDetailsForm
-              prevStep={prevStep}
-              nextStep={nextStep}
-              handleFormDataChange={handleFormDataChange}                            
-              savedAddressinfo={formData.addressInfo}
-      />
-          );
+      case 2:
+        return (
+          <AddressDetailsForm
+            {...commonProps}
+            savedData={savedData.addressInfo}
+          />
+        );
       case 3:
         return (
           <JoiningDetailsForm
-            nextStep={nextStep}
-            prevStep={prevStep}
-            handleFormDataChange={handleFormDataChange}
-            savedJoiningDetails={formData.joiningDetails} // Send saved data
+            {...commonProps}
+            savedData={savedData.joiningDetails}
           />
         );
       case 4:
         return (
           <EducationDetailsForm
-            nextStep={nextStep}
-            prevStep={prevStep}
-            handleFormDataChange={handleFormDataChange}
-            savedEducationDetails={formData.educationDetails} // Send saved data
+            {...commonProps}
+            savedData={savedData.educationDetails}
           />
         );
       case 5:
         return (
           <FamilyDetailsForm
-            nextStep={nextStep}
-            prevStep={prevStep}
-            handleFormDataChange={handleFormDataChange}
-            savedFamilyDetails={formData.familyDetails} // Send saved data
+            {...commonProps}
+            savedData={savedData.familyDetails}
           />
         );
       case 6:
         return (
           <ServiceHistoryForm
-            nextStep={nextStep}
-            prevStep={prevStep}
-            handleFormDataChange={handleFormDataChange}
-            savedServiceHistory={formData.serviceHistory} // Send saved data
+            {...commonProps}
+            savedData={savedData.serviceHistory}
           />
         );
-      case 7:
-        return (
-          <NominationDetailsForm
-            prevStep={prevStep}
-            nextStep={nextStep}
-            handleFormDataChange={handleFormDataChange}
-            // handleSubmit={handleSubmit}
-            savedNominationDetails={formData.nominationDetails} // Send saved data
-          />
-        );
+        case 7:
+  return (
+    <NominationDetailsForm
+      {...commonProps}
+      savedData={savedData.nominationDetails}
+      onComplete={handleComplete}
+    />
+  );
 
-        case 8:
-          return (
-            <DocumentManagement
-              prevStep={prevStep}
-              handleFormDataChange={handleFormDataChange}
-              handleSubmit={handleSubmit}
-              savedDocuments={formData.documents}
-            />
-          );
-        
-      default:
-        return null;
-    }
-  };
+      }
+    };
+      
 
   return (
-    <div>
-      <h1>Registration Form</h1>
+    <div className="register-screen">
+      <div className="progress-indicator">
+      {employeeId && <div>Employee Code: {employeeId}</div>}
+      Step {currentStep} of 7
+      </div>
       {renderForm()}
     </div>
   );
 };
+
 
 export default RegisterScreen;

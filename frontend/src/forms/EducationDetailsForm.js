@@ -1,73 +1,56 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import './styles.css'
 
-
-const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedEducationDetails }) => {
-  // State to manage education details
-  const [educationDetails, setEducationDetails] = useState(savedEducationDetails?.educationDetails || {
-    basic: [
-      { education: '', board: '', marks: '', year: '', stream: '', grade: '' },
-    ],
-    technical: [
-      { education: '', board: '', marks: '', year: '', stream: '', grade: '' },
-    ],
-    professional: [
-      { education: '', board: '', marks: '', year: '', stream: '', grade: '' },
-    ],
-  });
-
+const API_URL = 'http://localhost:5000/api/employees';
+ 
+const EducationTrainingDetailsForm = ({ savedEducationDetails, nextStep, prevStep }) => {
+const [educationDetails, setEducationDetails] = useState(savedEducationDetails?.educationDetails || {
+  basic: [
+    { education: '', institute: '', board: '', marks: '', year: '', stream: '', grade: '' },
+    { education: '', institute: '', board: '', marks: '', year: '', stream: '', grade: '' }
+  ],
+  professional: [
+    { education: '', institute: '', board: '', marks: '', year: '', stream: '', grade: '' },
+    { education: '', institute: '', board: '', marks: '', year: '', stream: '', grade: '' },
+    { education: '', institute: '', board: '', marks: '', year: '', stream: '', grade: '' }
+  ]
+}); 
   // State to manage training details
   const [trainingInIndia, setTrainingInIndia] = useState(savedEducationDetails?.trainingInIndia || [
-    { type: '', topic: '', institute: '', sponsor: '', from: new Date().toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] },
+    { type: '', topic: '', institute: '', country: '', sponsor: '', from: new Date().toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] },
   ]);
-
-  const [trainingAbroad, setTrainingAbroad] = useState(savedEducationDetails?.trainingAbroad || [
-    { type: '', topic: '', institute: '', sponsor: '', from: new Date().toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] },
-  ]);
-
+ 
+  
+ 
   // Validation state
   const [errors, setErrors] = useState({});
-
+ 
   // Validate education fields
   const validateEducation = () => {
     const newErrors = {};
-    ['basic', 'technical', 'professional'].forEach((category) => {
-      educationDetails[category].forEach((edu, index) => {
-        if (!edu.education) newErrors[`${category}_education_${index}`] = 'Education is required';
-        if (!edu.board) newErrors[`${category}_board_${index}`] = 'Board is required';
-        if (!edu.marks || isNaN(edu.marks)) newErrors[`${category}_marks_${index}`] = 'Valid marks are required';
-        if (!edu.year || isNaN(edu.year)) newErrors[`${category}_year_${index}`] = 'Valid year is required';
-        if (!edu.stream) newErrors[`${category}_stream_${index}`] = 'Stream is required';
-        if (!edu.grade) newErrors[`${category}_grade_${index}`] = 'Grade is required';
-      });
+    const categories = ['basic', 'professional'];
+    
+    categories.forEach((category) => {
+      if (educationDetails && educationDetails[category]) {
+        educationDetails[category].forEach((edu, index) => {
+          if (!edu.education) newErrors[`${category}_education_${index}`] = 'Education is required';
+          if (!edu.institute) newErrors[`${category}_institute_${index}`] = 'Institute is required';
+          if (!edu.board) newErrors[`${category}_board_${index}`] = 'Board is required';
+          if (!edu.marks || isNaN(edu.marks)) newErrors[`${category}_marks_${index}`] = 'Valid marks are required';
+          if (!edu.year || isNaN(edu.year)) newErrors[`${category}_year_${index}`] = 'Valid year is required';
+          if (!edu.stream) newErrors[`${category}_stream_${index}`] = 'Stream is required';
+          if (!edu.grade) newErrors[`${category}_grade_${index}`] = 'Grade is required';
+        });
+      }
     });
+    
     return newErrors;
   };
-
-  // // Validate training fields
-  // const validateTraining = () => {
-  //   const newErrors = {};
-  //   trainingInIndia.forEach((train, index) => {
-  //     if (!train.type) newErrors[`training_in_india_type_${index}`] = 'Type is required';
-  //     if (!train.topic) newErrors[`training_in_india_topic_${index}`] = 'Topic is required';
-  //     if (!train.institute) newErrors[`training_in_india_institute_${index}`] = 'Institute is required';
-  //     if (!train.from) newErrors[`training_in_india_from_${index}`] = 'From date is required';
-  //     if (!train.sponsor) newErrors[`training_in_india_sponsor_${index}`] = 'Sponsor is required';
-  //     if (!train.to) newErrors[`training_in_india_to_${index}`] = 'To date is required';
-  //   });
-  //   trainingAbroad.forEach((train, index) => {
-  //     if (!train.type) newErrors[`training_abroad_type_${index}`] = 'Type is required';
-  //     if (!train.topic) newErrors[`training_abroad_topic_${index}`] = 'Topic is required';
-  //     if (!train.institute) newErrors[`training_abroad_institute_${index}`] = 'Institute is required';
-  //     if (!train.sponsor) newErrors[`training_abroad_sponsor_${index}`] = 'Sponsor is required';
-  //     if (!train.from) newErrors[`training_abroad_from_${index}`] = 'From date is required';
-  //     if (!train.to) newErrors[`training_abroad_to_${index}`] = 'To date is required';
-  //   });
-  //   return newErrors;
-  // };
-
   
-
+ 
+ 
+ 
   // Handle input change for education
   const handleEducationChange = (category, index, e) => {
     const { name, value } = e.target;
@@ -75,7 +58,7 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
     newEducationDetails[category][index][name] = value;
     setEducationDetails(newEducationDetails);
   };
-
+ 
   // Handle input change for training in India
   const handleTrainingInIndiaChange = (index, e) => {
     const { name, value } = e.target;
@@ -83,387 +66,316 @@ const EducationTrainingDetailsForm = ({ nextStep, prevStep, handleFormDataChange
     newTrainingDetails[index][name] = value;
     setTrainingInIndia(newTrainingDetails);
   };
-
-  // Handle input change for training abroad
-  const handleTrainingAbroadChange = (index, e) => {
-    const { name, value } = e.target;
-    const newTrainingDetails = [...trainingAbroad];
-    newTrainingDetails[index][name] = value;
-    setTrainingAbroad(newTrainingDetails);
-  };
-
-  // Add a new education row
-  const addEducationRow = (category) => {
-    const newRow = { education: '', board: '', marks: '', year: '', stream: '', grade: '' };
-    setEducationDetails((prevDetails) => ({
-      ...prevDetails,
-      [category]: [...prevDetails[category], newRow],
-    }));
-  };
-
-  // Remove an education row
-  const removeEducationRow = (category, index) => {
-    const newRows = educationDetails[category].filter((_, idx) => idx !== index);
-    setEducationDetails((prevDetails) => ({
-      ...prevDetails,
-      [category]: newRows,
-    }));
-  };
-
+ 
+  
+ 
+  
+ 
   // Add a new training row for Training in India
   const addTrainingInIndiaRow = () => {
-    const newRow = { type: '', topic: '', institute: '', sponsor: '', from: new Date().toISOString().split('T')[0], to: Date().toISOString().split('T')[0] };
-    setTrainingInIndia((prevRows) => [...prevRows, newRow]);
+    const today = new Date().toISOString().split('T')[0];
+    const newRow = { type: '', topic: '', institute: '', country: '', sponsor: '', from: today, to: today };
+    setTrainingInIndia(prevRows => [...prevRows, newRow]);
   };
-
+ 
   // Remove a training row for Training in India
   const removeTrainingInIndiaRow = (index) => {
     const newRows = trainingInIndia.filter((_, idx) => idx !== index);
     setTrainingInIndia(newRows);
   };
-
-  // Add a new training row for Training Abroad
-  const addTrainingAbroadRow = () => {
-    const newRow = { type: '', topic: '', institute: '', sponsor: '', from: new Date().toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] };
-    setTrainingAbroad((prevRows) => [...prevRows, newRow]);
-  };
-
-  // Remove a training row for Training Abroad
-  const removeTrainingAbroadRow = (index) => {
-    const newRows = trainingAbroad.filter((_, idx) => idx !== index);
-    setTrainingAbroad(newRows);
-  };
-
+ 
+   
   // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Starting form submission...');
+  
+    const validBasicEducation = educationDetails.basic.map(edu => {
+      console.log('Processing basic education:', edu);
+      return {
+        education: edu.education,
+        institute: edu.institute,
+        board: edu.board,
+        marks: Number(edu.marks),
+        year: Number(edu.year),
+        grade: edu.grade,
+        stream: edu.stream
+      };
+    });
+  
+    const validProfessionalEducation = educationDetails.professional.map(edu => {
+      console.log('Processing professional education:', edu);
+      return {
+        education: edu.education,
+        institute: edu.institute,
+        board: edu.board,
+        marks: Number(edu.marks),
+        year: Number(edu.year),
+        grade: edu.grade,
+        stream: edu.stream
+      };
+    });
+  
+    console.log('Training status:', hasTraining);
+    
+    const formattedTrainingData = hasTraining === 'yes' ? 
+    trainingInIndia.map(train => ({
+    type: train.type.toString(),
+    topic: train.topic.toString(),
+    institute: train.institute.toString(),
+    country: train.country.toString(),
+    sponsor: train.sponsor.toString(),
+    from: new Date(train.from).toISOString(),
+    to: new Date(train.to).toISOString()
+  })) : [];
 
-    // Validate all fields
-    const educationErrors = validateEducation();
-    // const trainingErrors = validateTraining();
-    const allErrors = { ...educationErrors};
-    const trainingDetails = {trainingInIndia, trainingAbroad}
-
-    if (Object.keys(allErrors).length > 0) {
-      setErrors(allErrors); // Set validation errors
-      alert('Please fix the errors before submitting');
-      return;
+  
+    const payload = {
+      employeeId: localStorage.getItem('Emp_ID'),
+      educationDetails: {
+        basic: validBasicEducation,
+        professional: validProfessionalEducation
+      },
+      trainingStatus: hasTraining,
+      trainingDetails: {
+        trainingInIndia: formattedTrainingData
+      }
+    };
+  
+    console.log('Final payload:', JSON.stringify(payload, null, 2));
+  
+    try {
+      const response = await axios.post('http://localhost:5000/api/employees/education-details', payload);
+      console.log('Server response:', response.data);
+      if (response.data.success) {
+        console.log('Submission successful, moving to next step');
+        nextStep();
+      }
+    } catch (error) {
+      console.log('Submission failed');
+      console.log('Error response:', error.response?.data);
+      console.log('Error status:', error.response?.status);
+      console.log('Error details:', error.message);
     }
-    console.log("Education Details:", educationDetails)
-    handleFormDataChange("educationDetails", educationDetails)
-    console.log("trainingInIndia", trainingInIndia)
-    handleFormDataChange("trainingInIndia", trainingInIndia)
-    console.log("trainingInAbroad", trainingAbroad)
-    handleFormDataChange("trainingInAbroad", trainingAbroad)
-    console.log(trainingDetails)
-    handleFormDataChange("trainingDetails", trainingDetails)
-    nextStep()
-    // Clear any previous errors
-    setErrors({});
-  };
+  };  
 
+  const [selectedBasicEducation, setSelectedBasicEducation] = useState([]);
+  const [selectedProfEducation, setSelectedProfEducation] = useState([]);
+  const [hasTraining, setHasTraining] = useState('no');
+ 
   return (
     <div className="education-training-container">
       <form onSubmit={handleSubmit}>
         {/* Education Details */}
         <div className="form-section">
           <h4 className="form-subtitle">Education Details</h4>
-          
+         
           {/* Basic Education */}
-          
+         
           <table className="education-table">
-            <thead>
-           <tr>
-             <th colSpan="7" style={{textAlign:"center", fontStyle:"italic"}}>Basic</th>
-           </tr>
-             <tr>
-                <th>Education</th>
-                <th>Name of Board/University</th>
-                <th>Marks Obtained (In %)</th>
-                <th>Passing Year</th>
-                <th>Stream</th>
-                <th>Grade</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {educationDetails.basic.map((edu, index) => (
-                <tr key={index}>
-                  <td>
-                    <input type="text" name="education" value={edu.education} onChange={(e) => handleEducationChange('basic', index, e)} />
-                    {errors[`basic_education_${index}`] && <span className="error">{errors[`basic_education_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="board" value={edu.board} onChange={(e) => handleEducationChange('basic', index, e)} />
-                    {errors[`basic_board_${index}`] && <span className="error">{errors[`basic_board_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="marks" value={edu.marks} onChange={(e) => handleEducationChange('basic', index, e)} />
-                    {errors[`basic_marks_${index}`] && <span className="error">{errors[`basic_marks_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="year" value={edu.year} onChange={(e) => handleEducationChange('basic', index, e)} />
-                    {errors[`basic_year_${index}`] && <span className="error">{errors[`basic_year_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="stream" value={edu.stream} onChange={(e) => handleEducationChange('basic', index, e)} />
-                    {errors[`basic_stream_${index}`] && <span className="error">{errors[`basic_stream_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="grade" value={edu.grade} onChange={(e) => handleEducationChange('basic', index, e)} />
-                    {errors[`basic_grade_${index}`] && <span className="error">{errors[`basic_grade_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <button type="button" className='remvingButton' onClick={() => removeEducationRow('basic', index)}>x</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button type="button" className='addingButton' onClick={() => addEducationRow('basic')}>+Add Basic Education</button>
-
-          {/* Technical Education */}
+  <thead>
+    <tr>
+      <th colSpan="7" style={{textAlign:"center", fontStyle:"italic"}}>Basic</th>
+    </tr>
+    <tr>
+      <th>Education</th>
+      <th>Institute Name</th>
+      <th>Name of Board/University</th>
+      <th>Marks Obtained (In %)</th>
+      <th>Passing Year</th>
+      <th>Stream</th>
+      <th>Grade</th>
+    </tr>
+  </thead>
+  <tbody>
+    {educationDetails.basic.map((edu, index) => (
+      <tr key={index}>
+        <td>
+          <select 
+            name="education" 
+            value={edu.education}
+            onChange={(e) => {
+              handleEducationChange('basic', index, e);
+              setSelectedBasicEducation([...selectedBasicEducation, e.target.value]);
+            }}
+          >
+            <option value="">Select Education</option>
+            <option value="10th" disabled={selectedBasicEducation.includes('10th') && edu.education !== '10th'}>10th</option>
+            <option value="12th" disabled={selectedBasicEducation.includes('12th') && edu.education !== '12th'}>12th</option>
+          </select>
+          {errors[`basic_education_${index}`] && <span className="error">{errors[`basic_education_${index}`]}</span>}
+        </td>
+        <td>
+          <input type="text" name="institute" value={edu.institute} onChange={(e) => handleEducationChange('basic', index, e)} />
+        </td>
+        <td>
+          <input type="text" name="board" value={edu.board} onChange={(e) => handleEducationChange('basic', index, e)} />
+        </td>
+        <td>
+          <input type="text" name="marks" value={edu.marks} onChange={(e) => handleEducationChange('basic', index, e)} />
+        </td>
+        <td>
+          <input type="text" name="year" value={edu.year} onChange={(e) => handleEducationChange('basic', index, e)} />
+        </td>
+        <td>
+          <input type="text" name="stream" value={edu.stream} onChange={(e) => handleEducationChange('basic', index, e)} />
+        </td>
+        <td>
+          <input type="text" name="grade" value={edu.grade} onChange={(e) => handleEducationChange('basic', index, e)} />
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>  
           
-          <table className="education-table">
-            <thead>
-           <tr>
-             <th colSpan="7" style={{textAlign:"center", fontStyle:"italic"}}>Technical</th>
-           </tr>
-              <tr>
-                <th>Education</th>
-                <th>Name of Board/University</th>
-                <th>Marks Obtained (In %)</th>
-                <th>Passing Year</th>
-                <th>Stream</th>
-                <th>Grade</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {educationDetails.technical.map((edu, index) => (
-                <tr key={index}>
-                  <td>
-                    <input type="text" name="education" value={edu.education} onChange={(e) => handleEducationChange('technical', index, e)} />
-                    {errors[`technical_education_${index}`] && <span className="error">{errors[`technical_education_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="board" value={edu.board} onChange={(e) => handleEducationChange('technical', index, e)} />
-                    {errors[`technical_board_${index}`] && <span className="error">{errors[`technical_board_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="marks" value={edu.marks} onChange={(e) => handleEducationChange('technical', index, e)} />
-                    {errors[`technical_marks_${index}`] && <span className="error">{errors[`technical_marks_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="year" value={edu.year} onChange={(e) => handleEducationChange('technical', index, e)} />
-                    {errors[`technical_year_${index}`] && <span className="error">{errors[`technical_year_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="stream" value={edu.stream} onChange={(e) => handleEducationChange('technical', index, e)} />
-                    {errors[`technical_stream_${index}`] && <span className="error">{errors[`technical_stream_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="grade" value={edu.grade} onChange={(e) => handleEducationChange('technical', index, e)} />
-                    {errors[`technical_grade_${index}`] && <span className="error">{errors[`technical_grade_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <button type="button" className='remvingButton' onClick={() => removeEducationRow('technical', index)}>x</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button type="button" className='addingButton' onClick={() => addEducationRow('technical')}>+Add Technical Education</button>
-
           {/* Professional Education */}
-          
+         
           <table className="education-table">
-            <thead>
-           <tr>
-             <th colSpan="7" style={{textAlign:"center", fontStyle:"italic"}}>Professional</th>
-           </tr>
-              <tr>
-                <th>Education</th>
-                <th>Name of Board/University</th>
-                <th>Marks Obtained (In %)</th>
-                <th>Passing Year</th>
-                <th>Stream</th>
-                <th>Grade</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {educationDetails.professional.map((edu, index) => (
-                <tr key={index}>
-                  <td>
-                    <input type="text" name="education" value={edu.education} onChange={(e) => handleEducationChange('professional', index, e)} />
-                    {errors[`professional_education_${index}`] && <span className="error">{errors[`professional_education_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="board" value={edu.board} onChange={(e) => handleEducationChange('professional', index, e)} />
-                    {errors[`professional_board_${index}`] && <span className="error">{errors[`professional_board_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="marks" value={edu.marks} onChange={(e) => handleEducationChange('professional', index, e)} />
-                    {errors[`professional_marks_${index}`] && <span className="error">{errors[`professional_marks_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="year" value={edu.year} onChange={(e) => handleEducationChange('professional', index, e)} />
-                    {errors[`technical_year_${index}`] && <span className="error">{errors[`technical_year_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="stream" value={edu.stream} onChange={(e) => handleEducationChange('professional', index, e)} />
-                    {errors[`professional_stream_${index}`] && <span className="error">{errors[`professional_stream_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="grade" value={edu.grade} onChange={(e) => handleEducationChange('professional', index, e)} />
-                    {errors[`professional_grade_${index}`] && <span className="error">{errors[`professional_grade_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <button type="button" className='remvingButton'  onClick={() => removeEducationRow('professional', index)}>x</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button type="button" className='addingButton' onClick={() => addEducationRow('professional')}>+Add Professional Education</button>
-        </div>
+  <thead>
+    <tr>
+      <th colSpan="7" style={{textAlign:"center", fontStyle:"italic"}}>Professional</th>
+    </tr>
+    <tr>
+      <th>Education</th>
+      <th>Institute Name</th>
+      <th>Name of Board/University</th>
+      <th>Marks Obtained (In %)</th>
+      <th>Passing Year</th>
+      <th>Stream</th>
+      <th>Grade</th>
+    </tr>
+  </thead>
+  <tbody>
+  {educationDetails.professional.map((edu, index) => (
+      <tr key={index}>
+        <td>
+          <select 
+            name="education" 
+            value={edu.education}
+            onChange={(e) => {
+              handleEducationChange('professional', index, e);
+              setSelectedProfEducation([...selectedProfEducation, e.target.value]);
+            }}
+          >
+            <option value="">Select Education</option>
+            <option value="UG" disabled={selectedProfEducation.includes('UG') && edu.education !== 'UG'}>UG</option>
+            <option value="PG" disabled={selectedProfEducation.includes('PG') && edu.education !== 'PG'}>PG</option>
+            <option value="Doctorate" disabled={selectedProfEducation.includes('Doctorate') && edu.education !== 'Doctorate'}>Doctorate</option>
+          </select>
+          {errors[`professional_education_${index}`] && <span className="error">{errors[`professional_education_${index}`]}</span>}
+        </td>
+        <td>
+          <input type="text" name="institute" value={edu.institute} onChange={(e) => handleEducationChange('professional', index, e)} />
+        </td>
+        <td>
+          <input type="text" name="board" value={edu.board} onChange={(e) => handleEducationChange('professional', index, e)} />
+        </td>
+        <td>
+          <input type="text" name="marks" value={edu.marks} onChange={(e) => handleEducationChange('professional', index, e)} />
+        </td>
+        <td>
+          <input type="text" name="year" value={edu.year} onChange={(e) => handleEducationChange('professional', index, e)} />
+        </td>
+        <td>
+          <input type="text" name="stream" value={edu.stream} onChange={(e) => handleEducationChange('professional', index, e)} />
+        </td>
+        <td>
+          <input type="text" name="grade" value={edu.grade} onChange={(e) => handleEducationChange('professional', index, e)} />
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+</div>
 
         {/* Training Details */}
         <div className="form-section">
-          <h4 className="form-subtitle">Training Details</h4>
+  <h4 className="form-subtitle">Training Details</h4>
+  
+  <div className="training-radio">
+    <label>Have you undergone any training?</label>
+    <div>
+      <input 
+        type="radio" 
+        name="hasTraining" 
+        value="yes" 
+        checked={hasTraining === 'yes'}
+        onChange={(e) => setHasTraining(e.target.value)} 
+      /> Yes
+      <input 
+        type="radio" 
+        name="hasTraining" 
+        value="no" 
+        checked={hasTraining === 'no'}
+        onChange={(e) => setHasTraining(e.target.value)} 
+      /> No
+    </div>
+  </div>
 
-          {/* Training in India */}
-      
-          <table className="training-table">
-            <thead>
-           <tr>
-             <th colSpan="7" style={{textAlign:"center", fontStyle:"italic"}}>In India</th>
-           </tr>
-              <tr>
-                <th>Training Type</th>
-                <th>Topic Name</th>
-                <th>Name of Institute</th>
-                <th>Sponsored by</th>
-                <th>Date From</th>
-                <th>Date To</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {trainingInIndia.map((train, index) => (
-                <tr key={index}>
-                  <td>
-                    <input type="text" name="type" value={train.type} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
-                    {errors[`training_in_india_type_${index}`] && <span className="error">{errors[`training_in_india_type_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="topic" value={train.topic} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
-                    {errors[`training_in_india_topic_${index}`] && <span className="error">{errors[`training_in_india_topic_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="institute" value={train.institute} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
-                    {errors[`training_in_india_institute_${index}`] && <span className="error">{errors[`training_in_india_institute_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="sponsor" value={train.sponsor} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
-                    {errors[`training_in_india_sponsor_${index}`] && <span className="error">{errors[`training_in_india_sponsor_${index}`]}</span>}
-                  </td>
-                  <td>
-  <input 
-    type="date" 
-    name="from" 
-    value={train.from} 
-    onChange={(e) => handleTrainingInIndiaChange(index, e)} 
-  />
-</td>
-<td>
-  <input 
-    type="date" 
-    name="to" 
-    value={train.to} 
-    onChange={(e) => handleTrainingInIndiaChange(index, e)} 
-  />
-</td>
-                  <td>
-                    <button type="button" className='remvingButton' onClick={() => removeTrainingInIndiaRow(index)}>x</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button type="button" className='addingButton' onClick={addTrainingInIndiaRow}>+Add Training in India</button>
-
-          {/* Training Abroad */}
-          
-          <table className="training-table">
-            <thead>
-           <tr>
-             <th colSpan="7" style={{textAlign:"center", fontStyle:"italic"}}>Abroad</th>
-           </tr>
-              <tr>
-                <th>Training Type</th>
-                <th>Topic Name</th>
-                <th>Name of Institute</th>
-                <th>Sponsored by</th>
-                <th>Date From</th>
-                <th>Date To</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {trainingAbroad.map((train, index) => (
-                <tr key={index}>
-                  <td>
-                    <input type="text" name="type" value={train.type} onChange={(e) => handleTrainingAbroadChange(index, e)} />
-                    {errors[`training_abroad_type_${index}`] && <span className="error">{errors[`training_abroad_type_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="topic" value={train.topic} onChange={(e) => handleTrainingAbroadChange(index, e)} />
-                    {errors[`training_abroad_topic_${index}`] && <span className="error">{errors[`training_abroad_topic_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="institute" value={train.institute} onChange={(e) => handleTrainingAbroadChange(index, e)} />
-                    {errors[`training_abroad_institute_${index}`] && <span className="error">{errors[`training_abroad_institute_${index}`]}</span>}
-                  </td>
-                  <td>
-                    <input type="text" name="sponsor" value={train.sponsor} onChange={(e) => handleTrainingAbroadChange(index, e)} />
-                    {errors[`training_abroad_sponsor_${index}`] && <span className="error">{errors[`training_abroad_sponsor_${index}`]}</span>}
-                  </td>
-                  <td>
-  <input 
-    type="date" 
-    name="from" 
-    value={train.from} 
-    onChange={(e) => handleTrainingAbroadChange(index, e)} 
-  />
-</td>
-<td>
-  <input 
-    type="date" 
-    name="to" 
-    value={train.to} 
-    onChange={(e) => handleTrainingAbroadChange(index, e)} 
-  />
-</td>
-                  <td>
-                    <button type="button" className='remvingButton' onClick={() => removeTrainingAbroadRow(index)}>x</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button type="button" className='addingButton' onClick={addTrainingAbroadRow}>+Add Training Abroad</button>
-        </div>
-
+  {hasTraining === 'yes' && (
+    <>
+      <table className="training-table">
+        <thead>
+          <tr>
+            <th colSpan="8" style={{textAlign:"center", fontStyle:"italic"}}>Training </th>
+          </tr>
+          <tr>
+            <th>Training Type</th>
+            <th>Topic Name</th>
+            <th>Name of Institute</th>
+            <th>Country</th>
+            <th>Sponsored by</th>
+            <th>Date From</th>
+            <th>Date To</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {trainingInIndia.map((train, index) => (
+            <tr key={index}>
+              <td>
+                <input type="text" name="type" value={train.type} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
+              </td>
+              <td>
+                <input type="text" name="topic" value={train.topic} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
+              </td>
+              <td>
+                <input type="text" name="institute" value={train.institute} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
+              </td>
+              <td>
+                <input type="text" name="country" value={train.country} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
+              </td>
+              <td>
+                <input type="text" name="sponsor" value={train.sponsor} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
+              </td>
+              <td>
+                <input type="date" name="from" value={train.from} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
+              </td>
+              <td>
+                <input type="date" name="to" value={train.to} onChange={(e) => handleTrainingInIndiaChange(index, e)} />
+              </td>
+              <td>
+                <button type="button" className='remvingButton' onClick={() => removeTrainingInIndiaRow(index)}>x</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <button type="button" className='addingButton' onClick={addTrainingInIndiaRow}>+Add</button>
+    </>
+  )}
+</div>
+ 
         <div className="form-actions">
         <button type='button' onClick={prevStep} className="submit-btn" > &lt; Previous </button>
         <button type="submit" className="submit-btn">Next &gt; </button>
         </div>
       </form>
-      
+     
     </div>
   );
 };
-
+ 
 export default EducationTrainingDetailsForm;
+ 
+ 

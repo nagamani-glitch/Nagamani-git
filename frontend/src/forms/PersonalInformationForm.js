@@ -1,34 +1,47 @@
 import React from 'react';
-import { TextField, RadioGroup, FormControlLabel, Radio, Paper, FormControl, Button, Typography, Grid, Select, MenuItem , InputLabel, FormHelperText} from '@mui/material';
+import { TextField, Paper, FormControl, Button, Typography, Grid, Select, MenuItem, InputLabel, FormHelperText } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { v4 as uuidv4} from 'uuid';
 
+const PersonalInformationForm = ({ nextStep ,setEmployeeId}) => {
+  
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required('First name is required'),
   lastName: Yup.string().required('Last name is required'),
-  dob: Yup.date().required('Date of birth is required'),
+  dob: Yup.date()
+    .required('Date of birth is required')
+    .max(new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000), 'Employee must be at least 18 years old'),
   gender: Yup.string().required('Gender is required'),
   maritalStatus: Yup.string().required('Marital status is required'),
   bloodGroup: Yup.string().required('Blood group is required'),
   nationality: Yup.string().required('Nationality is required'),
-  aadharNumber: Yup.string().matches(/^[0-9]{12}$/, 'Aadhar number must be 12 digits').required('Aadhar number is required'),
-  panNumber: Yup.string().length(10, 'PAN number must be 10 characters').required('PAN number is required'),
-  mobileNumber: Yup.string().matches(/^[0-9]{10}$/, 'Mobile number must be 10 digits').required('Mobile number is required'),
-  email: Yup.string().email('Invalid email format').required('Email is required'),
+  aadharNumber: Yup.string()
+    .matches(/^[0-9]{12}$/, 'Aadhar number must be 12 digits')
+    .required('Aadhar number is required'),
+  panNumber: Yup.string()
+    .matches(/^[A-Z0-9]{10}$/, 'PAN number must be 10 characters')
+    .required('PAN number is required'),
+  mobileNumber: Yup.string()
+    .matches(/^[0-9]{10}$/, 'Mobile number must be 10 digits')
+    .required('Mobile number is required'),
+  email: Yup.string()
+    .email('Invalid email format')
+    .required('Email is required')
+    .trim(),
   prefix: Yup.string().required('Prefix is required'),
-  employeeImage: Yup.mixed()
-    .required('Profile photo is required')
-    .test('fileFormat', 'Only image formats are allowed', value => {
-      if (!value) return false;
-      return ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);
-    })
+  employeeImage: Yup.mixed().required('Profile photo is required')
 });
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-const prefixOptions = [{value: 'Mr.' , gender : 'Male'},
-                       {value: 'Ms.' , gender : 'Female'},
-                       {value: 'Dr.' , gender : 'Null'}];
+const prefixOptions = [
+  {value: 'Mr.', gender: 'Male'},
+  {value: 'Ms.', gender: 'Female'},
+  {value: 'Dr.', gender: 'Null'}
+];
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
 const months = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -40,24 +53,20 @@ const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 const genderOptions = {
   'Mr.': ['Male'],
   'Ms.': ['Female'],
-  // 'Mrs.': ['Female'],
   'Dr.': ['Male', 'Female', 'Other']
 };
 
 const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
 
-
-
-const PersonalInformationForm = ({ nextStep, handleFormDataChange, handleImageUpload }) => {
   const initialValues = {
-    prefix:'',
+    prefix: '',
     firstName: '',
     middleName: '',
     lastName: '',
-    dob: '',
-    dobDay: '',
-    dobMonth: '',
-    dobYear: '',
+    dob: new Date(),
+    dobDay: new Date().getDate(),
+    dobMonth: months[new Date().getMonth()],
+    dobYear: new Date().getFullYear(),
     gender: '',
     maritalStatus: '',
     bloodGroup: '',
@@ -69,28 +78,182 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, handleImageUp
     employeeImage: null
   };
 
+  const handleSave = async (values) => {
+    try {
+      // Input validation
+      if (!values || !values.firstName || !values.lastName || !values.dob) {
+        throw new Error('Invalid input data');
+      }
+  
+      console.log('Starting handleSave with values:', values);
+  
+      const dobDate = new Date(
+        values.dobYear,
+        months.indexOf(values.dobMonth),
+        values.dobDay
+      );
+      const dob = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
+      console.log('Formatted DOB:', dob);
+  
+      const personalInfoData = {
+        prefix: values.prefix,
+        firstName: values.firstName,
+        middleName: values.middleName || '',
+        lastName: values.lastName,
+        dob: dob,
+        gender: values.gender,
+        maritalStatus: values.maritalStatus,
+        bloodGroup: values.bloodGroup,
+        nationality: values.nationality,
+        aadharNumber: values.aadharNumber,
+        panNumber: values.panNumber.toUpperCase(),
+        mobileNumber: values.mobileNumber,
+        email: values.email.trim().toLowerCase()
+      };
+      console.log('Constructed personalInfoData:', personalInfoData);
+  
+      const formData = new FormData();
+      const empId = uuidv4(); // generate a new UUID
+      const requestData = {
+        Emp_ID: uuidv4(),
+        personalInfo: personalInfoData
+      };
+      console.log('Final request data structure:', requestData);
+  
+      formData.append('formData', JSON.stringify(requestData));
+  
+      if (values.employeeImage) {
+        formData.append('employeeImage', values.employeeImage);
+        console.log('Employee image attached:', values.employeeImage.name);
+      }
+  
+      console.log('FormData entries:', Array.from(formData.entries()));
+  
+      // Use a secure storage mechanism (e.g., secure cookie or token-based authentication)
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Unauthorized access');
+      }
+  
+      try {
+        const response = await axios.post(
+          'http://localhost:5000/api/employees/personal-info',
+          formData, // Pass formData instead of requestData
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+  
+        console.log('Server response:', response.data);
+  
+        if (response.data.success) {
+          const newEmpId = response.data.employeeId;
+          localStorage.setItem('Emp_ID', newEmpId);
+          setEmployeeId(newEmpId);
+          toast.success('Personal information saved successfully');
+          nextStep();
+        }
+      } catch (error) {
+        console.error('Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          headers: error.response?.headers
+        });
+        console.log('Full error object:', error);
+        handleError(error.response?.data);
+      }
+    } catch (error) {
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers
+      });
+      console.log('Full error object:', error);
+      handleError(error.response?.data);
+    }
+  };  
+  
+  const handleError = (error) => {
+    // Handle validation errors from backend
+    if (error?.details) {
+      error.details.forEach(detail => {
+        // Extract field name from the path
+        const fieldMatch = detail.match(/Path `(.+)` is required/);
+        if (fieldMatch) {
+          const field = fieldMatch[1];
+          // Map backend field paths to user-friendly messages
+          const fieldMessages = {
+            'personalInfo.prefix': 'Title/Prefix',
+            'personalInfo.firstName': 'First Name',
+            'personalInfo.lastName': 'Last Name',
+            'personalInfo.dob': 'Date of Birth',
+            'personalInfo.gender': 'Gender',
+            'personalInfo.maritalStatus': 'Marital Status',
+            'personalInfo.bloodGroup': 'Blood Group',
+            'personalInfo.nationality': 'Nationality',
+            'personalInfo.aadharNumber': 'Aadhar Number',
+            'personalInfo.panNumber': 'PAN Number',
+            'personalInfo.mobileNumber': 'Mobile Number',
+            'personalInfo.email': 'Email Address',
+            'personalInfo.employeeImage': 'Profile Photo'
+          };
+          
+          const fieldName = fieldMessages[field] || field;
+          toast.error(`${fieldName} is required`);
+        } else {
+          // Handle other validation errors
+          toast.error(detail);
+        }
+      });
+    } else if (error?.message) {
+      // Handle specific error messages
+      switch (error.field) {
+        case 'email':
+          toast.error('This email address is already registered');
+          break;
+        case 'aadharNumber':
+          toast.error('This Aadhar number is already in use');
+          break;
+        case 'panNumber':
+          toast.error('This PAN number is already registered');
+          break;
+        case 'mobileNumber':
+          toast.error('This mobile number is already in use');
+          break;
+        default:
+          toast.error(error.message);
+      }
+    } else {
+      // Generic error message
+      toast.error('Please fill in all required fields correctly');
+    }
+  };
+  
+  
+    
   const AnimatedTextField = ({ field, form, label, ...props }) => {
     const handleChange = (e) => {
-      // Handle email field normally
       if (field.name === 'email') {
         form.setFieldValue(field.name, e.target.value);
         return;
       }
       
-      // Handle PAN number in uppercase
       if (field.name === 'panNumber') {
         form.setFieldValue(field.name, e.target.value.toUpperCase());
         return;
       }
       
-      // Handle other fields in sentence case
       const sentenceCaseValue = e.target.value
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
       form.setFieldValue(field.name, sentenceCaseValue);
     };
-  
     return (
       <motion.div
         initial={{ scale: 0.98, opacity: 0 }}
@@ -115,430 +278,333 @@ const PersonalInformationForm = ({ nextStep, handleFormDataChange, handleImageUp
             },
             '& .MuiInputBase-input': {
               color: '#000000',
-            },
-            '& .MuiInputBase-input[type="date"]': {
-              padding: '16.5px 14px',
-              '&::-webkit-calendar-picker-indicator': {
-                cursor: 'pointer',
-                padding: '8px',
-                marginRight: '-8px'
-              }
             }
           }}
         />
       </motion.div>
     );
   };
-  
-  
-
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={validationSchema}
-      onSubmit={(values) => {
-        handleFormDataChange("personalInfo", values);
-        nextStep();
-      }}
+      onSubmit={handleSave}
     >
-      {({ errors, touched, values }) => (
+      {({ errors, touched, setFieldValue, values }) => (
         <Form>
           <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
             <Typography variant="h5" gutterBottom color="primary">
               Personal Information
             </Typography>
 
-        <Grid container spacing={3}>
-  {/* Name fields in single line */}
-  <Grid item container spacing={2}>
-    <Grid item xs={2}>
-      <FormControl fullWidth>
-        <Field name="prefix">
-  {({ field, form }) => (
-    <Select
-      {...field}
-      label="Title"
-      displayEmpty
-      error={touched.prefix && errors.prefix}
-      onChange={(e) => {
-        const selectedPrefix = prefixOptions.find(p => p.value === e.target.value);
-        form.setFieldValue('prefix', e.target.value);
-        
-        // Set gender automatically if prefix has defined gender
-        if (selectedPrefix.gender) {
-          form.setFieldValue('gender', selectedPrefix.gender);
-        }
-      }}
-    >
-      <MenuItem value="" disabled>
-        <em>Title</em>
-      </MenuItem>
-      {prefixOptions.map(prefix => (
-        <MenuItem key={prefix.value} value={prefix.value}>{prefix.value}</MenuItem>
-      ))}
-    </Select>
-  )}
-</Field>
-      </FormControl>
-    </Grid>
-    
-    <Grid item xs={3}>
-      <Field name="firstName">
-        {({ field, form }) => (
-          <TextField
-            {...field}
-            label="First Name"
-            fullWidth
-            onChange={(e) => {
-              const sentenceCaseValue = e.target.value
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
-              form.setFieldValue(field.name, sentenceCaseValue);
-            }}
-            error={touched.firstName && errors.firstName}
-            helperText={touched.firstName && errors.firstName}
-          />
-        )}
-      </Field>
-    </Grid>
-
-    <Grid item xs={3}>
-      <Field name="middleName">
-        {({ field, form }) => (
-          <TextField
-            {...field}
-            label="Middle Name"
-            fullWidth
-            onChange={(e) => {
-              const sentenceCaseValue = e.target.value
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
-              form.setFieldValue(field.name, sentenceCaseValue);
-            }}
-          />
-        )}
-      </Field>
-    </Grid>
-
-    <Grid item xs={4}>
-      <Field name="lastName">
-        {({ field, form }) => (
-          <TextField
-            {...field}
-            label="Last Name"
-            fullWidth
-            onChange={(e) => {
-              const sentenceCaseValue = e.target.value
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
-              form.setFieldValue(field.name, sentenceCaseValue);
-            }}
-            error={touched.lastName && errors.lastName}
-            helperText={touched.lastName && errors.lastName}
-          />
-        )}
-      </Field>
-    </Grid>
-  </Grid>            
-          
-  <Grid item xs={12} sm={6}>
-  <Typography variant="body1" gutterBottom>Date of Birth</Typography>
-  <Grid container spacing={2}>
-    <Grid item xs={4}>
-      <FormControl fullWidth>
-        <InputLabel>Date</InputLabel>
-        <Field name="dobDay">
-          {({ field, form }) => (
-            <Select
-              {...field}
-              label="Date"
-              onChange={(e) => {
-                form.setFieldValue('dobDay', e.target.value);
-                const newDate = new Date(
-                  form.values.dobYear,
-                  months.indexOf(form.values.dobMonth),
-                  e.target.value
-                );
-                form.setFieldValue('dob', newDate);
-              }}
-            >
-              {days.map(day => (
-                <MenuItem key={day} value={day}>{day}</MenuItem>
-              ))}
-            </Select>
-          )}
-        </Field>
-      </FormControl>
-    </Grid>
-
-    <Grid item xs={4}>
-      <FormControl fullWidth>
-        <InputLabel>Month</InputLabel>
-        <Field name="dobMonth">
-          {({ field, form }) => (
-            <Select
-              {...field}
-              label="Month"
-              onChange={(e) => {
-                form.setFieldValue('dobMonth', e.target.value);
-                const newDate = new Date(
-                  form.values.dobYear,
-                  months.indexOf(e.target.value),
-                  form.values.dobDay
-                );
-                form.setFieldValue('dob', newDate);
-              }}
-            >
-              {months.map(month => (
-                <MenuItem key={month} value={month}>{month}</MenuItem>
-              ))}
-            </Select>
-          )}
-        </Field>
-      </FormControl>
-    </Grid>
-
-    <Grid item xs={4}>
-      <FormControl fullWidth>
-        <InputLabel>Year</InputLabel>
-        <Field name="dobYear">
-          {({ field, form }) => (
-            <Select
-              {...field}
-              label="Year"
-              onChange={(e) => {
-                form.setFieldValue('dobYear', e.target.value);
-                const newDate = new Date(
-                  e.target.value,
-                  months.indexOf(form.values.dobMonth),
-                  form.values.dobDay
-                );
-                form.setFieldValue('dob', newDate);
-              }}
-            >
-              {years.map(year => (
-                <MenuItem key={year} value={year}>{year}</MenuItem>
-              ))}
-            </Select>
-          )}
-        </Field>
-      </FormControl>
-    </Grid>
-  </Grid>
-  {touched.dob && errors.dob && (
-    <Typography color="error" variant="caption">
-      {errors.dob}
-    </Typography>
-  )}
-</Grid>
-              
+            <Grid container spacing={3}>
+              {/* Name fields */}
               <Grid item container spacing={2}>
-  <Grid item xs={6}>
-    <FormControl fullWidth>
-      <InputLabel>Gender</InputLabel>
-      <Field name="gender">
-        {({ field, form }) => (
-          <Select
-            {...field}
-            label="Gender"
-            displayEmpty
-            error={touched.gender && errors.gender}
-          >
-            <MenuItem value="" disabled>
-              <em>Select Gender</em>
-            </MenuItem>
-            {genderOptions[form.values.prefix]?.map(gender => (
-              <MenuItem key={gender} value={gender}>
-                {gender}
-              </MenuItem>
-            ))}
-          </Select>
-        )}
-      </Field>
-      {touched.gender && errors.gender && (
-        <FormHelperText error>{errors.gender}</FormHelperText>
-      )}
-    </FormControl>
-  </Grid>
+                <Grid item xs={2}>
+                  <FormControl fullWidth>
+                    <Field name="prefix">
+                      {({ field, form }) => (
+                        <Select
+                          {...field}
+                          label="Title"
+                          displayEmpty
+                          error={touched.prefix && errors.prefix}
+                          onChange={(e) => {
+                            const selectedPrefix = prefixOptions.find(p => p.value === e.target.value);
+                            form.setFieldValue('prefix', e.target.value);
+                            if (selectedPrefix.gender !== 'Null') {
+                              form.setFieldValue('gender', selectedPrefix.gender);
+                            }
+                          }}
+                        >
+                          <MenuItem value="" disabled>Title</MenuItem>
+                          {prefixOptions.map(prefix => (
+                            <MenuItem key={prefix.value} value={prefix.value}>{prefix.value}</MenuItem>
+                          ))}
+                        </Select>
+                      )}
+                    </Field>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={3}>
+                  <Field
+                    name="firstName"
+                    component={AnimatedTextField}
+                    label="First Name"
+                    fullWidth
+                  />
+                </Grid>
 
-  <Grid item xs={6}>
-    <FormControl fullWidth>
-      <InputLabel>Marital Status</InputLabel>
-      <Field name="maritalStatus">
-        {({ field, form }) => (
-          <Select
-            {...field}
-            label="Marital Status"
-            displayEmpty
-            error={touched.maritalStatus && errors.maritalStatus}
-          >
-            <MenuItem value="" disabled>
-              <em>Select Marital Status</em>
-            </MenuItem>
-            {maritalStatusOptions.map(status => (
-              <MenuItem key={status} value={status}>
-                {status}
-              </MenuItem>
-            ))}
-          </Select>
-        )}
-      </Field>
-      {touched.maritalStatus && errors.maritalStatus && (
-        <FormHelperText error>{errors.maritalStatus}</FormHelperText>
+                <Grid item xs={3}>
+                  <Field
+                    name="middleName"
+                    component={AnimatedTextField}
+                    label="Middle Name"
+                    fullWidth
+                  />
+                </Grid>
+
+                <Grid item xs={4}>
+                  <Field
+                    name="lastName"
+                    component={AnimatedTextField}
+                    label="Last Name"
+                    fullWidth
+                  />
+                </Grid>
+              </Grid>
+
+              {/* Date of Birth */}
+              <Grid item xs={12} >
+                <Typography variant="body1" gutterBottom>Date of Birth</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={4}>
+                    <FormControl fullWidth>
+                      <InputLabel>Date</InputLabel>
+                      <Field name="dobDay">
+                        {({ field, form }) => (
+                          <Select
+                            {...field}
+                            label="Date"
+                            onChange={(e) => {
+                              form.setFieldValue('dobDay', e.target.value);
+                              const newDate = new Date(
+                                form.values.dobYear,
+                                months.indexOf(form.values.dobMonth),
+                                e.target.value
+                              );
+                              form.setFieldValue('dob', newDate);
+                            }}
+                          >
+                            {days.map(day => (
+                              <MenuItem key={day} value={day}>{day}</MenuItem>
+                            ))}
+                          </Select>
+                        )}
+                      </Field>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={4}>
+                    <FormControl fullWidth>
+                      <InputLabel>Month</InputLabel>
+                      <Field name="dobMonth">
+                        {({ field, form }) => (
+                          <Select
+                            {...field}
+                            label="Month"
+                            onChange={(e) => {
+                              form.setFieldValue('dobMonth', e.target.value);
+                              const newDate = new Date(
+                                form.values.dobYear,
+                                months.indexOf(e.target.value),
+                                form.values.dobDay
+                              );
+                              form.setFieldValue('dob', newDate);
+                            }}
+                          >
+                            {months.map(month => (
+                              <MenuItem key={month} value={month}>{month}</MenuItem>
+                            ))}
+                          </Select>
+                        )}
+                      </Field>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={4}>
+                    <FormControl fullWidth>
+                      <InputLabel>Year</InputLabel>
+                      <Field name="dobYear">
+                        {({ field, form }) => (
+                          <Select
+                            {...field}
+                            label="Year"
+                            onChange={(e) => {
+                              form.setFieldValue('dobYear', e.target.value);
+                              const newDate = new Date(
+                                e.target.value,
+                                months.indexOf(form.values.dobMonth),
+                                form.values.dobDay
+                              );
+                              form.setFieldValue('dob', newDate);
+                            }}
+                          >
+                            {years.map(year => (
+                              <MenuItem key={year} value={year}>{year}</MenuItem>
+                            ))}
+                          </Select>
+                        )}
+                      </Field>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              {/* Gender */}
+
+<Grid item xs={12} sm={6} >
+  <FormControl fullWidth error={touched.gender && errors.gender}>
+    <InputLabel>Gender</InputLabel>
+    <Field name="gender">
+      {({ field }) => (
+        <Select
+          {...field}
+          label="Gender"
+        >
+          <MenuItem value="">Select Gender</MenuItem>
+          {genderOptions[values.prefix]?.map(gender => (
+            <MenuItem key={gender} value={gender}>{gender}</MenuItem>
+          ))}
+        </Select>
       )}
-    </FormControl>
-  </Grid>
+    </Field>
+    {touched.gender && errors.gender && (
+      <FormHelperText>{errors.gender}</FormHelperText>
+    )}
+  </FormControl>
+</Grid>
+
+    {/* Marital Status */}
+
+<Grid item xs={12} sm={6}>
+  <FormControl fullWidth error={touched.maritalStatus && errors.maritalStatus}>
+    <InputLabel>Marital Status</InputLabel>
+    <Field name="maritalStatus">
+      {({ field }) => (
+        <Select
+          {...field}
+          label="Marital Status"
+        >
+          <MenuItem value="">Select Marital Status</MenuItem>
+          {maritalStatusOptions.map(status => (
+            <MenuItem key={status} value={status}>{status}</MenuItem>
+          ))}
+        </Select>
+      )}
+    </Field>
+    {touched.maritalStatus && errors.maritalStatus && (
+      <FormHelperText>{errors.maritalStatus}</FormHelperText>
+    )}
+  </FormControl>
+</Grid>
+
+    {/* Blood Group */}
+
+<Grid item xs={12} sm={6}>
+  <FormControl fullWidth error={touched.bloodGroup && errors.bloodGroup}>
+    <InputLabel>Blood Group</InputLabel>
+    <Field name="bloodGroup">
+      {({ field }) => (
+        <Select
+          {...field}
+          label="Blood Group"
+        >
+          <MenuItem value="">Select Blood Group</MenuItem>
+          {bloodGroups.map(group => (
+            <MenuItem key={group} value={group}>{group}</MenuItem>
+          ))}
+        </Select>
+      )}
+    </Field>
+    {touched.bloodGroup && errors.bloodGroup && (
+      <FormHelperText>{errors.bloodGroup}</FormHelperText>
+    )}
+  </FormControl>
 </Grid>
 
 
+              {/* Nationality */}
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <Field name="bloodGroup">
-                    {({ field }) => (
-                      <Select
-                        {...field}
-                        label="Blood Group"
-                        displayEmpty
-                        placeholder="Select Blood Group"
-                        error={touched.bloodGroup && errors.bloodGroup}
-                      >
-                        <MenuItem value="" disabled>
-                          <em>Select Blood Group </em> 
-                        </MenuItem>
-                        {bloodGroups.map(group => (
-                          <MenuItem key={group} value={group}>{group}</MenuItem>
-                        ))}
-                      </Select>
-                    )}
-                  </Field>
-                </FormControl>
+                <Field
+                  name="nationality"
+                  component={AnimatedTextField}
+                  label="Nationality"
+                  fullWidth
+                />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-    <Field name="nationality">
-      {({ field, form }) => (
-        <TextField
-          {...field}
-          label="Nationality"
-          fullWidth
-          onChange={(e) => {
-            const sentenceCaseValue = e.target.value
-              .split(' ')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join(' ');
-            form.setFieldValue(field.name, sentenceCaseValue);
-          }}
-          error={touched.nationality && errors.nationality}
-          helperText={touched.nationality && errors.nationality}
-        />
-      )}
-    </Field>
-  </Grid>
-
-
-  <Grid item xs={12} sm={6}>
-    <Field name="aadharNumber">
-      {({ field, form }) => (
-        <TextField
-          {...field}
-          label="Aadhar Number"
-          fullWidth
-          onChange={(e) => {
-            form.setFieldValue(field.name, e.target.value);
-          }}
-          error={touched.aadharNumber && errors.aadharNumber}
-          helperText={touched.aadharNumber && errors.aadharNumber}
-        />
-      )}
-    </Field>
-  </Grid>
-
-  <Grid item xs={12} sm={6}>
-    <Field name="panNumber">
-      {({ field, form }) => (
-        <TextField
-          {...field}
-          label="PAN Number"
-          fullWidth
-          onChange={(e) => {
-            form.setFieldValue(field.name, e.target.value.toUpperCase());
-          }}
-          error={touched.panNumber && errors.panNumber}
-          helperText={touched.panNumber && errors.panNumber}
-        />
-      )}
-    </Field>
-  </Grid>
-
-  <Grid item xs={12} sm={6}>
-    <Field name="mobileNumber">
-      {({ field, form }) => (
-        <TextField
-          {...field}
-          label="Mobile Number"
-          fullWidth
-          onChange={(e) => {
-            form.setFieldValue(field.name, e.target.value);
-          }}
-          error={touched.mobileNumber && errors.mobileNumber}
-          helperText={touched.mobileNumber && errors.mobileNumber}
-        />
-      )}
-    </Field>
-  </Grid>
-
-  <Grid item xs={12} sm={6}>
-    <Field name="email">
-      {({ field, form }) => (
-        <TextField
-          {...field}
-          label="Email"
-          fullWidth
-          onChange={(e) => {
-            form.setFieldValue(field.name, e.target.value);
-          }}
-          error={touched.email && errors.email}
-          helperText={touched.email && errors.email}
-        />
-      )}
-      </Field>
+                <Field
+                  name="aadharNumber"
+                  component={AnimatedTextField}
+                  label="Aadhar Number"
+                  fullWidth
+                />
               </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Field
+                  name="panNumber"
+                  component={AnimatedTextField}
+                  label="PAN Number"
+                  fullWidth
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Field
+                  name="mobileNumber"
+                  component={AnimatedTextField}
+                  label="Mobile Number"
+                  fullWidth
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Field
+                  name="email"
+                  component={AnimatedTextField}
+                  label="Email"
+                  fullWidth
+                />
+              </Grid>
+
               <Grid item xs={12}>
   <InputLabel required>Employee Image</InputLabel>
   <Field name="employeeImage">
     {({ field, form }) => (
       <div>
-        <input 
-          type="file" 
-          accept="image/*"
-          onChange={(event) => {
-            const file = event.target.files[0];
-            form.setFieldValue("employeeImage", file);
-            handleImageUpload(event);
-          }}
-          required
-        />
+        <input
+  type="file"
+  accept="image/*"
+  onChange={(event) => {
+    const file = event.currentTarget.files[0];
+    if (file) {
+      if (file.size > 5000000) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+        toast.error('Only JPG, JPEG & PNG files are allowed');
+        return;
+      }
+      form.setFieldValue("employeeImage", file);
+    }
+  }}
+/>
         {form.touched.employeeImage && form.errors.employeeImage && (
-          <Typography color="error">{form.errors.employeeImage}</Typography>
+          <Typography color="error" variant="caption">
+            {form.errors.employeeImage}
+          </Typography>
         )}
       </div>
     )}
   </Field>
 </Grid>
-            </Grid>
+</Grid>
+
+            {/* Submit button */}
 
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                sx={{ mt: 3 }}
-              >
-                Next
-              </Button>
+            <Button
+                  onClick={() => handleSave(values)}
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                >
+                  Next
+                </Button>
             </motion.div>
           </Paper>
         </Form>
