@@ -1,7 +1,7 @@
 // import React, { useState, useEffect } from 'react';
 // import { Container, Row, Col, Card, Table, Badge, Spinner } from 'react-bootstrap';
 // import { timesheetService } from '../services/timesheetService';
-// import { FaClock, FaUserClock, FaChartLine, FaHistory, FaRegCalendarCheck, FaRegClock } from 'react-icons/fa';
+// import { FaClock, FaUserClock, FaChartLine, FaHistory, FaRegCalendarCheck, FaRegClock, FaCalendarAlt, FaStopwatch } from 'react-icons/fa';
 // import './TimesheetDashboard.css';
 
 // const TimesheetDashboard = () => {
@@ -13,28 +13,44 @@
 //     onTimePercentage: 0,
 //     overtime: 0
 //   });
-//   const [loading, setLoading] = useState(true);
+//   const [todayLoading, setTodayLoading] = useState(true);
+//   const [weeklyLoading, setWeeklyLoading] = useState(true);
 //   const employeeId = localStorage.getItem('employeeId') || 'EMP123';
+
+//   const getWeekNumber = (date) => {
+//     const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+//     const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+//     return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+//   };
 
 //   useEffect(() => {
 //     fetchTimesheetData();
-//     const interval = setInterval(fetchTimesheetData, 60000);
+    
+//     const interval = setInterval(() => {
+//       if (!document.hidden) {
+//         fetchTimesheetData();
+//       }
+//     }, 300000);
+    
 //     return () => clearInterval(interval);
 //   }, []);
 
 //   const fetchTimesheetData = async () => {
 //     try {
-//       setLoading(true);
+//       setTodayLoading(true);
 //       const todayResponse = await timesheetService.getTodayTimesheet(employeeId);
-//       const weeklyResponse = await timesheetService.getWeeklyTimesheets(employeeId);
-      
 //       setTodayTimesheet(todayResponse.data.timesheet);
+//       setTodayLoading(false);
+
+//       setWeeklyLoading(true);
+//       const weeklyResponse = await timesheetService.getWeeklyTimesheets(employeeId);
 //       setWeeklyTimesheets(weeklyResponse.data.timesheets);
 //       calculateWeeklyStats(weeklyResponse.data.timesheets);
+//       setWeeklyLoading(false);
 //     } catch (error) {
 //       console.error('Failed to fetch timesheet data:', error);
-//     } finally {
-//       setLoading(false);
+//       setTodayLoading(false);
+//       setWeeklyLoading(false);
 //     }
 //   };
 
@@ -78,7 +94,7 @@
 //     return <Badge bg={statusColors[status] || 'secondary'} className="status-badge">{status}</Badge>;
 //   };
 
-//   if (loading) {
+//   if (todayLoading && weeklyLoading) {
 //     return (
 //       <div className="loading-container">
 //         <Spinner animation="border" variant="primary" size="lg" />
@@ -91,10 +107,22 @@
 //     <Container fluid className="timesheet-dashboard">
 //       <div className="dashboard-header">
 //         <div className="header-content">
-//           <FaClock className="header-icon pulse" />
-//           <div>
+//           <div className="header-icon-wrapper">
+//             <FaClock className="header-icon pulse" />
+//           </div>
+//           <div className="header-text">
 //             <h1>Timesheet Dashboard</h1>
 //             <p className="header-subtitle">Track your time, boost your productivity</p>
+//           </div>
+//         </div>
+//         <div className="header-stats">
+//           <div className="quick-stat">
+//             <FaCalendarAlt />
+//             <span>Week {getWeekNumber(new Date())}</span>
+//           </div>
+//           <div className="quick-stat">
+//             <FaStopwatch />
+//             <span>{weeklyStats.totalHours} This Week</span>
 //           </div>
 //         </div>
 //       </div>
@@ -253,17 +281,62 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Spinner } from 'react-bootstrap';
 import { timesheetService } from '../services/timesheetService';
-import { FaClock, FaUserClock, FaChartLine, FaHistory, FaRegCalendarCheck, FaRegClock, FaCalendarAlt, FaStopwatch } from 'react-icons/fa';
+import { 
+  FaClock, FaUserClock, FaChartLine, FaHistory, 
+  FaRegCalendarCheck, FaRegClock, FaCalendarAlt, 
+  FaStopwatch, FaCheckCircle, FaExclamationCircle 
+} from 'react-icons/fa';
 import './TimesheetDashboard.css';
+
+const StatsCard = ({ icon: Icon, title, value, color }) => (
+  <div className="stat-card">
+    <div className="stat-circle" style={{ borderColor: color }}>
+      <Icon size={24} color={color} />
+      <h5>{title}</h5>
+      <p style={{ color }}>{value}</p>
+    </div>
+  </div>
+);
+
+const StatusBadge = ({ status }) => {
+  const statusConfig = {
+    active: { 
+      className: 'status-badge-active',
+      icon: FaCheckCircle 
+    },
+    completed: { 
+      className: 'status-badge-completed',
+      icon: FaCheckCircle 
+    },
+    pending: { 
+      className: 'status-badge-pending',
+      icon: FaExclamationCircle 
+    },
+    late: { 
+      className: 'status-badge-late',
+      icon: FaExclamationCircle 
+    }
+  };
+
+  const config = statusConfig[status] || statusConfig.pending;
+  const Icon = config.icon;
+
+  return (
+    <div className={`status-badge ${config.className}`}>
+      <Icon size={14} />
+      <span>{status}</span>
+    </div>
+  );
+};
 
 const TimesheetDashboard = () => {
   const [todayTimesheet, setTodayTimesheet] = useState(null);
   const [weeklyTimesheets, setWeeklyTimesheets] = useState([]);
   const [weeklyStats, setWeeklyStats] = useState({
-    totalHours: 0,
-    averageDaily: 0,
+    totalHours: '0h 0m',
+    averageDaily: '0h 0m',
     onTimePercentage: 0,
-    overtime: 0
+    overtime: '0h 0m'
   });
   const [todayLoading, setTodayLoading] = useState(true);
   const [weeklyLoading, setWeeklyLoading] = useState(true);
@@ -277,15 +350,23 @@ const TimesheetDashboard = () => {
 
   useEffect(() => {
     fetchTimesheetData();
-    
-    const interval = setInterval(() => {
-      if (!document.hidden) {
-        fetchTimesheetData();
-      }
-    }, 300000);
-    
-    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!todayTimesheet) return;
+
+    if (todayTimesheet.checkInTime) {
+      setTimeout(() => {
+        fetchTimesheetData();
+      }, 500);
+    }
+
+    if (todayTimesheet.checkOutTime) {
+      setTimeout(() => {
+        fetchTimesheetData();
+      }, 500);
+    }
+  }, [todayTimesheet?.status]);
 
   const fetchTimesheetData = async () => {
     try {
@@ -336,16 +417,6 @@ const TimesheetDashboard = () => {
     return `${hours}h ${minutes}m`;
   };
 
-  const getStatusBadge = (status) => {
-    const statusColors = {
-      active: 'primary',
-      completed: 'success',
-      pending: 'warning',
-      late: 'danger'
-    };
-    return <Badge bg={statusColors[status] || 'secondary'} className="status-badge">{status}</Badge>;
-  };
-
   if (todayLoading && weeklyLoading) {
     return (
       <div className="loading-container">
@@ -394,7 +465,7 @@ const TimesheetDashboard = () => {
                       <FaRegCalendarCheck />
                       <span>Status</span>
                     </div>
-                    {getStatusBadge(todayTimesheet.status)}
+                    <StatusBadge status={todayTimesheet.status} />
                   </div>
                   <div className="summary-item">
                     <div className="item-label">
@@ -446,30 +517,30 @@ const TimesheetDashboard = () => {
             </Card.Header>
             <Card.Body>
               <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-circle">
-                    <h5>Total Hours</h5>
-                    <p>{weeklyStats.totalHours}</p>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-circle">
-                    <h5>Daily Average</h5>
-                    <p>{weeklyStats.averageDaily}</p>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-circle">
-                    <h5>Punctuality</h5>
-                    <p>{weeklyStats.onTimePercentage}%</p>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-circle">
-                    <h5>Overtime</h5>
-                    <p>{weeklyStats.overtime}</p>
-                  </div>
-                </div>
+                <StatsCard
+                  icon={FaClock}
+                  title="Total Hours"
+                  value={weeklyStats.totalHours}
+                  color="#2193b0"
+                />
+                <StatsCard
+                  icon={FaChartLine}
+                  title="Daily Average"
+                  value={weeklyStats.averageDaily}
+                  color="#6dd5ed"
+                />
+                <StatsCard
+                  icon={FaRegCalendarCheck}
+                  title="Punctuality"
+                  value={`${weeklyStats.onTimePercentage}%`}
+                  color="#00b894"
+                />
+                <StatsCard
+                  icon={FaStopwatch}
+                  title="Overtime"
+                  value={weeklyStats.overtime}
+                  color="#ff7675"
+                />
               </div>
             </Card.Body>
           </Card>
@@ -499,6 +570,7 @@ const TimesheetDashboard = () => {
                     <tr 
                       key={index} 
                       className={`timesheet-row ${timesheet.status === 'active' ? 'active-row' : ''}`}
+                      style={{ animation: `fadeIn 0.5s ease-out ${index * 0.1}s` }}
                     >
                       <td className="date-cell">
                         {new Date(timesheet.checkInTime).toLocaleDateString('en-US', {
@@ -514,8 +586,12 @@ const TimesheetDashboard = () => {
                           : '-'
                         }
                       </td>
-                      <td className="duration-cell">{formatDuration(timesheet.duration || 0)}</td>
-                      <td>{getStatusBadge(timesheet.status)}</td>
+                      <td className="duration-cell">
+                        {formatDuration(timesheet.duration || 0)}
+                      </td>
+                      <td>
+                        <StatusBadge status={timesheet.status} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>

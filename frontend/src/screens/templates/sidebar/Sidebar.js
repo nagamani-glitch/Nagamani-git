@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartPie,
+  faChartBar,
   faClockRotateLeft,
   faBullseye,
   faRocket,
@@ -32,11 +33,15 @@ function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div>
-        <h5 style={{ color: "white" }}>DB4Cloud</h5>
-        <p style={{ color: "white" }}>My Company</p>
-        <hr />
-      </div>
+      {/* <div>
+      <img src="https://res.cloudinary.com/dfl9rotoy/image/upload/v1741065300/logo2-removebg-preview_p6juhh.png" alt="Logo" 
+       style={{ width: "auto", height: "100px", marginLeft: "10px", marginTop: "10px" }} 
+       />
+      
+         <h5 style={{ color: "white" }}>DB4Cloud</h5>
+        <p style={{ color: "white" }}>My Company</p> 
+         <hr /> 
+      </div> */}
       <ul>
         <li onClick={() => handleNavigation("/Dashboards")}>
           <FontAwesomeIcon icon={faChartPie} />
@@ -110,6 +115,18 @@ function Sidebar() {
           </ul>
         )}
 
+        <li onClick={() => handleMainClick("reports")}>
+          <FontAwesomeIcon icon={faChartBar} />
+          <span>Reports</span>
+        </li>
+        {activeMenu === "reports" && (
+          <ul className="sub-menu">
+            <li onClick={() => handleNavigation("/Dashboards/employee-report")}>
+              Employee Report
+            </li>
+          </ul>
+        )}
+
         <li onClick={() => handleMainClick("employee")}>
           <FontAwesomeIcon icon={faUsers} />
           <span>Employee</span>
@@ -122,11 +139,11 @@ function Sidebar() {
             <li onClick={() => handleNavigation("/Dashboards/employees")}>
               Employees
             </li>
-            <li
+            {/* <li
               onClick={() => handleNavigation("/Dashboards/document-request")}
             >
               Document Requests
-            </li>
+            </li> */}
             <li onClick={() => handleNavigation("/Dashboards/shift-requests")}>
               Shift Requests
             </li>
@@ -209,21 +226,21 @@ function Sidebar() {
         </li>
         {activeMenu === "payroll" && (
           <ul className="sub-menu">
-            <li
+            {/* <li
               onClick={() => handleNavigation("/Dashboards/payroll-dashboard")}
             >
               Dashboard
-            </li>
+            </li> */}
             <li onClick={() => handleNavigation("/Dashboards/payroll-system")}>
               Payroll system
             </li>
-            <li onClick={() => handleNavigation("/Dashboards/allowances")}>
+            {/* <li onClick={() => handleNavigation("/Dashboards/allowances")}>
               Allowances
-            </li>
+            </li> */}
             <li onClick={() => handleNavigation("/Dashboards/contract")}>
               Contract
             </li>
-            <li onClick={() => handleNavigation("/Dashboards/deductions")}>
+            {/* <li onClick={() => handleNavigation("/Dashboards/deductions")}>
               Deductions
             </li>
             <li onClick={() => handleNavigation("/Dashboards/payslips")}>
@@ -231,7 +248,7 @@ function Sidebar() {
             </li>
             <li onClick={() => handleNavigation("/Dashboards/federal-tax")}>
               Federal Tax
-            </li>
+            </li> */}
           </ul>
         )}
 

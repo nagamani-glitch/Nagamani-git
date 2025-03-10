@@ -132,6 +132,8 @@ const ForgotPassword = () => {
                             },
                             '& .MuiOutlinedInput-input': {
                                 color: 'white',
+                                backgroundColor:'#000',
+
                             },
                         }
                     }}

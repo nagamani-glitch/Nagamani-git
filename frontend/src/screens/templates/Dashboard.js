@@ -9,7 +9,7 @@ import axios from 'axios';
 
 // All component imports remain the same as in previous code...
 import MainDashboard from "./MainDashboard";
-import DocumentRequestPage from './productManagement/DocumentRequestPage';
+// import DocumentRequestPage from './productManagement/DocumentRequestPage';
 import RecruitmentDashboard from "./Recruitment/RecruitmentDashboard";
 import RecruitmentPipeline from "./Recruitment/RecruitmentPipeline";
 import RecruitmentSurvey from "./Recruitment/RecruitmentSurvey";
@@ -41,14 +41,14 @@ import CompanyHolidays from "./configuration/CompanyHolidays";
 import RestrictLeaves from "./configuration/RestrictLeaves";
 import FaqCategory from "./faqs/FaqCategory";
 import FaqPage from "./faqs/FaqPage";
-import PayrollDashboard from "./Payroll/PayrollDashboard";
-import Allowances from "./Payroll/Allowances";
-import CreateAllowance from "./Payroll/CreateAllowance";
+// import PayrollDashboard from "./Payroll/PayrollDashboard";
+// import Allowances from "./Payroll/Allowances";
+// import CreateAllowance from "./Payroll/CreateAllowance";
 import Contract from "./Payroll/Contract";
-import Deductions from "./Payroll/Deductions";
-import CreateDeduction from "./Payroll/CreateDeduction";
-import FederalTax from "./Payroll/FederalTax";
-import Payslips from "./Payroll/Payslips";
+// import Deductions from "./Payroll/Deductions";
+// import CreateDeduction from "./Payroll/CreateDeduction";
+// import FederalTax from "./Payroll/FederalTax";
+// import Payslips from "./Payroll/Payslips";
 import PerformanceDashboard from "./Performance/PerformanceDashboard";
 import Objectives from "./Performance/Objectives";
 import Feedback from "./Performance/Feedback";
@@ -56,6 +56,7 @@ import CreateFeedback from "./Performance/CreateFeedback";
 import ExitPage from "./Offboarding/ExitPage";
 import ResignationPage from "./Offboarding/ResignationPage";
 import PayrollSystem from "./Payroll/Payrollsystem";
+import EmployeeReport from './reports/EmployeeReport';
 
 
 function Dashboard() {
@@ -102,7 +103,7 @@ function Dashboard() {
 
           {/* <Route path="/profile/:Id" element={<ProfilePage />} /> */}
           <Route path="/employees" element={<EmployeeListing onNavigate={handleNavigation} />} />
-          <Route path="/document-request" element={<DocumentRequestPage />} />
+          {/* <Route path="/document-request" element={<DocumentRequestPage />} /> */}
           <Route path="/work-type-request" element={<WorkTypeRequest />} />
           <Route path="/shift-requests" element={<ShiftRequests />} />
           <Route path="/rotating-shift-assign" element={<RotatingShiftAssign />} />
@@ -123,14 +124,14 @@ function Dashboard() {
           <Route path="/holidays" element={<Holidays />} />
           <Route path="/company-leaves" element={<CompanyHolidays />} />
           <Route path="/restrict-leaves" element={<RestrictLeaves />} />
-          <Route path="/payroll-dashboard" element={<PayrollDashboard />} />
+          {/* <Route path="/payroll-dashboard" element={<PayrollDashboard />} />
           <Route path="/allowances" element={<Allowances />} />
-          <Route path="/allowances/create" element={<CreateAllowance onNavigate={handleNavigation} />} />
+          <Route path="/allowances/create" element={<CreateAllowance onNavigate={handleNavigation} />} /> */}
           <Route path="/contract" element={<Contract />} />
-          <Route path="/deductions" element={<Deductions />} />
+          {/* <Route path="/deductions" element={<Deductions />} />
           <Route path="/create-deduction" element={<CreateDeduction />} />
           <Route path="/federal-tax" element={<FederalTax />} />
-          <Route path="/payslips" element={<Payslips />} />
+          <Route path="/payslips" element={<Payslips />} /> */}
           <Route path="/performance-dashboard" element={<PerformanceDashboard />} />
           <Route path="/objectives" element={<Objectives />} />
           <Route path="/feedback" element={<Feedback />} />
@@ -138,6 +139,7 @@ function Dashboard() {
           <Route path="/exit-process" element={<ExitPage />} />
           <Route path="/resignation-letter" element={<ResignationPage />} />
           <Route path="/payroll-system" element={<PayrollSystem />} />
+          <Route path="/employee-report" element={<EmployeeReport />} />
         </Routes>
       </div>
       <QuickActionButton onNavigate={handleNavigation} />

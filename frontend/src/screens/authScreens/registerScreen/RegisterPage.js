@@ -17,7 +17,7 @@
 //   const [otpSent, setOtpSent] = useState(false);
 //   const [showPassword, setShowPassword] = useState(false);
 //   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
 //   const navigate = useNavigate();
 
 //   const handleChange = (e) => {
@@ -169,7 +169,7 @@ const RegisterPage = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -219,6 +219,39 @@ const RegisterPage = () => {
         <Container
           component="main"
           maxWidth="xs"
+          // sx={{
+          //   mt: 8,
+          //   p: 4,
+          //   boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+          //   borderRadius: '20px',
+          //   backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          //   backdropFilter: 'blur(15px)',
+          //   border: '1px solid hsla(0, 0.00%, 100.00%, 0.18)',
+          //   '& .MuiTextField-root': {
+          //     '& .MuiOutlinedInput-root': {
+          //       '& fieldset': {
+          //         borderColor: 'rgba(255, 255, 255, 0.3)',
+          //       },
+          //       '&:hover fieldset': {
+          //         borderColor: 'rgba(255, 255, 255, 0.5)',
+          //       },
+          //     },
+          //     '& .MuiInputLabel-root': {
+          //       color: 'rgba(255, 255, 255, 0.7)',
+
+
+          //     },
+          //     '& .MuiOutlinedInput-input': {
+          //       color: 'white',
+          //      backgroundColor:'#000',
+          //       //background: "transparent",
+          //       // opacity:'0.7',
+          //     },
+          //   },
+          // }}
+
+          // Update the Container sx prop styling:
+
           sx={{
             mt: 8,
             p: 4,
@@ -229,27 +262,32 @@ const RegisterPage = () => {
             border: '1px solid rgba(255, 255, 255, 0.18)',
             '& .MuiTextField-root': {
               '& .MuiOutlinedInput-root': {
+                backgroundColor: 'black', // Add this line
                 '& fieldset': {
                   borderColor: 'rgba(255, 255, 255, 0.3)',
                 },
                 '&:hover fieldset': {
                   borderColor: 'rgba(255, 255, 255, 0.5)',
                 },
+                '& input': { // Add this block
+                  color: 'white',
+                  '&::placeholder': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }
+                }
               },
               '& .MuiInputLabel-root': {
                 color: 'rgba(255, 255, 255, 0.7)',
-              },
-              '& .MuiOutlinedInput-input': {
-                color: 'white',
-              },
-            },
+              }
+            }
           }}
+
         >
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            sx={{ 
-              mb: 2, 
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{
+              mb: 2,
               textAlign: 'center',
               color: 'white',
               fontWeight: 600,
@@ -271,6 +309,7 @@ const RegisterPage = () => {
               onChange={handleChange}
               required
             />
+
             <TextField
               margin="normal"
               fullWidth
@@ -293,8 +332,8 @@ const RegisterPage = () => {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton 
-                      onClick={togglePasswordVisibility} 
+                    <IconButton
+                      onClick={togglePasswordVisibility}
                       edge="end"
                       sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
                     >
@@ -316,8 +355,8 @@ const RegisterPage = () => {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton 
-                      onClick={toggleConfirmPasswordVisibility} 
+                    <IconButton
+                      onClick={toggleConfirmPasswordVisibility}
                       edge="end"
                       sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
                     >
@@ -327,18 +366,21 @@ const RegisterPage = () => {
                 ),
               }}
             />
+
             {error && (
               <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                 {error}
               </Typography>
             )}
+
+
             <motion.div whileHover={{ scale: 1.05 }}>
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ 
-                  mt: 3, 
+                sx={{
+                  mt: 3,
                   mb: 2,
                   backgroundColor: '#4a90e2',
                   '&:hover': {
@@ -352,10 +394,10 @@ const RegisterPage = () => {
                 Register
               </Button>
             </motion.div>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                mt: 2, 
+            <Typography
+              variant="body2"
+              sx={{
+                mt: 2,
                 textAlign: 'center',
                 color: 'rgba(255, 255, 255, 0.8)',
                 '& a': {
@@ -371,6 +413,7 @@ const RegisterPage = () => {
             </Typography>
           </Box>
         </Container>
+
       </motion.div>
     </div>
   );
