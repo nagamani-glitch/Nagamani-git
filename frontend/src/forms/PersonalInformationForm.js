@@ -94,14 +94,33 @@ const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
     employeeImage: null
   };
 
-  const handleSave = async () => {
+  const handleSave = async (values) => {
     try {
+      // Collect form data from the Formik values
+      const personalInfoData = {
+        prefix: values.prefix,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        dob: values.dob,
+        gender: values.gender,
+        maritalStatus: values.maritalStatus,
+        bloodGroup: values.bloodGroup,
+        nationality: values.nationality,
+        aadharNumber: values.aadharNumber || undefined, // Use undefined instead of empty string
+        panNumber: values.panNumber || undefined,
+        mobileNumber: values.mobileNumber,
+        email: values.email || undefined
+      };
+      
+      // Create FormData object for file upload
       const formData = new FormData();
-      formData.append('formData', JSON.stringify({ personalInfo }));
-      if (imageFile) {
-        formData.append('employeeImage', imageFile);
+      formData.append('formData', JSON.stringify({ personalInfo: personalInfoData }));
+      
+      // Add image file if it exists
+      if (values.employeeImage) {
+        formData.append('employeeImage', values.employeeImage);
       }
-  
+    
       const response = await axios.post(
         'http://localhost:5000/api/employees/personal-info',
         formData,
@@ -111,15 +130,82 @@ const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
           }
         }
       );
-  
+    
       if (response.data.success) {
+        // Call onSave with the employee ID
         onSave(response.data.employeeId);
+        // Navigate to next step
         nextStep();
+        toast.success('Personal information saved successfully');
       }
     } catch (error) {
       console.error('Error saving personal info:', error.response?.data || error.message);
+      
+      // Show appropriate error messages
+      if (error.response?.data?.error?.includes('duplicate key error')) {
+        if (error.response.data.error.includes('aadharNumber')) {
+          toast.error('This Aadhar number is already registered');
+        } else if (error.response.data.error.includes('panNumber')) {
+          toast.error('This PAN number is already registered');
+        } else if (error.response.data.error.includes('email')) {
+          toast.error('This email is already registered');
+        } else {
+          toast.error('A duplicate entry was detected. Please check your information.');
+        }
+      } else {
+        toast.error('Error saving personal information. Please try again.');
+      }
     }
   };
+  
+  // In the handleSave function:
+// const handleSave = async () => {
+//   try {
+//     // Validate required fields before submission
+//     if (!personalInfo.firstName || !personalInfo.lastName) {
+//       toast.error('First name and last name are required');
+//       return;
+//     }
+    
+//     const formData = new FormData();
+//     formData.append('formData', JSON.stringify({ personalInfo }));
+//     if (imageFile) {
+//       formData.append('employeeImage', imageFile);
+//     }
+  
+//     const response = await axios.post(
+//       'http://localhost:5000/api/employees/personal-info',
+//       formData,
+//       {
+//         headers: {
+//           'Content-Type': 'multipart/form-data'
+//         }
+//       }
+//     );
+  
+//     if (response.data.success) {
+//       onSave(response.data.employeeId);
+//       nextStep();
+//     }
+//   } catch (error) {
+//     console.error('Error saving personal info:', error.response?.data || error.message);
+//     // Show a more user-friendly error message
+//     if (error.response?.data?.error?.includes('duplicate key error')) {
+//       if (error.response.data.error.includes('aadharNumber')) {
+//         toast.error('This Aadhar number is already registered');
+//       } else if (error.response.data.error.includes('panNumber')) {
+//         toast.error('This PAN number is already registered');
+//       } else if (error.response.data.error.includes('email')) {
+//         toast.error('This email is already registered');
+//       } else {
+//         toast.error('A duplicate entry was detected. Please check your information.');
+//       }
+//     } else {
+//       toast.error('Error saving personal information. Please try again.');
+//     }
+//   }
+// };
+
   
   // const handleSave = async (values) => {
   //   try {
@@ -641,13 +727,13 @@ const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
 
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
-                  onClick={() => handleSave(values)}
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                >
-                  Next
-                </Button>
+  type="submit" // Change to submit type to trigger Formik validation
+  variant="contained"
+  color="primary"
+  fullWidth
+>
+  Next
+</Button>
             </motion.div>
           </Paper>
         </Form>

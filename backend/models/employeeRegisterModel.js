@@ -19,10 +19,10 @@ const onboardingFormSchema = new mongoose.Schema({
     maritalStatus: String,
     bloodGroup: String,
     nationality: String,
-    aadharNumber: { type: String, unique: true },
-    panNumber: { type: String, unique: true },
-    mobileNumber: String,
-    email: { type: String, unique: true },
+    aadharNumber: { type: String, unique: true, spares:true },
+    panNumber: { type: String, unique: true, spares:true },
+    mobileNumber: { type: String, unique: true, spares:true },
+    email: { type: String, unique: true , spares:true },
     employeeImage: String
   },
   addressDetails: {

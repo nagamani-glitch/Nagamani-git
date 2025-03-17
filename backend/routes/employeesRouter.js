@@ -9,10 +9,24 @@ router.post('/personal-info', uploads.single('employeeImage'), async (req, res) 
   try {
     const { personalInfo } = JSON.parse(req.body.formData);
     
+    // Validate required fields
+    if (!personalInfo.firstName || !personalInfo.lastName) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'First name and last name are required' 
+      });
+    }
+    
+    // Clean up empty fields to avoid unique constraint issues
+    const cleanPersonalInfo = { ...personalInfo };
+    if (!cleanPersonalInfo.aadharNumber) delete cleanPersonalInfo.aadharNumber;
+    if (!cleanPersonalInfo.panNumber) delete cleanPersonalInfo.panNumber;
+    if (!cleanPersonalInfo.email) delete cleanPersonalInfo.email;
+    
     // Create a new employee instance
     const employee = new Employee({
       personalInfo: {
-        ...personalInfo,
+        ...cleanPersonalInfo,
         employeeImage: req.file ? `/uploads/${req.file.filename}` : null
       }
     });
@@ -32,6 +46,35 @@ router.post('/personal-info', uploads.single('employeeImage'), async (req, res) 
     res.status(400).json({ success: false, error: error.message });
   }
 });
+
+
+// router.post('/personal-info', uploads.single('employeeImage'), async (req, res) => {
+//   try {
+//     const { personalInfo } = JSON.parse(req.body.formData);
+    
+//     // Create a new employee instance
+//     const employee = new Employee({
+//       personalInfo: {
+//         ...personalInfo,
+//         employeeImage: req.file ? `/uploads/${req.file.filename}` : null
+//       }
+//     });
+    
+//     // Generate an employee ID if not already set
+//     if (!employee.Emp_ID) {
+//       employee.Emp_ID = await Employee.generateEmployeeNumber();
+//     }
+    
+//     // Save the employee
+//     await employee.save();
+    
+//     console.log('Saved employee with ID:', employee.Emp_ID);
+//     res.json({ success: true, employeeId: employee.Emp_ID });
+//   } catch (error) {
+//     console.error('Error saving employee:', error);
+//     res.status(400).json({ success: false, error: error.message });
+//   }
+// });
 
 // router.post('/personal-info', uploads.single('employeeImage'), async (req, res) => {
 //   try {
