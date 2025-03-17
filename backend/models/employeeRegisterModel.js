@@ -1,7 +1,14 @@
 import mongoose from 'mongoose';
 
-const employeeSchema = new mongoose.Schema({
-  Emp_ID: { type: String, required: true, unique: true },
+const onboardingFormSchema = new mongoose.Schema({
+    Emp_ID: { 
+    type: String,
+    unique: true,
+    // required: true,
+    // default: function() {
+    //   return this.constructor.generateEmployeeNumber();
+    // }
+    },
   registrationComplete: { type: Boolean, default: false },
   personalInfo: {
     prefix: String,
@@ -156,11 +163,58 @@ const employeeSchema = new mongoose.Schema({
     state: String,
     pinCode: String,
     phoneNumber: String
-  }]
+  }],
+
+  bankInfo: ({
+    accountNumber: String,
+    ifscCode: String,
+    bankName: String,
+    branchName: String,
+    accountType: String
+  }),
 }, { timestamps: true });
 
-const Employee= mongoose.model('Employee', employeeSchema);
-export default Employee;
+// Define the static method
+onboardingFormSchema.statics.generateEmployeeNumber = async function() {
+  const latestEmployee = await this.findOne().sort({ Emp_ID: -1 });
+  
+  if (!latestEmployee) {
+    return 'DB-0001';
+  }
+
+  const currentNumber = parseInt(latestEmployee.Emp_ID.split('-')[1]);
+  const nextNumber = (currentNumber + 1).toString().padStart(4, '0');
+  return `DB-${nextNumber}`;
+};
+
+// Make sure the pre-save middleware is properly defined
+onboardingFormSchema.pre('save', async function(next) {
+  try {
+    if (!this.Emp_ID) {
+      this.Emp_ID = await this.constructor.generateEmployeeNumber();
+      console.log('Generated Emp_ID:', this.Emp_ID); // Add logging
+    }
+    next();
+  } catch (error) {
+    console.error('Error in pre-save middleware:', error);
+    next(error);
+  }
+});
+// Add a pre-save middleware to set the Emp_ID
+onboardingFormSchema.pre('save', async function(next) {
+  if (!this.Emp_ID) {
+    // Use await to resolve the promise
+    this.Emp_ID = await this.constructor.generateEmployeeNumber();
+  }
+  next();
+});
+
+
+
+
+
+const onboardingForm = mongoose.model('OnboardingForm', onboardingFormSchema);
+export default onboardingForm;
 
 
 // import mongoose from 'mongoose';

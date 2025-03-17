@@ -1,4 +1,4 @@
-import React from 'react';
+import {useState} from 'react';
 import { TextField, Paper, FormControl, Button, Typography, Grid, Select, MenuItem, InputLabel, FormHelperText } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Formik, Form, Field } from 'formik';
@@ -7,7 +7,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { v4 as uuidv4} from 'uuid';
 
-const PersonalInformationForm = ({ nextStep ,setEmployeeId}) => {
+const PersonalInformationForm = ({ nextStep ,setEmployeeId, onSave}) => {
   
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required('First name is required'),
@@ -50,6 +50,22 @@ const months = [
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
+const[personalInfo,setPersonalInfo] = useState({
+    prefix: '',
+    firstName: '',
+    lastName: '',
+    dob: '',
+    gender: '',
+    maritalStatus: '',
+    bloodGroup: '',
+    nationality: '',
+    aadharNumber: '',
+    panNumber: '',
+    mobileNumber: '',
+    email: ''
+});
+const [imageFile, setImageFile] = useState(null);
+
 const genderOptions = {
   'Mr.': ['Male'],
   'Ms.': ['Female'],
@@ -78,105 +94,132 @@ const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
     employeeImage: null
   };
 
-  const handleSave = async (values) => {
+  const handleSave = async () => {
     try {
-      // Input validation
-      if (!values || !values.firstName || !values.lastName || !values.dob) {
-        throw new Error('Invalid input data');
-      }
-  
-      console.log('Starting handleSave with values:', values);
-  
-      const dobDate = new Date(
-        values.dobYear,
-        months.indexOf(values.dobMonth),
-        values.dobDay
-      );
-      const dob = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
-      console.log('Formatted DOB:', dob);
-  
-      const personalInfoData = {
-        prefix: values.prefix,
-        firstName: values.firstName,
-        middleName: values.middleName || '',
-        lastName: values.lastName,
-        dob: dob,
-        gender: values.gender,
-        maritalStatus: values.maritalStatus,
-        bloodGroup: values.bloodGroup,
-        nationality: values.nationality,
-        aadharNumber: values.aadharNumber,
-        panNumber: values.panNumber.toUpperCase(),
-        mobileNumber: values.mobileNumber,
-        email: values.email.trim().toLowerCase()
-      };
-      console.log('Constructed personalInfoData:', personalInfoData);
-  
       const formData = new FormData();
-      const empId = uuidv4(); // generate a new UUID
-      const requestData = {
-        Emp_ID: uuidv4(),
-        personalInfo: personalInfoData
-      };
-      console.log('Final request data structure:', requestData);
-  
-      formData.append('formData', JSON.stringify(requestData));
-  
-      if (values.employeeImage) {
-        formData.append('employeeImage', values.employeeImage);
-        console.log('Employee image attached:', values.employeeImage.name);
+      formData.append('formData', JSON.stringify({ personalInfo }));
+      if (imageFile) {
+        formData.append('employeeImage', imageFile);
       }
   
-      console.log('FormData entries:', Array.from(formData.entries()));
-  
-      // Use a secure storage mechanism (e.g., secure cookie or token-based authentication)
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Unauthorized access');
-      }
-  
-      try {
-        const response = await axios.post(
-          'http://localhost:5000/api/employees/personal-info',
-          formData, // Pass formData instead of requestData
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${token}`
-            }
+      const response = await axios.post(
+        'http://localhost:5000/api/employees/personal-info',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
           }
-        );
-  
-        console.log('Server response:', response.data);
-  
-        if (response.data.success) {
-          const newEmpId = response.data.employeeId;
-          localStorage.setItem('Emp_ID', newEmpId);
-          setEmployeeId(newEmpId);
-          toast.success('Personal information saved successfully');
-          nextStep();
         }
-      } catch (error) {
-        console.error('Error details:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          headers: error.response?.headers
-        });
-        console.log('Full error object:', error);
-        handleError(error.response?.data);
+      );
+  
+      if (response.data.success) {
+        onSave(response.data.employeeId);
+        nextStep();
       }
     } catch (error) {
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        headers: error.response?.headers
-      });
-      console.log('Full error object:', error);
-      handleError(error.response?.data);
+      console.error('Error saving personal info:', error.response?.data || error.message);
     }
-  };  
+  };
+  
+  // const handleSave = async (values) => {
+  //   try {
+  //     // Input validation
+  //     if (!values || !values.firstName || !values.lastName || !values.dob) {
+  //       throw new Error('Invalid input data');
+  //     }
+  
+  //     console.log('Starting handleSave with values:', values);
+  
+  //     const dobDate = new Date(
+  //       values.dobYear,
+  //       months.indexOf(values.dobMonth),
+  //       values.dobDay
+  //     );
+  //     const dob = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
+  //     console.log('Formatted DOB:', dob);
+  
+  //     const personalInfoData = {
+  //       prefix: values.prefix,
+  //       firstName: values.firstName,
+  //       middleName: values.middleName || '',
+  //       lastName: values.lastName,
+  //       dob: dob,
+  //       gender: values.gender,
+  //       maritalStatus: values.maritalStatus,
+  //       bloodGroup: values.bloodGroup,
+  //       nationality: values.nationality,
+  //       aadharNumber: values.aadharNumber,
+  //       panNumber: values.panNumber.toUpperCase(),
+  //       mobileNumber: values.mobileNumber,
+  //       email: values.email.trim().toLowerCase()
+  //     };
+  //     console.log('Constructed personalInfoData:', personalInfoData);
+  
+  //     const formData = new FormData();
+  //     const empId = uuidv4(); // generate a new UUID
+  //     const requestData = {
+  //       Emp_ID: uuidv4(),
+  //       personalInfo: personalInfoData
+  //     };
+  //     console.log('Final request data structure:', requestData);
+  
+  //     formData.append('formData', JSON.stringify(requestData));
+  
+  //     if (values.employeeImage) {
+  //       formData.append('employeeImage', values.employeeImage);
+  //       console.log('Employee image attached:', values.employeeImage.name);
+  //     }
+  
+  //     console.log('FormData entries:', Array.from(formData.entries()));
+  
+  //     // Use a secure storage mechanism (e.g., secure cookie or token-based authentication)
+  //     const token = localStorage.getItem('token');
+  //     if (!token) {
+  //       throw new Error('Unauthorized access');
+  //     }
+  
+  //     try {
+  //       const response = await axios.post(
+  //         'http://localhost:5000/api/employees/personal-info',
+  //         formData, // Pass formData instead of requestData
+  //         {
+  //           headers: {
+  //             'Content-Type': 'multipart/form-data',
+  //             'Authorization': `Bearer ${token}`
+  //           }
+  //         }
+  //       );
+  
+  //       console.log('Server response:', response.data);
+  
+  //       if (response.data.success) {
+  //         const newEmpId = response.data.employeeId;
+  //         localStorage.setItem('Emp_ID', newEmpId);
+  //         setEmployeeId(newEmpId);
+  //         toast.success('Personal information saved successfully');
+  //         nextStep();
+  //       }
+  //     } catch (error) {
+  //       console.error('Error details:', {
+  //         message: error.message,
+  //         response: error.response?.data,
+  //         status: error.response?.status,
+  //         headers: error.response?.headers
+  //       });
+  //       console.log('Full error object:', error);
+  //       handleError(error.response?.data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error details:', {
+  //       message: error.message,
+  //       response: error.response?.data,
+  //       status: error.response?.status,
+  //       headers: error.response?.headers
+  //     });
+  //     console.log('Full error object:', error);
+  //     handleError(error.response?.data);
+  //   }
+  // };  
   
   const handleError = (error) => {
     // Handle validation errors from backend

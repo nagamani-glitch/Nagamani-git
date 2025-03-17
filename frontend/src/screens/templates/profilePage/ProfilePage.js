@@ -17,6 +17,10 @@ import Resignation from './resignation/Resignation';
 import { updateContract, getContractsByEmployeeId, deleteContract } from '../../../services/contractServices';
 import './ProfilePage.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+
+
 const ProfilePage = () => {
   const { id } = useParams();
   const [editMode, setEditMode] = useState(false);
@@ -45,7 +49,7 @@ const ProfilePage = () => {
     
     setLoading(true);
     try {
-      const response = await axios.get(`/api/employees/${id}`);
+      const response = await axios.get(`/api/employees/get-employee/${id}`);
       const { 
         personalInfo, 
         addressInfo, 
@@ -185,7 +189,7 @@ const ProfilePage = () => {
     if (!imagePath) {
       return `${process.env.PUBLIC_URL}/default-avatar.png`;
     }
-    return `${process.env.REACT_APP_API_URL}/uploads/${imagePath}`;
+    return `${API_URL}/uploads/${imagePath}`;
   };
 
   const updateBankInfo = async () => {
