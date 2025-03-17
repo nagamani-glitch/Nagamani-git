@@ -27,7 +27,7 @@ const onboardingFormSchema = new mongoose.Schema({
   },
   addressDetails: {
     presentAddress: {
-      address: String,
+      address: String,  // Changed from { type: String, default: null }
       city: String,
       district: String,
       state: String,

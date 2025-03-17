@@ -109,43 +109,96 @@ const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoi
     employeeType: ''
   };
 
+  // const handleSubmit = async (values) => {
+  //   try {
+  //     const formattedData = {
+  //       dateOfAppointment: {
+  //         day: parseInt(values.appointmentDay),
+  //         month: values.appointmentMonth,
+  //         year: parseInt(values.appointmentYear)
+  //       },
+  //       department: values.department,
+  //       dateOfJoining: {
+  //         day: parseInt(values.joiningDay),
+  //         month: values.joiningMonth,
+  //         year: parseInt(values.joiningYear)
+  //       },
+  //       initialDesignation: values.initialDesignation,
+  //       modeOfRecruitment: values.modeOfRecruitment,
+  //       employeeType: values.employeeType
+  //     };
+  
+  //     console.log('Request payload:', {
+  //       employeeId,
+  //       joiningDetails: formattedData
+  //     });
+  
+  //     const response = await axios.post(
+  //       'http://localhost:5000/api/employees/joining-details',
+  //       {
+  //         employeeId,
+  //         joiningDetails: formattedData
+  //       },
+  //       {
+  //         headers: { 'Content-Type': 'application/json' }
+  //       }
+  //     );
+  
+  //     console.log('Server response:', response.data);
+  
+  //     if (response.data.success) {
+  //       console.log('Joining details saved successfully:', response.data);
+  //       toast.success('Joining details saved successfully');
+  //       nextStep();
+  //     }
+  //   } catch (error) {
+  //     console.log('Error details:', error.response?.data);
+  //     toast.error('Failed to save joining details');
+  //   }
+  // };
+
   const handleSubmit = async (values) => {
     try {
-      const formattedData = {
-        dateOfAppointment: {
-          day: parseInt(values.appointmentDay),
-          month: values.appointmentMonth,
-          year: parseInt(values.appointmentYear)
-        },
+      // Create actual Date objects
+      const appointmentDate = new Date(
+        values.appointmentYear,
+        months.indexOf(values.appointmentMonth),
+        values.appointmentDay
+      );
+      
+      const joiningDate = new Date(
+        values.joiningYear,
+        months.indexOf(values.joiningMonth),
+        values.joiningDay
+      );
+      
+      const formData = {
+        dateOfAppointment: appointmentDate,
+        dateOfJoining: joiningDate,
         department: values.department,
-        dateOfJoining: {
-          day: parseInt(values.joiningDay),
-          month: values.joiningMonth,
-          year: parseInt(values.joiningYear)
-        },
         initialDesignation: values.initialDesignation,
         modeOfRecruitment: values.modeOfRecruitment,
         employeeType: values.employeeType
       };
-  
+    
       console.log('Request payload:', {
         employeeId,
-        joiningDetails: formattedData
+        formData
       });
-  
+    
       const response = await axios.post(
         'http://localhost:5000/api/employees/joining-details',
         {
           employeeId,
-          joiningDetails: formattedData
+          formData
         },
         {
           headers: { 'Content-Type': 'application/json' }
         }
       );
-  
+    
       console.log('Server response:', response.data);
-  
+    
       if (response.data.success) {
         console.log('Joining details saved successfully:', response.data);
         toast.success('Joining details saved successfully');
@@ -156,6 +209,7 @@ const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoi
       toast.error('Failed to save joining details');
     }
   };
+  
     
 
   return (

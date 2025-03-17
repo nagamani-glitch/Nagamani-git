@@ -47,43 +47,114 @@ router.post('/personal-info', uploads.single('employeeImage'), async (req, res) 
   }
 });
 
+// router.post('/address-info', async (req, res) => {
+//   try {
+//     const { currentAddress, permanentAddress } = req.body;
+    
+//     const updatedEmployee = await Employee.findOneAndUpdate(
+//       { Emp_ID: req.body.employeeId },
+//       { 
+//         $set: { 
+//           addressDetails: {
+//             presentAddress: {
+//               address: currentAddress.street || '',
+//               city: currentAddress.city || '',
+//               district: currentAddress.district || '',
+//               state: currentAddress.state || '',
+//               pinCode: currentAddress.pincode || '',
+//               country: currentAddress.country || ''
+//             },
+//             permanentAddress: {
+//               address: permanentAddress.street || '',
+//               city: permanentAddress.city || '',
+//               district: permanentAddress.district || '',
+//               state: permanentAddress.state || '',
+//               pinCode: permanentAddress.pincode || '',
+//               country: permanentAddress.country || ''
+//             }
+//           }
+//         }
+//       },
+//       { new: true }
+//     );
+
+//     res.json({ success: true });
+//   } catch (error) {
+//     console.log('Error details:', error);
+//     res.status(400).json({ success: false, error: error.message });
+//   }
+// });
+
 router.post('/address-info', async (req, res) => {
   try {
-    const { currentAddress, permanentAddress } = req.body;
+    const { currentAddress, permanentAddress, employeeId } = req.body;
+    
+    // Log the received data to verify what's coming from the frontend
+    console.log('Received address data:', { 
+      employeeId, 
+      currentAddress, 
+      permanentAddress 
+    });
+    
+    if (!employeeId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Employee ID is required' 
+      });
+    }
+    
+    // Create the update object with the exact field structure from the schema
+    const updateData = {
+      addressDetails: {
+        presentAddress: {
+          address: currentAddress.street,
+          city: currentAddress.city,
+          district: currentAddress.district,
+          state: currentAddress.state,
+          pinCode: currentAddress.pincode,
+          country: currentAddress.country
+        },
+        permanentAddress: {
+          address: permanentAddress.street,
+          city: permanentAddress.city,
+          district: permanentAddress.district,
+          state: permanentAddress.state,
+          pinCode: permanentAddress.pincode,
+          country: permanentAddress.country
+        }
+      }
+    };
+    
+    // Log the update data being sent to MongoDB
+    console.log('Update data for MongoDB:', updateData);
     
     const updatedEmployee = await Employee.findOneAndUpdate(
-      { Emp_ID: req.body.employeeId },
-      { 
-        $set: { 
-          addressDetails: {
-            presentAddress: {
-              address: currentAddress.street || '',
-              city: currentAddress.city || '',
-              district: currentAddress.district || '',
-              state: currentAddress.state || '',
-              pinCode: currentAddress.pincode || '',
-              country: currentAddress.country || ''
-            },
-            permanentAddress: {
-              address: permanentAddress.street || '',
-              city: permanentAddress.city || '',
-              district: permanentAddress.district || '',
-              state: permanentAddress.state || '',
-              pinCode: permanentAddress.pincode || '',
-              country: permanentAddress.country || ''
-            }
-          }
-        }
-      },
+      { Emp_ID: employeeId },
+      { $set: updateData },
       { new: true }
     );
 
+    if (!updatedEmployee) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Employee not found' 
+      });
+    }
+
+    // Log the updated employee to verify the changes
+    console.log('Updated employee:', {
+      id: updatedEmployee.Emp_ID,
+      addressDetails: updatedEmployee.addressDetails
+    });
+    
     res.json({ success: true });
   } catch (error) {
-    console.log('Error details:', error);
+    console.error('Error details:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });
+
+
 
 router.post('/education-details', async (req, res) => {
   try {
@@ -117,15 +188,48 @@ router.post('/education-details', async (req, res) => {
 router.post('/joining-details', async (req, res) => {
   try {
     const { employeeId, formData } = req.body;
-    await Employee.findOneAndUpdate(
+    
+    if (!employeeId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Employee ID is required' 
+      });
+    }
+    
+    const updatedEmployee = await Employee.findOneAndUpdate(
       { Emp_ID: employeeId },
-      { joiningDetails: formData }
+      { $set: { joiningDetails: formData } },
+      { new: true }
     );
+    
+    if (!updatedEmployee) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Employee not found' 
+      });
+    }
+    
+    console.log('Updated employee with joining details:', updatedEmployee.Emp_ID);
     res.json({ success: true });
   } catch (error) {
+    console.error('Error saving joining details:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });
+
+
+// router.post('/joining-details', async (req, res) => {
+//   try {
+//     const { employeeId, formData } = req.body;
+//     await Employee.findOneAndUpdate(
+//       { Emp_ID: employeeId },
+//       { joiningDetails: formData }
+//     );
+//     res.json({ success: true });
+//   } catch (error) {
+//     res.status(400).json({ success: false, error: error.message });
+//   }
+// });
 
 router.post('/family-details', async (req, res) => {
   try {
