@@ -7,20 +7,64 @@ const router = express.Router();
 
 router.post('/personal-info', uploads.single('employeeImage'), async (req, res) => {
   try {
-    const { Emp_ID, personalInfo } = JSON.parse(req.body.formData);
+    const { personalInfo } = JSON.parse(req.body.formData);
+    
+    // Create a new employee instance
     const employee = new Employee({
-      Emp_ID,
       personalInfo: {
         ...personalInfo,
         employeeImage: req.file ? `/uploads/${req.file.filename}` : null
       }
     });
+    
+    // Generate an employee ID if not already set
+    if (!employee.Emp_ID) {
+      employee.Emp_ID = await Employee.generateEmployeeNumber();
+    }
+    
+    // Save the employee
     await employee.save();
+    
+    console.log('Saved employee with ID:', employee.Emp_ID);
     res.json({ success: true, employeeId: employee.Emp_ID });
   } catch (error) {
+    console.error('Error saving employee:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });
+
+// router.post('/personal-info', uploads.single('employeeImage'), async (req, res) => {
+//   try {
+//     const { personalInfo } = JSON.parse(req.body.formData);
+//     const employee = new Employee({
+//       personalInfo: {
+//         ...personalInfo,
+//         employeeImage: req.file ? `/uploads/${req.file.filename}` : null
+//       }
+//     });
+//     await employee.save();
+//     res.json({ success: true, employeeId: employee.Emp_ID });
+//   } catch (error) {
+//     res.status(400).json({ success: false, error: error.message });
+//   }
+// });
+
+// router.post('/personal-info', uploads.single('employeeImage'), async (req, res) => {
+//   try {
+//     const { Emp_ID, personalInfo } = JSON.parse(req.body.formData);
+//     const employee = new Employee({
+//       Emp_ID,
+//       personalInfo: {
+//         ...personalInfo,
+//         employeeImage: req.file ? `/uploads/${req.file.filename}` : null
+//       }
+//     });
+//     await employee.save();
+//     res.json({ success: true, employeeId: employee.Emp_ID });
+//   } catch (error) {
+//     res.status(400).json({ success: false, error: error.message });
+//   }
+// });
 
 router.post('/address-info', async (req, res) => {
   try {
@@ -154,6 +198,32 @@ router.post('/service-history', async (req, res) => {
   }
 });
 
+// Add this route to fetch complete profile data
+router.get('/profile/:employeeId', async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ Emp_ID: req.params.employeeId });
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+    res.json({
+      success: true,
+      data: {
+        personalInfo: employee.personalInfo,
+        addressDetails: employee.addressDetails,
+        joiningDetails: employee.joiningDetails,
+        educationDetails: employee.educationDetails,
+        familyDetails: employee.familyDetails,
+        serviceHistory: employee.serviceHistory,
+        nominationDetails: employee.nominationDetails,
+        trainingDetails: employee.trainingDetails
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching profile data' });
+  }
+});
+
+
 router.get('/get-employee/:employeeId', async (req, res) => {
   try {
     const employee = await Employee.findOne({ Emp_ID: req.params.employeeId });
@@ -212,6 +282,43 @@ router.post('/complete-registration', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+router.get('/registered', async (req, res) => {
+  try {
+    const employees = await Employee.find({})
+      .select('personalInfo addressDetails joiningDetails Emp_ID')
+      .sort('-createdAt');
+    
+    res.json(employees);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching employees', error });
+  }
+});
+
+// Bank info routes
+router.get('/bank-info/:employeeId', async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ Emp_ID: req.params.employeeId });
+    res.json(employee.bankInfo);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching bank info' });
+  }
+});
+
+router.put('/bank-info/:employeeId', async (req, res) => {
+  try {
+    const employee = await Employee.findOneAndUpdate(
+      { Emp_ID: req.params.employeeId },
+      { bankInfo: req.body },
+      { new: true }
+    );
+    res.json(employee.bankInfo);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating bank info' });
+  }
+});
+
+
 
 
 
