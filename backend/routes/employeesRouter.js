@@ -403,5 +403,120 @@ router.put('/bank-info/:employeeId', async (req, res) => {
   }
 });
 
+router.get('/report', async (req, res) => {
+  try {
+    // Get all employees
+    const employees = await Employee.find({})
+      .select('Emp_ID personalInfo joiningDetails addressDetails registrationComplete createdAt');
+    
+    // Calculate statistics
+    const totalEmployees = employees.length;
+    const activeEmployees = employees.filter(emp => emp.registrationComplete).length;
+    
+    // Get department distribution
+    const departments = {};
+    employees.forEach(emp => {
+      // Check if joiningDetails exists and has department
+      const dept = emp.joiningDetails && emp.joiningDetails.department 
+        ? emp.joiningDetails.department 
+        : 'Unassigned';
+        
+      // Make sure we don't count empty strings or null values as departments
+      if (dept && dept.trim() !== '') {
+        departments[dept] = (departments[dept] || 0) + 1;
+      } else {
+        departments['Unassigned'] = (departments['Unassigned'] || 0) + 1;
+      }
+    });
+    
+    // Format department data for pie chart - filter out empty departments
+    const departmentData = Object.keys(departments)
+      .filter(name => name && name !== 'undefined' && name !== 'null')
+      .map(name => ({
+        name,
+        value: departments[name]
+      }));
+    
+    // Calculate monthly trends (last 6 months)
+    const today = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(today.getMonth() - 6);
+    
+    const monthlyData = {};
+    for (let i = 0; i < 6; i++) {
+      const month = new Date();
+      month.setMonth(today.getMonth() - i);
+      const monthName = month.toLocaleString('default', { month: 'short' });
+      monthlyData[monthName] = { onboarded: 0, offboarded: 0 };
+    }
+    
+    // Count onboarded employees by month
+    employees.forEach(emp => {
+      if (emp.createdAt && emp.createdAt > sixMonthsAgo) {
+        const monthName = emp.createdAt.toLocaleString('default', { month: 'short' });
+        if (monthlyData[monthName]) {
+          monthlyData[monthName].onboarded += 1;
+        }
+      }
+    });
+    
+    // Format trend data for chart
+    const trendData = Object.keys(monthlyData).map(month => ({
+      month,
+      onboarded: monthlyData[month].onboarded,
+      offboarded: monthlyData[month].offboarded
+    })).reverse();
+    
+    // Format employee data for table
+    const employeeData = employees.map((emp, index) => {
+      // Get department with fallback to "Unassigned"
+      const department = emp.joiningDetails && emp.joiningDetails.department && 
+                         emp.joiningDetails.department.trim() !== '' 
+                         ? emp.joiningDetails.department 
+                         : 'Unassigned';
+                         
+      return {
+        key: index.toString(),
+        empId: emp.Emp_ID,
+        name: `${emp.personalInfo?.firstName || ''} ${emp.personalInfo?.lastName || ''}`,
+        department: department,
+        status: emp.registrationComplete ? 'Active' : 'Incomplete',
+        progress: emp.registrationComplete ? 100 : 50,
+        avatar: emp.personalInfo?.employeeImage || 'https://xsgames.co/randomusers/avatar.php?g=pixel',
+        email: emp.personalInfo?.email || 'N/A',
+        joiningDate: emp.joiningDetails?.dateOfJoining 
+                    ? new Date(emp.joiningDetails.dateOfJoining).toLocaleDateString() 
+                    : 'N/A'
+      };
+    });
+    
+    // Add "Unassigned" to department data if it exists
+    if (departments['Unassigned'] && !departmentData.find(d => d.name === 'Unassigned')) {
+      departmentData.push({
+        name: 'Unassigned',
+        value: departments['Unassigned']
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        stats: {
+          totalOnboarded: activeEmployees,
+          totalOffboarded: 0, // You might want to implement this logic
+          averageOnboardingTime: 14, // Placeholder - implement actual calculation
+          completionRate: totalEmployees > 0 ? Math.round((activeEmployees / totalEmployees) * 100) : 0
+        },
+        trendData,
+        departmentData,
+        employeeData
+      }
+    });
+  } catch (error) {
+    console.error('Error generating report:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;
 
