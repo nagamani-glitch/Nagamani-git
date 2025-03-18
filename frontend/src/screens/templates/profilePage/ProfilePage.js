@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Container, Row, Col, Card, ListGroup, Form, Button, Tab, Nav, Table, Modal } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 import WorkTypeAndShift from './workTypeAndShift/WorkTypeAndShift';
 import Attendance from './attendance/Attendance';
 import Leave from './leave/Leave';
@@ -34,6 +35,7 @@ const ProfilePage = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
+  const[employeeId,setEmployeeId]=useState("");
   const [formData, setFormData] = useState({
     contractName: '',
     startDate: '',
@@ -44,51 +46,76 @@ const ProfilePage = () => {
     status: ''
   });
 
-  const fetchProfileData = useCallback(async () => {
-    if (!id) return;
+  // Update the fetchProfileData function in ProfilePage.js
+const fetchProfileData = useCallback(async () => {
+  if (!id) return;
+  
+  setLoading(true);
+  try {
+    // Use the get-employee endpoint from employeesRouter.js
+    const response = await axios.get(`http://localhost:5000/api/employees/get-employee/${id}`);
     
-    setLoading(true);
-    try {
-      const response = await axios.get(`/api/employees/get-employee/${id}`);
-      const { 
-        personalInfo, 
-        addressInfo, 
-        joiningDetails, 
-        educationDetails,
-        trainingDetails,
-        familyDetails,
-        serviceHistory,
-        nominationDetails,
-        bankInfo,
-        name, 
-        email, 
-        phone,
-        img 
-      } = response.data;
+    if (response.data.success) {
+      const employeeData = response.data.data;
+
+      setEmployeeId(employeeData.Emp_ID);
       
-      setPersonalInfo({ 
-        ...personalInfo, 
-        addressInfo,
-        joiningDetails,
-        educationDetails,
-        trainingDetails,
-        familyDetails,
-        serviceHistory,
-        nominationDetails,
-        bankInfo,
-        name, 
-        email, 
-        phone 
+      // Set personal info from the employee data
+      setPersonalInfo({
+        employeeId: employeeData.Emp_ID,
+        name: `${employeeData.personalInfo?.firstName || ''} ${employeeData.personalInfo?.lastName || ''}`,
+        email: employeeData.personalInfo?.email || '',
+        phone: employeeData.personalInfo?.mobileNumber || '',
+        department: employeeData.joiningDetails?.department || '',
+        designation: employeeData.joiningDetails?.initialDesignation || '',
+        bloodGroup: employeeData.personalInfo?.bloodGroup || '',
+        gender: employeeData.personalInfo?.gender || '',
+        maritalStatus: employeeData.personalInfo?.maritalStatus || '',
+        panNumber: employeeData.personalInfo?.panNumber || '',
+        aadharNumber: employeeData.personalInfo?.aadharNumber || '',
+        // Include all other fields from personalInfo
+        ...employeeData.personalInfo,
+        // Include nested objects
+        addressInfo: employeeData.addressDetails || {},
+        joiningDetails: employeeData.joiningDetails || {},
+        educationDetails: employeeData.educationDetails || {},
+        trainingDetails: employeeData.trainingDetails || {},
+        familyDetails: employeeData.familyDetails || [],
+        serviceHistory: employeeData.serviceHistory || [],
+        nominationDetails: employeeData.nominationDetails || []
       });
       
-      const imageUrl = img ? `${process.env.REACT_APP_API_URL}/uploads/${img}` : null;
+      // Set bank info
+      setBankInfo(employeeData.bankInfo || {});
+      
+      // Set work info
+      setWorkInfo({
+        department: employeeData.joiningDetails?.department || '',
+        designation: employeeData.joiningDetails?.initialDesignation || '',
+        employeeType: employeeData.joiningDetails?.employeeType || '',
+        dateOfJoining: employeeData.joiningDetails?.dateOfJoining || '',
+        dateOfAppointment: employeeData.joiningDetails?.dateOfAppointment || '',
+        modeOfRecruitment: employeeData.joiningDetails?.modeOfRecruitment || ''
+      });
+      
+      // Set profile image
+      const imageUrl = employeeData.personalInfo?.employeeImage 
+        ? `http://localhost:5000${employeeData.personalInfo.employeeImage}` 
+        : null;
       setProfileImage(imageUrl);
-    } catch (error) {
-      console.error('Error fetching profile data:', error);
-    } finally {
-      setLoading(false);
+      
+      console.log('Fetched employee data:', employeeData);
+    } else {
+      console.error('Failed to fetch employee data');
     }
-  }, [id]);
+  } catch (error) {
+    console.error('Error fetching profile data:', error);
+  } finally {
+    setLoading(false);
+  }
+}, [id]);
+
+
 
   const fetchContracts = useCallback(async () => {
     if (!id) return;
@@ -147,22 +174,24 @@ const ProfilePage = () => {
     setEditMode(!editMode);
   };
 
-  const handleInputChange = (e, section) => {
-    const { name, value } = e.target;
-    switch(section) {
-      case 'personal':
-        setPersonalInfo(prev => ({ ...prev, [name]: value }));
-        break;
-      case 'work':
-        setWorkInfo(prev => ({ ...prev, [name]: value }));
-        break;
-      case 'bank':
-        setBankInfo(prev => ({ ...prev, [name]: value }));
-        break;
-      default:
-        break;
-    }
-  };
+  // Update the handleInputChange function in ProfilePage.js
+const handleInputChange = (e, section) => {
+  const { name, value } = e.target;
+  switch(section) {
+    case 'personal':
+      setPersonalInfo(prev => ({ ...prev, [name]: value }));
+      break;
+    case 'work':
+      setWorkInfo(prev => ({ ...prev, [name]: value }));
+      break;
+    case 'bank':
+      setBankInfo(prev => ({ ...prev, [name]: value }));
+      break;
+    default:
+      break;
+  }
+};
+
 
   const handleSaveChanges = async () => {
     if (selectedContract) {
@@ -192,14 +221,37 @@ const ProfilePage = () => {
     return `${API_URL}/uploads/${imagePath}`;
   };
 
-  const updateBankInfo = async () => {
-    try {
-      await axios.put(`/api/employees/${id}/bank-info`, bankInfo);
-      setEditMode(false);
-    } catch (error) {
-      console.error('Error updating bank info:', error);
+  // Update the updateBankInfo function in ProfilePage.js
+const updateBankInfo = async () => {
+  try {
+    // Validate bank info before submitting
+    if (editMode && bankInfo.accountNumber) {
+      const response = await axios.put(
+        `http://localhost:5000/api/employees/bank-info/${id}`,
+        bankInfo,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.status === 200) {
+        toast.success('Bank information updated successfully');
+        setBankInfo(response.data);
+        setEditMode(false);
+      } else {
+        toast.error('Failed to update bank information');
+      }
+    } else if (editMode) {
+      toast.warning('Please fill in all required fields');
     }
-  };
+  } catch (error) {
+    console.error('Error updating bank info:', error);
+    toast.error('Error updating bank information: ' + (error.response?.data?.message || error.message));
+  }
+};
+
 
   return (
     <Container fluid className="profile-page-container">
@@ -232,18 +284,22 @@ const ProfilePage = () => {
                     {/* <Button variant="outline-secondary" onClick={handleEditToggle}>
                       {editMode ? 'Save' : 'Edit'}
                     </Button> */}
-                  </Col>
+                  </Col>                  
                   <Col>
                     <ListGroup variant="flush">
+                    <ListGroup.Item><strong style={{fontSize:"13px"}}>Employee ID:</ strong>
+                    {editMode ? <Form.Control type="text" value="None" readOnly /> : employeeId}  </ListGroup.Item>
                       <ListGroup.Item>
                         <strong style={{ fontSize: "13px" }}>Work Email:</strong> {editMode ? <Form.Control type="text" value="None" readOnly /> : personalInfo.email}
                       </ListGroup.Item>
                       <ListGroup.Item><strong style={{ fontSize: "13px" }}>Email:</strong> {personalInfo.email}</ListGroup.Item>
-                      <ListGroup.Item>
+                      {/* <ListGroup.Item>
                         <strong style={{ fontSize: "13px" }}>Work Phone:</strong> {editMode ? <Form.Control type="text" value="None" readOnly /> : personalInfo.phone}
-                      </ListGroup.Item>
+                      </ListGroup.Item> */}
                       <ListGroup.Item><strong style={{ fontSize: "13px" }}>Phone:</strong> {personalInfo.phone}</ListGroup.Item>
                     </ListGroup>
+                    
+                    
                   </Col>
                 </Row>
               </Card.Body>
@@ -497,25 +553,36 @@ const ProfilePage = () => {
     <Col md={12}>
       <h6>Contact Details</h6>
       <ListGroup variant="flush">
-        <ListGroup.Item>
-          <strong>Present Address:</strong> {personalInfo.addressInfo?.presentAddress}
-        </ListGroup.Item>
-        <ListGroup.Item>
-          <strong>Present City:</strong> {personalInfo.addressInfo?.presentCity}
-        </ListGroup.Item>
-        <ListGroup.Item>
-          <strong>Present District:</strong> {personalInfo.addressInfo?.presentDistrict}
-        </ListGroup.Item>
-        <ListGroup.Item>
-          <strong>Present State:</strong> {personalInfo.addressInfo?.presentState}
-        </ListGroup.Item>
-        <ListGroup.Item>
-          <strong>Present Pin Code:</strong> {personalInfo.addressInfo?.presentPinCode}
-        </ListGroup.Item>
+      <ListGroup.Item>
+  <strong>Present Address:</strong> {
+    personalInfo.addressInfo?.presentAddress ? 
+    `${personalInfo.addressInfo.presentAddress.address || ''}, 
+     ${personalInfo.addressInfo.presentAddress.city || ''}, 
+     ${personalInfo.addressInfo.presentAddress.district || ''}, 
+     ${personalInfo.addressInfo.presentAddress.state || ''} - 
+     ${personalInfo.addressInfo.presentAddress.pinCode || ''}, 
+     ${personalInfo.addressInfo.presentAddress.country || ''}` 
+    : 'Not Available'
+  }
+</ListGroup.Item>
+
+<ListGroup.Item>
+  <strong>Permanent Address:</strong> {
+    personalInfo.addressInfo?.permanentAddress ? 
+    `${personalInfo.addressInfo.permanentAddress.address || ''}, 
+     ${personalInfo.addressInfo.permanentAddress.city || ''}, 
+     ${personalInfo.addressInfo.permanentAddress.district || ''}, 
+     ${personalInfo.addressInfo.permanentAddress.state || ''} - 
+     ${personalInfo.addressInfo.permanentAddress.pinCode || ''}, 
+     ${personalInfo.addressInfo.permanentAddress.country || ''}` 
+    : 'Not Available'
+  }
+</ListGroup.Item>
+
         {/* <ListGroup.Item>
           <strong>Present Country:</strong> {personalInfo.addressInfo?.presentCountry}
         </ListGroup.Item> */}
-        <ListGroup.Item>
+        {/* <ListGroup.Item>
           <strong>Permanent Address:</strong> {personalInfo.addressInfo?.permanentAddress}
         </ListGroup.Item>
         <ListGroup.Item>
@@ -529,7 +596,7 @@ const ProfilePage = () => {
         </ListGroup.Item>
         <ListGroup.Item>
           <strong>Permanent Pin Code:</strong> {personalInfo.addressInfo?.permanentPinCode}
-        </ListGroup.Item>
+        </ListGroup.Item> */}
         {/* <ListGroup.Item>
           <strong>Permanent Country:</strong> {personalInfo.addressInfo?.permanentCountry}
         </ListGroup.Item> */}
@@ -571,7 +638,8 @@ const ProfilePage = () => {
 
                           {/* Bank Information Tab */}
 
-                          <Tab.Pane eventKey="bankInfo">
+                          
+<Tab.Pane eventKey="bankInfo">
   <Row>
     <Col md={12}>
       <Card>
@@ -617,6 +685,11 @@ const ProfilePage = () => {
                   name="ifscCode"
                   value={bankInfo.ifscCode || ''}
                   onChange={(e) => handleInputChange(e, 'bank')}
+                  onBlur={(e) => {
+                    // Convert to uppercase on blur
+                    const uppercaseValue = e.target.value.toUpperCase();
+                    setBankInfo(prev => ({ ...prev, ifscCode: uppercaseValue }));
+                  }}
                 />
               ) : (
                 bankInfo.ifscCode || 'Not Available'
@@ -636,19 +709,6 @@ const ProfilePage = () => {
               )}
             </ListGroup.Item>
             <ListGroup.Item>
-              <strong>Branch Address:</strong>
-              {editMode ? (
-                <Form.Control
-                  type="text"
-                  name="branchAddress"
-                  value={bankInfo.branchAddress || ''}
-                  onChange={(e) => handleInputChange(e, 'bank')}
-                />
-              ) : (
-                bankInfo.branchAddress || 'Not Available'
-              )}
-            </ListGroup.Item>
-            <ListGroup.Item>
               <strong>Account Type:</strong>
               {editMode ? (
                 <Form.Select
@@ -659,17 +719,37 @@ const ProfilePage = () => {
                   <option value="">Select Account Type</option>
                   <option value="Savings">Savings</option>
                   <option value="Current">Current</option>
+                  <option value="Salary">Salary</option>
                 </Form.Select>
               ) : (
                 bankInfo.accountType || 'Not Available'
               )}
             </ListGroup.Item>
           </ListGroup>
+          
+          {editMode && (
+            <div className="d-flex justify-content-end mt-3">
+              <Button 
+                variant="secondary" 
+                className="me-2" 
+                onClick={() => setEditMode(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={updateBankInfo}
+              >
+                Save Changes
+              </Button>
+            </div>
+          )}
         </Card.Body>
       </Card>
     </Col>
   </Row>
 </Tab.Pane>
+
 
  
                           {/* Contract Details Tab */}
