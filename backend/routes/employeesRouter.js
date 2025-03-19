@@ -452,11 +452,17 @@ router.get('/report', async (req, res) => {
                          ? emp.joiningDetails.department 
                          : 'Unassigned';
                          
+   // Get designation with fallback to "Not Assigned"
+  const designation = emp.joiningDetails && emp.joiningDetails.initialDesignation && 
+  emp.joiningDetails.initialDesignation.trim() !== '' 
+  ? emp.joiningDetails.initialDesignation 
+  : 'Not Assigned';
       return {
         key: index.toString(),
         empId: emp.Emp_ID,
         name: `${emp.personalInfo?.firstName || ''} ${emp.personalInfo?.lastName || ''}`,
         department: department,
+        designation: designation,
         status: emp.registrationComplete ? 'Active' : 'Incomplete',
         progress: emp.registrationComplete ? 100 : 50,
         avatar: emp.personalInfo?.employeeImage || 'https://xsgames.co/randomusers/avatar.php?g=pixel',
