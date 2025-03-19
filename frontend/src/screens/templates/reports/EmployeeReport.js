@@ -187,7 +187,7 @@ const EmployeeReport = () => {
         "Employee ID": emp.empId,
         Name: emp.name,
         Department: emp.department,
-        'Designation': emp.designation,
+        Designation: emp.designation,
         Status: emp.status,
         Progress: `${emp.progress}%`,
         Email: emp.email || "N/A",
@@ -320,13 +320,11 @@ const EmployeeReport = () => {
       render: (department) => <span>{department}</span>,
     },
     {
-      title: 'Designation',
-      dataIndex: 'designation',
-      key: 'designation',
+      title: "Designation",
+      dataIndex: "designation",
+      key: "designation",
       sorter: (a, b) => a.designation.localeCompare(b.designation),
-      render: (designation) => (
-        <span>{designation}</span>
-      ),
+      render: (designation) => <span>{designation}</span>,
     },
     {
       title: "Status",
