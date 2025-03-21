@@ -1,159 +1,73 @@
-// import Timesheet from '../models/Timesheet.js';
-
-// export const checkIn = async (req, res) => {
-//   try {
-//     const { employeeId } = req.body;
-    
-//     const existingActiveTimesheet = await Timesheet.findOne({
-//       employeeId,
-//       status: 'active'
-//     });
-
-//     if (existingActiveTimesheet) {
-//       return res.status(400).json({ message: 'Already checked in' });
-//     }
-
-//     const timesheet = await Timesheet.create({
-//       employeeId,
-//       checkInTime: new Date()
-//     });
-
-//     res.status(201).json(timesheet);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// export const checkOut = async (req, res) => {
-//   try {
-//     const { employeeId, duration } = req.body;
-    
-//     const timesheet = await Timesheet.findOne({
-//       employeeId,
-//       status: 'active'
-//     });
-
-//     if (!timesheet) {
-//       return res.status(400).json({ message: 'No active check-in found' });
-//     }
-
-//     timesheet.checkOutTime = new Date();
-//     timesheet.duration = duration;
-//     timesheet.status = 'completed';
-//     await timesheet.save();
-
-//     res.json(timesheet);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// export const getTodayTimesheet = async (req, res) => {
-//   try {
-//     const { employeeId } = req.query;
-//     const today = new Date();
-//     today.setHours(0, 0, 0, 0);
-
-//     const timesheet = await Timesheet.findOne({
-//       employeeId,
-//       checkInTime: { $gte: today },
-//       status: 'active'
-//     });
-
-//     res.json({ timesheet });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// export const getWeeklyTimesheets = async (req, res) => {
-//   try {
-//     const { employeeId } = req.query;
-//     const startOfWeek = new Date();
-//     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-//     startOfWeek.setHours(0, 0, 0, 0);
-
-//     const timesheets = await Timesheet.find({
-//       employeeId,
-//       checkInTime: { $gte: startOfWeek }
-//     }).sort({ checkInTime: -1 });
-
-//     res.json({ timesheets });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
 import Timesheet from '../models/Timesheet.js';
-
+ 
 // Check-in handler
 export const checkIn = async (req, res) => {
     try {
         const { employeeId } = req.body;
-        
+       
         const existingActiveTimesheet = await Timesheet.findOne({
             employeeId,
             status: 'active'
         });
-
+ 
         if (existingActiveTimesheet) {
             return res.status(400).json({ message: 'Already checked in' });
         }
-
+ 
         const timesheet = await Timesheet.create({
             employeeId,
             checkInTime: new Date()
         });
-
+ 
         res.status(201).json(timesheet);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
+ 
 // Check-out handler
 export const checkOut = async (req, res) => {
     try {
         const { employeeId, duration } = req.body;
-        
+       
         const timesheet = await Timesheet.findOne({
             employeeId,
             status: 'active'
         });
-
+ 
         if (!timesheet) {
             return res.status(400).json({ message: 'No active check-in found' });
         }
-
+ 
         timesheet.checkOutTime = new Date();
         timesheet.duration = duration;
         timesheet.status = 'completed';
         await timesheet.save();
-
+ 
         res.json(timesheet);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
+ 
 // Get today's timesheet
 export const getTodayTimesheet = async (req, res) => {
     try {
         const { employeeId } = req.query;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
+ 
         const timesheet = await Timesheet.findOne({
             employeeId,
             checkInTime: { $gte: today }
         }).sort({ checkInTime: -1 });
-
+ 
         res.json({ timesheet });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
+ 
 // Get weekly timesheets
 export const getWeeklyTimesheets = async (req, res) => {
     try {
@@ -161,18 +75,18 @@ export const getWeeklyTimesheets = async (req, res) => {
         const startOfWeek = new Date();
         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
         startOfWeek.setHours(0, 0, 0, 0);
-
+ 
         const timesheets = await Timesheet.find({
             employeeId,
             checkInTime: { $gte: startOfWeek }
         }).sort({ checkInTime: -1 });
-
+ 
         res.json({ timesheets });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
+ 
 // Get all timesheets
 export const getAllTimesheets = async (req, res) => {
     try {
@@ -182,7 +96,7 @@ export const getAllTimesheets = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
+ 
 // Get timesheet by ID
 export const getTimesheetById = async (req, res) => {
     try {
@@ -195,7 +109,7 @@ export const getTimesheetById = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
+ 
 // Update timesheet
 export const updateTimesheet = async (req, res) => {
     try {
@@ -212,7 +126,7 @@ export const updateTimesheet = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
+ 
 // Delete timesheet
 export const deleteTimesheet = async (req, res) => {
     try {

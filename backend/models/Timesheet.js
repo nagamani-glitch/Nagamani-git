@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-
+ 
 const timesheetSchema = new mongoose.Schema({
   employeeId: {
     type: String,
@@ -21,8 +21,8 @@ const timesheetSchema = new mongoose.Schema({
     enum: ['active', 'completed'],
     default: 'active'
   }
-}, { 
-  timestamps: true 
+}, {
+  timestamps: true
 });
-
+ 
 export default mongoose.model('Timesheet', timesheetSchema);
