@@ -43,7 +43,7 @@ const styles = {
     padding: {
       xs: "12px",
       sm: "16px",
-      md: "24px"
+      md: "24px",
     },
     backgroundColor: "#f8fafc",
     minHeight: "100vh",
@@ -52,22 +52,22 @@ const styles = {
     display: "flex",
     flexDirection: {
       xs: "column",
-      md: "row"
+      md: "row",
     },
     alignItems: {
       xs: "flex-start",
-      md: "center"
+      md: "center",
     },
     gap: {
       xs: 2,
-      md: 0
+      md: 0,
     },
     justifyContent: "space-between",
     marginBottom: "32px",
     padding: {
       xs: "16px",
       sm: "20px",
-      md: "24px"
+      md: "24px",
     },
     backgroundColor: "white",
     borderRadius: "12px",
@@ -80,14 +80,14 @@ const styles = {
     alignItems: "center",
     width: {
       xs: "100%",
-      md: "auto"
-    }
+      md: "auto",
+    },
   },
   searchBar: {
     marginRight: 2,
     width: {
       xs: "100%",
-      sm: "280px"
+      sm: "280px",
     },
     backgroundColor: "#fff",
     borderRadius: "8px",
@@ -156,10 +156,12 @@ const styles = {
   },
 };
 
+// Update the statusColors object to use red for "Not-Hired"
 const statusColors = {
-  "Not-Hired": "#ff9800",
-  Hired: "#4caf50",
+  "Not-Hired": "#ef4444", // Changed to red
+  Hired: "#4caf50", // Green (unchanged)
 };
+
 const RecruitmentCandidate = () => {
   const [view, setView] = useState("grid");
   const [candidates, setCandidates] = useState([]);
@@ -175,6 +177,13 @@ const RecruitmentCandidate = () => {
     message: "",
     severity: "success",
   });
+  // const [newCandidate, setNewCandidate] = useState({
+  //   name: "",
+  //   email: "",
+  //   position: "",
+  //   status: "Not-Hired",
+  //   color: statusColors["Not-Hired"],
+  // });
   const [newCandidate, setNewCandidate] = useState({
     name: "",
     email: "",
@@ -224,6 +233,14 @@ const RecruitmentCandidate = () => {
     }
   };
 
+  // const handleStatusChange = (event) => {
+  //   const status = event.target.value;
+  //   setNewCandidate({
+  //     ...newCandidate,
+  //     status: status,
+  //     color: statusColors[status],
+  //   });
+  // };
   const handleStatusChange = (event) => {
     const status = event.target.value;
     setNewCandidate({
@@ -301,7 +318,11 @@ const RecruitmentCandidate = () => {
               startIcon={<FilterList />}
               onClick={() =>
                 setFilter(
-                  filter === "" ? "Hired" : filter === "Hired" ? "Not-Hired" : ""
+                  filter === ""
+                    ? "Hired"
+                    : filter === "Hired"
+                    ? "Not-Hired"
+                    : ""
                 )
               }
               sx={styles.actionButton}
@@ -475,7 +496,8 @@ const RecruitmentCandidate = () => {
               onChange={(e) =>
                 setNewCandidate({ ...newCandidate, name: e.target.value })
               }
-              sx={{ mt:2,
+              sx={{
+                mt: 2,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "white",
                   borderRadius: "12px",
@@ -486,11 +508,11 @@ const RecruitmentCandidate = () => {
                 "& .MuiInputLabel-root.Mui-focused": {
                   color: "#1976d2",
                 },
-                mt: 2
+                mt: 2,
               }}
             />
 
-            <TextField 
+            <TextField
               fullWidth
               label="Email"
               name="email"
@@ -547,7 +569,7 @@ const RecruitmentCandidate = () => {
                   },
                 }}
               >
-                <MenuItem value="Not-Hired" sx={{ color: "#f44336" }}>
+                <MenuItem value="Not-Hired" sx={{ color: "#ef4444" }}>
                   Not Hired
                 </MenuItem>
                 <MenuItem value="Hired" sx={{ color: "#4caf50" }}>
@@ -661,7 +683,6 @@ const RecruitmentCandidate = () => {
             }}
           >
             Cancel
-
           </Button>
           <Button
             onClick={() => handleDeleteCandidate(selectedCandidate?._id)}
@@ -690,6 +711,6 @@ const RecruitmentCandidate = () => {
       </Snackbar>
     </Box>
   );
-}
+};
 
 export default RecruitmentCandidate;
