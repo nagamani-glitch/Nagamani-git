@@ -106,11 +106,11 @@ function Sidebar() {
             <li onClick={() => handleNavigation("/Dashboards/onboarding-view")}>
               Onboarding View
             </li>
-            <li onClick={() => handleNavigation("/Dashboards/candidates-view")}>
-              Candidates View
-            </li>
             <li onClick={() => handleNavigation("/Dashboards/onboarding-form")}>
               Onboarding Form
+            </li>
+            <li onClick={() => handleNavigation("/Dashboards/candidates-view")}>
+              Candidates View
             </li>
           </ul>
         )}
