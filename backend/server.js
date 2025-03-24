@@ -113,7 +113,7 @@ app.use(candidateRoutes);
 app.use(surveyRoutes);
 app.use('/api/applicantProfiles', applicantProfileRoutes);
 app.use('/api/interviews', interviewRoutes);
-app.use('/api/skill-zone', skillZoneRoutes);
+app.use( skillZoneRoutes);
 app.use('/api/employees',employeeRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/assets', assetRoutes);

@@ -388,7 +388,7 @@ const RecruitmentCandidate = () => {
                           <Avatar
                             sx={{
                               ...styles.avatar,
-                              bgcolor: candidate.color,
+                              bgcolor: "#9e9e9e", // Grey color for all avatars
                               color: "white",
                             }}
                           >

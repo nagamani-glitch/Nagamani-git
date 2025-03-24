@@ -61,7 +61,7 @@ const CandidatesView = () => {
   const [formData, setFormData] = useState(initialFormState);
 
   const departments = ["Engineering", "Product", "Marketing", "Sales", "HR"];
-  const statuses = ["Active", "Pending", "Inactive"];
+  const statuses = ["Pending", "Offer Letter Accepted", "Offer Letter Rejected"]
 
   useEffect(() => {
     fetchCandidates();
@@ -196,12 +196,14 @@ const CandidatesView = () => {
 
   const getStatusChipColor = (status) => {
     const colors = {
-      Active: "success",
-      Pending: "warning",
-      Inactive: "error",
+      "Pending": "warning",
+      "Offer Letter Accepted": "success",
+      "Offer Letter Rejected": "error"
     };
     return colors[status] || "default";
   };
+  
+  
 
   return (
     <div className="candidate-view">
