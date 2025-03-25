@@ -15,52 +15,37 @@ import {
   Snackbar,
   Alert,
   Box,
+  CircularProgress,
 } from "@mui/material";
 import {
-  Add,
-  Delete,
   FilterList,
   Search,
-  Edit,
   CheckCircle,
   Cancel,
-  AddComment,
   ChatBubbleOutline,
+  Info,
 } from "@mui/icons-material";
 import "./LeaveRequests.css";
 import Popover from "@mui/material/Popover";
 import { Stack } from "@mui/material";
 
-const API_URL = "http://localhost:5000/api/leave-requests";
+// Use the same API endpoint as MyLeaveRequests.js
+const API_URL = "http://localhost:5000/api/my-leave-requests";
 
 const LeaveRequests = () => {
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [leaveData, setLeaveData] = useState([]);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [selectedLeaveId, setSelectedLeaveId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
   const [newComment, setNewComment] = useState("");
+  const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
-  });
-
-  const [createFormData, setCreateFormData] = useState({
-    type: "",
-    startDate: "",
-    endDate: "",
-    reason: "",
-  });
-
-  const [editFormData, setEditFormData] = useState({
-    type: "",
-    startDate: "",
-    endDate: "",
-    reason: "",
-    id: null,
   });
 
   const [filters, setFilters] = useState({
@@ -75,139 +60,78 @@ const LeaveRequests = () => {
 
   const fetchLeaveRequests = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(API_URL);
       setLeaveData(response.data);
+      setLoading(false);
     } catch (error) {
+      console.error("Error fetching leave requests:", error);
       showSnackbar("Error fetching leave requests", "error");
+      setLoading(false);
     }
   };
 
-  const handleCreateSubmit = async () => {
+  const handleApproveRequest = async (id) => {
     try {
-      const leaveRequestData = {
-        type: createFormData.type,
-        startDate: new Date(createFormData.startDate),
-        endDate: new Date(createFormData.endDate),
-        comment: createFormData.reason,
-        status: "Pending",
-        confirmation: "Pending",
-        days: calculateDays(createFormData.startDate, createFormData.endDate),
-      };
-
-      const response = await axios.post(API_URL, leaveRequestData);
-      setLeaveData([...leaveData, response.data]);
-      setIsCreateOpen(false);
-      setCreateFormData({ type: "", startDate: "", endDate: "", reason: "" });
-      showSnackbar("Leave request created successfully");
+      setLoading(true);
+      const response = await axios.put(`${API_URL}/${id}/approve`);
+      
+      // Update the local state with the updated leave request
+      setLeaveData(
+        leaveData.map((leave) =>
+          leave._id === id ? response.data : leave
+        )
+      );
+      
+      showSnackbar("Leave request approved successfully");
+      setLoading(false);
     } catch (error) {
-      showSnackbar("Error creating leave request", "error");
+      console.error("Error approving leave request:", error);
+      showSnackbar("Error approving leave request", "error");
+      setLoading(false);
     }
   };
 
-  const handleEditSubmit = async () => {
-    try {
-      const updatedData = {
-        type: editFormData.type,
-        startDate: new Date(editFormData.startDate),
-        endDate: new Date(editFormData.endDate),
-        comment: editFormData.reason,
-        days: calculateDays(editFormData.startDate, editFormData.endDate),
-      };
+  const handleOpenRejectDialog = (id) => {
+    setSelectedLeaveId(id);
+    setRejectionReason("");
+    setIsRejectDialogOpen(true);
+  };
 
+  const handleRejectRequest = async () => {
+    if (!rejectionReason.trim()) {
+      showSnackbar("Rejection reason is required", "error");
+      return;
+    }
+
+    try {
+      setLoading(true);
       const response = await axios.put(
-        `${API_URL}/${editFormData.id}`,
-        updatedData
+        `${API_URL}/${selectedLeaveId}/reject`,
+        { rejectionReason }
       );
+      
+      // Update the local state with the updated leave request
       setLeaveData(
         leaveData.map((leave) =>
-          leave._id === response.data._id ? response.data : leave
+          leave._id === selectedLeaveId ? response.data : leave
         )
       );
-      setIsEditDialogOpen(false);
-      showSnackbar("Leave request updated successfully");
+      
+      setIsRejectDialogOpen(false);
+      showSnackbar("Leave request rejected successfully");
+      setLoading(false);
     } catch (error) {
-      showSnackbar("Error updating leave request", "error");
+      console.error("Error rejecting leave request:", error);
+      showSnackbar("Error rejecting leave request", "error");
+      setLoading(false);
     }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/${id}`);
-      setLeaveData(leaveData.filter((leave) => leave._id !== id));
-      showSnackbar("Leave request deleted successfully");
-    } catch (error) {
-      showSnackbar("Error deleting leave request", "error");
-    }
-  };
-
-  const handleConfirmationChange = async (id, status) => {
-    try {
-      const response = await axios.put(`${API_URL}/${id}/status`, {
-        status,
-        confirmation: status,
-      });
-      setLeaveData(
-        leaveData.map((leave) =>
-          leave._id === response.data._id ? response.data : leave
-        )
-      );
-      showSnackbar(`Leave request ${status.toLowerCase()} successfully`);
-    } catch (error) {
-      showSnackbar(`Error updating leave request status`, "error");
-    }
-  };
-  const handleSaveComment = async () => {
-    try {
-      const response = await axios.put(
-        `${API_URL}/${selectedLeaveId}/comment`,
-        { comment: newComment }
-      );
-      setLeaveData(
-        leaveData.map((leave) =>
-          leave._id === response.data._id ? response.data : leave
-        )
-      );
-      handleCloseCommentDialog();
-      showSnackbar("Comment updated successfully");
-    } catch (error) {
-      showSnackbar("Error updating comment", "error");
-    }
-  };
-
-  const calculateDays = (startDate, endDate) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end - start);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  };
-
-  const handleCreateInputChange = (e) => {
-    setCreateFormData({
-      ...createFormData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleEditClick = (leave) => {
-    setEditFormData({
-      type: leave.type,
-      startDate: leave.startDate.split("T")[0],
-      endDate: leave.endDate.split("T")[0],
-      reason: leave.comment,
-      id: leave._id,
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleEditInputChange = (e) => {
-    setEditFormData({
-      ...editFormData,
-      [e.target.name]: e.target.value,
-    });
   };
 
   const handleOpenCommentDialog = (leaveId) => {
+    const leave = leaveData.find((l) => l._id === leaveId);
     setSelectedLeaveId(leaveId);
+    setNewComment(leave.comment || "");
     setIsCommentDialogOpen(true);
   };
 
@@ -215,6 +139,31 @@ const LeaveRequests = () => {
     setIsCommentDialogOpen(false);
     setSelectedLeaveId(null);
     setNewComment("");
+  };
+
+  const handleSaveComment = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.put(
+        `${API_URL}/${selectedLeaveId}/comment`,
+        { comment: newComment }
+      );
+      
+      // Update the local state with the updated leave request
+      setLeaveData(
+        leaveData.map((leave) =>
+          leave._id === selectedLeaveId ? response.data : leave
+        )
+      );
+      
+      handleCloseCommentDialog();
+      showSnackbar("Comment updated successfully");
+      setLoading(false);
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      showSnackbar("Error updating comment", "error");
+      setLoading(false);
+    }
   };
 
   const showSnackbar = (message, severity = "success") => {
@@ -237,13 +186,17 @@ const LeaveRequests = () => {
   };
 
   const filteredLeaveData = leaveData.filter((leave) => {
-    const matchesType = !filters.type || leave.type === filters.type;
+    const matchesType = !filters.type || leave.leaveType === filters.type;
     const matchesStatus = !filters.status || leave.status === filters.status;
     const matchesSearch =
-      leave.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      leave.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (leave.comment &&
-        leave.comment.toLowerCase().includes(searchTerm.toLowerCase()));
+      leave.leaveType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      leave.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (leave.reason &&
+        leave.reason.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (leave.employeeName &&
+        leave.employeeName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (leave.employeeCode &&
+        leave.employeeCode.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesType && matchesStatus && matchesSearch;
   });
 
@@ -256,7 +209,7 @@ const LeaveRequests = () => {
         <div className="leave-requests-controls">
           <TextField
             className="leave-requests-search"
-            placeholder="Search by type, status or comment..."
+            placeholder="Search by employee, type, status or reason..."
             variant="outlined"
             size="small"
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -272,459 +225,183 @@ const LeaveRequests = () => {
             >
               Filter
             </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setIsCreateOpen(true)}
-              startIcon={<Add />}
-            >
-              Create Request
-            </Button>
           </div>
         </div>
       </div>
       <div className="leave-requests-table-container">
-        <table className="leave-requests-table">
-          <thead>
-            <tr>
-              <th>Leave Type</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Days</th>
-              <th>Status</th>
-              <th>Confirmation</th>
-              <th>Comment</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredLeaveData.map((leave) => (
-              <tr key={leave._id}>
-                <td>{leave.type}</td>
-                <td>{new Date(leave.startDate).toLocaleDateString()}</td>
-                <td>{new Date(leave.endDate).toLocaleDateString()}</td>
-                <td>{leave.days}</td>
-                <td>
-                  <span className={getStatusBadgeClass(leave.status)}>
-                    {leave.status}
-                  </span>
-                </td>
-                <td>
-                  <div className="confirmation-actions">
-                    <Tooltip title="Approve">
-                      <IconButton
-                        onClick={() =>
-                          handleConfirmationChange(leave._id, "Approved")
-                        }
-                        color={
-                          leave.confirmation === "Approved"
-                            ? "success"
-                            : "default"
-                        }
-                      >
-                        <CheckCircle />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Reject">
-                      <IconButton
-                        onClick={() =>
-                          handleConfirmationChange(leave._id, "Rejected")
-                        }
-                        color={
-                          leave.confirmation === "Rejected"
-                            ? "error"
-                            : "default"
-                        }
-                      >
-                        <Cancel />
-                      </IconButton>
-                    </Tooltip>
-                  </div>
-                </td>
-                <td>
-                  <div className="leave-comment-section">
-                    <Tooltip title="Add Comment">
-                      <IconButton
-                        onClick={() => handleOpenCommentDialog(leave._id)}
-                      >
-                        <AddComment />
-                      </IconButton>
-                    </Tooltip>
-                    {leave.comment && (
-                      <Tooltip title={leave.comment}>
+        {loading && !leaveData.length ? (
+          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : !filteredLeaveData.length ? (
+          <Box sx={{ p: 4, textAlign: "center" }}>
+            <Typography variant="body1" color="textSecondary">
+              No leave requests found
+            </Typography>
+          </Box>
+        ) : (
+          <table className="leave-requests-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Leave Type</th>
+                <th>Duration</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLeaveData.map((leave) => (
+                <tr key={leave._id}>
+                  <td>
+                    <div>
+                      <strong>{leave.employeeName}</strong>
+                      <div className="employee-code">{leave.employeeCode}</div>
+                    </div>
+                  </td>
+                  <td>{leave.leaveType}</td>
+                  <td>
+                    <div>
+                      {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+                      <div className="leave-days">
+                        {leave.halfDay ? "Half Day" : `${Math.ceil(
+                          (new Date(leave.endDate) - new Date(leave.startDate)) /
+                            (1000 * 60 * 60 * 24) + 1
+                        )} days`}
+                        {leave.halfDay && ` (${leave.halfDayType})`}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="leave-reason">{leave.reason}</div>
+                  </td>
+                  <td>
+                    <span className={getStatusBadgeClass(leave.status)}>
+                      {leave.status}
+                    </span>
+                    {leave.status === "rejected" && leave.rejectionReason && (
+                      <Tooltip title={leave.rejectionReason}>
                         <IconButton size="small">
-                          <ChatBubbleOutline />
+                          <Info fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     )}
-                  </div>
-                </td>
-                <td>
-                  <div className="leave-actions-section">
-                    <Tooltip title="Edit">
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleEditClick(leave)}
-                      >
-                        <Edit />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDelete(leave._id)}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Tooltip>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                  <td>
+                    <div className="confirmation-actions">
+                      {leave.status === "pending" && (
+                        <>
+                          <Tooltip title="Approve">
+                            <IconButton
+                              onClick={() => handleApproveRequest(leave._id)}
+                              color="success"
+                              disabled={loading}
+                            >
+                              <CheckCircle />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Reject">
+                            <IconButton
+                              onClick={() => handleOpenRejectDialog(leave._id)}
+                              color="error"
+                              disabled={loading}
+                            >
+                              <Cancel />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
+                      <Tooltip title="View/Add Comment">
+                        <IconButton
+                          onClick={() => handleOpenCommentDialog(leave._id)}
+                          disabled={loading}
+                        >
+                          <ChatBubbleOutline />
+                        </IconButton>
+                      </Tooltip>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {/* Create Dialogs */}
-
+      {/* Reject Dialog */}
       <Dialog
-        open={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
+        open={isRejectDialogOpen}
+        onClose={() => setIsRejectDialogOpen(false)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{
-          sx: {
-            width: "600px",
-            borderRadius: "20px",
-            overflow: "hidden",
-          },
-        }}
       >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            padding: "24px 32px",
-          }}
-        >
-          Create Leave Request
+        <DialogTitle sx={{ bgcolor: "#fef2f2", color: "#dc2626" }}>
+          Reject Leave Request
         </DialogTitle>
-
-        <DialogContent
-          sx={{
-            padding: "32px",
-            backgroundColor: "#f8fafc",
-            marginTop: "20px",
-          }}
-        >
-          <Select
-            name="type"
-            value={createFormData.type}
-            onChange={handleCreateInputChange}
-            fullWidth
-            margin="dense"
-            displayEmpty
-            sx={{
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "&:hover fieldset": {
-                  borderColor: "#1976d2",
-                },
-              },
-            }}
-          >
-            <MenuItem value="">Select Leave Type</MenuItem>
-            <MenuItem value="Annual Leave">Annual Leave</MenuItem>
-            <MenuItem value="Sick Leave">Sick Leave</MenuItem>
-            <MenuItem value="Personal Leave">Personal Leave</MenuItem>
-          </Select>
-
+        <DialogContent sx={{ pt: 3 }}>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            Please provide a reason for rejecting this leave request:
+          </Typography>
           <TextField
-            name="startDate"
-            label="Start Date"
-            type="date"
-            fullWidth
+            autoFocus
             margin="dense"
-            value={createFormData.startDate}
-            onChange={handleCreateInputChange}
-            InputLabelProps={{ shrink: true }}
-            sx={{
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "&:hover fieldset": {
-                  borderColor: "#1976d2",
-                },
-              },
-            }}
-          />
-
-          <TextField
-            name="endDate"
-            label="End Date"
-            type="date"
+            label="Rejection Reason"
             fullWidth
-            margin="dense"
-            value={createFormData.endDate}
-            onChange={handleCreateInputChange}
-            InputLabelProps={{ shrink: true }}
-            sx={{
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "&:hover fieldset": {
-                  borderColor: "#1976d2",
-                },
-              },
-            }}
-          />
-
-          <TextField
-            name="reason"
-            label="Reason"
-            fullWidth
-            margin="dense"
             multiline
             rows={4}
-            value={createFormData.reason}
-            onChange={handleCreateInputChange}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "&:hover fieldset": {
-                  borderColor: "#1976d2",
-                },
-              },
-            }}
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            required
+            error={!rejectionReason.trim()}
+            helperText={!rejectionReason.trim() ? "Rejection reason is required" : ""}
           />
         </DialogContent>
-
-        <DialogActions
-          sx={{
-            padding: "24px 32px",
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
-        >
-          <Button
-            onClick={() => setIsCreateOpen(false)}
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
+        <DialogActions>
+          <Button onClick={() => setIsRejectDialogOpen(false)}>Cancel</Button>
+          <Button 
+            onClick={handleRejectRequest} 
+            color="error"
+            disabled={!rejectionReason.trim() || loading}
           >
-            Cancel
-          </Button>
-
-          <Button
-            onClick={handleCreateSubmit}
-            color="primary"
-            variant="contained"
-            sx={{
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              fontSize: "0.95rem",
-              textTransform: "none",
-              padding: "8px 32px",
-              borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-              color: "white",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-              },
-            }}
-          >
-            Submit
+            {loading ? <CircularProgress size={24} /> : "Reject"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Edit Dialog */}
-
+      {/* Comment Dialog */}
       <Dialog
-        open={isEditDialogOpen}
-        onClose={() => setIsEditDialogOpen(false)}
+        open={isCommentDialogOpen}
+        onClose={handleCloseCommentDialog}
         maxWidth="sm"
         fullWidth
-        PaperProps={{
-          sx: {
-            width: "600px",
-            borderRadius: "20px",
-            overflow: "hidden",
-          },
-        }}
       >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            padding: "24px 32px",
-          }}
-        >
-          Edit Leave Request
-        </DialogTitle>
-
-        <DialogContent
-          sx={{
-            padding: "32px",
-            backgroundColor: "#f8fafc",
-            marginTop: "20px",
-          }}
-        >
-          <Select
-            name="type"
-            value={editFormData.type}
-            onChange={handleEditInputChange}
-            fullWidth
-            margin="dense"
-            sx={{
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "&:hover fieldset": {
-                  borderColor: "#1976d2",
-                },
-              },
-            }}
-          >
-            <MenuItem value="Annual Leave">Annual Leave</MenuItem>
-            <MenuItem value="Sick Leave">Sick Leave</MenuItem>
-            <MenuItem value="Personal Leave">Personal Leave</MenuItem>
-          </Select>
-
+        <DialogTitle>Add/Edit Comment</DialogTitle>
+        <DialogContent>
           <TextField
-            name="startDate"
-            label="Start Date"
-            type="date"
-            fullWidth
+            autoFocus
             margin="dense"
-            value={editFormData.startDate}
-            onChange={handleEditInputChange}
-            InputLabelProps={{ shrink: true }}
-            sx={{
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "&:hover fieldset": {
-                  borderColor: "#1976d2",
-                },
-              },
-            }}
-          />
-
-          <TextField
-            name="endDate"
-            label="End Date"
-            type="date"
+            label="Comment"
             fullWidth
-            margin="dense"
-            value={editFormData.endDate}
-            onChange={handleEditInputChange}
-            InputLabelProps={{ shrink: true }}
-            sx={{
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "&:hover fieldset": {
-                  borderColor: "#1976d2",
-                },
-              },
-            }}
-          />
-
-          <TextField
-            name="reason"
-            label="Reason"
-            fullWidth
-            margin="dense"
             multiline
             rows={4}
-            value={editFormData.reason}
-            onChange={handleEditInputChange}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "&:hover fieldset": {
-                  borderColor: "#1976d2",
-                },
-              },
-            }}
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
           />
         </DialogContent>
-
-        <DialogActions
-          sx={{
-            padding: "24px 32px",
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
-        >
-          <Button
-            onClick={() => setIsEditDialogOpen(false)}
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            onClick={handleEditSubmit}
+        <DialogActions>
+          <Button onClick={handleCloseCommentDialog}>Cancel</Button>
+          <Button 
+            onClick={handleSaveComment} 
             color="primary"
-            variant="contained"
-            sx={{
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              fontSize: "0.95rem",
-              textTransform: "none",
-              padding: "8px 32px",
-              borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-              color: "white",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-              },
-            }}
+            disabled={loading}
           >
-            Save Changes
+            {loading ? <CircularProgress size={24} /> : "Save"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Filter Dialog */}
-
+      {/* Filter Popover */}
       <Popover
         open={Boolean(filterAnchorEl)}
         anchorEl={filterAnchorEl}
@@ -737,52 +414,27 @@ const LeaveRequests = () => {
           vertical: "top",
           horizontal: "right",
         }}
-        PaperProps={{
-          sx: {
-            width: "400px",
-            borderRadius: "16px",
-            mt: 1,
-            overflow: "hidden",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-          },
-        }}
       >
-        <Box
-          sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            p: 3,
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Box sx={{ p: 2, width: 300 }}>
+          <Typography variant="subtitle1" gutterBottom>
             Filter Leave Requests
           </Typography>
-        </Box>
-
-        <Box sx={{ p: 3 }}>
-          <Stack spacing={3}>
+          <Stack spacing={2}>
             <Select
               value={filters.type}
-              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              fullWidth
+              onChange={(e) =>
+                setFilters({ ...filters, type: e.target.value })
+              }
               displayEmpty
-              sx={{
-                height: "56px",
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#e0e7ff",
-                },
-                "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#1976d2",
-                },
-              }}
-              renderValue={(selected) => selected || "Select Leave Type"}
+              fullWidth
+              size="small"
             >
-              <MenuItem value="">All Types</MenuItem>
-              <MenuItem value="Annual Leave">Annual Leave</MenuItem>
-              <MenuItem value="Sick Leave">Sick Leave</MenuItem>
-              <MenuItem value="Personal Leave">Personal Leave</MenuItem>
+              <MenuItem value="">All Leave Types</MenuItem>
+              <MenuItem value="annual">Annual Leave</MenuItem>
+              <MenuItem value="sick">Sick Leave</MenuItem>
+              <MenuItem value="personal">Personal Leave</MenuItem>
+              <MenuItem value="maternity">Maternity Leave</MenuItem>
+              <MenuItem value="paternity">Paternity Leave</MenuItem>
             </Select>
 
             <Select
@@ -790,187 +442,83 @@ const LeaveRequests = () => {
               onChange={(e) =>
                 setFilters({ ...filters, status: e.target.value })
               }
-              fullWidth
               displayEmpty
-              sx={{
-                height: "56px",
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#e0e7ff",
-                },
-                "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#1976d2",
-                },
-              }}
-              renderValue={(selected) => selected || "Select Status"}
-            >
-              <MenuItem value="">All Status</MenuItem>
-              <MenuItem value="Pending">Pending</MenuItem>
-              <MenuItem value="Approved">Approved</MenuItem>
-              <MenuItem value="Rejected">Rejected</MenuItem>
-            </Select>
-          </Stack>
-
-          <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
-            <Button
               fullWidth
+              size="small"
+            >
+              <MenuItem value="">All Statuses</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="approved">Approved</MenuItem>
+              <MenuItem value="rejected">Rejected</MenuItem>
+            </Select>
+
+            <TextField
+              label="From Date"
+              type="date"
+              size="small"
+              fullWidth
+              value={filters.dateRange.start}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  dateRange: { ...filters.dateRange, start: e.target.value },
+                })
+              }
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <TextField
+              label="To Date"
+              type="date"
+              size="small"
+              fullWidth
+              value={filters.dateRange.end}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  dateRange: { ...filters.dateRange, end: e.target.value },
+                })
+              }
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <Button
+              variant="contained"
+              onClick={() => setFilterAnchorEl(null)}
+              fullWidth
+            >
+              Apply Filters
+            </Button>
+            <Button
+              variant="outlined"
               onClick={() => {
                 setFilters({
                   type: "",
                   status: "",
                   dateRange: { start: "", end: "" },
                 });
+                setFilterAnchorEl(null);
               }}
-              sx={{
-                border: "2px solid #1976d2",
-                color: "#1976d2",
-                "&:hover": {
-                  border: "2px solid #64b5f6",
-                  backgroundColor: "#e3f2fd",
-                },
-                borderRadius: "8px",
-                py: 1,
-                fontWeight: 600,
-              }}
-            >
-              Clear All
-            </Button>
-
-            <Button
               fullWidth
-              onClick={() => setFilterAnchorEl(null)}
-              sx={{
-                background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-                color: "white",
-                "&:hover": {
-                  background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-                },
-                borderRadius: "8px",
-                py: 1,
-                fontWeight: 600,
-              }}
             >
-              Apply Filters
+              Clear Filters
             </Button>
           </Stack>
         </Box>
       </Popover>
 
-      {/*Comment Dialog */}
-
-      <Dialog
-        open={isCommentDialogOpen}
-        onClose={handleCloseCommentDialog}
-        PaperProps={{
-          sx: {
-            width: "500px",
-            borderRadius: "20px",
-            overflow: "hidden",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            padding: "24px 32px",
-          }}
-        >
-          Add Comment
-        </DialogTitle>
-
-        <DialogContent
-          sx={{
-            padding: "32px",
-            backgroundColor: "#f8fafc",
-            marginTop: "20px",
-          }}
-        >
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Comment"
-            fullWidth
-            multiline
-            rows={4}
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "white",
-                borderRadius: "12px",
-                "&:hover fieldset": {
-                  borderColor: "#1976d2",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#1976d2",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                color: "#64748b",
-                fontWeight: 500,
-              },
-            }}
-          />
-        </DialogContent>
-
-        <DialogActions
-          sx={{
-            padding: "24px 32px",
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
-        >
-          <Button
-            onClick={handleCloseCommentDialog}
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            onClick={handleSaveComment}
-            sx={{
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              color: "white",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 4,
-              py: 1,
-              fontWeight: 600,
-            }}
-          >
-            Save Comment
-          </Button>
-        </DialogActions>
-      </Dialog>
-
+      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
@@ -979,3 +527,4 @@ const LeaveRequests = () => {
 };
 
 export default LeaveRequests;
+
