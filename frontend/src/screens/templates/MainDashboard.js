@@ -45,19 +45,19 @@ const MainDashboard = () => {
     ]);
   }, [timeRange]);
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await axios.get(`http://localhost:5000/api/employees/report?period=${timeRange}`);
-      setDashboardData(response.data.data);
-    } catch (err) {
-      console.error("Error fetching dashboard data:", err);
-      setError("Failed to load dashboard data. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchDashboardData = async () => {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const response = await axios.get(`http://localhost:5000/api/employees/report?period=${timeRange}`);
+  //     setDashboardData(response.data.data);
+  //   } catch (err) {
+  //     console.error("Error fetching dashboard data:", err);
+  //     setError("Failed to load dashboard data. Please try again later.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // const fetchRecentJoins = async () => {
   //   try {
@@ -74,6 +74,36 @@ const MainDashboard = () => {
   //   }
   // };
 // In the fetchRecentJoins function, update the filtering and sorting logic:
+
+const fetchDashboardData = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await axios.get(`http://localhost:5000/api/employees/report?period=${timeRange}`);
+    
+    // Get the original data
+    const dashData = response.data.data;
+    
+    // Fetch all employees to get gender information
+    const employeesResponse = await axios.get('http://localhost:5000/api/employees/registered');
+    
+    // Extract gender information
+    const genderData = employeesResponse.data.map(emp => ({
+      gender: emp.personalInfo?.gender || 'Other'
+    }));
+    
+    // Add gender data to dashboard data
+    setDashboardData({
+      ...dashData,
+      genderData: genderData
+    });
+  } catch (err) {
+    console.error("Error fetching dashboard data:", err);
+    setError("Failed to load dashboard data. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
 
 const fetchRecentJoins = async () => {
   try {
@@ -131,25 +161,46 @@ const fetchRecentJoins = async () => {
   };
 
   // Prepare gender chart data
-  const getGenderChartData = () => {
-    // Calculate gender distribution from employee data
-    const genderCounts = { Male: 0, Female: 0, Other: 0 };
+  // const getGenderChartData = () => {
+  //   // Calculate gender distribution from employee data
+  //   const genderCounts = { Male: 0, Female: 0, Other: 0 };
     
-    dashboardData.employeeData?.forEach(employee => {
-      const gender = employee.gender || 'Other';
-      if (gender === 'Male') genderCounts.Male++;
-      else if (gender === 'Female') genderCounts.Female++;
-      else genderCounts.Other++;
-    });
+  //   dashboardData.employeeData?.forEach(employee => {
+  //     const gender = employee.gender || 'Other';
+  //     if (gender === 'Male') genderCounts.Male++;
+  //     else if (gender === 'Female') genderCounts.Female++;
+  //     else genderCounts.Other++;
+  //   });
 
-    return {
-      labels: Object.keys(genderCounts),
-      datasets: [{
-        data: Object.values(genderCounts),
-        backgroundColor: ['#4A90E2', '#FF5C8D', '#F8E71C'],
-      }]
-    };
+  //   return {
+  //     labels: Object.keys(genderCounts),
+  //     datasets: [{
+  //       data: Object.values(genderCounts),
+  //       backgroundColor: ['#4A90E2', '#FF5C8D', '#F8E71C'],
+  //     }]
+  //   };
+  // };
+// Prepare gender chart data
+const getGenderChartData = () => {
+  // Calculate gender distribution from gender data
+  const genderCounts = { Male: 0, Female: 0, Other: 0 };
+  
+  dashboardData.genderData?.forEach(item => {
+    const gender = item.gender || 'Other';
+    if (gender === 'Male') genderCounts.Male++;
+    else if (gender === 'Female') genderCounts.Female++;
+    else genderCounts.Other++;
+  });
+
+  return {
+    labels: Object.keys(genderCounts),
+    datasets: [{
+      data: Object.values(genderCounts),
+      backgroundColor: ['#4A90E2', '#FF5C8D', '#F8E71C'],
+    }]
   };
+};
+
 
   // Prepare onboarding trend data
   const getOnboardingTrendData = () => {
@@ -408,7 +459,7 @@ const fetchRecentJoins = async () => {
           </Paper>
         </Grid>
 
-        {/* Gender Distribution */}
+        {/* Gender Distribution
         <Grid item xs={12} md={6} lg={4}>
           <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.08)', height: '100%' }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
@@ -425,7 +476,26 @@ const fetchRecentJoins = async () => {
               )}
             </Box>
           </Paper>
-        </Grid>
+        </Grid> */}
+        {/* Gender Distribution */}
+<Grid item xs={12} md={6} lg={4}>
+  <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.08)', height: '100%' }}>
+    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+      Gender Distribution
+    </Typography>
+    <Divider sx={{ mb: 3 }} />
+    <Box sx={{ height: 300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      {dashboardData.genderData && dashboardData.genderData.length > 0 ? (
+        <Doughnut data={getGenderChartData()} options={chartOptions} />
+      ) : (
+        <Typography variant="body1" color="text.secondary">
+          No gender data available
+        </Typography>
+      )}
+    </Box>
+  </Paper>
+</Grid>
+
 
         {/* Onboarding Trend */}
         <Grid item xs={12} lg={4}>
