@@ -89,33 +89,7 @@ export class PayrollController {
     }
   }
 
-  // static async updateEmployee(req, res) {
-  //   try {
-  //     const employee = await EmployeePayroll.findOneAndUpdate(
-  //       { empId: req.params.empId },
-  //       req.body,
-  //       { new: true, runValidators: true }
-  //     );
-
-  //     if (!employee) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: 'Employee not found'
-  //       });
-  //     }
-
-  //     res.status(200).json({
-  //       success: true,
-  //       data: employee,
-  //       message: 'Employee updated successfully'
-  //     });
-  //   } catch (error) {
-  //     res.status(400).json({
-  //       success: false,
-  //       message: error.message
-  //     });
-  //   }
-  // }
+  
 
   static async updateEmployee(req, res) {
     try {
