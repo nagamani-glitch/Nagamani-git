@@ -190,11 +190,21 @@ function Sidebar() {
         </li>
         {activeMenu === "attendance" && (
           <ul className="sub-menu">
+
+
+            <li onClick={() => handleNavigation("/Dashboards/attendance-dashboard")}>
+              Dashboard
+            </li>
+
+           
             <li
               onClick={() => handleNavigation("/Dashboards/attendance-records")}
             >
               Attendance Records
             </li>
+
+
+
             <li
               onClick={() => handleNavigation("/Dashboards/time-off-requests")}
             >

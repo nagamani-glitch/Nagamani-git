@@ -17,6 +17,7 @@ import ForgotPassword from './screens/authScreens/forgotPassword/ForgotPassword'
 import ResetPassword from './screens/authScreens/resetPassword/ResetPassword';
 import Settings from './screens/Settings';
 import { NotificationProvider } from './context/NotificationContext';
+import AttendanceDashboard from './screens/dashboards/AttendanceDashboard';
 
 
   function App() {
@@ -37,6 +38,9 @@ import { NotificationProvider } from './context/NotificationContext';
                 <Route element={<PrivateRoute />}>
                   <Route path='/home' element={<HomeScreen />} />
                   <Route path='/Dashboards/*' element={<Dashboard />} />
+                  <Route path="/Dashboards/attendance-dashboard" element={<AttendanceDashboard />} />
+
+
                   <Route path="/settings" element={<Settings />} />
                 </Route>
               </Routes>
