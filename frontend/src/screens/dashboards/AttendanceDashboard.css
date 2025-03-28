@@ -1,0 +1,230 @@
+/* Improved stat cards styling */
+.improved-card {
+  height: 180px;
+  border-radius: 15px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  border: none;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.improved-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.stat-icon-improved {
+  font-size: 28px;
+  color: white;
+}
+
+.stat-content-improved {
+  padding: 25px 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.stat-number {
+  font-size: 42px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: white;
+}
+
+.stat-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0;
+}
+
+/* Card color variations */
+.improved-card {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.present-card {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.late-card {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.leave-card {
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+}
+
+/* Existing styles for status badges */
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-badge.present {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.late {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.absent {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge.on-leave {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+/* Dashboard container styles */
+.dashboard-container {
+  display: flex;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.page-title {
+  margin-bottom: 25px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Attendance rate circle */
+.attendance-rate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.rate-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: conic-gradient(#4caf50 0% calc(var(--rate) * 1%), #f0f0f0 calc(var(--rate) * 1%) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 15px;
+  --rate: 87.5;
+}
+
+.rate-circle::before {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: white;
+}
+
+.rate-percentage {
+  position: relative;
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Working hours styles */
+.working-hours {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.working-hours h3 {
+  font-size: 36px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.table th {
+  border-top: none;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .sidebar {
+    width: 0;
+    overflow: hidden;
+  }
+  
+  .sidebar.active {
+    width: 250px;
+  }
+}
+
+/* Add this new class for Total Employees label */
+.total-employees-label {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Roboto', sans-serif;
+  color: rgba(255, 255, 255, 1);
+  margin-bottom: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Add these styles to your existing CSS file */
+.chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chart-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    width: 100%;
+  }
+}
