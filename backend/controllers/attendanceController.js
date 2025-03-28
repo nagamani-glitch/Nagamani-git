@@ -107,6 +107,106 @@ const AttendanceController = {
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
+  },
+
+  getAttendanceStats: async (req, res) => {
+    try {
+      const attendance = await Attendance.find().sort({ date: -1 });
+      
+      // Get today's date in ISO format (YYYY-MM-DD)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // Get today's attendance records
+      const todayRecords = attendance.filter(record => 
+        new Date(record.date) >= today && new Date(record.date) < tomorrow
+      );
+      
+      // Get all unique employees
+      const allEmployees = [...new Set(attendance.map(record => record.empId))];
+      
+      // Calculate present employees
+      const presentToday = todayRecords.filter(record => 
+        record.checkIn && record.checkIn !== "-"
+      ).length;
+      
+      // Calculate late employees
+      const lateToday = todayRecords.filter(record => {
+        if (!record.checkIn || record.checkIn === "-") return false;
+        
+        // Consider employees late if they check in after 9:30 AM
+        const checkInTime = record.checkIn;
+        const [hours, minutes] = checkInTime.split(':').map(Number);
+        return (hours > 9 || (hours === 9 && minutes > 30));
+      }).length;
+      
+      // Calculate employees on leave
+      const onLeave = todayRecords.filter(record => 
+        (!record.checkIn || record.checkIn === "-") && 
+        record.comment && 
+        record.comment.toLowerCase().includes('leave')
+      ).length;
+      
+      // Calculate attendance rate
+      const attendanceRate = allEmployees.length > 0 
+        ? Math.round((presentToday / allEmployees.length) * 100) 
+        : 0;
+      
+      // Calculate average working hours
+      const workingRecords = attendance.filter(record => 
+        record.atWork && record.atWork !== "-" && !isNaN(parseFloat(record.atWork))
+      );
+      
+      const totalWorkHours = workingRecords.reduce((sum, record) => 
+        sum + parseFloat(record.atWork), 0
+      );
+      
+      const averageWorkHours = workingRecords.length > 0 
+        ? (totalWorkHours / workingRecords.length).toFixed(1) 
+        : 0;
+      
+      // Get recent attendance (last 5 records)
+      const recentAttendance = attendance
+        .slice(0, 5)
+        .map(record => {
+          let status = 'Absent';
+          
+          if (record.checkIn && record.checkIn !== "-") {
+            const checkInTime = record.checkIn;
+            const [hours, minutes] = checkInTime.split(':').map(Number);
+            
+            if (hours > 9 || (hours === 9 && minutes > 30)) {
+              status = 'Late';
+            } else {
+              status = 'Present';
+            }
+          } else if (record.comment && record.comment.toLowerCase().includes('leave')) {
+            status = 'On Leave';
+          }
+          
+          return {
+            id: record._id,
+            name: record.name,
+            status: status,
+            time: record.checkIn !== "-" ? record.checkIn : "-"
+          };
+        });
+      
+      res.json({
+        totalEmployees: allEmployees.length,
+        presentToday,
+        lateToday,
+        onLeave,
+        attendanceRate,
+        averageWorkHours,
+        recentAttendance
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
 };
 

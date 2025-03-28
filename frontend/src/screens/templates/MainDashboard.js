@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Box, Grid, CircularProgress, Alert, Button, Divider, Avatar, List, ListItem, ListItemAvatar, ListItemText, IconButton, Tooltip, Paper, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Card, CardContent, Typography, Box, Grid, CircularProgress, Alert, Button, Divider, Avatar, List, ListItem, ListItemAvatar, ListItemText, IconButton, Tooltip, Paper, Select, MenuItem, FormControl, InputLabel, Chip } from '@mui/material';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { Chart, ArcElement, Tooltip as ChartTooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { styled } from '@mui/system';
 import axios from 'axios';
-import { Refresh, Person, Business, Announcement, CalendarToday, TrendingUp, TrendingDown, Info } from '@mui/icons-material';
+import { Refresh, Person, Business, Announcement, CalendarToday, TrendingUp, TrendingDown, Info, Event, Block, Weekend } from '@mui/icons-material';
+// Import the API functions
+import { fetchHolidays } from './api/holidays';
 
 // Register necessary elements and components for Chart.js
 Chart.register(ArcElement, ChartTooltip, Legend, CategoryScale, LinearScale, BarElement);
@@ -15,6 +17,8 @@ const StyledHeader = styled(Box)(({ theme, color }) => ({
   backgroundColor: color,
   marginBottom: '10px',
 }));
+
+const apiBaseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
 const MainDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -32,108 +36,141 @@ const MainDashboard = () => {
   });
   const [timeRange, setTimeRange] = useState('6m');
   const [recentJoins, setRecentJoins] = useState([]);
+  
+  // State for all types of announcements
   const [announcements, setAnnouncements] = useState([]);
+  const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+  const [activeAnnouncementType, setActiveAnnouncementType] = useState('all');
 
   useEffect(() => {
     fetchDashboardData();
     fetchRecentJoins();
-    // In a real app, you would fetch announcements from an API
-    setAnnouncements([
-      { id: 1, title: 'Company Picnic', date: '2023-07-15', content: 'Annual company picnic at Central Park.' },
-      { id: 2, title: 'New Health Benefits', date: '2023-07-10', content: 'Updated health benefits package available.' },
-      { id: 3, title: 'Office Closure', date: '2023-07-04', content: 'Office will be closed for Independence Day.' }
-    ]);
+    fetchAllAnnouncements();
   }, [timeRange]);
 
-  // const fetchDashboardData = async () => {
-  //   setLoading(true);
-  //   setError(null);
-  //   try {
-  //     const response = await axios.get(`http://localhost:5000/api/employees/report?period=${timeRange}`);
-  //     setDashboardData(response.data.data);
-  //   } catch (err) {
-  //     console.error("Error fetching dashboard data:", err);
-  //     setError("Failed to load dashboard data. Please try again later.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  // Function to fetch all types of announcements
+  const fetchAllAnnouncements = async () => {
+    setLoadingAnnouncements(true);
+    try {
+      // Fetch holidays using the imported function
+      const holidaysResponse = await fetchHolidays();
+      const holidays = holidaysResponse.data.map(holiday => ({
+        id: holiday._id,
+        title: holiday.name,
+        date: holiday.startDate,
+        content: `Holiday${holiday.recurring ? ' (Recurring)' : ''} from ${new Date(holiday.startDate).toLocaleDateString()} to ${new Date(holiday.endDate).toLocaleDateString()}`,
+        type: 'holiday',
+        icon: <Event />,
+        color: '#2196F3',
+        bgColor: '#E3F2FD'
+      }));
 
-  // const fetchRecentJoins = async () => {
-  //   try {
-  //     const response = await axios.get('http://localhost:5000/api/employees/registered');
-  //     // Sort by joining date (most recent first) and take the top 5
-  //     const sortedEmployees = response.data
-  //       .filter(emp => emp.joiningDetails && emp.joiningDetails.dateOfJoining)
-  //       .sort((a, b) => new Date(b.joiningDetails.dateOfJoining) - new Date(a.joiningDetails.dateOfJoining))
-  //       .slice(0, 5);
+      // Fetch company holidays
+      const companyHolidaysResponse = await axios.get(`${apiBaseURL}/api/companyHolidays`);
+      const companyHolidays = companyHolidaysResponse.data.map(holiday => ({
+        id: holiday._id,
+        title: `${holiday.week} ${holiday.day}`,
+        date: new Date().toISOString(), // Current date as these are recurring
+        content: `Weekly holiday on ${holiday.day}`,
+        type: 'companyHoliday',
+        icon: <Weekend />,
+        color: '#FF9800',
+        bgColor: '#FFF3E0'
+      }));
+
+      // Fetch restricted leaves
+      const restrictLeavesResponse = await axios.get(`${apiBaseURL}/api/restrictLeaves`);
+      const restrictLeaves = restrictLeavesResponse.data.map(leave => ({
+        id: leave._id,
+        title: leave.title,
+        date: leave.startDate,
+        content: `${leave.description} (${leave.department}, ${leave.jobPosition})`,
+        endDate: leave.endDate,
+        type: 'restrictLeave',
+        icon: <Block />,
+        color: '#F44336',
+        bgColor: '#FFEBEE'
+      }));
+
+      // Combine all announcements and sort by date (most recent first)
+      const allAnnouncements = [...holidays, ...companyHolidays, ...restrictLeaves]
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      setAnnouncements(allAnnouncements);
+    } catch (err) {
+      console.error("Error fetching announcements:", err);
+    } finally {
+      setLoadingAnnouncements(false);
+    }
+  };
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${apiBaseURL}/api/employees/report?period=${timeRange}`);
       
-  //     setRecentJoins(sortedEmployees);
-  //   } catch (err) {
-  //     console.error("Error fetching recent joins:", err);
-  //   }
-  // };
-// In the fetchRecentJoins function, update the filtering and sorting logic:
+      // Get the original data
+      const dashData = response.data.data;
+      
+      // Fetch all employees to get gender information
+      const employeesResponse = await axios.get(`${apiBaseURL}/api/employees/registered`);
+      
+      // Extract gender information
+      const genderData = employeesResponse.data.map(emp => ({
+        gender: emp.personalInfo?.gender || 'Other'
+      }));
+      
+      // Add gender data to dashboard data
+      setDashboardData({
+        ...dashData,
+        genderData: genderData
+      });
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      setError("Failed to load dashboard data. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const fetchDashboardData = async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    const response = await axios.get(`http://localhost:5000/api/employees/report?period=${timeRange}`);
-    
-    // Get the original data
-    const dashData = response.data.data;
-    
-    // Fetch all employees to get gender information
-    const employeesResponse = await axios.get('http://localhost:5000/api/employees/registered');
-    
-    // Extract gender information
-    const genderData = employeesResponse.data.map(emp => ({
-      gender: emp.personalInfo?.gender || 'Other'
-    }));
-    
-    // Add gender data to dashboard data
-    setDashboardData({
-      ...dashData,
-      genderData: genderData
-    });
-  } catch (err) {
-    console.error("Error fetching dashboard data:", err);
-    setError("Failed to load dashboard data. Please try again later.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-const fetchRecentJoins = async () => {
-  try {
-    const response = await axios.get('http://localhost:5000/api/employees/registered');
-    
-    // Sort by joining date (most recent first) and take the top 5
-    const sortedEmployees = response.data
-      .filter(emp => emp.joiningDetails && emp.joiningDetails.dateOfJoining)
-      .sort((a, b) => {
-        const dateA = new Date(a.joiningDetails.dateOfJoining);
-        const dateB = new Date(b.joiningDetails.dateOfJoining);
-        return dateB - dateA;
-      })
-      .slice(0, 5);
-    
-    setRecentJoins(sortedEmployees);
-  } catch (err) {
-    console.error("Error fetching recent joins:", err);
-  }
-};
-
-
+  const fetchRecentJoins = async () => {
+    try {
+      const response = await axios.get(`${apiBaseURL}/api/employees/registered`);
+      
+      // Sort by joining date (most recent first) and take the top 5
+      const sortedEmployees = response.data
+        .filter(emp => emp.joiningDetails && emp.joiningDetails.dateOfJoining)
+        .sort((a, b) => {
+          const dateA = new Date(a.joiningDetails.dateOfJoining);
+          const dateB = new Date(b.joiningDetails.dateOfJoining);
+          return dateB - dateA;
+        })
+        .slice(0, 5);
+      
+      setRecentJoins(sortedEmployees);
+    } catch (err) {
+      console.error("Error fetching recent joins:", err);
+    }
+  };
 
   const handleRefresh = () => {
     fetchDashboardData();
     fetchRecentJoins();
+    fetchAllAnnouncements();
   };
 
   const handleTimeRangeChange = (event) => {
     setTimeRange(event.target.value);
+  };
+
+  // Filter announcements based on active type
+  const getFilteredAnnouncements = () => {
+    if (activeAnnouncementType === 'all') {
+      return announcements.slice(0, 5); // Show only 5 for 'all' to avoid overcrowding
+    }
+    return announcements
+      .filter(announcement => announcement.type === activeAnnouncementType)
+      .slice(0, 10); // Show more when filtered by type
   };
 
   // Prepare department chart data
@@ -161,46 +198,25 @@ const fetchRecentJoins = async () => {
   };
 
   // Prepare gender chart data
-  // const getGenderChartData = () => {
-  //   // Calculate gender distribution from employee data
-  //   const genderCounts = { Male: 0, Female: 0, Other: 0 };
+  const getGenderChartData = () => {
+    // Calculate gender distribution from gender data
+    const genderCounts = { Male: 0, Female: 0, Other: 0 };
     
-  //   dashboardData.employeeData?.forEach(employee => {
-  //     const gender = employee.gender || 'Other';
-  //     if (gender === 'Male') genderCounts.Male++;
-  //     else if (gender === 'Female') genderCounts.Female++;
-  //     else genderCounts.Other++;
-  //   });
+    dashboardData.genderData?.forEach(item => {
+      const gender = item.gender || 'Other';
+      if (gender === 'Male') genderCounts.Male++;
+      else if (gender === 'Female') genderCounts.Female++;
+      else genderCounts.Other++;
+    });
 
-  //   return {
-  //     labels: Object.keys(genderCounts),
-  //     datasets: [{
-  //       data: Object.values(genderCounts),
-  //       backgroundColor: ['#4A90E2', '#FF5C8D', '#F8E71C'],
-  //     }]
-  //   };
-  // };
-// Prepare gender chart data
-const getGenderChartData = () => {
-  // Calculate gender distribution from gender data
-  const genderCounts = { Male: 0, Female: 0, Other: 0 };
-  
-  dashboardData.genderData?.forEach(item => {
-    const gender = item.gender || 'Other';
-    if (gender === 'Male') genderCounts.Male++;
-    else if (gender === 'Female') genderCounts.Female++;
-    else genderCounts.Other++;
-  });
-
-  return {
-    labels: Object.keys(genderCounts),
-    datasets: [{
-      data: Object.values(genderCounts),
-      backgroundColor: ['#4A90E2', '#FF5C8D', '#F8E71C'],
-    }]
+    return {
+      labels: Object.keys(genderCounts),
+      datasets: [{
+        data: Object.values(genderCounts),
+        backgroundColor: ['#4A90E2', '#FF5C8D', '#F8E71C'],
+      }]
+    };
   };
-};
-
 
   // Prepare onboarding trend data
   const getOnboardingTrendData = () => {
@@ -271,11 +287,10 @@ const getGenderChartData = () => {
       }
     }
   };
-
   if (loading && !dashboardData.stats.totalOnboarded) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-               <CircularProgress size={60} />
+        <CircularProgress size={60} />
         <Typography variant="h6" sx={{ ml: 2 }}>
           Loading dashboard data...
         </Typography>
@@ -458,8 +473,8 @@ const getGenderChartData = () => {
             </Box>
           </Paper>
         </Grid>
-
-        {/* Gender Distribution
+        
+        {/* Gender Distribution */}
         <Grid item xs={12} md={6} lg={4}>
           <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.08)', height: '100%' }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
@@ -467,7 +482,7 @@ const getGenderChartData = () => {
             </Typography>
             <Divider sx={{ mb: 3 }} />
             <Box sx={{ height: 300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              {dashboardData.employeeData && dashboardData.employeeData.length > 0 ? (
+              {dashboardData.genderData && dashboardData.genderData.length > 0 ? (
                 <Doughnut data={getGenderChartData()} options={chartOptions} />
               ) : (
                 <Typography variant="body1" color="text.secondary">
@@ -476,26 +491,7 @@ const getGenderChartData = () => {
               )}
             </Box>
           </Paper>
-        </Grid> */}
-        {/* Gender Distribution */}
-<Grid item xs={12} md={6} lg={4}>
-  <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.08)', height: '100%' }}>
-    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-      Gender Distribution
-    </Typography>
-    <Divider sx={{ mb: 3 }} />
-    <Box sx={{ height: 300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      {dashboardData.genderData && dashboardData.genderData.length > 0 ? (
-        <Doughnut data={getGenderChartData()} options={chartOptions} />
-      ) : (
-        <Typography variant="body1" color="text.secondary">
-          No gender data available
-        </Typography>
-      )}
-    </Box>
-  </Paper>
-</Grid>
-
+        </Grid>
 
         {/* Onboarding Trend */}
         <Grid item xs={12} lg={4}>
@@ -516,7 +512,7 @@ const getGenderChartData = () => {
           </Paper>
         </Grid>
 
-        {/* Recent Joins
+        {/* Recent Joins */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
@@ -528,12 +524,19 @@ const getGenderChartData = () => {
                 recentJoins.map((employee) => (
                   <ListItem key={employee._id} alignItems="flex-start" sx={{ px: 0 }}>
                     <ListItemAvatar>
-                      <Avatar alt={`${employee.firstName} ${employee.lastName}`} src={employee.profilePicture}>
-                        {employee.firstName ? employee.firstName.charAt(0) : 'E'}
+                      <Avatar 
+                        alt={`${employee.personalInfo?.firstName || ''} ${employee.personalInfo?.lastName || ''}`} 
+                        src={employee.personalInfo?.employeeImage || ''}
+                      >
+                        {employee.personalInfo?.firstName ? employee.personalInfo.firstName.charAt(0) : 'E'}
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
-                      primary={`${employee.firstName} ${employee.lastName}`}
+                      primary={
+                        <Typography variant="subtitle1" fontWeight="medium">
+                          {`${employee.personalInfo?.firstName || ''} ${employee.personalInfo?.lastName || ''}`}
+                        </Typography>
+                      }
                       secondary={
                         <React.Fragment>
                           <Typography
@@ -541,13 +544,17 @@ const getGenderChartData = () => {
                             variant="body2"
                             color="text.primary"
                           >
-                            {employee.joiningDetails?.designation || 'Employee'}
+                            ID: {employee.Emp_ID || 'N/A'}
                           </Typography>
-                          {" — "}
-                          {employee.joiningDetails?.department || 'Department not specified'}
+                          <br />
+                          <Typography component="span" variant="body2">
+                            {employee.joiningDetails?.initialDesignation || 'Employee'}
+                            {employee.joiningDetails?.department && ` — ${employee.joiningDetails.department}`}
+                          </Typography>
                           <br />
                           <Typography component="span" variant="caption" color="text.secondary">
-                            Joined: {new Date(employee.joiningDetails?.dateOfJoining).toLocaleDateString()}
+                            Joined: {employee.joiningDetails?.dateOfJoining ? 
+                              new Date(employee.joiningDetails.dateOfJoining).toLocaleDateString() : 'N/A'}
                           </Typography>
                         </React.Fragment>
                       }
@@ -561,107 +568,139 @@ const getGenderChartData = () => {
               )}
             </List>
           </Paper>
-        </Grid> */}
-        {/* Recent Joins */}
-<Grid item xs={12} md={6}>
-  <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
-    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-      Recent Joins
-    </Typography>
-    <Divider sx={{ mb: 2 }} />
-    <List sx={{ width: '100%' }}>
-      {recentJoins.length > 0 ? (
-        recentJoins.map((employee) => (
-          <ListItem key={employee._id} alignItems="flex-start" sx={{ px: 0 }}>
-            <ListItemAvatar>
-              <Avatar 
-                alt={`${employee.personalInfo?.firstName || ''} ${employee.personalInfo?.lastName || ''}`} 
-                src={employee.personalInfo?.employeeImage || ''}
-              >
-                {employee.personalInfo?.firstName ? employee.personalInfo.firstName.charAt(0) : 'E'}
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText
-              primary={
-                <Typography variant="subtitle1" fontWeight="medium">
-                  {`${employee.personalInfo?.firstName || ''} ${employee.personalInfo?.lastName || ''}`}
-                </Typography>
-              }
-              secondary={
-                <React.Fragment>
-                  <Typography
-                    component="span"
-                    variant="body2"
-                    color="text.primary"
-                  >
-                    ID: {employee.Emp_ID || 'N/A'}
-                  </Typography>
-                  <br />
-                  <Typography component="span" variant="body2">
-                    {employee.joiningDetails?.initialDesignation || 'Employee'}
-                    {employee.joiningDetails?.department && ` — ${employee.joiningDetails.department}`}
-                  </Typography>
-                  <br />
-                  <Typography component="span" variant="caption" color="text.secondary">
-                    Joined: {employee.joiningDetails?.dateOfJoining ? 
-                      new Date(employee.joiningDetails.dateOfJoining).toLocaleDateString() : 'N/A'}
-                  </Typography>
-                </React.Fragment>
-              }
-            />
-          </ListItem>
-        ))
-      ) : (
-        <Typography variant="body1" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-          No recent joins found
-        </Typography>
-      )}
-    </List>
-  </Paper>
-</Grid>
+        </Grid>
 
-
-        {/* Announcements */}
+        {/* All Announcements - Enhanced Section */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-              Announcements
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                Announcements & Holidays
+              </Typography>
+              <Tooltip title="Refresh Announcements">
+                <IconButton onClick={fetchAllAnnouncements} size="small">
+                  <Refresh fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            
+            {/* Filter chips for announcement types */}
+            <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              <Chip 
+                label="All" 
+                onClick={() => setActiveAnnouncementType('all')}
+                color={activeAnnouncementType === 'all' ? 'primary' : 'default'}
+                variant={activeAnnouncementType === 'all' ? 'filled' : 'outlined'}
+              />
+              <Chip 
+                label="Holidays" 
+                icon={<Event fontSize="small" />}
+                onClick={() => setActiveAnnouncementType('holiday')}
+                color={activeAnnouncementType === 'holiday' ? 'primary' : 'default'}
+                variant={activeAnnouncementType === 'holiday' ? 'filled' : 'outlined'}
+              />
+              <Chip 
+                label="Weekly Holidays" 
+                icon={<Weekend fontSize="small" />}
+                onClick={() => setActiveAnnouncementType('companyHoliday')}
+                color={activeAnnouncementType === 'companyHoliday' ? 'primary' : 'default'}
+                variant={activeAnnouncementType === 'companyHoliday' ? 'filled' : 'outlined'}
+              />
+              <Chip 
+                label="Restricted Leaves" 
+                icon={<Block fontSize="small" />}
+                onClick={() => setActiveAnnouncementType('restrictLeave')}
+                color={activeAnnouncementType === 'restrictLeave' ? 'primary' : 'default'}
+                variant={activeAnnouncementType === 'restrictLeave' ? 'filled' : 'outlined'}
+              />
+            </Box>
+            
             <Divider sx={{ mb: 2 }} />
-            <List sx={{ width: '100%' }}>
-              {announcements.map((announcement) => (
-                <ListItem key={announcement.id} alignItems="flex-start" sx={{ px: 0 }}>
-                  <ListItemAvatar>
-                    <Avatar sx={{ bgcolor: '#FFF3E0', color: '#FF9800' }}>
-                      <Announcement />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={announcement.title}
-                    secondary={
-                      <React.Fragment>
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          color="text.primary"
-                        >
-                          {announcement.content}
-                        </Typography>
-                        <br />
-                        <Typography component="span" variant="caption" color="text.secondary">
-                          Date: {new Date(announcement.date).toLocaleDateString()}
-                        </Typography>
-                      </React.Fragment>
-                    }
-                  />
-                </ListItem>
-              ))}
-            </List>
+            
+            {loadingAnnouncements ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                <CircularProgress size={30} />
+              </Box>
+            ) : getFilteredAnnouncements().length > 0 ? (
+              <List sx={{ width: '100%', maxHeight: '400px', overflow: 'auto' }}>
+                {getFilteredAnnouncements().map((announcement) => (
+                  <ListItem 
+                    key={announcement.id} 
+                    alignItems="flex-start" 
+                    sx={{ 
+                      px: 0,
+                      mb: 1,
+                      pb: 1,
+                      borderBottom: '1px solid #f0f0f0',
+                      '&:last-child': {
+                        borderBottom: 'none'
+                      }
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <Avatar sx={{ 
+                        bgcolor: announcement.bgColor,
+                        color: announcement.color
+                      }}>
+                        {announcement.icon}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="subtitle1" fontWeight="medium">
+                            {announcement.title}
+                          </Typography>
+                          <Chip 
+                            label={
+                              announcement.type === 'holiday' ? 'Holiday' : 
+                              announcement.type === 'companyHoliday' ? 'Weekly' : 'Restricted'
+                            }
+                            size="small"
+                            sx={{ 
+                              height: 20,
+                              fontSize: '0.7rem',
+                              bgcolor: announcement.bgColor,
+                              color: announcement.color,
+                              fontWeight: 'bold'
+                            }}
+                          />
+                        </Box>
+                      }
+                      secondary={
+                        <React.Fragment>
+                          <Typography component="span" variant="body2" color="text.primary">
+                            {announcement.content}
+                          </Typography>
+                          <br />
+                          <Typography component="span" variant="caption" color="text.secondary">
+                            {announcement.type === 'holiday' && announcement.recurring ? 'Recurring Holiday' : 
+                             announcement.type === 'companyHoliday' ? 'Weekly Holiday' : 'Restricted Leave'} • 
+                            {announcement.date ? ` ${new Date(announcement.date).toLocaleDateString()}` : ''}
+                            {announcement.endDate && announcement.type === 'restrictLeave' ? 
+                              ` to ${new Date(announcement.endDate).toLocaleDateString()}` : ''}
+                          </Typography>
+                        </React.Fragment>
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            ) : (
+              <Typography variant="body1" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                                 No {activeAnnouncementType === 'all' ? 'announcements' : 
+                   activeAnnouncementType === 'holiday' ? 'holidays' : 
+                   activeAnnouncementType === 'companyHoliday' ? 'weekly holidays' : 'restricted leaves'} found
+              </Typography>
+            )}
           </Paper>
         </Grid>
       </Grid>
     </Box>
   );
 };
+
 export default MainDashboard;
- 
+
+
+          
