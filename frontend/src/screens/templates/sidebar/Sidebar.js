@@ -236,29 +236,17 @@ function Sidebar() {
         </li>
         {activeMenu === "payroll" && (
           <ul className="sub-menu">
-            {/* <li
+            <li
               onClick={() => handleNavigation("/Dashboards/payroll-dashboard")}
             >
               Dashboard
-            </li> */}
+            </li>
             <li onClick={() => handleNavigation("/Dashboards/payroll-system")}>
               Payroll system
             </li>
-            {/* <li onClick={() => handleNavigation("/Dashboards/allowances")}>
-              Allowances
-            </li> */}
             <li onClick={() => handleNavigation("/Dashboards/contract")}>
               Contract
             </li>
-            {/* <li onClick={() => handleNavigation("/Dashboards/deductions")}>
-              Deductions
-            </li>
-            <li onClick={() => handleNavigation("/Dashboards/payslips")}>
-              Payslips
-            </li>
-            <li onClick={() => handleNavigation("/Dashboards/federal-tax")}>
-              Federal Tax
-            </li> */}
           </ul>
         )}
 
