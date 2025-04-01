@@ -133,85 +133,55 @@ const PayrollSystem = () => {
     });
   };
 
-  // Add this function to handle bulk deduction creation
-  // const handleAddMultipleDeductions = async () => {
-  //   try {
-  //     if (!bulkDeductionEmployeeId || selectedDeductions.length === 0) {
-  //       showAlert("Please select an employee and at least one deduction", "error");
-  //       return;
-  //     }
+  // Separate state variables for employee preview and allowance/deduction preview
+  const [employeePreviewDialogOpen, setEmployeePreviewDialogOpen] =
+    useState(false);
+  const [allowancePreviewDialogOpen, setAllowancePreviewDialogOpen] =
+    useState(false);
+  const [previewEmployee, setPreviewEmployee] = useState(null);
 
-  //     const employee = employeeData.find((e) => e.empId === bulkDeductionEmployeeId);
-  //     if (!employee) {
-  //       showAlert("Invalid employee selected", "error");
-  //       return;
-  //     }
-
-  //     // Create an array of deduction objects with individual percentages
-  //     const deductionsToAdd = selectedDeductions.map(deductionName => ({
-  //       empId: bulkDeductionEmployeeId,
-  //       name: deductionName,
-  //       percentage: parseFloat(deductionPercentages[deductionName] || 0),
-  //       amount: calculateDeductionAmount(
-  //         employee.basicPay,
-  //         deductionPercentages[deductionName] || 0
-  //       ).toString(),
-  //       category: "Tax",
-  //       status: "Active",
-  //       isRecurring: true
-  //     }));
-
-  //     // Create all deductions in sequence
-  //     for (const deduction of deductionsToAdd) {
-  //       await axios.post(`${API_URL}/deductions`, deduction);
-  //     }
-
-  //     showAlert(`Successfully added ${deductionsToAdd.length} deductions`);
-  //     await fetchDeductions();
-  //     handleCloseDeductionDialog();
-  //   } catch (error) {
-  //     showAlert(
-  //       error.response?.data?.message || "Error saving deductions",
-  //       "error"
-  //     );
-  //   }
-  // };
-
-  // This is for the Add employee preview dialog
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
-const [previewEmployee, setPreviewEmployee] = useState(null);
-
-
-const handleOpenPreview = (empId) => {
-  // First close the dialog if it's already open to ensure fresh data
-  if (previewDialogOpen) {
-    setPreviewDialogOpen(false);
-  }
-
-  // Fetch the latest data
-  Promise.all([fetchAllowances(), fetchDeductions()]).then(() => {
-    // Now set the employee and open the dialog with fresh data
+  // Handler for opening employee preview
+  const handleOpenEmployeePreview = (empId) => {
     const employee = employeeData.find((emp) => emp.empId === empId);
     if (employee) {
       setPreviewEmployee(employee);
-      setPreviewDialogOpen(true);
+      setEmployeePreviewDialogOpen(true);
     }
-  });
-};
+  };
 
-// Add this function to handle closing the preview dialog
-const handleClosePreview = () => {
-  setPreviewDialogOpen(false);
-  setPreviewEmployee(null);
-};
+  // Handler for closing employee preview
+  const handleCloseEmployeePreview = () => {
+    setEmployeePreviewDialogOpen(false);
+    setPreviewEmployee(null);
+  };
 
+  // Handler for opening allowance/deduction preview
+  const handleOpenAllowancePreview = (empId) => {
+    // First close the dialog if it's already open to ensure fresh data
+    if (allowancePreviewDialogOpen) {
+      setAllowancePreviewDialogOpen(false);
+    }
 
+    // Fetch the latest data
+    Promise.all([fetchAllowances(), fetchDeductions()]).then(() => {
+      // Now set the employee and open the dialog with fresh data
+      const employee = employeeData.find((emp) => emp.empId === empId);
+      if (employee) {
+        setPreviewEmployee(employee);
+        setAllowancePreviewDialogOpen(true);
+      }
+    });
+  };
+
+  // Handler for closing allowance/deduction preview
+  const handleCloseAllowancePreview = () => {
+    setAllowancePreviewDialogOpen(false);
+    setPreviewEmployee(null);
+  };
 
   // Add these state variables for allowance preview
   const [previewAllowanceDialog, setPreviewAllowanceDialog] = useState(false);
   const [previewAllowance, setPreviewAllowance] = useState(null);
-
-  
 
   // Add this function to handle multiple allowance selection
   const handleAllowanceSelection = (allowanceType, isChecked) => {
@@ -611,8 +581,6 @@ const handleClosePreview = () => {
     }
   };
 
-
-
   const handleAddEmployee = async () => {
     try {
       if (!newEmployee.empId || !newEmployee.empName || !newEmployee.basicPay) {
@@ -906,29 +874,32 @@ const handleClosePreview = () => {
     }
   };
 
-  
   // Add this function to calculate net impact (total allowances - total deductions)
-const calculateNetImpact = (empId) => {
-  const employee = employeeData.find((e) => e.empId === empId);
-  if (!employee) return 0;
+  const calculateNetImpact = (empId) => {
+    const employee = employeeData.find((e) => e.empId === empId);
+    if (!employee) return 0;
 
-  // Calculate total allowances
-  const totalAllowances = allowanceData
-    .filter((a) => a.empId === empId && a.status === "Active")
-    .reduce((sum, item) => {
-      return sum + calculateAllowanceAmount(employee.basicPay, item.percentage);
-    }, 0);
+    // Calculate total allowances
+    const totalAllowances = allowanceData
+      .filter((a) => a.empId === empId && a.status === "Active")
+      .reduce((sum, item) => {
+        return (
+          sum + calculateAllowanceAmount(employee.basicPay, item.percentage)
+        );
+      }, 0);
 
-  // Calculate total deductions
-  const totalDeductions = deductions
-    .filter((d) => d.empId === empId && d.status === "Active")
-    .reduce((sum, item) => {
-      return sum + calculateDeductionAmount(employee.basicPay, item.percentage);
-    }, 0);
+    // Calculate total deductions
+    const totalDeductions = deductions
+      .filter((d) => d.empId === empId && d.status === "Active")
+      .reduce((sum, item) => {
+        return (
+          sum + calculateDeductionAmount(employee.basicPay, item.percentage)
+        );
+      }, 0);
 
-  // Return the net impact
-  return totalAllowances - totalDeductions;
-};
+    // Return the net impact
+    return totalAllowances - totalDeductions;
+  };
 
   return (
     <Container className="payroll-container">
@@ -1093,7 +1064,7 @@ const calculateNetImpact = (empId) => {
                       <Tooltip title="Preview">
                         <IconButton
                           className="preview-button"
-                          onClick={() => handleOpenPreview(item.empId)}
+                          onClick={() => handleOpenEmployeePreview(item.empId)}
                         >
                           <PreviewIcon
                             sx={{
@@ -1279,7 +1250,9 @@ const calculateNetImpact = (empId) => {
                         <Tooltip title="Preview">
                           <IconButton
                             className="preview-button"
-                            onClick={() => handleOpenPreview(employee.empId)}
+                            onClick={() =>
+                              handleOpenAllowancePreview(employee.empId)
+                            }
                           >
                             <PreviewIcon
                               sx={{
@@ -1390,288 +1363,6 @@ const calculateNetImpact = (empId) => {
             </Table>
           </TableContainer>
         </TabPanel>
-
-       
-       
-{/* Preview Dialog for Allowances and Deductions */}
-<Dialog
-  open={previewDialogOpen}
-  onClose={handleClosePreview}
-  maxWidth="md"
-  fullWidth
-  PaperProps={{
-    elevation: 3,
-    sx: { borderRadius: 2, overflow: "hidden" },
-  }}
->
-  <DialogTitle
-    sx={{
-      bgcolor: "#1976d2",
-      color: "white",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    }}
-  >
-    <Typography variant="h6">
-      Allowances & Deductions for {previewEmployee?.empName}
-    </Typography>
-    <IconButton onClick={handleClosePreview} sx={{ color: "white" }}>
-      <CloseIcon />
-    </IconButton>
-  </DialogTitle>
-
-  {previewEmployee && (
-    <DialogContent sx={{ p: 3 }}>
-      <Grid container spacing={3}>
-        {/* Allowances */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, borderRadius: 2 }}>
-            <Typography
-              variant="h6"
-              sx={{ 
-                mb: 2, 
-                borderBottom: "1px solid #eee", 
-                pb: 1,
-                color: "#4caf50"
-              }}
-            >
-              Allowances
-            </Typography>
-            {allowanceData.filter(
-              (a) =>
-                a.empId === previewEmployee.empId &&
-                a.status === "Active"
-            ).length > 0 ? (
-              <TableContainer sx={{ maxHeight: 300 }}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Percentage</TableCell>
-                      <TableCell>Category</TableCell>
-                      <TableCell align="right">Amount</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {allowanceData
-                      .filter(
-                        (a) =>
-                          a.empId === previewEmployee.empId &&
-                          a.status === "Active"
-                      )
-                      .map((allowance) => (
-                        <TableRow key={allowance._id || `${allowance.empId}_${allowance.name}`}>
-                          <TableCell>{allowance.name}</TableCell>
-                          <TableCell>{allowance.percentage}%</TableCell>
-                          <TableCell>
-                            <Chip 
-                              label={allowance.category} 
-                              size="small"
-                              sx={{ 
-                                bgcolor: 
-                                  allowance.category === "Regular" ? "#e3f2fd" : 
-                                  allowance.category === "Travel" ? "#e8f5e9" : 
-                                  "#fff8e1"
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            Rs.{" "}
-                            {calculateAllowanceAmount(
-                              previewEmployee.basicPay,
-                              allowance.percentage
-                            ).toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                      <TableCell
-                        colSpan={3}
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        Total Allowances
-                      </TableCell>
-                      <TableCell
-                        align="right"
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        Rs.{" "}
-                        {allowanceData
-                          .filter(
-                            (a) =>
-                              a.empId === previewEmployee.empId &&
-                              a.status === "Active"
-                          )
-                          .reduce((sum, item) => {
-                            return (
-                              sum +
-                              calculateAllowanceAmount(
-                                previewEmployee.basicPay,
-                                item.percentage
-                              )
-                            );
-                          }, 0)
-                          .toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              <Typography
-                variant="body2"
-                color="textSecondary"
-                sx={{ py: 2, textAlign: "center" }}
-              >
-                No active allowances found
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Deductions */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, borderRadius: 2 }}>
-            <Typography
-              variant="h6"
-              sx={{ 
-                mb: 2, 
-                borderBottom: "1px solid #eee", 
-                pb: 1,
-                color: "#f44336"
-              }}
-            >
-              Deductions
-            </Typography>
-            {deductions.filter(
-              (d) =>
-                d.empId === previewEmployee.empId &&
-                d.status === "Active"
-            ).length > 0 ? (
-              <TableContainer sx={{ maxHeight: 300 }}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Percentage</TableCell>
-                      <TableCell>Category</TableCell>
-                      <TableCell align="right">Amount</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {deductions
-                      .filter(
-                        (d) =>
-                          d.empId === previewEmployee.empId &&
-                          d.status === "Active"
-                      )
-                      .map((deduction) => (
-                        <TableRow key={deduction._id || `${deduction.empId}_${deduction.name}`}>
-                          <TableCell>{deduction.name}</TableCell>
-                          <TableCell>{deduction.percentage}%</TableCell>
-                          <TableCell>
-                            <Chip 
-                              label={deduction.category} 
-                              size="small"
-                              sx={{ 
-                                bgcolor: 
-                                  deduction.category === "Tax" ? "#ffebee" : 
-                                  deduction.category === "Insurance" ? "#e8eaf6" : 
-                                  "#fce4ec"
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            Rs.{" "}
-                            {calculateDeductionAmount(
-                              previewEmployee.basicPay,
-                              deduction.percentage
-                            ).toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                      <TableCell
-                        colSpan={3}
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        Total Deductions
-                      </TableCell>
-                      <TableCell
-                        align="right"
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        Rs.{" "}
-                        {calculateTotalDeductions(
-                          previewEmployee.empId
-                        ).toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              <Typography
-                variant="body2"
-                color="textSecondary"
-                sx={{ py: 2, textAlign: "center" }}
-              >
-                No active deductions found
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Net Impact */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, borderRadius: 2, bgcolor: "#f8f9fa" }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Typography variant="subtitle1">
-                Net Impact on Salary
-              </Typography>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: "bold",
-                  color: calculateNetImpact(previewEmployee.empId) >= 0 ? "#4caf50" : "#f44336",
-                }}
-              >
-                {calculateNetImpact(previewEmployee.empId) >= 0 ? "+" : ""}
-                Rs. {calculateNetImpact(previewEmployee.empId).toFixed(2)}
-              </Typography>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
-    </DialogContent>
-  )}
-
-  <DialogActions sx={{ p: 2, bgcolor: "#f5f5f5" }}>
-    <Button onClick={handleClosePreview} variant="outlined">
-      Close
-    </Button>
-    <Button
-      variant="contained"
-      startIcon={<EditIcon />}
-      onClick={() => {
-        handleClosePreview();
-        setEditMode(false);
-        setBulkEmployeeId(previewEmployee.empId);
-        setOpenDialog(true);
-      }}
-    >
-      Manage Allowances & Deductions
-    </Button>
-  </DialogActions>
-</Dialog>
-
 
         {/* Payslips Tab */}
         <TabPanel value={tabIndex} index={2}>
@@ -1910,260 +1601,549 @@ const calculateNetImpact = (empId) => {
         </TabPanel>
 
         {/* Employee Preview Dialog */}
-        {/* Employee Preview Dialog */}
-<Dialog
-  open={previewDialogOpen}
-  onClose={handleClosePreview}
-  maxWidth="md"
-  fullWidth
-  PaperProps={{
-    elevation: 3,
-    sx: { borderRadius: 2, overflow: "hidden" },
-  }}
->
-  <DialogTitle
-    sx={{
-      bgcolor: "#1976d2",
-      color: "white",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    }}
-  >
-    <Typography variant="h6">Employee Details Preview</Typography>
-    <IconButton onClick={handleClosePreview} sx={{ color: "white" }}>
-      <CloseIcon />
-    </IconButton>
-  </DialogTitle>
-
-  {previewEmployee && (
-    <DialogContent sx={{ p: 3 }}>
-      <Grid container spacing={3}>
-        {/* Employee Basic Info */}
-        <Grid item xs={12}>
-          <Paper
-            sx={{ p: 2, mb: 2, bgcolor: "#f8f9fa", borderRadius: 2 }}
+        <Dialog
+          open={employeePreviewDialogOpen}
+          onClose={handleCloseEmployeePreview}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            elevation: 3,
+            sx: { borderRadius: 2, overflow: "hidden" },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              bgcolor: "#1976d2",
+              color: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: "bold", mr: 2 }}
-              >
-                {previewEmployee.empName}
-              </Typography>
-              <Chip
-                label={`ID: ${previewEmployee.empId}`}
-                color="primary"
-                variant="outlined"
-              />
-              <Chip
-                label={previewEmployee.status}
-                color={
-                  previewEmployee.status === "Active"
-                    ? "success"
-                    : "error"
-                }
-                sx={{ ml: 1 }}
-              />
-            </Box>
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Department
-                </Typography>
-                <Typography variant="body1">
-                  {previewEmployee.department}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Designation
-                </Typography>
-                <Typography variant="body1">
-                  {previewEmployee.designation}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Basic Pay
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-                  Rs. {parseFloat(previewEmployee.basicPay).toFixed(2)}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-
-        {/* Bank & ID Details */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, height: "100%", borderRadius: 2 }}>
-            <Typography
-              variant="h6"
-              sx={{ mb: 2, borderBottom: "1px solid #eee", pb: 1 }}
+            <Typography variant="h6">Employee Details Preview</Typography>
+            <IconButton
+              onClick={handleCloseEmployeePreview}
+              sx={{ color: "white" }}
             >
-              Bank & ID Details
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+
+          {previewEmployee && (
+            <DialogContent sx={{ p: 3 }}>
+              <Grid container spacing={3}>
+                {/* Employee Basic Info */}
+                <Grid item xs={12}>
+                  <Paper
+                    sx={{ p: 2, mb: 2, bgcolor: "#f8f9fa", borderRadius: 2 }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <Typography
+                        variant="h5"
+                        sx={{ fontWeight: "bold", mr: 2 }}
+                      >
+                        {previewEmployee.empName}
+                      </Typography>
+                      <Chip
+                        label={`ID: ${previewEmployee.empId}`}
+                        color="primary"
+                        variant="outlined"
+                      />
+                      <Chip
+                        label={previewEmployee.status}
+                        color={
+                          previewEmployee.status === "Active"
+                            ? "success"
+                            : "error"
+                        }
+                        sx={{ ml: 1 }}
+                      />
+                    </Box>
+
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={4}>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Department
+                        </Typography>
+                        <Typography variant="body1">
+                          {previewEmployee.department}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Designation
+                        </Typography>
+                        <Typography variant="body1">
+                          {previewEmployee.designation}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Basic Pay
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                          Rs. {parseFloat(previewEmployee.basicPay).toFixed(2)}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Grid>
+
+                {/* Bank & ID Details */}
+                <Grid item xs={12} md={6}>
+                  <Paper sx={{ p: 2, height: "100%", borderRadius: 2 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ mb: 2, borderBottom: "1px solid #eee", pb: 1 }}
+                    >
+                      Bank & ID Details
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1.5,
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Bank Name
+                        </Typography>
+                        <Typography variant="body1">
+                          {previewEmployee.bankName}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Account Number
+                        </Typography>
+                        <Typography variant="body1">
+                          {previewEmployee.bankAccountNo}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          PF Number
+                        </Typography>
+                        <Typography variant="body1">
+                          {previewEmployee.pfNo}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          UAN Number
+                        </Typography>
+                        <Typography variant="body1">
+                          {previewEmployee.uanNo}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          PAN Number
+                        </Typography>
+                        <Typography variant="body1">
+                          {previewEmployee.panNo}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Paper>
+                </Grid>
+
+                {/* Attendance & Pay Details */}
+                <Grid item xs={12} md={6}>
+                  <Paper sx={{ p: 2, height: "100%", borderRadius: 2 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ mb: 2, borderBottom: "1px solid #eee", pb: 1 }}
+                    >
+                      Attendance & Pay Details
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1.5,
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Payable Days
+                        </Typography>
+                        <Typography variant="body1">
+                          {previewEmployee.payableDays} days
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          LOP Days
+                        </Typography>
+                        <Typography variant="body1">
+                          {previewEmployee.lop} days
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Working Days
+                        </Typography>
+                        <Typography variant="body1">
+                          {previewEmployee.payableDays - previewEmployee.lop}{" "}
+                          days
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Per Day Pay
+                        </Typography>
+                        <Typography variant="body1">
+                          Rs.{" "}
+                          {calculatePerDayPay(
+                            previewEmployee.basicPay,
+                            previewEmployee.payableDays
+                          ).toFixed(2)}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Attendance Adjusted Pay
+                        </Typography>
+                        <Typography variant="body1">
+                          Rs.{" "}
+                          {calculateAttendanceBasedPay(
+                            previewEmployee.basicPay,
+                            previewEmployee.payableDays,
+                            previewEmployee.lop
+                          ).toFixed(2)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </DialogContent>
+          )}
+
+          <DialogActions sx={{ p: 2, bgcolor: "#f5f5f5" }}>
+            <Button onClick={handleCloseEmployeePreview} variant="outlined">
+              Close
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<EditIcon />}
+              onClick={() => {
+                handleCloseEmployeePreview();
+                setEditMode(true);
+                setSelectedItem(previewEmployee);
+                setNewEmployee({ ...previewEmployee });
+                setOpenEmployeeDialog(true);
+              }}
+              sx={{ mr: 1 }}
+            >
+              Edit Employee
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Allowances & Deductions Preview Dialog */}
+        <Dialog
+          open={allowancePreviewDialogOpen}
+          onClose={handleCloseAllowancePreview}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            elevation: 3,
+            sx: { borderRadius: 2, overflow: "hidden" },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              bgcolor: "#1976d2",
+              color: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="h6">
+              Allowances & Deductions for {previewEmployee?.empName}
             </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 1.5,
+            <IconButton
+              onClick={handleCloseAllowancePreview}
+              sx={{ color: "white" }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+
+          {previewEmployee && (
+            <DialogContent sx={{ p: 3 }}>
+              <Grid container spacing={3}>
+                {/* Allowances */}
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 2, borderRadius: 2 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 2,
+                        borderBottom: "1px solid #eee",
+                        pb: 1,
+                        color: "#4caf50",
+                      }}
+                    >
+                      Allowances
+                    </Typography>
+                    {allowanceData.filter(
+                      (a) =>
+                        a.empId === previewEmployee.empId &&
+                        a.status === "Active"
+                    ).length > 0 ? (
+                      <TableContainer sx={{ maxHeight: 300 }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Name</TableCell>
+                              <TableCell>Percentage</TableCell>
+                              <TableCell>Category</TableCell>
+                              <TableCell align="right">Amount</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {allowanceData
+                              .filter(
+                                (a) =>
+                                  a.empId === previewEmployee.empId &&
+                                  a.status === "Active"
+                              )
+                              .map((allowance) => (
+                                <TableRow
+                                  key={
+                                    allowance._id ||
+                                    `${allowance.empId}_${allowance.name}`
+                                  }
+                                >
+                                  <TableCell>{allowance.name}</TableCell>
+                                  <TableCell>{allowance.percentage}%</TableCell>
+                                  <TableCell>
+                                    <Chip
+                                      label={allowance.category}
+                                      size="small"
+                                      sx={{
+                                        bgcolor:
+                                          allowance.category === "Regular"
+                                            ? "#e3f2fd"
+                                            : allowance.category === "Travel"
+                                            ? "#e8f5e9"
+                                            : "#fff8e1",
+                                      }}
+                                    />
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    Rs.{" "}
+                                    {calculateAllowanceAmount(
+                                      previewEmployee.basicPay,
+                                      allowance.percentage
+                                    ).toFixed(2)}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                              <TableCell
+                                colSpan={3}
+                                sx={{ fontWeight: "bold" }}
+                              >
+                                Total Allowances
+                              </TableCell>
+                              <TableCell
+                                align="right"
+                                sx={{ fontWeight: "bold" }}
+                              >
+                                Rs.{" "}
+                                {allowanceData
+                                  .filter(
+                                    (a) =>
+                                      a.empId === previewEmployee.empId &&
+                                      a.status === "Active"
+                                  )
+                                  .reduce((sum, item) => {
+                                    return (
+                                      sum +
+                                      calculateAllowanceAmount(
+                                        previewEmployee.basicPay,
+                                        item.percentage
+                                      )
+                                    );
+                                  }, 0)
+                                  .toFixed(2)}
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        sx={{ py: 2, textAlign: "center" }}
+                      >
+                        No active allowances found
+                      </Typography>
+                    )}
+                  </Paper>
+                </Grid>
+
+                {/* Deductions */}
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 2, borderRadius: 2 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 2,
+                        borderBottom: "1px solid #eee",
+                        pb: 1,
+                        color: "#f44336",
+                      }}
+                    >
+                      Deductions
+                    </Typography>
+                    {deductions.filter(
+                      (d) =>
+                        d.empId === previewEmployee.empId &&
+                        d.status === "Active"
+                    ).length > 0 ? (
+                      <TableContainer sx={{ maxHeight: 300 }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Name</TableCell>
+                              <TableCell>Percentage</TableCell>
+                              <TableCell>Category</TableCell>
+                              <TableCell align="right">Amount</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {deductions
+                              .filter(
+                                (d) =>
+                                  d.empId === previewEmployee.empId &&
+                                  d.status === "Active"
+                              )
+                              .map((deduction) => (
+                                <TableRow
+                                  key={
+                                    deduction._id ||
+                                    `${deduction.empId}_${deduction.name}`
+                                  }
+                                >
+                                  <TableCell>{deduction.name}</TableCell>
+                                  <TableCell>{deduction.percentage}%</TableCell>
+                                  <TableCell>
+                                    <Chip
+                                      label={deduction.category}
+                                      size="small"
+                                      sx={{
+                                        bgcolor:
+                                          deduction.category === "Tax"
+                                            ? "#ffebee"
+                                            : deduction.category === "Insurance"
+                                            ? "#e8eaf6"
+                                            : "#fce4ec",
+                                      }}
+                                    />
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    Rs.{" "}
+                                    {calculateDeductionAmount(
+                                      previewEmployee.basicPay,
+                                      deduction.percentage
+                                    ).toFixed(2)}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                              <TableCell
+                                colSpan={3}
+                                sx={{ fontWeight: "bold" }}
+                              >
+                                Total Deductions
+                              </TableCell>
+                              <TableCell
+                                align="right"
+                                sx={{ fontWeight: "bold" }}
+                              >
+                                Rs.{" "}
+                                {calculateTotalDeductions(
+                                  previewEmployee.empId
+                                ).toFixed(2)}
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        sx={{ py: 2, textAlign: "center" }}
+                      >
+                        No active deductions found
+                      </Typography>
+                    )}
+                  </Paper>
+                </Grid>
+
+                {/* Net Impact */}
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 2, borderRadius: 2, bgcolor: "#f8f9fa" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Typography variant="subtitle1">
+                        Net Impact on Salary
+                      </Typography>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          fontWeight: "bold",
+                          color:
+                            calculateNetImpact(previewEmployee.empId) >= 0
+                              ? "#4caf50"
+                              : "#f44336",
+                        }}
+                      >
+                        {calculateNetImpact(previewEmployee.empId) >= 0
+                          ? "+"
+                          : ""}
+                        Rs.{" "}
+                        {calculateNetImpact(previewEmployee.empId).toFixed(2)}
+                      </Typography>
+                    </Box>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </DialogContent>
+          )}
+
+          <DialogActions sx={{ p: 2, bgcolor: "#f5f5f5" }}>
+            <Button onClick={handleCloseAllowancePreview} variant="outlined">
+              Close
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<EditIcon />}
+              onClick={() => {
+                handleCloseAllowancePreview();
+                setEditMode(false);
+                setBulkEmployeeId(previewEmployee.empId);
+                setOpenDialog(true);
               }}
             >
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Bank Name
-                </Typography>
-                <Typography variant="body1">
-                  {previewEmployee.bankName}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Account Number
-                </Typography>
-                <Typography variant="body1">
-                  {previewEmployee.bankAccountNo}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  PF Number
-                </Typography>
-                <Typography variant="body1">
-                  {previewEmployee.pfNo}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  UAN Number
-                </Typography>
-                <Typography variant="body1">
-                  {previewEmployee.uanNo}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  PAN Number
-                </Typography>
-                <Typography variant="body1">
-                  {previewEmployee.panNo}
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Grid>
-
-        {/* Attendance & Pay Details */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, height: "100%", borderRadius: 2 }}>
-            <Typography
-              variant="h6"
-              sx={{ mb: 2, borderBottom: "1px solid #eee", pb: 1 }}
-            >
-              Attendance & Pay Details
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 1.5,
-              }}
-            >
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Payable Days
-                </Typography>
-                <Typography variant="body1">
-                  {previewEmployee.payableDays} days
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  LOP Days
-                </Typography>
-                <Typography variant="body1">
-                  {previewEmployee.lop} days
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Working Days
-                </Typography>
-                <Typography variant="body1">
-                  {previewEmployee.payableDays - previewEmployee.lop}{" "}
-                  days
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Per Day Pay
-                </Typography>
-                <Typography variant="body1">
-                  Rs.{" "}
-                  {calculatePerDayPay(
-                    previewEmployee.basicPay,
-                    previewEmployee.payableDays
-                  ).toFixed(2)}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Attendance Adjusted Pay
-                </Typography>
-                <Typography variant="body1">
-                  Rs.{" "}
-                  {calculateAttendanceBasedPay(
-                    previewEmployee.basicPay,
-                    previewEmployee.payableDays,
-                    previewEmployee.lop
-                  ).toFixed(2)}
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
-    </DialogContent>
-  )}
-
-  <DialogActions sx={{ p: 2, bgcolor: "#f5f5f5" }}>
-    <Button onClick={handleClosePreview} variant="outlined">
-      Close
-     </Button>
-
-  {/*  <Button
-      variant="contained"
-      startIcon={<EditIcon />}
-      onClick={() => {
-        handleClosePreview();
-        setEditMode(true);
-        setSelectedItem(previewEmployee);
-        setNewEmployee({ ...previewEmployee });
-        setOpenEmployeeDialog(true);
-      }}
-      sx={{ mr: 1 }}
-    >
-      Edit Employee
-    </Button>
-    <Button
-      variant="contained"
-      color="primary"
-      startIcon={<FileDownloadIcon />}
-      onClick={async () => {
-        const payslip = await generatePayslip(previewEmployee.empId);
-        if (payslip) {
-          downloadPayslip(payslip._id);
-        }
-        handleClosePreview();
-      }}
-    >
-      Generate Payslip
-    </Button> */}
-  </DialogActions>
-</Dialog>
+              Manage Allowances & Deductions
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Create Employee Dialog */}
         <Dialog
