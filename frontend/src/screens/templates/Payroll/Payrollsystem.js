@@ -1686,6 +1686,7 @@ const calculateNetImpact = (empId) => {
               }}
             >
               <Grid container spacing={3}>
+                
                 {/* Employee Details Section */}
                 <Grid item xs={12}>
                   <Typography variant="h5" className="payslip-header">
