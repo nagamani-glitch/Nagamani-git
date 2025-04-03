@@ -313,63 +313,162 @@ const PayrollSystem = () => {
     saveAs(data, "employees.xlsx");
   };
 
+  // const importFromExcel = async (event) => {
+  //   try {
+  //     const file = event.target.files[0];
+  //     const reader = new FileReader();
+
+  //     reader.onload = async (e) => {
+  //       const data = new Uint8Array(e.target.result);
+  //       const workbook = XLSX.read(data, { type: "array" });
+  //       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+  //       const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+  //       // Validate and format each row before sending to API
+  //       const validEmployees = jsonData
+  //         .map((row) => ({
+  //           empId: String(row["Employee ID"] || "").trim(),
+  //           empName: String(row["Name"] || "").trim(),
+  //           department: String(row["Department"] || "").trim(),
+  //           designation: String(row["Designation"] || "").trim(),
+  //           basicPay: Number(row["Basic Pay"]) || 0,
+  //           bankName: String(row["Bank Name"] || "").trim(),
+  //           bankAccountNo: String(row["Bank Account No"] || "").trim(),
+  //           pfNo: String(row["PF Number"] || "").trim(),
+  //           uanNo: String(row["UAN Number"] || "").trim(),
+  //           panNo: String(row["PAN Number"] || "").trim(),
+  //           payableDays: Number(row["Payable Days"]) || 30,
+  //           lop: Number(row["LOP Days"]) || 0,
+  //           status: "Active",
+  //         }))
+  //         .filter((emp) => emp.empId && emp.empName && emp.basicPay > 0);
+
+  //       if (validEmployees.length === 0) {
+  //         showAlert("No valid employee data found in Excel file", "error");
+  //         return;
+  //       }
+
+  //       // Send all employees in a single API call
+  //       const response = await axios.post(`${API_URL}/employees/bulk`, {
+  //         employees: validEmployees,
+  //       });
+
+  //       if (response.data.success) {
+  //         await fetchEmployees();
+  //         showAlert(`Successfully imported ${validEmployees.length} employees`);
+  //       }
+
+  //       event.target.value = "";
+  //     };
+
+  //     reader.readAsArrayBuffer(file);
+  //   } catch (error) {
+  //     showAlert(
+  //       "Import failed: " + (error.response?.data?.message || error.message),
+  //       "error"
+  //     );
+  //   }
+  // };
+
   const importFromExcel = async (event) => {
     try {
       const file = event.target.files[0];
+      if (!file) {
+        showAlert("No file selected", "error");
+        return;
+      }
+      
       const reader = new FileReader();
-
+  
       reader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-        // Validate and format each row before sending to API
-        const validEmployees = jsonData
-          .map((row) => ({
-            empId: String(row["Employee ID"] || "").trim(),
-            empName: String(row["Name"] || "").trim(),
-            department: String(row["Department"] || "").trim(),
-            designation: String(row["Designation"] || "").trim(),
-            basicPay: Number(row["Basic Pay"]) || 0,
-            bankName: String(row["Bank Name"] || "").trim(),
-            bankAccountNo: String(row["Bank Account No"] || "").trim(),
-            pfNo: String(row["PF Number"] || "").trim(),
-            uanNo: String(row["UAN Number"] || "").trim(),
-            panNo: String(row["PAN Number"] || "").trim(),
-            payableDays: Number(row["Payable Days"]) || 30,
-            lop: Number(row["LOP Days"]) || 0,
-            status: "Active",
-          }))
-          .filter((emp) => emp.empId && emp.empName && emp.basicPay > 0);
-
-        if (validEmployees.length === 0) {
-          showAlert("No valid employee data found in Excel file", "error");
-          return;
-        }
-
-        // Send all employees in a single API call
-        const response = await axios.post(`${API_URL}/employees/bulk`, {
-          employees: validEmployees,
-        });
-
-        if (response.data.success) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+  
+          // Validate and format each row before sending to API
+          const validEmployees = jsonData
+            .map((row) => ({
+              empId: String(row["Employee ID"] || "").trim(),
+              empName: String(row["Name"] || "").trim(),
+              department: String(row["Department"] || "").trim(),
+              designation: String(row["Designation"] || "").trim(),
+              basicPay: parseFloat(row["Basic Pay"]) || 0,
+              bankName: String(row["Bank Name"] || "").trim(),
+              bankAccountNo: String(row["Bank Account No"] || "").trim(),
+              pfNo: String(row["PF Number"] || "").trim(),
+              uanNo: String(row["UAN Number"] || "").trim(),
+              panNo: String(row["PAN Number"] || "").trim(),
+              payableDays: parseInt(row["Payable Days"]) || 30,
+              lop: parseFloat(row["LOP Days"]) || 0,
+              status: "Active",
+              email: row["Email"] || "",  // Add email field if it exists in Excel
+            }))
+            .filter((emp) => emp.empId && emp.empName && emp.basicPay > 0);
+  
+          if (validEmployees.length === 0) {
+            showAlert("No valid employee data found in Excel file", "error");
+            return;
+          }
+  
+          // Show loading message
+          showAlert(`Importing ${validEmployees.length} employees...`, "info");
+  
+          // Try individual employee creation instead of bulk
+          let successCount = 0;
+          for (const employee of validEmployees) {
+            try {
+              // Use the single employee creation endpoint instead of bulk
+              await axios.post(`${API_URL}/employees`, employee);
+              successCount++;
+            } catch (err) {
+              console.error(`Failed to import employee ${employee.empId}:`, err);
+              // Continue with the next employee
+            }
+          }
+  
+          // Clear the file input
+          event.target.value = "";
+          
+          // Refresh all data
           await fetchEmployees();
-          showAlert(`Successfully imported ${validEmployees.length} employees`);
+          
+          if (successCount > 0) {
+            showAlert(`Successfully imported ${successCount} out of ${validEmployees.length} employees`);
+          } else {
+            showAlert("Failed to import any employees", "error");
+          }
+        } catch (error) {
+          console.error("Error processing Excel file:", error);
+          showAlert(
+            error.response?.data?.message || "Error processing Excel file",
+            "error"
+          );
+          // Clear the file input
+          event.target.value = "";
         }
-
+      };
+  
+      reader.onerror = () => {
+        showAlert("Error reading file", "error");
         event.target.value = "";
       };
-
+  
       reader.readAsArrayBuffer(file);
     } catch (error) {
+      console.error("Import error:", error);
       showAlert(
         "Import failed: " + (error.response?.data?.message || error.message),
         "error"
       );
+      // Clear the file input
+      if (event.target) {
+        event.target.value = "";
+      }
     }
   };
-
+  
   const [newEmployee, setNewEmployee] = useState({
     empId: "",
     empName: "",
@@ -900,7 +999,6 @@ const PayrollSystem = () => {
     // Return the net impact
     return totalAllowances - totalDeductions;
   };
-
   return (
     <Container className="payroll-container">
       <Snackbar
@@ -1124,7 +1222,6 @@ const PayrollSystem = () => {
             </Table>
           </TableContainer>
         </TabPanel>
-
         {/* Allowances & Deductions Tab */}
 
         <TabPanel value={tabIndex} index={1}>
@@ -1363,7 +1460,6 @@ const PayrollSystem = () => {
             </Table>
           </TableContainer>
         </TabPanel>
-
         {/* Payslips Tab */}
         <TabPanel value={tabIndex} index={2}>
           {employeeData.map((emp) => (
@@ -1600,7 +1696,6 @@ const PayrollSystem = () => {
             </Paper>
           ))}
         </TabPanel>
-
         {/* Employee Preview Dialog */}
         <Dialog
           open={employeePreviewDialogOpen}
@@ -1843,7 +1938,6 @@ const PayrollSystem = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
         {/* Allowances & Deductions Preview Dialog */}
         <Dialog
           open={allowancePreviewDialogOpen}
@@ -2145,7 +2239,6 @@ const PayrollSystem = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
         {/* Create Employee Dialog */}
         <Dialog
           open={openEmployeeDialog}
@@ -2336,7 +2429,6 @@ const PayrollSystem = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
         {/* Create Allowance Dialog */}
         <Dialog
           open={openDialog}
@@ -2557,7 +2649,6 @@ const PayrollSystem = () => {
                       </Box>
                     </Box>
                   </Grid>
-
                   {selectedAllowances.length > 0 && (
                     <Grid item xs={12}>
                       <Paper sx={{ p: 2, bgcolor: "#f5f5f5" }}>
@@ -2618,7 +2709,6 @@ const PayrollSystem = () => {
                       </Paper>
                     </Grid>
                   )}
-
                   {/* Optional Deduction Selection */}
                   <Grid item xs={12} sx={{ mt: 3 }}>
                     <Typography
@@ -2722,7 +2812,6 @@ const PayrollSystem = () => {
                       </FormGroup>
                     </FormControl>
                   </Grid>
-
                   {selectedDeductions.length > 0 && (
                     <Grid item xs={12}>
                       <Paper
@@ -2907,7 +2996,6 @@ const PayrollSystem = () => {
             )}
           </DialogActions>
         </Dialog>
-
         {/* Create Deduction Dialog */}
         <Dialog
           open={openDeductionDialog}
