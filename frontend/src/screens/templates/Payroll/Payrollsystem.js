@@ -33,9 +33,6 @@ import {
   InputLabel,
   Fade,
   Checkbox,
-  Divider,
-  FormControlLabel,
-  FormGroup,
 } from "@mui/material";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -97,10 +94,8 @@ const PayrollSystem = () => {
   // Add these state variables near your other state declarations
   const [selectedAllowances, setSelectedAllowances] = useState([]);
   const [bulkEmployeeId, setBulkEmployeeId] = useState("");
-  // const [bulkAllowancePercentage, setBulkAllowancePercentage] = useState(0);
   const [allowancePercentages, setAllowancePercentages] = useState({});
 
-  // for the add deduction
   // Add these state variables for deductions similar to allowances
   const [selectedDeductions, setSelectedDeductions] = useState([]);
   const [deductionPercentages, setDeductionPercentages] = useState({});
@@ -178,10 +173,6 @@ const PayrollSystem = () => {
     setAllowancePreviewDialogOpen(false);
     setPreviewEmployee(null);
   };
-
-  // Add these state variables for allowance preview
-  const [previewAllowanceDialog, setPreviewAllowanceDialog] = useState(false);
-  const [previewAllowance, setPreviewAllowance] = useState(null);
 
   // Add this function to handle multiple allowance selection
   const handleAllowanceSelection = (allowanceType, isChecked) => {
@@ -313,63 +304,6 @@ const PayrollSystem = () => {
     saveAs(data, "employees.xlsx");
   };
 
-  // const importFromExcel = async (event) => {
-  //   try {
-  //     const file = event.target.files[0];
-  //     const reader = new FileReader();
-
-  //     reader.onload = async (e) => {
-  //       const data = new Uint8Array(e.target.result);
-  //       const workbook = XLSX.read(data, { type: "array" });
-  //       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-  //       const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-  //       // Validate and format each row before sending to API
-  //       const validEmployees = jsonData
-  //         .map((row) => ({
-  //           empId: String(row["Employee ID"] || "").trim(),
-  //           empName: String(row["Name"] || "").trim(),
-  //           department: String(row["Department"] || "").trim(),
-  //           designation: String(row["Designation"] || "").trim(),
-  //           basicPay: Number(row["Basic Pay"]) || 0,
-  //           bankName: String(row["Bank Name"] || "").trim(),
-  //           bankAccountNo: String(row["Bank Account No"] || "").trim(),
-  //           pfNo: String(row["PF Number"] || "").trim(),
-  //           uanNo: String(row["UAN Number"] || "").trim(),
-  //           panNo: String(row["PAN Number"] || "").trim(),
-  //           payableDays: Number(row["Payable Days"]) || 30,
-  //           lop: Number(row["LOP Days"]) || 0,
-  //           status: "Active",
-  //         }))
-  //         .filter((emp) => emp.empId && emp.empName && emp.basicPay > 0);
-
-  //       if (validEmployees.length === 0) {
-  //         showAlert("No valid employee data found in Excel file", "error");
-  //         return;
-  //       }
-
-  //       // Send all employees in a single API call
-  //       const response = await axios.post(`${API_URL}/employees/bulk`, {
-  //         employees: validEmployees,
-  //       });
-
-  //       if (response.data.success) {
-  //         await fetchEmployees();
-  //         showAlert(`Successfully imported ${validEmployees.length} employees`);
-  //       }
-
-  //       event.target.value = "";
-  //     };
-
-  //     reader.readAsArrayBuffer(file);
-  //   } catch (error) {
-  //     showAlert(
-  //       "Import failed: " + (error.response?.data?.message || error.message),
-  //       "error"
-  //     );
-  //   }
-  // };
-
   const importFromExcel = async (event) => {
     try {
       const file = event.target.files[0];
@@ -377,16 +311,16 @@ const PayrollSystem = () => {
         showAlert("No file selected", "error");
         return;
       }
-      
+
       const reader = new FileReader();
-  
+
       reader.onload = async (e) => {
         try {
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: "array" });
           const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
-  
+
           // Validate and format each row before sending to API
           const validEmployees = jsonData
             .map((row) => ({
@@ -403,18 +337,18 @@ const PayrollSystem = () => {
               payableDays: parseInt(row["Payable Days"]) || 30,
               lop: parseFloat(row["LOP Days"]) || 0,
               status: "Active",
-              email: row["Email"] || "",  // Add email field if it exists in Excel
+              email: row["Email"] || "", // Add email field if it exists in Excel
             }))
             .filter((emp) => emp.empId && emp.empName && emp.basicPay > 0);
-  
+
           if (validEmployees.length === 0) {
             showAlert("No valid employee data found in Excel file", "error");
             return;
           }
-  
+
           // Show loading message
           showAlert(`Importing ${validEmployees.length} employees...`, "info");
-  
+
           // Try individual employee creation instead of bulk
           let successCount = 0;
           for (const employee of validEmployees) {
@@ -423,19 +357,24 @@ const PayrollSystem = () => {
               await axios.post(`${API_URL}/employees`, employee);
               successCount++;
             } catch (err) {
-              console.error(`Failed to import employee ${employee.empId}:`, err);
+              console.error(
+                `Failed to import employee ${employee.empId}:`,
+                err
+              );
               // Continue with the next employee
             }
           }
-  
+
           // Clear the file input
           event.target.value = "";
-          
+
           // Refresh all data
           await fetchEmployees();
-          
+
           if (successCount > 0) {
-            showAlert(`Successfully imported ${successCount} out of ${validEmployees.length} employees`);
+            showAlert(
+              `Successfully imported ${successCount} out of ${validEmployees.length} employees`
+            );
           } else {
             showAlert("Failed to import any employees", "error");
           }
@@ -449,12 +388,12 @@ const PayrollSystem = () => {
           event.target.value = "";
         }
       };
-  
+
       reader.onerror = () => {
         showAlert("Error reading file", "error");
         event.target.value = "";
       };
-  
+
       reader.readAsArrayBuffer(file);
     } catch (error) {
       console.error("Import error:", error);
@@ -468,7 +407,7 @@ const PayrollSystem = () => {
       }
     }
   };
-  
+
   const [newEmployee, setNewEmployee] = useState({
     empId: "",
     empName: "",
@@ -764,59 +703,6 @@ const PayrollSystem = () => {
     }
   };
 
-  // Update the handleAddDeduction function
-  const handleAddDeduction = async () => {
-    try {
-      if (
-        !newDeduction.empId ||
-        !newDeduction.name ||
-        !newDeduction.percentage
-      ) {
-        showAlert("Please fill all required fields", "error");
-        return;
-      }
-
-      const employee = employeeData.find((e) => e.empId === newDeduction.empId);
-      if (!employee) {
-        showAlert("Invalid employee selected", "error");
-        return;
-      }
-
-      const calculatedAmount = calculateDeductionAmount(
-        employee.basicPay,
-        newDeduction.percentage
-      );
-
-      const payload = {
-        empId: newDeduction.empId,
-        name: newDeduction.name,
-        amount: calculatedAmount.toString(),
-        percentage: parseFloat(newDeduction.percentage),
-        category: newDeduction.category || "Tax",
-        status: newDeduction.status || "Active",
-        isRecurring: true,
-      };
-
-      if (editMode && selectedItem) {
-        // For edit mode, we need to use the virtual ID format: empId_deductionName
-        const id = `${selectedItem.empId}_${selectedItem.name}`;
-        await axios.put(`${API_URL}/deductions/${id}`, payload);
-        showAlert("Deduction updated successfully");
-      } else {
-        await axios.post(`${API_URL}/deductions`, payload);
-        showAlert("Deduction added successfully");
-      }
-
-      await fetchDeductions();
-      handleCloseDeductionDialog();
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error saving deduction",
-        "error"
-      );
-    }
-  };
-
   const handleCloseEmployeeDialog = () => {
     setOpenEmployeeDialog(false);
     setEditMode(false);
@@ -854,25 +740,6 @@ const PayrollSystem = () => {
       amount: "",
       percentage: 0,
       category: "Regular",
-      status: "Active",
-      description: "",
-      isRecurring: true,
-    });
-  };
-
-  const handleCloseDeductionDialog = () => {
-    setOpenDeductionDialog(false);
-    setEditMode(false);
-    setSelectedItem(null);
-    setSelectedDeductions([]);
-    setDeductionPercentages({});
-    setBulkDeductionEmployeeId("");
-    setNewDeduction({
-      empId: "",
-      name: "",
-      amount: "",
-      percentage: 0,
-      category: "Tax",
       status: "Active",
       description: "",
       isRecurring: true,
@@ -1222,6 +1089,7 @@ const PayrollSystem = () => {
             </Table>
           </TableContainer>
         </TabPanel>
+
         {/* Allowances & Deductions Tab */}
 
         <TabPanel value={tabIndex} index={1}>
@@ -1460,6 +1328,7 @@ const PayrollSystem = () => {
             </Table>
           </TableContainer>
         </TabPanel>
+
         {/* Payslips Tab */}
         <TabPanel value={tabIndex} index={2}>
           {employeeData.map((emp) => (
@@ -1473,7 +1342,6 @@ const PayrollSystem = () => {
               }}
             >
               <Grid container spacing={3}>
-                
                 {/* Employee Details Section */}
                 <Grid item xs={12}>
                   <Typography variant="h5" className="payslip-header">
@@ -2433,7 +2301,7 @@ const PayrollSystem = () => {
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
-          maxWidth="md"
+          maxWidth="sm"
           fullWidth
           PaperProps={{
             elevation: 0,
@@ -2441,7 +2309,7 @@ const PayrollSystem = () => {
           }}
         >
           <DialogTitle className="dialog-title">
-            {editMode ? "Edit Allowance" : "Add Allowances"}
+            {editMode ? "Edit Allowance" : "Add New Allowance"}
           </DialogTitle>
           <DialogContent className="dialog-content">
             <Grid container spacing={2}>
@@ -2471,9 +2339,87 @@ const PayrollSystem = () => {
                 </FormControl>
               </Grid>
 
-              {!editMode ? (
+              {editMode ? (
                 <>
-                  {/* Multiple Allowance Selection */}
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Allowance Name"
+                      fullWidth
+                      value={newAllowance.name}
+                      onChange={(e) =>
+                        setNewAllowance({
+                          ...newAllowance,
+                          name: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Percentage"
+                      type="number"
+                      fullWidth
+                      value={newAllowance.percentage}
+                      onChange={(e) =>
+                        setNewAllowance({
+                          ...newAllowance,
+                          percentage: Math.max(
+                            0,
+                            Math.min(100, Number(e.target.value))
+                          ),
+                        })
+                      }
+                      required
+                      InputProps={{
+                        inputProps: { min: 0, max: 100 },
+                        endAdornment: (
+                          <InputAdornment position="end">%</InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth required>
+                      <InputLabel>Category</InputLabel>
+                      <Select
+                        value={newAllowance.category}
+                        onChange={(e) =>
+                          setNewAllowance({
+                            ...newAllowance,
+                            category: e.target.value,
+                          })
+                        }
+                        label="Category"
+                      >
+                        <MenuItem value="Regular">Regular</MenuItem>
+                        <MenuItem value="Travel">Travel</MenuItem>
+                        <MenuItem value="Special">Special</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth required>
+                      <InputLabel>Status</InputLabel>
+                      <Select
+                        value={newAllowance.status}
+                        onChange={(e) =>
+                          setNewAllowance({
+                            ...newAllowance,
+                            status: e.target.value,
+                          })
+                        }
+                        label="Status"
+                      >
+                        <MenuItem value="Active">Active</MenuItem>
+                        <MenuItem value="Inactive">Inactive</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </>
+              ) : (
+                <>
+                  {/* Table-like structure for allowances, similar to deduction dialog */}
                   <Grid item xs={12}>
                     <Typography variant="subtitle1" sx={{ mb: 1 }}>
                       Select Allowances to Add
@@ -2649,6 +2595,7 @@ const PayrollSystem = () => {
                       </Box>
                     </Box>
                   </Grid>
+
                   {selectedAllowances.length > 0 && (
                     <Grid item xs={12}>
                       <Paper sx={{ p: 2, bgcolor: "#f5f5f5" }}>
@@ -2709,6 +2656,7 @@ const PayrollSystem = () => {
                       </Paper>
                     </Grid>
                   )}
+
                   {/* Optional Deduction Selection */}
                   <Grid item xs={12} sx={{ mt: 3 }}>
                     <Typography
@@ -2722,96 +2670,88 @@ const PayrollSystem = () => {
                     >
                       Add Deductions (Optional)
                     </Typography>
-                    <FormControl component="fieldset">
-                      <FormGroup>
-                        {[
-                          {
-                            name: "PROFESSIONAL TAX",
-                            desc: "State-mandated tax on employment",
-                          },
-                          {
-                            name: "INCOME TAX",
-                            desc: "Tax on employee income",
-                          },
-                          {
-                            name: "PROVIDENT FUND",
-                            desc: "Retirement savings contribution",
-                          },
-                          {
-                            name: "HEALTH INSURANCE",
-                            desc: "Medical insurance premium",
-                          },
-                        ].map((deduction) => (
-                          <FormControlLabel
-                            key={deduction.name}
-                            control={
-                              <Checkbox
-                                checked={selectedDeductions.includes(
-                                  deduction.name
-                                )}
-                                onChange={(e) =>
-                                  handleDeductionSelection(
-                                    deduction.name,
-                                    e.target.checked
-                                  )
-                                }
-                              />
-                            }
-                            label={
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 1,
-                                }}
-                              >
-                                <Typography variant="body2">
-                                  {deduction.name}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  ({deduction.desc})
-                                </Typography>
-                                {selectedDeductions.includes(
-                                  deduction.name
-                                ) && (
-                                  <TextField
-                                    size="small"
-                                    type="number"
-                                    label="Percentage"
-                                    value={
-                                      deductionPercentages[deduction.name] || 0
-                                    }
-                                    onChange={(e) =>
-                                      handleDeductionPercentageChange(
-                                        deduction.name,
-                                        e.target.value
-                                      )
-                                    }
-                                    InputProps={{
-                                      endAdornment: (
-                                        <InputAdornment position="end">
-                                          %
-                                        </InputAdornment>
-                                      ),
-                                      inputProps: {
-                                        min: 0,
-                                        max: 100,
-                                        step: 0.5,
-                                      },
-                                    }}
-                                    sx={{ width: "120px", ml: 2 }}
-                                  />
-                                )}
-                              </Box>
-                            }
-                          />
-                        ))}
-                      </FormGroup>
-                    </FormControl>
+                    <TableContainer
+                      component={Paper}
+                      sx={{ maxHeight: 300, mb: 2 }}
+                    >
+                      <Table stickyHeader size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell padding="checkbox">Select</TableCell>
+                            <TableCell>Deduction Type</TableCell>
+                            <TableCell>Description</TableCell>
+                            <TableCell>Percentage (%)</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {[
+                            {
+                              name: "PROFESSIONAL TAX",
+                              desc: "State-mandated tax on employment",
+                            },
+                            {
+                              name: "INCOME TAX",
+                              desc: "Tax on employee income",
+                            },
+                            {
+                              name: "PROVIDENT FUND",
+                              desc: "Retirement savings contribution",
+                            },
+                            {
+                              name: "HEALTH INSURANCE",
+                              desc: "Medical insurance premium",
+                            },
+                          ].map((deduction) => (
+                            <TableRow key={deduction.name}>
+                              <TableCell padding="checkbox">
+                                <Checkbox
+                                  checked={selectedDeductions.includes(
+                                    deduction.name
+                                  )}
+                                  onChange={(e) =>
+                                    handleDeductionSelection(
+                                      deduction.name,
+                                      e.target.checked
+                                    )
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell>{deduction.name}</TableCell>
+                              <TableCell>{deduction.desc}</TableCell>
+                              <TableCell>
+                                <TextField
+                                  type="number"
+                                  size="small"
+                                  value={
+                                    deductionPercentages[deduction.name] || 0
+                                  }
+                                  onChange={(e) =>
+                                    handleDeductionPercentageChange(
+                                      deduction.name,
+                                      e.target.value
+                                    )
+                                  }
+                                  disabled={
+                                    !selectedDeductions.includes(deduction.name)
+                                  }
+                                  InputProps={{
+                                    endAdornment: (
+                                      <InputAdornment position="end">
+                                        %
+                                      </InputAdornment>
+                                    ),
+                                    inputProps: { min: 0, max: 100, step: 0.5 },
+                                  }}
+                                  sx={{ width: "100px" }}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
                   </Grid>
+
                   {selectedDeductions.length > 0 && (
                     <Grid item xs={12}>
                       <Paper
@@ -2884,85 +2824,6 @@ const PayrollSystem = () => {
                     </Grid>
                   )}
                 </>
-              ) : (
-                <>
-                  {/* Single Allowance Edit Mode */}
-                  <Grid item xs={12}>
-                    <TextField
-                      label="Allowance Name"
-                      fullWidth
-                      value={newAllowance.name}
-                      onChange={(e) =>
-                        setNewAllowance({
-                          ...newAllowance,
-                          name: e.target.value,
-                        })
-                      }
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      label="Percentage"
-                      type="number"
-                      fullWidth
-                      value={newAllowance.percentage}
-                      onChange={(e) =>
-                        setNewAllowance({
-                          ...newAllowance,
-                          percentage: Math.max(
-                            0,
-                            Math.min(100, Number(e.target.value))
-                          ),
-                        })
-                      }
-                      required
-                      InputProps={{
-                        inputProps: { min: 0, max: 100 },
-                        endAdornment: (
-                          <InputAdornment position="end">%</InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth required>
-                      <InputLabel>Category</InputLabel>
-                      <Select
-                        value={newAllowance.category}
-                        onChange={(e) =>
-                          setNewAllowance({
-                            ...newAllowance,
-                            category: e.target.value,
-                          })
-                        }
-                        label="Category"
-                      >
-                        <MenuItem value="Regular">Regular</MenuItem>
-                        <MenuItem value="Travel">Travel</MenuItem>
-                        <MenuItem value="Special">Special</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth required>
-                      <InputLabel>Status</InputLabel>
-                      <Select
-                        value={newAllowance.status}
-                        onChange={(e) =>
-                          setNewAllowance({
-                            ...newAllowance,
-                            status: e.target.value,
-                          })
-                        }
-                        label="Status"
-                      >
-                        <MenuItem value="Active">Active</MenuItem>
-                        <MenuItem value="Inactive">Inactive</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </>
               )}
             </Grid>
           </DialogContent>
@@ -2994,134 +2855,6 @@ const PayrollSystem = () => {
                   ` & ${selectedDeductions.length} Deduction(s)`}
               </Button>
             )}
-          </DialogActions>
-        </Dialog>
-        {/* Create Deduction Dialog */}
-        <Dialog
-          open={openDeductionDialog}
-          onClose={handleCloseDeductionDialog}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{
-            elevation: 0,
-            className: "dialog-paper",
-          }}
-        >
-          <DialogTitle className="dialog-title">
-            {editMode ? "Edit Deduction" : "Add New Deduction"}
-          </DialogTitle>
-          <DialogContent className="dialog-content">
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <FormControl fullWidth required>
-                  <InputLabel>Employee</InputLabel>
-                  <Select
-                    value={newDeduction.empId}
-                    onChange={(e) =>
-                      setNewDeduction({
-                        ...newDeduction,
-                        empId: e.target.value,
-                      })
-                    }
-                    label="Employee"
-                  >
-                    {employeeData.map((emp) => (
-                      <MenuItem key={emp.empId} value={emp.empId}>
-                        {emp.empId} - {emp.empName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Deduction Name"
-                  fullWidth
-                  value={newDeduction.name}
-                  onChange={(e) =>
-                    setNewDeduction({ ...newDeduction, name: e.target.value })
-                  }
-                  required
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Percentage"
-                  type="number"
-                  fullWidth
-                  value={newDeduction.percentage}
-                  onChange={(e) =>
-                    setNewDeduction({
-                      ...newDeduction,
-                      percentage: Math.max(
-                        0,
-                        Math.min(100, Number(e.target.value))
-                      ),
-                    })
-                  }
-                  required
-                  InputProps={{
-                    inputProps: { min: 0, max: 100 },
-                    endAdornment: (
-                      <InputAdornment position="end">%</InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth required>
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    value={newDeduction.category}
-                    onChange={(e) =>
-                      setNewDeduction({
-                        ...newDeduction,
-                        category: e.target.value,
-                      })
-                    }
-                    label="Category"
-                  >
-                    <MenuItem value="Tax">Tax</MenuItem>
-                    <MenuItem value="Insurance">Insurance</MenuItem>
-                    <MenuItem value="Loan">Loan</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth required>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    value={newDeduction.status}
-                    onChange={(e) =>
-                      setNewDeduction({
-                        ...newDeduction,
-                        status: e.target.value,
-                      })
-                    }
-                    label="Status"
-                  >
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Inactive">Inactive</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions className="dialog-actions">
-            <Button
-              onClick={handleCloseDeductionDialog}
-              color="error"
-              variant="outlined"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddDeduction}
-              color="primary"
-              variant="contained"
-            >
-              {editMode ? "Update" : "Add"} Deduction
-            </Button>
           </DialogActions>
         </Dialog>
       </Paper>
