@@ -65,33 +65,37 @@ export const deleteObjective = async (req, res) => {
 };
 
 // export const toggleArchive = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const objective = await Objective.findById(id);
-//     if (!objective) {
-//       return res.status(404).json({ message: 'Objective not found' });
+//     try {
+//       const { id } = req.params;
+//       const objective = await Objective.findById(id);
+      
+//       if (!objective) {
+//         return res.status(404).json({ message: 'Objective not found' });
+//       }
+      
+//       objective.archived = !objective.archived;
+//       const updatedObjective = await objective.save();
+//       res.status(200).json(updatedObjective);
+//     } catch (error) {
+//       res.status(400).json({ message: error.message });
 //     }
-//     objective.archived = !objective.archived;
-//     const updatedObjective = await objective.save();
-//     res.status(200).json(updatedObjective);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
+//   };
 
 export const toggleArchive = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const objective = await Objective.findById(id);
-      
-      if (!objective) {
-        return res.status(404).json({ message: 'Objective not found' });
-      }
-      
-      objective.archived = !objective.archived;
-      const updatedObjective = await objective.save();
-      res.status(200).json(updatedObjective);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+  try {
+    const { id } = req.params;
+    const objective = await Objective.findById(id);
+    
+    if (!objective) {
+      return res.status(404).json({ message: 'Objective not found' });
     }
-  };
+    
+    objective.archived = !objective.archived;
+    const updatedObjective = await objective.save();
+    
+    res.status(200).json(updatedObjective);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+  
