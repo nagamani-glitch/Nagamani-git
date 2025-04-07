@@ -8,7 +8,7 @@ import connectDB from './config/db.js';
 import employeesRouter from './routes/employeesRouter.js'
 import authRouter from './routes/authRouter.js'
 import profileRouter from './routes/profileRouter.js'
-import contractRouter from './routes/contractRouter.js'
+// import contractRouter from './routes/contractRouter.js'
 import applicantProfileRoutes from './routes/applicantProfileRoutes.js'
 import candidateRoutes from './routes/candidateRoutes.js'
 import employeeRoutes from './routes/employeeRoutes.js'
@@ -104,7 +104,7 @@ app.use("/api/employees", employeesRouter);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/auth", authRouter);
 app.use("/api/profiles", profileRouter);
-app.use("/api/contracts", contractRouter);
+// app.use("/api/contracts", contractRouter);
 app.use(candidateRoutes);
 app.use(surveyRoutes);
 app.use('/api/applicantProfiles', applicantProfileRoutes);
