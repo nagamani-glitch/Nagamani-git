@@ -7,8 +7,7 @@ const disciplinaryActionSchema = new mongoose.Schema({
   },
   action: {
     type: String,
-    required: true,
-    enum: ['Warning', 'Suspension', 'Termination', 'Written Notice']
+    required: true
   },
   description: {
     type: String,
@@ -20,28 +19,28 @@ const disciplinaryActionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    required: true,
-    enum: ['Warning', 'Suspension', 'Termination', 'Written Notice']
+    required: true
   },
   attachments: {
     filename: String,
-    path: String,
     originalName: String,
-    mimetype: String
+    path: String
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  // Add employee reference fields
+  employeeId: {
+    type: String
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+  email: {
+    type: String
+  },
+  department: {
+    type: String
+  },
+  designation: {
+    type: String
   }
-});
+}, { timestamps: true });
 
-disciplinaryActionSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
+const DisciplinaryAction = mongoose.model('DisciplinaryAction', disciplinaryActionSchema);
 
-export default mongoose.model('DisciplinaryAction', disciplinaryActionSchema);
+export default DisciplinaryAction;
