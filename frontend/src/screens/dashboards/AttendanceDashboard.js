@@ -587,7 +587,7 @@ function AttendanceDashboard() {
         <Container fluid className="attendance-dashboard">
           <h2 className="page-title">Attendance Dashboard</h2>
           
-          <Row className="stats-cards">
+          <Row className="stats-cards-att">
             <Col md={3}>
               <Card className="stat-card improved-card">
                 <Card.Body>
@@ -645,6 +645,8 @@ function AttendanceDashboard() {
             </Col>
           </Row>
           
+
+
           <Row className="mt-4">
             <Col md={6}>
               <Card>
