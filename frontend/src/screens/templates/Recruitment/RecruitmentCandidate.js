@@ -177,13 +177,7 @@ const RecruitmentCandidate = () => {
     message: "",
     severity: "success",
   });
-  // const [newCandidate, setNewCandidate] = useState({
-  //   name: "",
-  //   email: "",
-  //   position: "",
-  //   status: "Not-Hired",
-  //   color: statusColors["Not-Hired"],
-  // });
+
   const [newCandidate, setNewCandidate] = useState({
     name: "",
     email: "",
@@ -233,14 +227,6 @@ const RecruitmentCandidate = () => {
     }
   };
 
-  // const handleStatusChange = (event) => {
-  //   const status = event.target.value;
-  //   setNewCandidate({
-  //     ...newCandidate,
-  //     status: status,
-  //     color: statusColors[status],
-  //   });
-  // };
   const handleStatusChange = (event) => {
     const status = event.target.value;
     setNewCandidate({
