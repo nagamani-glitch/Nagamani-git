@@ -29,8 +29,18 @@ import "./LeaveRequests.css";
 import Popover from "@mui/material/Popover";
 import { Stack } from "@mui/material";
 
-// Use the same API endpoint as MyLeaveRequests.js
-const API_URL = "http://localhost:5000/api/my-leave-requests";
+// Use the new API endpoint for leave requests
+const API_URL = "http://localhost:5000/api/leave-requests";
+
+const LEAVE_TYPES = [
+  { value: 'annual', label: 'Annual Leave' },
+  { value: 'sick', label: 'Sick Leave' },
+  { value: 'personal', label: 'Personal Leave' },
+  { value: 'maternity', label: 'Maternity Leave' },
+  { value: 'paternity', label: 'Paternity Leave' },
+  { value: 'casual', label: 'Casual Leave' },
+  { value: 'earned', label: 'Earned Leave' }
+];
 
 const LeaveRequests = () => {
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
@@ -144,8 +154,9 @@ const LeaveRequests = () => {
   const handleSaveComment = async () => {
     try {
       setLoading(true);
+      // Add a comment endpoint to your backend if needed
       const response = await axios.put(
-        `${API_URL}/${selectedLeaveId}/comment`,
+        `${API_URL}/${selectedLeaveId}`,
         { comment: newComment }
       );
       
@@ -185,9 +196,35 @@ const LeaveRequests = () => {
     }
   };
 
+  const getLeaveTypeName = (typeValue) => {
+    const leaveType = LEAVE_TYPES.find(type => type.value === typeValue);
+    return leaveType ? leaveType.label : typeValue;
+  };
+
+  const calculateDays = (startDate, endDate, isHalfDay) => {
+    if (isHalfDay) return 0.5;
+    
+    // Use the numberOfDays field if available
+    return Math.ceil(
+      (new Date(endDate) - new Date(startDate)) /
+        (1000 * 60 * 60 * 24) + 1
+    );
+  };
+
   const filteredLeaveData = leaveData.filter((leave) => {
     const matchesType = !filters.type || leave.leaveType === filters.type;
     const matchesStatus = !filters.status || leave.status === filters.status;
+    
+    // Date range filtering
+    let matchesDateRange = true;
+    if (filters.dateRange.start && filters.dateRange.end) {
+      const startDate = new Date(filters.dateRange.start);
+      const endDate = new Date(filters.dateRange.end);
+      const leaveStartDate = new Date(leave.startDate);
+      
+      matchesDateRange = leaveStartDate >= startDate && leaveStartDate <= endDate;
+    }
+    
     const matchesSearch =
       leave.leaveType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       leave.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -197,7 +234,8 @@ const LeaveRequests = () => {
         leave.employeeName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (leave.employeeCode &&
         leave.employeeCode.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesType && matchesStatus && matchesSearch;
+        
+    return matchesType && matchesStatus && matchesSearch && matchesDateRange;
   });
 
   return (
@@ -260,15 +298,12 @@ const LeaveRequests = () => {
                       <div className="employee-code">{leave.employeeCode}</div>
                     </div>
                   </td>
-                  <td>{leave.leaveType}</td>
+                  <td>{getLeaveTypeName(leave.leaveType)}</td>
                   <td>
                     <div>
                       {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
                       <div className="leave-days">
-                        {leave.halfDay ? "Half Day" : `${Math.ceil(
-                          (new Date(leave.endDate) - new Date(leave.startDate)) /
-                            (1000 * 60 * 60 * 24) + 1
-                        )} days`}
+                        {leave.halfDay ? "Half Day" : `${leave.numberOfDays || calculateDays(leave.startDate, leave.endDate, leave.halfDay)} days`}
                         {leave.halfDay && ` (${leave.halfDayType})`}
                       </div>
                     </div>
@@ -396,7 +431,7 @@ const LeaveRequests = () => {
             color="primary"
             disabled={loading}
           >
-            {loading ? <CircularProgress size={24} /> : "Save"}
+                        {loading ? <CircularProgress size={24} /> : "Save"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -416,47 +451,50 @@ const LeaveRequests = () => {
         }}
       >
         <Box sx={{ p: 2, width: 300 }}>
-          <Typography variant="subtitle1" gutterBottom>
+          <Typography variant="subtitle1" sx={{ mb: 2 }}>
             Filter Leave Requests
           </Typography>
           <Stack spacing={2}>
-            <Select
+            <TextField
+              select
+              label="Leave Type"
+              fullWidth
+              size="small"
               value={filters.type}
               onChange={(e) =>
                 setFilters({ ...filters, type: e.target.value })
               }
-              displayEmpty
+            >
+              <MenuItem value="">All Types</MenuItem>
+              {LEAVE_TYPES.map((type) => (
+                <MenuItem key={type.value} value={type.value}>
+                  {type.label}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              select
+              label="Status"
               fullWidth
               size="small"
-            >
-              <MenuItem value="">All Leave Types</MenuItem>
-              <MenuItem value="annual">Annual Leave</MenuItem>
-              <MenuItem value="sick">Sick Leave</MenuItem>
-              <MenuItem value="personal">Personal Leave</MenuItem>
-              <MenuItem value="maternity">Maternity Leave</MenuItem>
-              <MenuItem value="paternity">Paternity Leave</MenuItem>
-            </Select>
-
-            <Select
               value={filters.status}
               onChange={(e) =>
                 setFilters({ ...filters, status: e.target.value })
               }
-              displayEmpty
-              fullWidth
-              size="small"
             >
               <MenuItem value="">All Statuses</MenuItem>
               <MenuItem value="pending">Pending</MenuItem>
               <MenuItem value="approved">Approved</MenuItem>
               <MenuItem value="rejected">Rejected</MenuItem>
-            </Select>
+            </TextField>
 
             <TextField
               label="From Date"
               type="date"
-              size="small"
               fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
               value={filters.dateRange.start}
               onChange={(e) =>
                 setFilters({
@@ -464,14 +502,14 @@ const LeaveRequests = () => {
                   dateRange: { ...filters.dateRange, start: e.target.value },
                 })
               }
-              InputLabelProps={{ shrink: true }}
             />
 
             <TextField
               label="To Date"
               type="date"
-              size="small"
               fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
               value={filters.dateRange.end}
               onChange={(e) =>
                 setFilters({
@@ -479,30 +517,28 @@ const LeaveRequests = () => {
                   dateRange: { ...filters.dateRange, end: e.target.value },
                 })
               }
-              InputLabelProps={{ shrink: true }}
             />
 
-            <Button
-              variant="contained"
-              onClick={() => setFilterAnchorEl(null)}
-              fullWidth
-            >
-              Apply Filters
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setFilters({
-                  type: "",
-                  status: "",
-                  dateRange: { start: "", end: "" },
-                });
-                setFilterAnchorEl(null);
-              }}
-              fullWidth
-            >
-              Clear Filters
-            </Button>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={() =>
+                  setFilters({
+                    type: "",
+                    status: "",
+                    dateRange: { start: "", end: "" },
+                  })
+                }
+              >
+                Clear Filters
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => setFilterAnchorEl(null)}
+              >
+                Apply Filters
+              </Button>
+            </Box>
           </Stack>
         </Box>
       </Popover>
