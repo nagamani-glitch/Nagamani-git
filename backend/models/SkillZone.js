@@ -46,6 +46,23 @@ const candidateSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  // Employee reference fields with proper definitions
+  employeeId: {
+    type: String,
+    default: null
+  },
+  email: {
+    type: String,
+    default: null
+  },
+  department: {
+    type: String,
+    default: null
+  },
+  designation: {
+    type: String,
+    default: null
+  }
 });
 
 // SkillZone schema
