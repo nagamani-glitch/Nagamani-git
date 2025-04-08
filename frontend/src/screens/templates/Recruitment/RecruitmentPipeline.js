@@ -18,6 +18,8 @@ import {
   TextField,
   DialogActions,
   MenuItem,
+  Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
@@ -55,12 +57,16 @@ const RecruitmentPipeline = () => {
     department: "",
     column: "Initial",
     stars: 0,
+    employeeId: "",
   });
   const [editingCandidate, setEditingCandidate] = useState(null);
   const [validationErrors, setValidationErrors] = useState({
     name: "",
     email: "",
   });
+  const [registeredEmployees, setRegisteredEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const tabLabels = useMemo(
     () => [
@@ -71,9 +77,14 @@ const RecruitmentPipeline = () => {
     ],
     []
   );
+  
   useEffect(() => {
     fetchCandidates(tabLabels[tabIndex]);
   }, [tabIndex, tabLabels]);
+
+  useEffect(() => {
+    fetchRegisteredEmployees();
+  }, []);
 
   const validateName = (name) => {
     const nameRegex = /^[a-zA-Z\s]{2,30}$/;
@@ -100,10 +111,43 @@ const RecruitmentPipeline = () => {
     }
   };
 
+  const fetchRegisteredEmployees = async () => {
+    try {
+      setLoadingEmployees(true);
+      const response = await axios.get("http://localhost:5000/api/employees/registered");
+      setRegisteredEmployees(response.data);
+      setLoadingEmployees(false);
+    } catch (error) {
+      console.error("Error fetching registered employees:", error);
+      setLoadingEmployees(false);
+    }
+  };
+
+  const handleEmployeeSelect = (event, employee) => {
+    setSelectedEmployee(employee);
+    if (employee) {
+      // Populate the candidate form with employee data
+      setNewCandidate({
+        ...newCandidate,
+        name: `${employee.personalInfo?.firstName || ''} ${employee.personalInfo?.lastName || ''}`.trim(),
+        email: employee.personalInfo?.email || '',
+        department: employee.joiningDetails?.department || '',
+        employeeId: employee.Emp_ID || '',
+      });
+    }
+  };
+
   const handleDialogOpen = (candidate = null) => {
     if (candidate) {
       setEditingCandidate(candidate);
       setNewCandidate({ ...candidate });
+      // If candidate has an employeeId, find and set the corresponding employee
+      if (candidate.employeeId) {
+        const employee = registeredEmployees.find(emp => emp.Emp_ID === candidate.employeeId);
+        setSelectedEmployee(employee || null);
+      } else {
+        setSelectedEmployee(null);
+      }
     } else {
       setEditingCandidate(null);
       setNewCandidate({
@@ -112,7 +156,9 @@ const RecruitmentPipeline = () => {
         department: "",
         column: "Initial",
         stars: 0,
+        employeeId: "",
       });
+      setSelectedEmployee(null);
     }
     setIsDialogOpen(true);
   };
@@ -138,6 +184,7 @@ const RecruitmentPipeline = () => {
       });
     }
   };
+  
   const handleAddOrEditCandidate = async () => {
     if (
       !validateName(newCandidate.name) ||
@@ -446,6 +493,21 @@ const RecruitmentPipeline = () => {
                               }}
                             >
                               {candidate.name}
+                              {candidate.employeeId && (
+                                <Typography
+                                  component="span"
+                                  sx={{
+                                    ml: 1,
+                                    fontSize: "0.75rem",
+                                    color: "#1976d2",
+                                    backgroundColor: "#e3f2fd",
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                  }}
+                                >
+                                  {candidate.employeeId}
+                                </Typography>
+                              )}
                             </Typography>
 
                             <Typography
@@ -577,6 +639,37 @@ const RecruitmentPipeline = () => {
           {editingCandidate ? "Edit Candidate" : "Add New Candidate"}
         </DialogTitle>
         <DialogContent sx={{ p: 3, backgroundColor: "#f8fafc" }}>
+          {/* Employee Selection Autocomplete */}
+          <Autocomplete
+            id="employee-select"
+            options={registeredEmployees}
+            getOptionLabel={(option) => 
+              `${option.Emp_ID} - ${option.personalInfo?.firstName || ''} ${option.personalInfo?.lastName || ''}`
+            }
+            value={selectedEmployee}
+            onChange={handleEmployeeSelect}
+            loading={loadingEmployees}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Select Onboarded Employee"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {loadingEmployees ? <CircularProgress color="inherit" size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+            sx={{ mb: 2, mt: 2 }}
+          />
+          
           <TextField
             fullWidth
             label="Name"
@@ -584,7 +677,7 @@ const RecruitmentPipeline = () => {
             onChange={(e) => handleInputChange("name", e.target.value)}
             error={!!validationErrors.name}
             helperText={validationErrors.name}
-            sx={{ mb: 2, mt: 2 }}
+            sx={{ mb: 2 }}
           />
           <TextField
             fullWidth
@@ -665,6 +758,12 @@ const RecruitmentPipeline = () => {
             variant="contained"
             onClick={handleAddOrEditCandidate}
             disabled={!!validationErrors.name || !!validationErrors.email}
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              px: 3,
+              fontWeight: 600,
+            }}
           >
             {editingCandidate ? "Save Changes" : "Add Candidate"}
           </Button>
@@ -675,3 +774,4 @@ const RecruitmentPipeline = () => {
 };
 
 export default RecruitmentPipeline;
+
