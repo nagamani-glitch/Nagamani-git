@@ -26,6 +26,7 @@ import {
   Cell,
   BarChart,
   Bar,
+  ResponsiveContainer,
 } from "recharts";
 import {
   DownloadOutlined,
@@ -37,6 +38,7 @@ import {
 import axios from "axios";
 import * as XLSX from "xlsx";
 import FileSaver from "file-saver";
+import "./EmployeeReport.css"; // Add a separate CSS file for this component
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
@@ -171,6 +173,7 @@ const EmployeeReport = () => {
     fetchReportData(timePeriod);
     message.success("Report data refreshed");
   };
+  
   // Export data to Excel
   const handleExport = () => {
     try {
@@ -387,15 +390,6 @@ const EmployeeReport = () => {
           >
             View
           </Button>
-          {/* <Button
-            type="link"
-            size="small"
-            onClick={() =>
-              (window.location.href = `/Dashboards/profile/${record.empId}`)
-            }
-          >
-            Edit
-          </Button> */}
         </Space>
       ),
     },
@@ -454,16 +448,22 @@ const EmployeeReport = () => {
 
   return (
     <div className="employee-report-wrapper" style={{ padding: "24px" }}>
-      <div className="report-header" style={{ marginBottom: "24px" }}>
-        <Row justify="space-between" align="middle">
+      <div className="employee-report-header" style={{ marginBottom: "24px" }}>
+      <Row justify="space-between" align="middle" style={{ marginBottom: "16px" }}>
           <Col>
-            <h1 style={{ margin: 0, fontSize: "24px" }}>
-              Employee Onboarding & Offboarding Analytics
+            <h1 className="employee-report-title" style={{ margin: 0, fontSize: "24px", fontWeight: "600" }}>
+              Employee Analytics Dashboard
             </h1>
           </Col>
           <Col>
             <Space>
-              <RangePicker onChange={handleDateRangeChange} />
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={handleRefresh}
+                loading={loading}
+              >
+                Refresh
+              </Button>
               <Button
                 type="primary"
                 icon={<DownloadOutlined />}
@@ -471,131 +471,132 @@ const EmployeeReport = () => {
               >
                 Export Report
               </Button>
-              <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
-                Refresh
-              </Button>
             </Space>
           </Col>
         </Row>
       </div>
 
-      <div className="stats-cards" style={{ marginBottom: "24px" }}>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
+      {/* Stats Cards - Fixed with specific class names and improved spacing */}
+      <div className="employee-report-stats-container" style={{ marginBottom: "24px" }}>
+        <Row gutter={[16, 16]} className="employee-report-stats-row">
+          <Col xs={24} sm={12} md={6} className="employee-report-stat-col">
+            <Card className="employee-report-stat-card" loading={loading} bordered={false}>
               <Statistic
                 title="Total Onboarded"
                 value={reportData.stats.totalOnboarded}
-                prefix={<UserAddOutlined />}
-                valueStyle={{ color: "#3f8600" }}
+                prefix={<UserAddOutlined style={{ color: "#52c41a" }} />}
+                valueStyle={{ color: "#52c41a" }}
               />
-              <div
-                style={{ fontSize: "12px", color: "#8c8c8c", marginTop: "8px" }}
-              >
-                Active employees
-              </div>
             </Card>
           </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
+          <Col xs={24} sm={12} md={6} className="employee-report-stat-col">
+            <Card className="employee-report-stat-card" loading={loading} bordered={false}>
               <Statistic
                 title="Total Offboarded"
                 value={reportData.stats.totalOffboarded}
-                prefix={<UserDeleteOutlined />}
-                valueStyle={{ color: "#cf1322" }}
+                prefix={<UserDeleteOutlined style={{ color: "#ff4d4f" }} />}
+                valueStyle={{ color: "#ff4d4f" }}
               />
-              <div
-                style={{ fontSize: "12px", color: "#8c8c8c", marginTop: "8px" }}
-              >
-                Inactive employees
-              </div>
             </Card>
           </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
+          <Col xs={24} sm={12} md={6} className="employee-report-stat-col">
+            <Card className="employee-report-stat-card" loading={loading} bordered={false}>
               <Statistic
-                title="Average Onboarding Time"
+                title="Avg. Onboarding Time"
                 value={reportData.stats.averageOnboardingTime}
                 suffix="days"
+                prefix={<span style={{ color: "#1890ff" }}>~</span>}
+                valueStyle={{ color: "#1890ff" }}
               />
-              <Progress percent={70} size="small" />
             </Card>
           </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
+          <Col xs={24} sm={12} md={6} className="employee-report-stat-col">
+            <Card className="employee-report-stat-card" loading={loading} bordered={false}>
               <Statistic
                 title="Completion Rate"
                 value={reportData.stats.completionRate}
                 suffix="%"
-              />
-              <Progress
-                percent={reportData.stats.completionRate}
-                size="small"
-                status={
-                  reportData.stats.completionRate < 50 ? "exception" : "success"
+                prefix={
+                  <Progress
+                    type="circle"
+                    percent={reportData.stats.completionRate}
+                    width={20}
+                    style={{ marginRight: 8 }}
+                    showInfo={false}
+                  />
                 }
+                valueStyle={{ color: "#722ed1" }}
               />
             </Card>
           </Col>
         </Row>
       </div>
 
-      <div className="charts-section" style={{ marginBottom: "24px" }}>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} lg={16}>
-            <Card
-              title="Employee Trends (Based on Joining Date)"
-              extra={
-                <Select
-                  defaultValue={timePeriod}
-                  style={{ width: 120 }}
-                  onChange={handleTimePeriodChange}
-                  options={getTimePeriodOptions()}
-                />
-              }
-            >
-              {reportData.trendData.length > 0 ? (
-                <BarChart
-                  width={800}
-                  height={300}
+      <Row gutter={[16, 16]}>
+        {/* Trend Chart */}
+        <Col xs={24} lg={16}>
+          <Card
+            title="Employee Onboarding Trends"
+            className="employee-report-chart-card"
+            extra={
+              <Select
+                defaultValue={timePeriod}
+                style={{ width: 140 }}
+                onChange={handleTimePeriodChange}
+                options={getTimePeriodOptions()}
+              />
+            }
+            loading={loading}
+          >
+            <div style={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
                   data={reportData.trendData}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  style={{ maxWidth: "100%" }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="onboarded" name="Onboarded" fill="#8884d8" />
-                  <Bar dataKey="offboarded" name="Offboarded" fill="#82ca9d" />
-                </BarChart>
-              ) : (
-                <div
-                  style={{
-                    height: 300,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  No trend data available
-                </div>
-              )}
-            </Card>
-          </Col>
-          <Col xs={24} lg={8}>
-            <Card title="Department Distribution">
-              {reportData.departmentData.length > 0 ? (
-                <PieChart width={300} height={300} style={{ margin: "0 auto" }}>
+                  <Line
+                    type="monotone"
+                    dataKey="onboarded"
+                    stroke="#52c41a"
+                    activeDot={{ r: 8 }}
+                    name="Onboarded"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="offboarded"
+                    stroke="#ff4d4f"
+                    name="Offboarded"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </Col>
+
+        {/* Department Distribution */}
+        <Col xs={24} lg={8}>
+          <Card
+            title="Department Distribution"
+            className="employee-report-chart-card"
+            loading={loading}
+          >
+            <div style={{ height: 300, display: "flex", justifyContent: "center", alignItems: "center" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
                   <Pie
                     data={reportData.departmentData}
-                    dataKey="value"
-                    nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
+                    labelLine={false}
+                    outerRadius={80}
                     fill="#8884d8"
+                    dataKey="value"
+                    nameKey="name"
                     label={({ name, percent }) =>
                       `${name}: ${(percent * 100).toFixed(0)}%`
                     }
@@ -607,66 +608,56 @@ const EmployeeReport = () => {
                       />
                     ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(value, name) => [`${value} employees`, name]}
-                  />
-                  <Legend />
+                  <Tooltip formatter={(value, name) => [`${value} employees`, name]} />
                 </PieChart>
-              ) : (
-                <div
-                  style={{
-                    height: 300,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  No department data available
-                </div>
-              )}
-            </Card>
-          </Col>
-        </Row>
-      </div>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </Col>
+      </Row>
 
-      <Card className="table-section">
-        <div style={{ marginBottom: "16px" }}>
-          <Space wrap>
+      {/* Employee Table */}
+      <Card
+        title="Employee List"
+        className="employee-report-table-card"
+        style={{ marginTop: "16px" }}
+        extra={
+          <Space>
+            <RangePicker onChange={handleDateRangeChange} />
             <Select
-              defaultValue="all"
-              style={{ width: 120 }}
+              placeholder="Filter by Status"
+              style={{ width: 150 }}
               onChange={(value) => setFilterStatus(value)}
+              defaultValue="all"
             >
-              <Option value="all">All Employees</Option>
-              <Option value="onboarded">Onboarded</Option>
+              <Option value="all">All Status</Option>
+              <Option value="onboarded">Active</Option>
+              <Option value="offboarded">Inactive</Option>
               <Option value="incomplete">Incomplete</Option>
-              <Option value="offboarded">Offboarded</Option>
             </Select>
             <Select
               mode="multiple"
-              placeholder="Select Department"
+              placeholder="Filter by Department"
               style={{ width: 200 }}
-              onChange={(values) => setFilterDepartment(values)}
-              options={reportData.departmentData.map((dept) => ({
-                label: dept.name,
-                value: dept.name,
-              }))}
-            />
-            <Button icon={<FilterOutlined />}>More Filters</Button>
+              onChange={(value) => setFilterDepartment(value)}
+              allowClear
+              maxTagCount={2}
+            >
+              {reportData.departmentData.map((dept) => (
+                <Option key={dept.name} value={dept.name}>
+                  {dept.name}
+                </Option>
+              ))}
+            </Select>
           </Space>
-        </div>
+        }
+      >
         <Table
           columns={columns}
           dataSource={getFilteredEmployeeData()}
           loading={loading}
           rowKey="key"
-          pagination={{
-            total: getFilteredEmployeeData().length,
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total) => `Total ${total} employees`,
-          }}
+          pagination={{ pageSize: 10 }}
           scroll={{ x: "max-content" }}
         />
       </Card>
@@ -675,3 +666,4 @@ const EmployeeReport = () => {
 };
 
 export default EmployeeReport;
+
