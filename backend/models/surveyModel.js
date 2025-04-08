@@ -42,6 +42,19 @@ const questionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // Employee reference fields
+  employeeId: {
+    type: String,
+  },
+  employeeName: {
+    type: String,
+  },
+  employeeDepartment: {
+    type: String,
+  },
+  employeeDesignation: {
+    type: String,
+  },
 });
 
 const templateSchema = new mongoose.Schema({

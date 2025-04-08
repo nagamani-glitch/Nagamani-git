@@ -87,10 +87,36 @@ export const getAllTemplates = async (req, res) => {
 };
 
 // Add a new template
+// export const addTemplate = async (req, res) => {
+//   const { name, questions } = req.body;
+//   try {
+//     const newTemplate = new Template({ name, questions });
+//     await newTemplate.save();
+//     res.status(201).json(newTemplate);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error adding template', error });
+//   }
+// };
+// Add a new template
 export const addTemplate = async (req, res) => {
   const { name, questions } = req.body;
   try {
-    const newTemplate = new Template({ name, questions });
+    // Make sure each question has all necessary fields
+    const processedQuestions = questions.map(q => ({
+      avatar: q.avatar,
+      question: q.question,
+      type: q.type,
+      employeeId: q.employeeId,
+      employeeName: q.employeeName,
+      employeeDepartment: q.employeeDepartment,
+      employeeDesignation: q.employeeDesignation
+    }));
+
+    const newTemplate = new Template({ 
+      name, 
+      questions: processedQuestions 
+    });
+    
     await newTemplate.save();
     res.status(201).json(newTemplate);
   } catch (error) {
@@ -98,10 +124,36 @@ export const addTemplate = async (req, res) => {
   }
 };
 
+
+// Add a new question to an existing template
+// export const addQuestionToTemplate = async (req, res) => {
+//   const { templateId } = req.params;
+//   const { question, type } = req.body;
+  
+//   try {
+//     const template = await Template.findById(templateId);
+//     if (!template) {
+//       return res.status(404).json({ message: 'Template not found' });
+//     }
+    
+//     const newQuestion = {
+//       avatar: question.charAt(0).toUpperCase(),
+//       question,
+//       type
+//     };
+    
+//     template.questions.push(newQuestion);
+//     await template.save();
+    
+//     res.status(200).json(template);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error adding question to template', error });
+//   }
+// };
 // Add a new question to an existing template
 export const addQuestionToTemplate = async (req, res) => {
   const { templateId } = req.params;
-  const { question, type } = req.body;
+  const { question, type, employeeId, employeeName, employeeDepartment, employeeDesignation } = req.body;
   
   try {
     const template = await Template.findById(templateId);
@@ -112,7 +164,11 @@ export const addQuestionToTemplate = async (req, res) => {
     const newQuestion = {
       avatar: question.charAt(0).toUpperCase(),
       question,
-      type
+      type,
+      employeeId,
+      employeeName,
+      employeeDepartment,
+      employeeDesignation
     };
     
     template.questions.push(newQuestion);
@@ -144,9 +200,36 @@ export const updateTemplate = async (req, res) => {
 };
 
 // Edit a question in a template
+// export const updateQuestion = async (req, res) => {
+//   const { templateId, questionId } = req.params;
+//   const { question, type } = req.body;
+  
+//   try {
+//     const template = await Template.findById(templateId);
+//     if (!template) {
+//       return res.status(404).json({ message: 'Template not found' });
+//     }
+    
+//     const questionIndex = template.questions.findIndex(
+//       q => q._id.toString() === questionId
+//     );
+    
+//     if (questionIndex === -1) {
+//       return res.status(404).json({ message: 'Question not found' });
+//     }
+    
+//     template.questions[questionIndex].question = question;
+//     template.questions[questionIndex].type = type;
+    
+//     await template.save();
+//     res.status(200).json(template);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error updating question', error });
+//   }
+// };
 export const updateQuestion = async (req, res) => {
   const { templateId, questionId } = req.params;
-  const { question, type } = req.body;
+  const { question, type, employeeId, employeeName, employeeDepartment, employeeDesignation } = req.body;
   
   try {
     const template = await Template.findById(templateId);
@@ -164,6 +247,10 @@ export const updateQuestion = async (req, res) => {
     
     template.questions[questionIndex].question = question;
     template.questions[questionIndex].type = type;
+    template.questions[questionIndex].employeeId = employeeId;
+    template.questions[questionIndex].employeeName = employeeName;
+    template.questions[questionIndex].employeeDepartment = employeeDepartment;
+    template.questions[questionIndex].employeeDesignation = employeeDesignation;
     
     await template.save();
     res.status(200).json(template);
