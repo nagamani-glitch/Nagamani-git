@@ -317,6 +317,28 @@ router.post('/complete-registration', async (req, res) => {
   }
 });
 
+// Add this route to fetch employees for dropdown selection
+router.get('/list', async (req, res) => {
+  try {
+    const employees = await Employee.find({})
+      .select('Emp_ID personalInfo.firstName personalInfo.lastName joiningDetails.department')
+      .sort('personalInfo.firstName');
+    
+    const formattedEmployees = employees.map(emp => ({
+      id: emp.Emp_ID,
+      name: `${emp.personalInfo?.firstName || ''} ${emp.personalInfo?.lastName || ''}`,
+      department: emp.joiningDetails?.department || 'Not Assigned',
+      value: `${emp.Emp_ID} - ${emp.personalInfo?.firstName || ''} ${emp.personalInfo?.lastName || ''}`
+    }));
+    
+    res.json({ success: true, data: formattedEmployees });
+  } catch (error) {
+    console.error('Error fetching employees list:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
 router.get('/registered', async (req, res) => {
   try {
     const employees = await Employee.find({})

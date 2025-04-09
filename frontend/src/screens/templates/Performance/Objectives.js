@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
+import { format } from 'date-fns';
 
 import {
   Dialog,
@@ -31,8 +32,11 @@ import {
   Tab,
   LinearProgress,
   Breadcrumbs,
-  Link
+  Link,
+  Autocomplete
 } from "@mui/material";
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { 
   Edit, 
   Delete, 
@@ -49,13 +53,15 @@ import {
   Home,
   Dashboard,
   Assessment,
-  MoreVert
+  MoreVert,
+  Close
 } from "@mui/icons-material";
 import Popover from "@mui/material/Popover";
 
 import "./Objectives.css";
 
 const API_URL = "http://localhost:5000/api/objectives";
+const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/registered";
 
 const Objectives = () => {
   const [objectives, setObjectives] = useState([]);
@@ -96,9 +102,20 @@ const Objectives = () => {
   const [selectedObjective, setSelectedObjective] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   
-  // New state variables for managers and assignees
+  // State variables for managers and assignees
   const [managerInput, setManagerInput] = useState("");
   const [assigneeInput, setAssigneeInput] = useState("");
+  const [employees, setEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+
+  // State for key results
+  const [keyResultInput, setKeyResultInput] = useState({
+    title: "",
+    description: "",
+    targetValue: "",
+    unit: "",
+    dueDate: null
+  });
 
   // Filter button click handler
   const handleFilterClick = (event) => {
@@ -115,6 +132,7 @@ const Objectives = () => {
   // Load objectives on component mount and when dependencies change
   useEffect(() => {
     loadObjectives();
+    fetchEmployees();
   }, [selectedTab, searchTerm, page, rowsPerPage, sortConfig]);
 
   // Calculate statistics when objectives change
@@ -130,6 +148,28 @@ const Objectives = () => {
       setObjectiveStats(stats);
     }
   }, [objectives]);
+
+  // Fetch employees data
+  const fetchEmployees = async () => {
+    try {
+      setLoadingEmployees(true);
+      const response = await axios.get(EMPLOYEES_API_URL);
+      
+      // Transform the data to the format we need
+      const formattedEmployees = response.data.map(emp => ({
+        id: emp.Emp_ID,
+        name: `${emp.personalInfo?.firstName || ''} ${emp.personalInfo?.lastName || ''}`.trim(),
+        designation: emp.joiningDetails?.initialDesignation || 'No Designation',
+        department: emp.joiningDetails?.department || 'No Department'
+      }));
+      
+      setEmployees(formattedEmployees);
+      setLoadingEmployees(false);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      setLoadingEmployees(false);
+    }
+  };
 
   // Load objectives from API
   const loadObjectives = async () => {
@@ -278,9 +318,10 @@ const Objectives = () => {
   const handleAdd = () => {
     const newObjective = {
       title: "",
-      managers: [], // Array instead of number
+      managers: [],
       keyResults: 0,
-      assignees: [], // Array instead of number
+      keyResultsData: [],
+      assignees: [],
       duration: "30 Days",
       description: "",
       archived: false,
@@ -300,6 +341,7 @@ const Objectives = () => {
         title: currentObjective.title,
         managers: Array.isArray(currentObjective.managers) ? currentObjective.managers : [],
         keyResults: Number(currentObjective.keyResults) || 0,
+        keyResultsData: Array.isArray(currentObjective.keyResultsData) ? currentObjective.keyResultsData : [],
         assignees: Array.isArray(currentObjective.assignees) ? currentObjective.assignees : [],
         duration: currentObjective.duration,
         description: currentObjective.description,
@@ -426,8 +468,8 @@ const Objectives = () => {
     return Math.floor(Math.random() * 100);
   };
 
-  // Format date
-  const formatDate = (dateString) => {
+   // Format date
+   const formatDate = (dateString) => {
     return moment(dateString).format('MMM DD, YYYY');
   };
 
@@ -490,6 +532,63 @@ const Objectives = () => {
       e.preventDefault();
       handleAddAssignee();
     }
+  };
+
+  // Key Results handlers
+  const handleKeyResultInputChange = (e) => {
+    const { name, value } = e.target;
+    setKeyResultInput(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleKeyResultDateChange = (newDate) => {
+    setKeyResultInput(prev => ({
+      ...prev,
+      dueDate: newDate
+    }));
+  };
+
+  const handleAddKeyResult = () => {
+    if (keyResultInput.title.trim() === "") {
+      setNotification({
+        open: true,
+        message: "Key result title is required",
+        severity: "error"
+      });
+      return;
+    }
+    
+    setCurrentObjective(prev => ({
+      ...prev,
+      keyResultsData: Array.isArray(prev.keyResultsData) 
+        ? [...prev.keyResultsData, keyResultInput] 
+        : [keyResultInput],
+      keyResults: Array.isArray(prev.keyResultsData) 
+        ? prev.keyResultsData.length + 1 
+        : 1
+    }));
+    
+    // Reset the input
+    setKeyResultInput({
+      title: "",
+      description: "",
+      targetValue: "",
+      unit: "",
+      dueDate: null
+    });
+  };
+
+  const handleRemoveKeyResult = (index) => {
+    setCurrentObjective(prev => {
+      const updatedKeyResults = prev.keyResultsData.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        keyResultsData: updatedKeyResults,
+        keyResults: updatedKeyResults.length
+      };
+    });
   };
 
   return (
@@ -882,7 +981,7 @@ const Objectives = () => {
                   color: "#475569",
                   fontWeight: 600,
                 }}
-              >
+                >
                 Progress
               </th>
               <th
@@ -992,6 +1091,20 @@ const Objectives = () => {
                           fontWeight: 500
                         }} 
                       />
+                      {obj.keyResultsData && obj.keyResultsData.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                          {obj.keyResultsData.slice(0, 2).map((kr, index) => (
+                            <Typography key={index} variant="caption" display="block" color="text.secondary">
+                              • {kr.title}
+                            </Typography>
+                          ))}
+                          {obj.keyResultsData.length > 2 && (
+                            <Typography variant="caption" color="primary">
+                              +{obj.keyResultsData.length - 2} more
+                            </Typography>
+                          )}
+                        </Box>
+                      )}
                     </td>
                     <td style={{ padding: "16px" }}>
                       {Array.isArray(obj.assignees) ? (
@@ -1181,11 +1294,11 @@ const Objectives = () => {
         <Dialog
           open={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
-          maxWidth="sm"
+          maxWidth="md"
           fullWidth
           PaperProps={{
             sx: {
-              width: "600px",
+              width: "800px",
               borderRadius: "20px",
               overflow: "hidden",
             },
@@ -1266,26 +1379,64 @@ const Objectives = () => {
                   </Typography>
                   
                   <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                    <TextField
-                      value={managerInput}
-                      onChange={handleManagerInputChange}
-                      onKeyDown={handleManagerKeyDown}
-                      placeholder="Enter manager name"
-                      fullWidth
-                      size="small"
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          backgroundColor: "white",
-                          borderRadius: "8px",
-                          "&:hover fieldset": {
-                            borderColor: "#1976d2",
-                          },
-                        },
+                    <Autocomplete
+                      options={employees}
+                      getOptionLabel={(option) => option.name || ""}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props} className="employee-option">
+                          <Avatar className="employee-option-avatar">
+                            {option.name.charAt(0)}
+                          </Avatar>
+                          <Box className="employee-option-info">
+                            <Typography className="employee-option-name">
+                              {option.name}
+                            </Typography>
+                            <Box className="employee-option-details">
+                              <Typography className="employee-option-id">
+                                {option.id}
+                              </Typography>
+                              <Typography className="employee-option-designation">
+                                {option.designation}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      )}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          placeholder="Select manager"
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                              "&:hover fieldset": {
+                                borderColor: "#1976d2",
+                              },
+                            },
+                          }}
+                        />
+                      )}
+                      onChange={(event, newValue) => {
+                        if (newValue) {
+                          setCurrentObjective(prev => ({
+                            ...prev,
+                            managers: Array.isArray(prev.managers) 
+                              ? [...prev.managers, newValue.name] 
+                              : [newValue.name]
+                          }));
+                        }
                       }}
+                      sx={{ flex: 1 }}
                     />
                     <Button 
                       variant="contained" 
-                      onClick={handleAddManager}
+                      onClick={() => {
+                        if (managerInput.trim() !== "") {
+                          handleAddManager();
+                        }
+                      }}
                       sx={{ 
                         minWidth: '80px',
                         background: "linear-gradient(45deg, #1976d2, #64b5f6)",
@@ -1325,24 +1476,180 @@ const Objectives = () => {
                   )}
                 </Box>
 
-                <TextField
-                  name="keyResults"
-                  label="Key Results"
-                  type="number"
-                  value={currentObjective.keyResults}
-                  onChange={handleInputChange}
-                  fullWidth
-                  InputProps={{ inputProps: { min: 0 } }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
+                {/* Key Results Section */}
+                <Box sx={{ mb: 2.5 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Key Results ({currentObjective.keyResults || 0})
+                  </Typography>
+                  
+                  <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2, mb: 2 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <TextField
+                          name="title"
+                          label="Key Result Title"
+                          value={keyResultInput.title}
+                          onChange={handleKeyResultInputChange}
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          name="description"
+                          label="Description"
+                          value={keyResultInput.description}
+                          onChange={handleKeyResultInputChange}
+                          multiline
+                          rows={2}
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          name="targetValue"
+                          label="Target Value"
+                          value={keyResultInput.targetValue}
+                          onChange={handleKeyResultInputChange}
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          name="unit"
+                          label="Unit"
+                          value={keyResultInput.unit}
+                          onChange={handleKeyResultInputChange}
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                          <DatePicker
+                            label="Due Date"
+                            value={keyResultInput.dueDate}
+                            onChange={handleKeyResultDateChange}
+                            renderInput={(params) => (
+                              <TextField 
+                                {...params} 
+                                fullWidth
+                                sx={{
+                                  "& .MuiOutlinedInput-root": {
+                                    backgroundColor: "white",
+                                    borderRadius: "8px",
+                                  },
+                                }}
+                              />
+                            )}
+                          />
+                        </LocalizationProvider>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Button
+                          variant="contained"
+                          onClick={handleAddKeyResult}
+                          startIcon={<Add />}
+                          sx={{
+                            background: "linear-gradient(45deg, #2e7d32, #66bb6a)",
+                            color: "white",
+                            borderRadius: "8px",
+                            textTransform: "none",
+                          }}
+                        >
+                          Add Key Result
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                  
+                  {/* Display added key results */}
+                  {Array.isArray(currentObjective.keyResultsData) && currentObjective.keyResultsData.length > 0 && (
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        Added Key Results:
+                      </Typography>
+                      
+                      {currentObjective.keyResultsData.map((kr, index) => (
+                        <Box 
+                          key={index} 
+                          sx={{ 
+                            p: 2, 
+                            mb: 2, 
+                            bgcolor: '#e8f5e9', 
+                            borderRadius: 2,
+                            border: '1px solid #c8e6c9',
+                            position: 'relative'
+                          }}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveKeyResult(index)}
+                            sx={{ 
+                              position: 'absolute', 
+                              top: 8, 
+                              right: 8,
+                              bgcolor: '#ffebee',
+                              '&:hover': { bgcolor: '#ffcdd2' }
+                            }}
+                          >
+                            <Close fontSize="small" />
+                          </IconButton>
+                          
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1, pr: 4 }}>
+                            {kr.title}
+                          </Typography>
+                          
+                          {kr.description && (
+                            <Typography variant="body2" sx={{ mb: 2, color: '#546e7a' }}>
+                              {kr.description}
+                            </Typography>
+                          )}
+                          
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {kr.targetValue && kr.unit && (
+                              <Chip 
+                                size="small" 
+                                label={`Target: ${kr.targetValue} ${kr.unit}`}
+                                sx={{ bgcolor: '#c8e6c9', color: '#2e7d32' }}
+                              />
+                            )}
+                            
+                            {kr.dueDate && (
+                              <Chip 
+                                size="small" 
+                                label={`Due: ${format(new Date(kr.dueDate), 'MMM dd, yyyy')}`}
+                                sx={{ bgcolor: '#bbdefb', color: '#1565c0' }}
+                              />
+                            )}
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+                </Box>
 
                 {/* Assignees Input */}
                 <Box sx={{ mb: 2.5 }}>
@@ -1351,26 +1658,64 @@ const Objectives = () => {
                   </Typography>
                   
                   <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                    <TextField
-                      value={assigneeInput}
-                      onChange={handleAssigneeInputChange}
-                      onKeyDown={handleAssigneeKeyDown}
-                      placeholder="Enter assignee name"
-                      fullWidth
-                      size="small"
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          backgroundColor: "white",
-                          borderRadius: "8px",
-                          "&:hover fieldset": {
-                            borderColor: "#1976d2",
-                          },
-                        },
+                    <Autocomplete
+                      options={employees}
+                      getOptionLabel={(option) => option.name || ""}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props} className="employee-option">
+                          <Avatar className="employee-option-avatar">
+                            {option.name.charAt(0)}
+                          </Avatar>
+                          <Box className="employee-option-info">
+                            <Typography className="employee-option-name">
+                              {option.name}
+                            </Typography>
+                            <Box className="employee-option-details">
+                              <Typography className="employee-option-id">
+                                {option.id}
+                              </Typography>
+                              <Typography className="employee-option-designation">
+                                {option.designation}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      )}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          placeholder="Select assignee"
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                              "&:hover fieldset": {
+                                borderColor: "#1976d2",
+                              },
+                            },
+                          }}
+                        />
+                      )}
+                      onChange={(event, newValue) => {
+                        if (newValue) {
+                          setCurrentObjective(prev => ({
+                            ...prev,
+                            assignees: Array.isArray(prev.assignees) 
+                              ? [...prev.assignees, newValue.name] 
+                              : [newValue.name]
+                          }));
+                        }
                       }}
+                      sx={{ flex: 1 }}
                     />
                     <Button 
                       variant="contained" 
-                      onClick={handleAddAssignee}
+                      onClick={() => {
+                        if (assigneeInput.trim() !== "") {
+                          handleAddAssignee();
+                        }
+                      }}
                       sx={{ 
                         minWidth: '80px',
                         background: "linear-gradient(45deg, #ff9800, #ffb74d)",
@@ -1429,483 +1774,715 @@ const Objectives = () => {
                     <MenuItem value="self">Self Objective</MenuItem>
                     <MenuItem value="all">Team Objective</MenuItem>
                   </Select>
-                  </FormControl>
+                </FormControl>
 
-<TextField
-  name="description"
-  label="Description"
-  value={currentObjective.description}
-  onChange={handleInputChange}
-  required
-  multiline
-  rows={4}
-  fullWidth
-  sx={{
-    "& .MuiOutlinedInput-root": {
-      backgroundColor: "white",
-      borderRadius: "12px",
-      "&:hover fieldset": {
-        borderColor: "#1976d2",
-      },
-    },
-  }}
-/>
-</Box>
+                <TextField
+                  name="description"
+                  label="Description"
+                  value={currentObjective.description}
+                  onChange={handleInputChange}
+                  required
+                  multiline
+                  rows={4}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Box>
 
-<Box
-sx={{
-  display: "flex",
-  gap: "10px",
-  mt: 4,
-  justifyContent: "flex-end",
-}}
->
-<Button
-  onClick={() => setIsCreateModalOpen(false)}
-  sx={{
-    border: "2px solid #1976d2",
-    color: "#1976d2",
-    "&:hover": {
-      border: "2px solid #64b5f6",
-      backgroundColor: "#e3f2fd",
-      color: "#1976d2",
-    },
-    textTransform: "none",
-    borderRadius: "8px",
-    px: 3,
-    fontWeight: 600,
-  }}
->
-  Cancel
-</Button>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: "10px",
+                  mt: 4,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <Button
+                  onClick={() => setIsCreateModalOpen(false)}
+                  sx={{
+                    border: "2px solid #1976d2",
+                    color: "#1976d2",
+                    "&:hover": {
+                      border: "2px solid #64b5f6",
+                      backgroundColor: "#e3f2fd",
+                      color: "#1976d2",
+                    },
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    px: 3,
+                    fontWeight: 600,
+                  }}
+                >
+                  Cancel
+                </Button>
 
-<Button
-  type="submit"
-  disabled={loading}
-  sx={{
-    background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-    color: "white",
-    "&:hover": {
-      background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-    },
-    textTransform: "none",
-    borderRadius: "8px",
-    px: 4,
-    py: 1,
-    fontWeight: 600,
-  }}
->
-  {loading ? <CircularProgress size={24} color="inherit" /> : "Create"}
-</Button>
-</Box>
-</form>
-</DialogContent>
-</Dialog>
-)}
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  sx={{
+                    background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                    color: "white",
+                    "&:hover": {
+                      background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                    },
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    px: 4,
+                    py: 1,
+                    fontWeight: 600,
+                  }}
+                >
+                  {loading ? <CircularProgress size={24} color="inherit" /> : "Create"}
+                </Button>
+              </Box>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
 
-{/* Edit Modal */}
-{isEditModalOpen && (
-<Dialog
-open={isEditModalOpen}
-onClose={() => setIsEditModalOpen(false)}
-maxWidth="sm"
-fullWidth
-PaperProps={{
-sx: {
-width: "600px",
-borderRadius: "20px",
-overflow: "hidden",
-},
-}}
->
-<DialogTitle
-sx={{
-background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-color: "white",
-fontSize: "1.5rem",
-fontWeight: 600,
-padding: "24px 32px",
-zIndex: 1,
-position: "relative",
-marginBottom: "0",
-marginTop: "0",
-}}
->
-Edit Objective
-</DialogTitle>
-
-<DialogContent
-sx={{
-padding: "32px",
-backgroundColor: "#f8fafc",
-marginTop: "20px",
-}}
->
-<form onSubmit={handleEditSubmit}>
-<Box
-sx={{
-  display: "flex",
-  flexDirection: "column",
-  gap: 2.5,
-  mt: 2,
-}}
->
-<TextField
-  name="title"
-  label="Title"
-  value={currentObjective.title}
-  onChange={handleInputChange}
-  required
-  fullWidth
-  sx={{
-    "& .MuiOutlinedInput-root": {
-      backgroundColor: "white",
-      borderRadius: "12px",
-      "&:hover fieldset": {
-        borderColor: "#1976d2",
-      },
-    },
-  }}
-/>
-
-<TextField
-  name="duration"
-  label="Duration"
-  value={currentObjective.duration}
-  onChange={handleInputChange}
-  required
-  fullWidth
-  sx={{
-    "& .MuiOutlinedInput-root": {
-      backgroundColor: "white",
-      borderRadius: "12px",
-      "&:hover fieldset": {
-        borderColor: "#1976d2",
-      },
-    },
-  }}
-/>
-
-{/* Managers Input */}
-<Box sx={{ mb: 2.5 }}>
-  <Typography variant="subtitle2" sx={{ mb: 1 }}>
-    Managers ({Array.isArray(currentObjective.managers) ? currentObjective.managers.length : 0})
-  </Typography>
-  
-  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-    <TextField
-      value={managerInput}
-      onChange={handleManagerInputChange}
-      onKeyDown={handleManagerKeyDown}
-      placeholder="Enter manager name"
-      fullWidth
-      size="small"
-      sx={{
-        "& .MuiOutlinedInput-root": {
-          backgroundColor: "white",
-          borderRadius: "8px",
-          "&:hover fieldset": {
-            borderColor: "#1976d2",
-          },
-        },
-      }}
-    />
-    <Button 
-      variant="contained" 
-      onClick={handleAddManager}
-      sx={{ 
-        minWidth: '80px',
-        background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-        borderRadius: "8px"
-      }}
-    >
-      Add
-    </Button>
-  </Box>
-  
-  {/* Display added managers */}
-  {Array.isArray(currentObjective.managers) && currentObjective.managers.length > 0 && (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 1, 
-        p: 2, 
-        bgcolor: '#f0f7ff', 
-        borderRadius: 2,
-        maxHeight: '150px',
-        overflowY: 'auto'
-      }}
-    >
-      {currentObjective.managers.map((manager, index) => (
-        <Chip
-          key={index}
-          label={manager}
-          onDelete={() => handleRemoveManager(index)}
-          sx={{ 
-            bgcolor: '#e3f2fd',
-            '&:hover': { bgcolor: '#bbdefb' }
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <Dialog
+          open={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              width: "800px",
+              borderRadius: "20px",
+              overflow: "hidden",
+            },
           }}
-        />
-      ))}
-    </Box>
-  )}
-</Box>
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              color: "white",
+              fontSize: "1.5rem",
+              fontWeight: 600,
+              padding: "24px 32px",
+              zIndex: 1,
+              position: "relative",
+              marginBottom: "0",
+              marginTop: "0",
+            }}
+          >
+            Edit Objective
+          </DialogTitle>
 
-<TextField
-  name="keyResults"
-  label="Key Results"
-  type="number"
-  value={currentObjective.keyResults}
-  onChange={handleInputChange}
-  fullWidth
-  InputProps={{ inputProps: { min: 0 } }}
-  sx={{
-    "& .MuiOutlinedInput-root": {
-      backgroundColor: "white",
-      borderRadius: "12px",
-      "&:hover fieldset": {
-        borderColor: "#1976d2",
-      },
-    },
-  }}
-/>
+          <DialogContent
+            sx={{
+              padding: "32px",
+              backgroundColor: "#f8fafc",
+              marginTop: "20px",
+            }}
+            >
+            <form onSubmit={handleEditSubmit}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2.5,
+                  mt: 2,
+                }}
+              >
+                <TextField
+                  name="title"
+                  label="Title"
+                  value={currentObjective.title}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
 
-{/* Assignees Input */}
-<Box sx={{ mb: 2.5 }}>
-  <Typography variant="subtitle2" sx={{ mb: 1 }}>
-    Assignees ({Array.isArray(currentObjective.assignees) ? currentObjective.assignees.length : 0})
-  </Typography>
-  
-  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-    <TextField
-      value={assigneeInput}
-      onChange={handleAssigneeInputChange}
-      onKeyDown={handleAssigneeKeyDown}
-      placeholder="Enter assignee name"
-      fullWidth
-      size="small"
-      sx={{
-        "& .MuiOutlinedInput-root": {
-          backgroundColor: "white",
-          borderRadius: "8px",
-          "&:hover fieldset": {
-            borderColor: "#1976d2",
-          },
-        },
-      }}
-    />
-    <Button 
-      variant="contained" 
-      onClick={handleAddAssignee}
-      sx={{ 
-        minWidth: '80px',
-        background: "linear-gradient(45deg, #ff9800, #ffb74d)",
-        borderRadius: "8px"
-      }}
-    >
-      Add
-    </Button>
-  </Box>
-  
-  {/* Display added assignees */}
-  {Array.isArray(currentObjective.assignees) && currentObjective.assignees.length > 0 && (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
-        gap: 1, 
-        p: 2, 
-        bgcolor: '#fff8e1', 
-        borderRadius: 2,
-        maxHeight: '150px',
-        overflowY: 'auto'
-      }}
-    >
-      {currentObjective.assignees.map((assignee, index) => (
-        <Chip
-          key={index}
-          label={assignee}
-          onDelete={() => handleRemoveAssignee(index)}
-          sx={{ 
-            bgcolor: '#ffecb3',
-            '&:hover': { bgcolor: '#ffe082' }
+                <TextField
+                  name="duration"
+                  label="Duration"
+                  value={currentObjective.duration}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+
+                {/* Managers Input */}
+                <Box sx={{ mb: 2.5 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Managers ({Array.isArray(currentObjective.managers) ? currentObjective.managers.length : 0})
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                    <Autocomplete
+                      options={employees}
+                      getOptionLabel={(option) => option.name || ""}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props} className="employee-option">
+                          <Avatar className="employee-option-avatar">
+                            {option.name.charAt(0)}
+                          </Avatar>
+                          <Box className="employee-option-info">
+                            <Typography className="employee-option-name">
+                              {option.name}
+                            </Typography>
+                            <Box className="employee-option-details">
+                              <Typography className="employee-option-id">
+                                {option.id}
+                              </Typography>
+                              <Typography className="employee-option-designation">
+                                {option.designation}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      )}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          placeholder="Select manager"
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                              "&:hover fieldset": {
+                                borderColor: "#1976d2",
+                              },
+                            },
+                          }}
+                        />
+                      )}
+                      onChange={(event, newValue) => {
+                        if (newValue) {
+                          setCurrentObjective(prev => ({
+                            ...prev,
+                            managers: Array.isArray(prev.managers) 
+                              ? [...prev.managers, newValue.name] 
+                              : [newValue.name]
+                          }));
+                        }
+                      }}
+                      sx={{ flex: 1 }}
+                    />
+                    <Button 
+                      variant="contained" 
+                      onClick={() => {
+                        if (managerInput.trim() !== "") {
+                          handleAddManager();
+                        }
+                      }}
+                      sx={{ 
+                        minWidth: '80px',
+                        background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                        borderRadius: "8px"
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </Box>
+                  
+                  {/* Display added managers */}
+                  {Array.isArray(currentObjective.managers) && currentObjective.managers.length > 0 && (
+                    <Box 
+                      sx={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: 1, 
+                        p: 2, 
+                        bgcolor: '#f0f7ff', 
+                        borderRadius: 2,
+                        maxHeight: '150px',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      {currentObjective.managers.map((manager, index) => (
+                        <Chip
+                          key={index}
+                          label={manager}
+                          onDelete={() => handleRemoveManager(index)}
+                          sx={{ 
+                            bgcolor: '#e3f2fd',
+                            '&:hover': { bgcolor: '#bbdefb' }
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                </Box>
+
+                {/* Key Results Section */}
+                <Box sx={{ mb: 2.5 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Key Results ({currentObjective.keyResults || 0})
+                  </Typography>
+                  
+                  <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2, mb: 2 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <TextField
+                          name="title"
+                          label="Key Result Title"
+                          value={keyResultInput.title}
+                          onChange={handleKeyResultInputChange}
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          name="description"
+                          label="Description"
+                          value={keyResultInput.description}
+                          onChange={handleKeyResultInputChange}
+                          multiline
+                          rows={2}
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          name="targetValue"
+                          label="Target Value"
+                          value={keyResultInput.targetValue}
+                          onChange={handleKeyResultInputChange}
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          name="unit"
+                          label="Unit"
+                          value={keyResultInput.unit}
+                          onChange={handleKeyResultInputChange}
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                          <DatePicker
+                            label="Due Date"
+                            value={keyResultInput.dueDate}
+                            onChange={handleKeyResultDateChange}
+                            renderInput={(params) => (
+                              <TextField 
+                                {...params} 
+                                fullWidth
+                                sx={{
+                                  "& .MuiOutlinedInput-root": {
+                                    backgroundColor: "white",
+                                    borderRadius: "8px",
+                                  },
+                                }}
+                              />
+                            )}
+                          />
+                        </LocalizationProvider>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Button
+                          variant="contained"
+                          onClick={handleAddKeyResult}
+                          startIcon={<Add />}
+                          sx={{
+                            background: "linear-gradient(45deg, #2e7d32, #66bb6a)",
+                            color: "white",
+                            borderRadius: "8px",
+                            textTransform: "none",
+                          }}
+                        >
+                          Add Key Result
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                  
+                  {/* Display added key results */}
+                  {Array.isArray(currentObjective.keyResultsData) && currentObjective.keyResultsData.length > 0 && (
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        Added Key Results:
+                      </Typography>
+                      
+                      {currentObjective.keyResultsData.map((kr, index) => (
+                        <Box 
+                          key={index} 
+                          sx={{ 
+                            p: 2, 
+                            mb: 2, 
+                            bgcolor: '#e8f5e9', 
+                            borderRadius: 2,
+                            border: '1px solid #c8e6c9',
+                            position: 'relative'
+                          }}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveKeyResult(index)}
+                            sx={{ 
+                              position: 'absolute', 
+                              top: 8, 
+                              right: 8,
+                              bgcolor: '#ffebee',
+                              '&:hover': { bgcolor: '#ffcdd2' }
+                            }}
+                          >
+                            <Close fontSize="small" />
+                          </IconButton>
+                          
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1, pr: 4 }}>
+                            {kr.title}
+                          </Typography>
+                          
+                          {kr.description && (
+                            <Typography variant="body2" sx={{ mb: 2, color: '#546e7a' }}>
+                              {kr.description}
+                            </Typography>
+                          )}
+                          
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {kr.targetValue && kr.unit && (
+                              <Chip 
+                                size="small" 
+                                label={`Target: ${kr.targetValue} ${kr.unit}`}
+                                sx={{ bgcolor: '#c8e6c9', color: '#2e7d32' }}
+                              />
+                            )}
+                            
+                            {kr.dueDate && (
+                              <Chip 
+                                size="small" 
+                                label={`Due: ${format(new Date(kr.dueDate), 'MMM dd, yyyy')}`}
+                                sx={{ bgcolor: '#bbdefb', color: '#1565c0' }}
+                              />
+                            )}
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+                </Box>
+
+                {/* Assignees Input */}
+                <Box sx={{ mb: 2.5 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Assignees ({Array.isArray(currentObjective.assignees) ? currentObjective.assignees.length : 0})
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                    <Autocomplete
+                      options={employees}
+                      getOptionLabel={(option) => option.name || ""}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props} className="employee-option">
+                          <Avatar className="employee-option-avatar">
+                            {option.name.charAt(0)}
+                          </Avatar>
+                          <Box className="employee-option-info">
+                            <Typography className="employee-option-name">
+                              {option.name}
+                            </Typography>
+                            <Box className="employee-option-details">
+                              <Typography className="employee-option-id">
+                                {option.id}
+                              </Typography>
+                              <Typography className="employee-option-designation">
+                                {option.designation}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      )}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          placeholder="Select assignee"
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                              "&:hover fieldset": {
+                                borderColor: "#1976d2",
+                              },
+                            },
+                          }}
+                        />
+                      )}
+                      onChange={(event, newValue) => {
+                        if (newValue) {
+                          setCurrentObjective(prev => ({
+                            ...prev,
+                            assignees: Array.isArray(prev.assignees) 
+                              ? [...prev.assignees, newValue.name] 
+                              : [newValue.name]
+                          }));
+                        }
+                      }}
+                      sx={{ flex: 1 }}
+                    />
+                    <Button 
+                      variant="contained" 
+                      onClick={() => {
+                        if (assigneeInput.trim() !== "") {
+                          handleAddAssignee();
+                        }
+                      }}
+                      sx={{ 
+                        minWidth: '80px',
+                        background: "linear-gradient(45deg, #ff9800, #ffb74d)",
+                        borderRadius: "8px"
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </Box>
+                  
+                  {/* Display added assignees */}
+                  {Array.isArray(currentObjective.assignees) && currentObjective.assignees.length > 0 && (
+                    <Box 
+                      sx={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: 1, 
+                        p: 2, 
+                        bgcolor: '#fff8e1', 
+                        borderRadius: 2,
+                        maxHeight: '150px',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      {currentObjective.assignees.map((assignee, index) => (
+                        <Chip
+                          key={index}
+                          label={assignee}
+                          onDelete={() => handleRemoveAssignee(index)}
+                          sx={{ 
+                            bgcolor: '#ffecb3',
+                            '&:hover': { bgcolor: '#ffe082' }
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                </Box>
+
+                <FormControl fullWidth>
+                  <InputLabel>Objective Type</InputLabel>
+                  <Select
+                    name="objectiveType"
+                    value={currentObjective.objectiveType}
+                    onChange={handleInputChange}
+                    required
+                    sx={{
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    }}
+                  >
+                    <MenuItem value="self">Self Objective</MenuItem>
+                    <MenuItem value="all">Team Objective</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <TextField
+                  name="description"
+                  label="Description"
+                  value={currentObjective.description}
+                  onChange={handleInputChange}
+                  required
+                  multiline
+                  rows={4}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Box>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: "10px",
+                  mt: 4,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <Button
+                  onClick={() => setIsEditModalOpen(false)}
+                  sx={{
+                    border: "2px solid #1976d2",
+                    color: "#1976d2",
+                    "&:hover": {
+                      border: "2px solid #64b5f6",
+                      backgroundColor: "#e3f2fd",
+                      color: "#1976d2",
+                    },
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    px: 3,
+                    fontWeight: 600,
+                  }}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  sx={{
+                    background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                    color: "white",
+                    "&:hover": {
+                      background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                    },
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    px: 4,
+                    py: 1,
+                    fontWeight: 600,
+                  }}
+                >
+                  {loading ? <CircularProgress size={24} color="inherit" /> : "Save Changes"}
+                </Button>
+              </Box>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Objective Details Modal */}
+      {isDetailModalOpen && selectedObjective && (
+        <Dialog
+          open={isDetailModalOpen}
+          onClose={() => setIsDetailModalOpen(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: "20px",
+              overflow: "hidden",
+            },
           }}
-        />
-      ))}
-    </Box>
-  )}
-</Box>
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              color: "white",
+              fontSize: "1.5rem",
+              fontWeight: 600,
+              padding: "24px 32px",
+            }}
+          >
+            Objective Details
+          </DialogTitle>
 
-<FormControl fullWidth>
-  <InputLabel>Objective Type</InputLabel>
-  <Select
-    name="objectiveType"
-    value={currentObjective.objectiveType}
-    onChange={handleInputChange}
-    required
-    sx={{
-      backgroundColor: "white",
-      borderRadius: "12px",
-      "&:hover fieldset": {
-        borderColor: "#1976d2",
-      },
-    }}
-  >
-    <MenuItem value="self">Self Objective</MenuItem>
-    <MenuItem value="all">Team Objective</MenuItem>
-  </Select>
-</FormControl>
+          <DialogContent sx={{ p: 0 }}>
+            <Box sx={{ p: 3, bgcolor: '#f8fafc' }}>
+              <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: '#1976d2' }}>
+                {selectedObjective.title}
+              </Typography>
 
-<TextField
-  name="description"
-  label="Description"
-  value={currentObjective.description}
-  onChange={handleInputChange}
-  required
-  multiline
-  rows={4}
-  fullWidth
-  sx={{
-    "& .MuiOutlinedInput-root": {
-      backgroundColor: "white",
-      borderRadius: "12px",
-      "&:hover fieldset": {
-        borderColor: "#1976d2",
-      },
-    },
-  }}
-/>
-</Box>
+              <Chip 
+                label={selectedObjective.objectiveType === 'self' ? 'Self Objective' : 'Team Objective'} 
+                color={selectedObjective.objectiveType === 'self' ? 'primary' : 'secondary'}
+                sx={{ mb: 2 }}
+              />
 
-<Box
-sx={{
-  display: "flex",
-  gap: "10px",
-  mt: 4,
-  justifyContent: "flex-end",
-}}
->
-<Button
-  onClick={() => setIsEditModalOpen(false)}
-  sx={{
-    border: "2px solid #1976d2",
-    color: "#1976d2",
-    "&:hover": {
-      border: "2px solid #64b5f6",
-      backgroundColor: "#e3f2fd",
-      color: "#1976d2",
-    },
-    textTransform: "none",
-    borderRadius: "8px",
-    px: 3,
-    fontWeight: 600,
-  }}
->
-  Cancel
-</Button>
+              <Typography variant="body1" paragraph sx={{ mt: 2 }}>
+                {selectedObjective.description}
+              </Typography>
+            </Box>
 
-<Button
-  type="submit"
-  disabled={loading}
-  sx={{
-    background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-    color: "white",
-    "&:hover": {
-      background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-    },
-    textTransform: "none",
-    borderRadius: "8px",
-    px: 4,
-    py: 1,
-    fontWeight: 600,
-  }}
->
-  {loading ? <CircularProgress size={24} color="inherit" /> : "Save Changes"}
-</Button>
-</Box>
-</form>
-</DialogContent>
-</Dialog>
-)}
+            <Divider />
 
-{/* Objective Details Modal */}
-{isDetailModalOpen && selectedObjective && (
-<Dialog
-open={isDetailModalOpen}
-onClose={() => setIsDetailModalOpen(false)}
-maxWidth="md"
-fullWidth
-PaperProps={{
-sx: {
-borderRadius: "20px",
-overflow: "hidden",
-},
-}}
->
-<DialogTitle
-sx={{
-background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-color: "white",
-fontSize: "1.5rem",
-fontWeight: 600,
-padding: "24px 32px",
-}}
->
-Objective Details
-</DialogTitle>
+            <Box sx={{ p: 3 }}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Paper elevation={0} sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Duration
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <AccessTime fontSize="small" color="action" />
+                      {selectedObjective.duration}
+                    </Typography>
+                  </Paper>
+                </Grid>
 
-<DialogContent sx={{ p: 0 }}>
-<Box sx={{ p: 3, bgcolor: '#f8fafc' }}>
-<Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: '#1976d2' }}>
-{selectedObjective.title}
-</Typography>
-
-<Chip 
-label={selectedObjective.objectiveType === 'self' ? 'Self Objective' : 'Team Objective'} 
-color={selectedObjective.objectiveType === 'self' ? 'primary' : 'secondary'}
-sx={{ mb: 2 }}
-/>
-
-<Typography variant="body1" paragraph sx={{ mt: 2 }}>
-{selectedObjective.description}
-</Typography>
-</Box>
-
-<Divider />
-
-<Box sx={{ p: 3 }}>
-<Grid container spacing={3}>
-<Grid item xs={12} md={6}>
-  <Paper elevation={0} sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
-    <Typography variant="subtitle2" color="text.secondary">
-      Duration
-    </Typography>
-    <Typography variant="body1" sx={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1 }}>
-      <AccessTime fontSize="small" color="action" />
-      {selectedObjective.duration}
-    </Typography>
-  </Paper>
-</Grid>
-
-<Grid item xs={12} md={6}>
-  <Paper elevation={0} sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
-    <Typography variant="subtitle2" color="text.secondary">
-      Progress
-    </Typography>
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-      <LinearProgress 
-        variant="determinate" 
-        value={calculateProgress(selectedObjective)} 
-        sx={{ 
-          width: '100%',
-          height: 10,
-          borderRadius: 5,
-          bgcolor: '#e0e0e0',
-        }}
-      />
-      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-      {calculateProgress(selectedObjective)}%
+                <Grid item xs={12} md={6}>
+                  <Paper elevation={0} sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Progress
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={calculateProgress(selectedObjective)} 
+                        sx={{ 
+                          width: '100%',
+                          height: 10,
+                          borderRadius: 5,
+                          bgcolor: '#e0e0e0',
+                        }}
+                      />
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {calculateProgress(selectedObjective)}%
                       </Typography>
                     </Box>
                   </Paper>
@@ -2182,7 +2759,7 @@ sx={{ mb: 2 }}
             <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
               <Button
                 fullWidth
-                onClick={resetFilter}
+                                onClick={resetFilter}
                 sx={{
                   border: "2px solid #1976d2",
                   color: "#1976d2",
@@ -2240,6 +2817,14 @@ sx={{ mb: 2 }}
 };
 
 export default Objectives;
+
+
+
+
+
+
+
+      
 
 
  
