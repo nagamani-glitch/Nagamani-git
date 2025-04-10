@@ -1,33 +1,3 @@
-// import express from 'express';
-// import {
-//   createFeedback,
-//   getAllFeedbacks,
-//   updateFeedback,
-//   deleteFeedback,
-//   getFeedbacksByType,
-//   getFeedbackHistory,
-//   addFeedbackComment,
-//   setFeedbackReminder,
-//   getFeedbackAnalytics
-// } from '../controllers/feedbackController.js';
-
-// const router = express.Router();
-
-// // Basic CRUD routes
-// router.post('/', createFeedback);
-// router.get('/', getAllFeedbacks);
-// router.put('/:id', updateFeedback);
-// router.delete('/:id', deleteFeedback);
-// router.get('/type/:type', getFeedbacksByType);
-
-// // Enhanced feature routes
-// router.get('/:id/history', getFeedbackHistory);
-// router.post('/:id/comments', addFeedbackComment);
-// router.post('/:id/reminders', setFeedbackReminder);
-// router.get('/analytics/summary', getFeedbackAnalytics);
-
-// export default router;
-
 import express from 'express';
 import {
   createFeedback,
@@ -37,15 +7,14 @@ import {
   getFeedbacksByType,
   getFeedbackHistory,
   addFeedbackComment,
-  setFeedbackReminder,
   getFeedbackAnalytics,
   submitFeedbackResponse,
-  bulkUpdateFeedback,
   getFeedbacksByEmployee,
-  getOverdueFeedbacks,
-  getUpcomingFeedbacks,
-  getDueFeedbackReminders,
-  markReminderComplete
+  getFeedbacksByDepartment,
+  getFeedbacksOverdue,
+  getFeedbacksDueThisWeek,
+  bulkUpdateFeedbacks,
+  bulkDeleteFeedbacks
 } from '../controllers/feedbackController.js';
 
 const router = express.Router();
@@ -62,22 +31,21 @@ router.get('/type/:type', getFeedbacksByType);
 // Enhanced feature routes
 router.get('/:id/history', getFeedbackHistory);
 router.post('/:id/comments', addFeedbackComment);
-router.post('/:id/reminders', setFeedbackReminder);
-router.post('/:id/response', submitFeedbackResponse);
 router.get('/analytics/summary', getFeedbackAnalytics);
 
-// Bulk operations
-router.post('/bulk', bulkUpdateFeedback);
+// Response submission
+router.post('/:id/response', submitFeedbackResponse);
 
-// Employee-specific routes
+// Employee and department specific routes
 router.get('/employee/:employeeId', getFeedbacksByEmployee);
+router.get('/department/:department', getFeedbacksByDepartment);
 
-// Status-based routes
-router.get('/status/overdue', getOverdueFeedbacks);
-router.get('/status/upcoming', getUpcomingFeedbacks);
+// Due date related routes
+router.get('/due/overdue', getFeedbacksOverdue);
+router.get('/due/this-week', getFeedbacksDueThisWeek);
 
-// Reminder routes
-router.get('/reminders/due', getDueFeedbackReminders);
-router.patch('/reminders/:feedbackId/:reminderId/complete', markReminderComplete);
+// Bulk operations
+router.put('/bulk/update', bulkUpdateFeedbacks);
+router.delete('/bulk/delete', bulkDeleteFeedbacks);
 
 export default router;

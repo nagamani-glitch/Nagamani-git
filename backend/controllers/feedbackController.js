@@ -1,157 +1,3 @@
-// import Feedback from '../models/Feedback.js';
-
-// export const createFeedback = async (req, res) => {
-//   try {
-//     const feedback = new Feedback(req.body);
-//     const savedFeedback = await feedback.save();
-//     res.status(201).json(savedFeedback);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
-
-// export const getAllFeedbacks = async (req, res) => {
-//   try {
-//     const feedbacks = await Feedback.find();
-//     const organizedFeedbacks = {
-//       selfFeedback: feedbacks.filter(f => f.feedbackType === 'selfFeedback'),
-//       requestedFeedback: feedbacks.filter(f => f.feedbackType === 'requestedFeedback'),
-//       feedbackToReview: feedbacks.filter(f => f.feedbackType === 'feedbackToReview'),
-//       anonymousFeedback: feedbacks.filter(f => f.feedbackType === 'anonymousFeedback')
-//     };
-//     res.status(200).json(organizedFeedbacks);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// export const updateFeedback = async (req, res) => {
-//   try {
-//     const updatedFeedback = await Feedback.findByIdAndUpdate(
-//       req.params.id,
-//       req.body,
-//       { new: true }
-//     );
-//     res.status(200).json(updatedFeedback);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
-
-// export const deleteFeedback = async (req, res) => {
-//   try {
-//     await Feedback.findByIdAndDelete(req.params.id);
-//     res.status(200).json({ message: 'Feedback deleted successfully' });
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
-
-// export const getFeedbacksByType = async (req, res) => {
-//   try {
-//     const feedbacks = await Feedback.find({ feedbackType: req.params.type });
-//     res.status(200).json(feedbacks);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
-
-// // New controller methods for enhanced features
-
-// export const getFeedbackHistory = async (req, res) => {
-//   try {
-//     // In a real implementation, you would fetch history from a separate collection
-//     // For now, we'll return a mock history
-//     res.status(200).json({
-//       history: [
-//         { 
-//           date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-//           action: 'Created',
-//           user: 'John Doe',
-//           details: 'Feedback created'
-//         },
-//         {
-//           date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-//           action: 'Updated',
-//           user: 'Jane Smith',
-//           details: 'Status changed from Not Started to In Progress'
-//         },
-//         {
-//           date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-//           action: 'Comment',
-//           user: 'Mike Johnson',
-//           details: 'Please provide more specific examples in your feedback'
-//         }
-//       ]
-//     });
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
-
-// export const addFeedbackComment = async (req, res) => {
-//   try {
-//     // In a real implementation, you would add the comment to a history collection
-//     // For now, we'll just return success
-//     res.status(201).json({ 
-//       message: 'Comment added successfully',
-//       comment: {
-//         date: new Date().toISOString(),
-//         action: 'Comment',
-//         user: 'Current User',
-//         details: req.body.comment
-//       }
-//     });
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
-
-// export const setFeedbackReminder = async (req, res) => {
-//   try {
-//     // In a real implementation, you would store the reminder in a database
-//     // For now, we'll just return success
-//     res.status(201).json({ 
-//       message: 'Reminder set successfully',
-//       reminder: req.body
-//     });
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
-
-// export const getFeedbackAnalytics = async (req, res) => {
-//   try {
-//     const feedbacks = await Feedback.find();
-    
-//     const analytics = {
-//       total: feedbacks.length,
-//       byStatus: {
-//         completed: feedbacks.filter(f => f.status === 'Completed').length,
-//         inProgress: feedbacks.filter(f => f.status === 'In Progress').length,
-//         notStarted: feedbacks.filter(f => f.status === 'Not Started').length,
-//         pending: feedbacks.filter(f => f.status === 'Pending').length,
-//       },
-//       byType: {
-//         selfFeedback: feedbacks.filter(f => f.feedbackType === 'selfFeedback').length,
-//         requestedFeedback: feedbacks.filter(f => f.feedbackType === 'requestedFeedback').length,
-//         feedbackToReview: feedbacks.filter(f => f.feedbackType === 'feedbackToReview').length,
-//         anonymousFeedback: feedbacks.filter(f => f.feedbackType === 'anonymousFeedback').length,
-//       },
-//       overdue: feedbacks.filter(f => 
-//         new Date(f.dueDate) < new Date() && f.status !== 'Completed'
-//       ).length,
-//       completionRate: feedbacks.length > 0 
-//         ? ((feedbacks.filter(f => f.status === 'Completed').length / feedbacks.length) * 100).toFixed(1)
-//         : 0
-//     };
-    
-//     res.status(200).json(analytics);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
-
 import Feedback from '../models/Feedback.js';
 
 export const createFeedback = async (req, res) => {
@@ -383,59 +229,12 @@ export const addFeedbackComment = async (req, res) => {
   }
 };
 
-export const setFeedbackReminder = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { reminderDate, reminderNote, recipients, isEmailNotification = true } = req.body;
-    
-    if (!reminderDate || !recipients || !recipients.length) {
-      return res.status(400).json({ message: 'Reminder date and recipients are required' });
-    }
-    
-    const feedback = await Feedback.findById(id);
-    if (!feedback) {
-      return res.status(404).json({ message: 'Feedback not found' });
-    }
-    
-    const reminder = {
-      reminderDate: new Date(reminderDate),
-      reminderNote,
-      recipients,
-      isEmailNotification,
-      isCompleted: false
-    };
-    
-    if (!feedback.reminders) {
-      feedback.reminders = [];
-    }
-    
-    feedback.reminders.push(reminder);
-    await feedback.save();
-    
-    // Add to history
-    const historyEntry = {
-      date: new Date(),
-      action: 'Reminder Set',
-      user: req.body.user || 'System',
-      details: `Reminder set for ${new Date(reminderDate).toLocaleString()}`
-    };
-    
-    feedback.history.push(historyEntry);
-    await feedback.save();
-    
-    res.status(201).json({ 
-      message: 'Reminder set successfully',
-      reminder
-    });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
 export const getFeedbackAnalytics = async (req, res) => {
   try {
+    // Get all feedbacks
     const feedbacks = await Feedback.find();
     
+    // Calculate analytics
     const analytics = {
       total: feedbacks.length,
       byStatus: {
@@ -450,12 +249,6 @@ export const getFeedbackAnalytics = async (req, res) => {
         feedbackToReview: feedbacks.filter(f => f.feedbackType === 'feedbackToReview').length,
         anonymousFeedback: feedbacks.filter(f => f.feedbackType === 'anonymousFeedback').length,
       },
-      byPriority: {
-        low: feedbacks.filter(f => f.priority === 'Low').length,
-        medium: feedbacks.filter(f => f.priority === 'Medium').length,
-        high: feedbacks.filter(f => f.priority === 'High').length,
-        critical: feedbacks.filter(f => f.priority === 'Critical').length,
-      },
       overdue: feedbacks.filter(f => 
         new Date(f.dueDate) < new Date() && f.status !== 'Completed'
       ).length,
@@ -466,7 +259,8 @@ export const getFeedbackAnalytics = async (req, res) => {
     
     res.status(200).json(analytics);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Error generating analytics:', error);
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -475,8 +269,8 @@ export const submitFeedbackResponse = async (req, res) => {
     const { id } = req.params;
     const { text, rating, submittedBy } = req.body;
     
-    if (!text || !rating) {
-      return res.status(400).json({ message: 'Response text and rating are required' });
+    if (!text && !rating) {
+      return res.status(400).json({ message: 'Response text or rating is required' });
     }
     
     const feedback = await Feedback.findById(id);
@@ -484,177 +278,155 @@ export const submitFeedbackResponse = async (req, res) => {
       return res.status(404).json({ message: 'Feedback not found' });
     }
     
-    feedback.response = {
+    // Create response object
+    const response = {
       text,
       rating,
       submittedBy: submittedBy || 'Anonymous',
       submittedAt: new Date()
     };
     
+    // Update feedback with response
+    feedback.response = response;
+    
+    // Update status to completed
     feedback.status = 'Completed';
     
-        // Add to history
-        const historyEntry = {
-          date: new Date(),
-          action: 'Response Submitted',
-          user: submittedBy || 'Anonymous',
-          details: `Feedback response submitted with rating: ${rating}/5`
-        };
-        
-        feedback.history.push(historyEntry);
-        await feedback.save();
-        
-        res.status(200).json({ 
-          message: 'Feedback response submitted successfully',
-          feedback
-        });
-      } catch (error) {
-        res.status(400).json({ message: error.message });
-      }
-    };
+    // Add to history
+    feedback.history.push({
+      date: new Date(),
+      action: 'Response Submitted',
+      user: submittedBy || 'Anonymous',
+      details: `Feedback response submitted with rating: ${rating || 'N/A'}`
+    });
     
-    export const bulkUpdateFeedback = async (req, res) => {
-      try {
-        const { ids, action, value } = req.body;
-        
-        if (!ids || !ids.length) {
-          return res.status(400).json({ message: 'Feedback IDs are required' });
-        }
-        
-        if (!action) {
-          return res.status(400).json({ message: 'Action is required' });
-        }
-        
-        let updateData = {};
-        let result;
-        
-        switch (action) {
-          case 'status':
-            updateData = { status: value };
-            result = await Feedback.updateMany(
-              { _id: { $in: ids } },
-              { $set: updateData }
-            );
-            break;
-            
-          case 'delete':
-            result = await Feedback.deleteMany({ _id: { $in: ids } });
-            break;
-            
-          default:
-            return res.status(400).json({ message: 'Invalid action' });
-        }
-        
-        res.status(200).json({ 
-          message: `Bulk ${action} completed successfully`,
-          affected: result.modifiedCount || result.deletedCount || 0
-        });
-      } catch (error) {
-        res.status(400).json({ message: error.message });
-      }
-    };
+    await feedback.save();
     
-    export const getFeedbacksByEmployee = async (req, res) => {
-      try {
-        const { employeeId } = req.params;
-        
-        // Find feedbacks where this employee is either the subject or the reviewer
-        const feedbacks = await Feedback.find({
-          $or: [
-            { 'employee.id': employeeId },
-            { employee: employeeId },
-            { 'manager.id': employeeId },
-            { manager: employeeId }
-          ]
-        });
-        
-        res.status(200).json(feedbacks);
-      } catch (error) {
-        res.status(400).json({ message: error.message });
-      }
-    };
+    res.status(200).json({ 
+      message: 'Feedback response submitted successfully',
+      feedback
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getFeedbacksByEmployee = async (req, res) => {
+  try {
+    const { employeeId } = req.params;
     
-    export const getOverdueFeedbacks = async (req, res) => {
-      try {
-        const today = new Date();
-        
-        const overdueFeedbacks = await Feedback.find({
-          dueDate: { $lt: today },
-          status: { $ne: 'Completed' }
-        });
-        
-        res.status(200).json(overdueFeedbacks);
-      } catch (error) {
-        res.status(400).json({ message: error.message });
-      }
-    };
+    // Find feedbacks where this employee is either the employee or manager
+    const feedbacks = await Feedback.find({
+      $or: [
+        { employee: employeeId },
+        { 'employee.id': employeeId },
+        { manager: employeeId },
+        { 'manager.id': employeeId }
+      ]
+    });
     
-    export const getUpcomingFeedbacks = async (req, res) => {
-      try {
-        const today = new Date();
-        const nextWeek = new Date();
-        nextWeek.setDate(today.getDate() + 7);
-        
-        const upcomingFeedbacks = await Feedback.find({
-          dueDate: { $gte: today, $lte: nextWeek },
-          status: { $ne: 'Completed' }
-        });
-        
-        res.status(200).json(upcomingFeedbacks);
-      } catch (error) {
-        res.status(400).json({ message: error.message });
-      }
-    };
+    res.status(200).json(feedbacks);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getFeedbacksByDepartment = async (req, res) => {
+  try {
+    const { department } = req.params;
     
-    export const getDueFeedbackReminders = async (req, res) => {
-      try {
-        const now = new Date();
-        
-        // Find all feedbacks with reminders due now
-        const feedbacks = await Feedback.find({
-          'reminders.reminderDate': { $lte: now },
-          'reminders.isCompleted': false
-        });
-        
-        // Extract just the due reminders
-        const dueReminders = feedbacks.flatMap(feedback => {
-          const reminders = feedback.reminders.filter(r => 
-            new Date(r.reminderDate) <= now && !r.isCompleted
-          ).map(r => ({
-            ...r.toObject(),
-            feedbackId: feedback._id,
-            feedbackTitle: feedback.title
-          }));
-          
-          return reminders;
-        });
-        
-        res.status(200).json(dueReminders);
-      } catch (error) {
-        res.status(400).json({ message: error.message });
-      }
-    };
+    // Find feedbacks where employee or manager is from this department
+    // This assumes employee and manager objects have department field
+    const feedbacks = await Feedback.find({
+      $or: [
+        { 'employee.department': department },
+        { 'manager.department': department }
+      ]
+    });
     
-    export const markReminderComplete = async (req, res) => {
-      try {
-        const { feedbackId, reminderId } = req.params;
-        
-        const feedback = await Feedback.findById(feedbackId);
-        if (!feedback) {
-          return res.status(404).json({ message: 'Feedback not found' });
-        }
-        
-        const reminderIndex = feedback.reminders.findIndex(r => r._id.toString() === reminderId);
-        if (reminderIndex === -1) {
-          return res.status(404).json({ message: 'Reminder not found' });
-        }
-        
-        feedback.reminders[reminderIndex].isCompleted = true;
-        await feedback.save();
-        
-        res.status(200).json({ message: 'Reminder marked as complete' });
-      } catch (error) {
-        res.status(400).json({ message: error.message });
-      }
-    };
+    res.status(200).json(feedbacks);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getFeedbacksOverdue = async (req, res) => {
+  try {
+    const today = new Date();
     
+    // Find feedbacks that are past due date and not completed
+    const overdueFeedbacks = await Feedback.find({
+      dueDate: { $lt: today },
+      status: { $ne: 'Completed' }
+    });
+    
+    res.status(200).json(overdueFeedbacks);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getFeedbacksDueThisWeek = async (req, res) => {
+  try {
+    const today = new Date();
+    const oneWeekFromNow = new Date();
+    oneWeekFromNow.setDate(today.getDate() + 7);
+    
+    // Find feedbacks due within the next week and not completed
+    const dueThisWeek = await Feedback.find({
+      dueDate: { $gte: today, $lte: oneWeekFromNow },
+      status: { $ne: 'Completed' }
+    });
+    
+    res.status(200).json(dueThisWeek);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const bulkUpdateFeedbacks = async (req, res) => {
+  try {
+    const { ids, updateData } = req.body;
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'Feedback IDs are required' });
+    }
+    
+    if (!updateData || Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: 'Update data is required' });
+    }
+    
+    // Update multiple feedbacks
+    const result = await Feedback.updateMany(
+      { _id: { $in: ids } },
+      { $set: updateData }
+    );
+    
+    res.status(200).json({ 
+      message: 'Feedbacks updated successfully',
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const bulkDeleteFeedbacks = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'Feedback IDs are required' });
+    }
+    
+    // Delete multiple feedbacks
+    const result = await Feedback.deleteMany({ _id: { $in: ids } });
+    
+    res.status(200).json({ 
+      message: 'Feedbacks deleted successfully',
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
