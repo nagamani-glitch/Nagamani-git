@@ -1,98 +1,3 @@
-// import SkillZone from '../models/SkillZone.js';
-
-// // Get all SkillZone entries
-// export const getSkillZones = async (req, res) => {
-//   try {
-//     const skillZones = await SkillZone.find();
-//     res.json(skillZones);
-//   } catch (error) {
-//     console.error('Error fetching SkillZones:', error);
-//     res.status(500).json({ message: 'Server Error' });
-//   }
-// };
-
-// // Create new SkillZone entry
-// export const createSkillZone = async (req, res) => {
-//   const { name, candidates } = req.body;
-
-//   try {
-//     const newSkillZone = new SkillZone({ name, candidates });
-//     await newSkillZone.save();
-//     res.json(newSkillZone);
-//   } catch (error) {
-//     console.error('Error creating SkillZone:', error);
-//     res.status(500).json({ message: 'Server Error' });
-//   }
-// };
-
-// // Edit an existing SkillZone entry (candidate)
-// export const updateSkillZoneCandidate = async (req, res) => {
-//   const { skillZoneId, candidateId } = req.params;
-//   const { name, reason } = req.body;
-
-//   try {
-//     const skillZone = await SkillZone.findById(skillZoneId);
-//     if (!skillZone) {
-//       return res.status(404).json({ message: 'SkillZone not found' });
-//     }
-
-//     const candidate = skillZone.candidates.id(candidateId);
-//     if (!candidate) {
-//       return res.status(404).json({ message: 'Candidate not found' });
-//     }
-
-//     candidate.name = name;
-//     candidate.reason = reason;
-
-//     await skillZone.save();
-//     res.json(skillZone);
-//   } catch (error) {
-//     console.error('Error updating SkillZone candidate:', error);
-//     res.status(500).json({ message: 'Server Error', error: error.message });
-//   }
-// };
-
-
-// // Delete candidate from a SkillZone
-// export const deleteSkillZoneCandidate = async (req, res) => {
-//   const { skillZoneId, candidateId } = req.params;
-
-//   try {
-//     const skillZone = await SkillZone.findById(skillZoneId);
-//     if (!skillZone) {
-//       return res.status(404).json({ message: 'SkillZone not found' });
-//     }
-
-//     skillZone.candidates = skillZone.candidates.filter(
-//       (candidate) => candidate._id.toString() !== candidateId
-//     );
-
-//     await skillZone.save();
-//     res.json(skillZone);
-//   } catch (error) {
-//     console.error('Error deleting SkillZone candidate:', error);
-//     res.status(500).json({ message: 'Server Error' });
-//   }
-// };
-
-// // Delete an entire SkillZone entry
-// export const deleteSkillZone = async (req, res) => {
-//   const { skillZoneId } = req.params;
-
-//   try {
-//     const deletedSkillZone = await SkillZone.findByIdAndDelete(skillZoneId);
-
-//     if (!deletedSkillZone) {
-//       return res.status(404).json({ message: 'SkillZone not found' });
-//     }
-
-//     res.json({ message: 'SkillZone deleted successfully', deletedSkillZone });
-//   } catch (error) {
-//     console.error('Error deleting SkillZone:', error);
-//     res.status(500).json({ message: 'Server Error' });
-//   }
-// };
-
 import SkillZone from '../models/SkillZone.js';
 
 // Get all skills
@@ -120,7 +25,7 @@ export const addSkill = async (req, res) => {
 // Add a candidate to a skill
 export const addCandidate = async (req, res) => {
   const { skillId } = req.params;
-  const { name, reason, addedOn } = req.body;
+  const { name, reason, addedOn, employeeId, email, department, designation } = req.body;
   
   try {
     const skill = await SkillZone.findById(skillId);
@@ -128,11 +33,20 @@ export const addCandidate = async (req, res) => {
       return res.status(404).json({ message: 'Skill not found' });
     }
     
-    skill.candidates.push({
+    // Create candidate object with all fields
+    const candidateData = {
       name,
       reason,
-      addedOn
-    });
+      addedOn: addedOn || new Date().toLocaleDateString()
+    };
+    
+    // Only add employee fields if they exist
+    if (employeeId) candidateData.employeeId = employeeId;
+    if (email) candidateData.email = email;
+    if (department) candidateData.department = department;
+    if (designation) candidateData.designation = designation;
+    
+    skill.candidates.push(candidateData);
     
     await skill.save();
     res.status(200).json(skill);
@@ -144,7 +58,7 @@ export const addCandidate = async (req, res) => {
 // Update a candidate in a skill
 export const updateCandidate = async (req, res) => {
   const { skillId, candidateId } = req.params;
-  const { name, reason } = req.body;
+  const { name, reason, employeeId, email, department, designation } = req.body;
   
   try {
     const skill = await SkillZone.findById(skillId);
@@ -160,8 +74,26 @@ export const updateCandidate = async (req, res) => {
       return res.status(404).json({ message: 'Candidate not found' });
     }
     
+    // Update basic fields
     skill.candidates[candidateIndex].name = name;
     skill.candidates[candidateIndex].reason = reason;
+    
+    // Update employee fields if provided
+    if (employeeId !== undefined) {
+      skill.candidates[candidateIndex].employeeId = employeeId;
+    }
+    
+    if (email !== undefined) {
+      skill.candidates[candidateIndex].email = email;
+    }
+    
+    if (department !== undefined) {
+      skill.candidates[candidateIndex].department = department;
+    }
+    
+    if (designation !== undefined) {
+      skill.candidates[candidateIndex].designation = designation;
+    }
     
     await skill.save();
     res.status(200).json(skill);
@@ -206,5 +138,4 @@ export const deleteSkill = async (req, res) => {
     res.status(500).json({ message: 'Error deleting skill', error });
   }
 };
-
 

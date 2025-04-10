@@ -1,10 +1,4 @@
 import React, { useState, useEffect } from "react";
-// import {
-//   Box, Button, Typography, Dialog, DialogTitle, DialogContent, TextField,
-//   IconButton, Grid, Stack, Table, TableBody, TableCell, TableContainer,
-//   TableHead, TableRow, Paper, InputAdornment, MenuItem, Chip,
-//   Alert, Snackbar
-// } from '@mui/material';
 import {
   Box,
   Button,
@@ -29,6 +23,8 @@ import {
   Alert,
   Snackbar,
   DialogActions,
+  Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 
 import {
@@ -42,6 +38,7 @@ import {
   Download,
 } from "@mui/icons-material";
 import GavelIcon from "@mui/icons-material/Gavel";
+import axios from "axios";
 
 const DisciplinaryActions = () => {
   const [open, setOpen] = useState(false);
@@ -54,6 +51,9 @@ const DisciplinaryActions = () => {
     message: "",
     severity: "success",
   });
+  const [registeredEmployees, setRegisteredEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const actionStatuses = [
     "Warning",
@@ -69,12 +69,17 @@ const DisciplinaryActions = () => {
     startDate: "",
     status: "",
     attachments: null,
+    employeeId: "",
+    email: "",
+    department: "",
+    designation: "",
   };
 
   const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
     fetchActions();
+    fetchRegisteredEmployees();
   }, [searchQuery, filterStatus]);
 
   const fetchActions = async () => {
@@ -90,15 +95,60 @@ const DisciplinaryActions = () => {
     }
   };
 
+  const fetchRegisteredEmployees = async () => {
+    try {
+      setLoadingEmployees(true);
+      const response = await axios.get(
+        "http://localhost:5000/api/employees/registered"
+      );
+      setRegisteredEmployees(response.data);
+      setLoadingEmployees(false);
+    } catch (error) {
+      console.error("Error fetching registered employees:", error);
+      showSnackbar("Error fetching employees", "error");
+      setLoadingEmployees(false);
+    }
+  };
+
+  const handleEmployeeSelect = (event, employee) => {
+    setSelectedEmployee(employee);
+    if (employee) {
+      // Populate the form with employee data
+      const fullName = `${employee.personalInfo?.firstName || ""} ${
+        employee.personalInfo?.lastName || ""
+      }`.trim();
+      setFormData({
+        ...formData,
+        employee: fullName,
+        employeeId: employee.Emp_ID || "",
+        email: employee.personalInfo?.email || "",
+        department: employee.joiningDetails?.department || "",
+        designation: employee.joiningDetails?.initialDesignation || "",
+      });
+    } else {
+      // Reset employee-related fields if selection is cleared
+      setFormData({
+        ...formData,
+        employee: "",
+        employeeId: "",
+        email: "",
+        department: "",
+        designation: "",
+      });
+    }
+  };
+
   const handleClickOpen = () => {
     setEditingAction(null);
     setFormData(initialFormState);
+    setSelectedEmployee(null);
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
     setEditingAction(null);
+    setSelectedEmployee(null);
   };
 
   const handleInputChange = (e) => {
@@ -123,6 +173,8 @@ const DisciplinaryActions = () => {
   const handleSave = async () => {
     try {
       const formDataToSend = new FormData();
+
+      // Add all form fields to FormData
       Object.keys(formData).forEach((key) => {
         if (key !== "attachments") {
           formDataToSend.append(key, formData[key]);
@@ -159,10 +211,19 @@ const DisciplinaryActions = () => {
 
   const handleEdit = (action) => {
     setEditingAction(action);
+
+    // Find the employee if there's an employeeId
+    const employee = action.employeeId
+      ? registeredEmployees.find((emp) => emp.Emp_ID === action.employeeId)
+      : null;
+
+    setSelectedEmployee(employee);
+
     setFormData({
       ...action,
       attachments: null, // Reset file input
     });
+
     setOpen(true);
   };
 
@@ -278,6 +339,8 @@ const DisciplinaryActions = () => {
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
               <TableCell>Employee</TableCell>
+              <TableCell>Employee ID</TableCell>
+              <TableCell>Department</TableCell>
               <TableCell>Action Type</TableCell>
               <TableCell>Description</TableCell>
               <TableCell>Start Date</TableCell>
@@ -291,6 +354,19 @@ const DisciplinaryActions = () => {
               actions.map((action) => (
                 <TableRow key={action._id} hover>
                   <TableCell>{action.employee}</TableCell>
+                  <TableCell>
+                    {action.employeeId ? (
+                      <Chip
+                        label={action.employeeId}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell>{action.department || "-"}</TableCell>
                   <TableCell>{action.action}</TableCell>
                   <TableCell>{action.description}</TableCell>
                   <TableCell>
@@ -336,7 +412,7 @@ const DisciplinaryActions = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={9} align="center">
                   <Box sx={{ py: 3, textAlign: "center" }}>
                     <GavelIcon sx={{ fontSize: 60, color: "#ccc", mb: 2 }} />
                     <Typography color="textSecondary">
@@ -369,43 +445,195 @@ const DisciplinaryActions = () => {
             fontWeight: 600,
             padding: "24px 32px",
           }}
-          
         >
           {editingAction ? "Edit Action" : "Take An Action"}
         </DialogTitle>
 
-        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc", marginTop: '20px'}}>
+        <DialogContent
+          sx={{
+            padding: "32px",
+            backgroundColor: "#f8fafc",
+            marginTop: "20px",
+          }}
+        >
           <Grid container spacing={3} sx={{ mt: 1 }}>
+            {/* Employee Selection Autocomplete */}
+            <Grid item xs={12}>
+              <Autocomplete
+                id="employee-select"
+                options={registeredEmployees}
+                getOptionLabel={(option) =>
+                  `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
+                    option.personalInfo?.lastName || ""
+                  }`
+                }
+                value={selectedEmployee}
+                onChange={handleEmployeeSelect}
+                loading={loadingEmployees}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Employee"
+                    variant="outlined"
+                    fullWidth
+                    required
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingEmployees ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+
             <Grid item xs={12} md={6}>
-            <TextField
-        name="employee"
-        label="Employee"
-        fullWidth
-        required
-        value={formData.employee}
-        onChange={handleInputChange}
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            backgroundColor: "white",
-            borderRadius: "12px",
-            "&:hover fieldset": {
-              borderColor: "#1976d2",
-            },
-          },
-          "& .MuiInputLabel-root.Mui-focused": {
-            color: "#1976d2",
-          }
-        }}
-      />
+              <TextField
+                name="employee"
+                label="Employee Name"
+                fullWidth
+                required
+                value={formData.employee}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1976d2",
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="email"
+                label="Email"
+                fullWidth
+                value={formData.email}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="department"
+                label="Department"
+                fullWidth
+                value={formData.department}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="designation"
+                label="Designation"
+                fullWidth
+                value={formData.designation}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 name="action"
-                select
                 label="Action Type"
+                select
                 fullWidth
                 required
                 value={formData.action}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="Verbal Warning">Verbal Warning</MenuItem>
+                <MenuItem value="Written Warning">Written Warning</MenuItem>
+                <MenuItem value="Suspension">Suspension</MenuItem>
+                <MenuItem value="Termination">Termination</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="startDate"
+                label="Start Date"
+                type="date"
+                fullWidth
+                required
+                value={formData.startDate}
+                onChange={handleInputChange}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="status"
+                label="Status"
+                select
+                fullWidth
+                required
+                value={formData.status}
                 onChange={handleInputChange}
                 sx={{
                   "& .MuiOutlinedInput-root": {
@@ -445,71 +673,18 @@ const DisciplinaryActions = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="startDate"
-                label="Start Date"
-                type="date"
-                fullWidth
-                required
-                InputLabelProps={{ shrink: true }}
-                value={formData.startDate}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                }}
-                
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="status"
-                select
-                label="Status"
-                fullWidth
-                required
-                value={formData.status}
-                onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                }}
-              >
-                {actionStatuses.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
             <Grid item xs={12}>
               <Button
                 variant="outlined"
                 component="label"
                 startIcon={<UploadFile />}
-                fullWidth
                 sx={{
                   borderRadius: "12px",
-                  borderColor: "#1976d2",
-                  color: "#1976d2",
-                  "&:hover": {
-                    borderColor: "#1565c0",
-                    backgroundColor: "#e3f2fd",
-                  },
+                  padding: "10px 16px",
+                  textTransform: "none",
                 }}
               >
-                Upload Supporting Documents
+                Upload Attachment
                 <input
                   type="file"
                   hidden
@@ -517,17 +692,16 @@ const DisciplinaryActions = () => {
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                 />
               </Button>
+              {formData.attachments && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  File selected: {formData.attachments.name}
+                </Typography>
+              )}
             </Grid>
           </Grid>
         </DialogContent>
-
         <DialogActions
-          sx={{
-            padding: "24px 32px",
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
+          sx={{ padding: "24px 32px", backgroundColor: "#f8fafc" }}
         >
           <Button
             onClick={handleClose}
@@ -547,26 +721,18 @@ const DisciplinaryActions = () => {
           >
             Cancel
           </Button>
-
           <Button
             onClick={handleSave}
             variant="contained"
-            disabled={
-              !formData.employee ||
-              !formData.action ||
-              !formData.description ||
-              !formData.startDate ||
-              !formData.status
-            }
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
               fontSize: "0.95rem",
               textTransform: "none",
               padding: "8px 32px",
               borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              boxShadow: "0 4px 12px rgba(52, 152, 219, 0.2)",
               "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                background: "linear-gradient(45deg, #1565c0, #1976d2)",
               },
             }}
           >
@@ -575,126 +741,17 @@ const DisciplinaryActions = () => {
         </DialogActions>
       </Dialog>
 
-      {/* <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          {editingAction ? 'Edit Action' : 'Take An Action'}
-          <IconButton
-            aria-label="close"
-            onClick={handleClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ pt: 3 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="employee"
-                label="Employee"
-                fullWidth
-                required
-                value={formData.employee}
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="action"
-                select
-                label="Action Type"
-                fullWidth
-                required
-                value={formData.action}
-                onChange={handleInputChange}
-              >
-                {actionStatuses.map(status => (
-                  <MenuItem key={status} value={status}>{status}</MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="description"
-                label="Description"
-                multiline
-                rows={4}
-                fullWidth
-                required
-                value={formData.description}
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="startDate"
-                label="Start Date"
-                type="date"
-                fullWidth
-                required
-                InputLabelProps={{ shrink: true }}
-                value={formData.startDate}
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="status"
-                select
-                label="Status"
-                fullWidth
-                required
-                value={formData.status}
-                onChange={handleInputChange}
-              >
-                {actionStatuses.map(status => (
-                  <MenuItem key={status} value={status}>{status}</MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12}>
-              <Button
-                variant="outlined"
-                component="label"
-                startIcon={<UploadFile />}
-                fullWidth
-              >
-                Upload Supporting Documents
-                <input
-                  type="file"
-                  hidden
-                  onChange={handleFileUpload}
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                />
-              </Button>
-              {formData.attachments && (
-                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                  Selected file: {formData.attachments.name}
-                </Typography>
-              )}
-            </Grid>
-          </Grid>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
-            <Button onClick={handleClose} variant="outlined">
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleSave}
-              disabled={!formData.employee || !formData.action || !formData.description || !formData.startDate || !formData.status}
-            >
-              {editingAction ? 'Update' : 'Save'}
-            </Button>
-          </Box>
-        </DialogContent>
-      </Dialog> */}
-
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

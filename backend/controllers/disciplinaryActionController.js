@@ -1,130 +1,184 @@
 import DisciplinaryAction from '../models/DisciplinaryAction.js';
-import fs from 'fs/promises';
+import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
+// Configure multer storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = 'uploads/disciplinary';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+export const upload = multer({ storage: storage });
+
+// Get all disciplinary actions with optional filtering
 export const getAllActions = async (req, res) => {
   try {
     const { searchQuery, status } = req.query;
-    const filter = {};
-
+    
+    let query = {};
+    
     if (searchQuery) {
-      filter.$or = [
-        { employee: { $regex: searchQuery, $options: 'i' } },
-        { description: { $regex: searchQuery, $options: 'i' } }
-      ];
+      query = {
+        $or: [
+          { employee: { $regex: searchQuery, $options: 'i' } },
+          { action: { $regex: searchQuery, $options: 'i' } },
+          { description: { $regex: searchQuery, $options: 'i' } },
+          { employeeId: { $regex: searchQuery, $options: 'i' } },
+          { department: { $regex: searchQuery, $options: 'i' } }
+        ]
+      };
     }
-
+    
     if (status && status !== 'all') {
-      filter.status = status;
+      query.status = status;
     }
-
-    const actions = await DisciplinaryAction.find(filter)
-      .sort({ createdAt: -1 });
-    res.status(200).json(actions);
+    
+    const actions = await DisciplinaryAction.find(query).sort({ createdAt: -1 });
+    res.json(actions);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+// Create a new disciplinary action
 export const createAction = async (req, res) => {
   try {
-    const actionData = req.body;
+    const { employee, action, description, startDate, status, employeeId, email, department, designation } = req.body;
+    
+    const newAction = new DisciplinaryAction({
+      employee,
+      action,
+      description,
+      startDate,
+      status,
+      employeeId,
+      email,
+      department,
+      designation
+    });
     
     if (req.file) {
-      actionData.attachments = {
+      newAction.attachments = {
         filename: req.file.filename,
-        path: req.file.path,
         originalName: req.file.originalname,
-        mimetype: req.file.mimetype
+        path: req.file.path
       };
     }
-
-    const newAction = new DisciplinaryAction(actionData);
-    const savedAction = await newAction.save();
-    res.status(201).json(savedAction);
+    
+    await newAction.save();
+    res.status(201).json(newAction);
   } catch (error) {
-    if (req.file) {
-      await fs.unlink(req.file.path);
-    }
     res.status(400).json({ message: error.message });
   }
 };
 
+// Get a single disciplinary action
+export const getAction = async (req, res) => {
+  try {
+    const action = await DisciplinaryAction.findById(req.params.id);
+    if (!action) {
+      return res.status(404).json({ message: 'Action not found' });
+    }
+    res.json(action);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update a disciplinary action
 export const updateAction = async (req, res) => {
   try {
-    const { id } = req.params;
-    const actionData = req.body;
+    const { employee, action, description, startDate, status, employeeId, email, department, designation } = req.body;
     
-    const existingAction = await DisciplinaryAction.findById(id);
-    if (!existingAction) {
-      return res.status(404).json({ message: 'Action not found' });
-    }
-
+    const updatedAction = {
+      employee,
+      action,
+      description,
+      startDate,
+      status,
+      employeeId,
+      email,
+      department,
+      designation
+    };
+    
     if (req.file) {
       // Delete old file if exists
-      if (existingAction.attachments?.path) {
-        await fs.unlink(existingAction.attachments.path);
+      const oldAction = await DisciplinaryAction.findById(req.params.id);
+      if (oldAction.attachments && oldAction.attachments.path) {
+        fs.unlink(oldAction.attachments.path, (err) => {
+          if (err) console.error('Error deleting old file:', err);
+        });
       }
-
-      actionData.attachments = {
+      
+      updatedAction.attachments = {
         filename: req.file.filename,
-        path: req.file.path,
         originalName: req.file.originalname,
-        mimetype: req.file.mimetype
+        path: req.file.path
       };
     }
-
-    const updatedAction = await DisciplinaryAction.findByIdAndUpdate(
-      id,
-      actionData,
+    
+    const result = await DisciplinaryAction.findByIdAndUpdate(
+      req.params.id,
+      updatedAction,
       { new: true }
     );
-    res.status(200).json(updatedAction);
-  } catch (error) {
-    if (req.file) {
-      await fs.unlink(req.file.path);
+    
+    if (!result) {
+      return res.status(404).json({ message: 'Action not found' });
     }
+    
+    res.json(result);
+  } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
 
+// Delete a disciplinary action
 export const deleteAction = async (req, res) => {
   try {
-    const { id } = req.params;
-    const action = await DisciplinaryAction.findById(id);
+    const action = await DisciplinaryAction.findById(req.params.id);
     
     if (!action) {
       return res.status(404).json({ message: 'Action not found' });
     }
-
-    // Delete associated file if exists
-    if (action.attachments?.path) {
-      await fs.unlink(action.attachments.path);
+    
+    // Delete attachment if exists
+    if (action.attachments && action.attachments.path) {
+      fs.unlink(action.attachments.path, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
     }
-
-    await DisciplinaryAction.findByIdAndDelete(id);
-    res.status(200).json({ message: 'Action deleted successfully' });
+    
+    await DisciplinaryAction.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Action deleted successfully' });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
-export const downloadFile = async (req, res) => {
+// Download attachment
+export const downloadAttachment = async (req, res) => {
   try {
     const { filename } = req.params;
-    const filePath = path.join('uploads/disciplinary-actions', filename);
+    const filePath = path.join('uploads/disciplinary', filename);
     
-    // Check if file exists
-    await fs.access(filePath);
-    
-    // Get file details from database
-    const action = await DisciplinaryAction.findOne({ 'attachments.filename': filename });
-    if (!action) {
-      return res.status(404).json({ message: 'File not found in database' });
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'File not found' });
     }
-
-    res.download(filePath, action.attachments.originalName);
+    
+    res.download(filePath);
   } catch (error) {
-    res.status(404).json({ message: 'File not found' });
+    res.status(500).json({ message: error.message });
   }
 };

@@ -147,7 +147,7 @@ app.use('/api/disciplinary-actions', disciplinaryActionRoutes);
 app.use('/api/time-off-requests', timeOffRequestRoutes);
 app.use('/api/rotating-shift', rotatingShiftRoutes);
 app.use('/api/rotating-worktype', rotatingWorktypeRoutes);
-app.use('/api/my-leave-requests', myLeaveRequestRoutes);
+app.use('/api/leave-requests', myLeaveRequestRoutes);
 app.use('/api/leave-requests', leaveRequestRoutes);
 // app.use('/api/documents', documentRoute);
 

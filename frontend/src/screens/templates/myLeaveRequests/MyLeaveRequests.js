@@ -1,174 +1,116 @@
-import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
 import {
   Box,
+  Typography,
   Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Grid,
-  IconButton,
   Paper,
+  TextField,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
-  Typography,
-  MenuItem,
-  InputAdornment,
-  Alert,
-  Snackbar,
+  IconButton,
+  Chip,
   FormControlLabel,
   Switch,
-  Tooltip,
   CircularProgress,
+  Snackbar,
+  Alert,
+  Divider,
+  Card,
+  CardContent,
+  CardHeader,
+  Tabs,
+  Tab,
+  LinearProgress,
+  Tooltip,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import {
   Add as AddIcon,
-  Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  CalendarToday as CalendarIcon,
+  EventBusy as EventBusyIcon,
+  EventAvailable as EventAvailableIcon,
+  AccessTime as AccessTimeIcon,
   Info as InfoIcon,
-  Close,
 } from "@mui/icons-material";
-import { format } from "date-fns";
+import axios from "axios";
+import format from "date-fns/format";
+import differenceInCalendarDays from "date-fns/differenceInCalendarDays";
+import isWeekend from "date-fns/isWeekend";
+import addDays from "date-fns/addDays";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
-const API_URL = "http://localhost:5000/api/my-leave-requests";
-
-const leaveTypes = [
-  { id: "annual", label: "Annual Leave" },
-  { id: "sick", label: "Sick Leave" },
-  { id: "personal", label: "Personal Leave" },
-  { id: "maternity", label: "Maternity Leave" },
-  { id: "paternity", label: "Paternity Leave" },
+const LEAVE_TYPES = [
+  { value: "annual", label: "Annual Leave" },
+  { value: "sick", label: "Sick Leave" },
+  { value: "personal", label: "Personal Leave" },
+  { value: "maternity", label: "Maternity Leave" },
+  { value: "paternity", label: "Paternity Leave" },
+  { value: "casual", label: "Casual Leave" },
+  { value: "earned", label: "Earned Leave" },
 ];
 
-const statsCards = [
-  {
-    id: "total",
-    label: "Total Requests",
-    color: "#2196f3",
-    getValue: (leaves) => leaves.length,
-  },
-  {
-    id: "pending",
-    label: "Pending",
-    color: "#ff9800",
-    getValue: (leaves) => leaves.filter((l) => l.status === "pending").length,
-  },
-  {
-    id: "approved",
-    label: "Approved",
-    color: "#4caf50",
-    getValue: (leaves) => leaves.filter((l) => l.status === "approved").length,
-  },
-  {
-    id: "rejected",
-    label: "Rejected",
-    color: "#f44336",
-    getValue: (leaves) => leaves.filter((l) => l.status === "rejected").length,
-  },
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884D8",
+  "#82ca9d",
+  "#ffc658",
 ];
 
-const styles = {
-  mainContainer: {
-    p: 4,
-    backgroundColor: "#f8fafc",
-    minHeight: "100vh",
-  },
-  headerSection: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    mb: 4,
-  },
-  pageTitle: {
-    fontSize: "2rem",
-    fontWeight: 600,
-    color: "#1a237e",
-  },
-  newRequestButton: {
-    background: "linear-gradient(45deg, #2196f3, #1976d2)",
-    boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-    "&:hover": {
-      background: "linear-gradient(45deg, #1976d2, #1565c0)",
-      boxShadow: "0 6px 16px rgba(25, 118, 210, 0.3)",
-    },
-  },
-  statsCard: {
-    p: 3,
-    borderRadius: 2,
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-    transition: "all 0.3s ease",
-    "&:hover": {
-      transform: "translateY(-5px)",
-      boxShadow: "0 8px 25px rgba(0, 0, 0, 0.12)",
-    },
-  },
-  tableContainer: {
-    borderRadius: 2,
-    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.06)",
-    overflow: "hidden",
-  },
-  tableHeader: {
-    backgroundColor: "#f1f5f9",
-    "& .MuiTableCell-head": {
-      color: "#475569",
-      fontWeight: 600,
-      textTransform: "uppercase",
-      letterSpacing: "0.5px",
-    },
-  },
-  statusChip: (status) => ({
-    borderRadius: "20px",
-    fontWeight: 500,
-    textTransform: "capitalize",
-    ...(status === "pending" && {
-      backgroundColor: "#fff7ed",
-      color: "#c2410c",
-    }),
-    ...(status === "approved" && {
-      backgroundColor: "#f0fdf4",
-      color: "#15803d",
-    }),
-    ...(status === "rejected" && {
-      backgroundColor: "#fef2f2",
-      color: "#dc2626",
-    }),
-  }),
-  actionButton: {
-    transition: "all 0.2s ease",
-    "&:hover": {
-      transform: "scale(1.1)",
-    },
-  },
+const API_URL = "http://localhost:5000/api/leave-requests";
+
+// Mock employee data - replace with actual authentication
+const EMPLOYEE = {
+  code: "EMP001",
+  name: "John Doe",
+  department: "Engineering",
 };
 
 const MyLeaveRequests = () => {
-  const [leaves, setLeaves] = useState([]);
+  const [tabValue, setTabValue] = useState(0);
+  const [leaveRequests, setLeaveRequests] = useState([]);
+  const [leaveBalance, setLeaveBalance] = useState(null);
+  const [statistics, setStatistics] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [selectedLeave, setSelectedLeave] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [rejectionReasonDialogOpen, setRejectionReasonDialogOpen] = useState(false);
-  const [filters, setFilters] = useState({
-    search: "",
-    status: "all",
-    type: "all",
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
   });
+
   const [formData, setFormData] = useState({
-    employeeName: "",
-    employeeCode: "",
-    leaveType: "",
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: format(new Date(), "yyyy-MM-dd"),
+    leaveType: "annual",
+    startDate: new Date(),
+    endDate: new Date(),
     reason: "",
     halfDay: false,
     halfDayType: "morning",
@@ -176,643 +118,792 @@ const MyLeaveRequests = () => {
 
   useEffect(() => {
     fetchLeaveRequests();
+    fetchLeaveBalance();
+    fetchLeaveStatistics();
   }, []);
 
   const fetchLeaveRequests = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(API_URL);
-      setLeaves(response.data);
-    } catch (err) {
-      setError("Failed to fetch leave requests");
-      console.error(err);
-    } finally {
+      const response = await axios.get(`${API_URL}/employee/${EMPLOYEE.code}`);
+      setLeaveRequests(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching leave requests:", error);
+      showSnackbar("Error fetching leave requests", "error");
       setLoading(false);
     }
   };
 
-  const handleCreateLeave = async () => {
+  const fetchLeaveBalance = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/balance/${EMPLOYEE.code}`);
+      setLeaveBalance(response.data);
+    } catch (error) {
+      console.error("Error fetching leave balance:", error);
+      showSnackbar("Error fetching leave balance", "error");
+    }
+  };
+
+  const fetchLeaveStatistics = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/statistics/${EMPLOYEE.code}`
+      );
+      setStatistics(response.data);
+    } catch (error) {
+      console.error("Error fetching leave statistics:", error);
+    }
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  const handleOpenDialog = () => {
+    setFormData({
+      leaveType: "annual",
+      startDate: new Date(),
+      endDate: new Date(),
+      reason: "",
+      halfDay: false,
+      halfDayType: "morning",
+    });
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  // const handleInputChange = (field, value) => {
+  //   setFormData({
+  //     ...formData,
+  //     [field]: value
+  //   });
+  // };
+  const handleInputChange = (field, value) => {
+    if (field === "halfDay" && value === true) {
+      // If half day is selected, set end date equal to start date
+      setFormData({
+        ...formData,
+        [field]: value,
+        endDate: formData.startDate,
+      });
+    } else if (field === "startDate" && formData.halfDay) {
+      // If changing start date while half day is selected, update end date too
+      setFormData({
+        ...formData,
+        [field]: value,
+        endDate: value,
+      });
+    } else {
+      // Normal case
+      setFormData({
+        ...formData,
+        [field]: value,
+      });
+    }
+  };
+
+  const calculateBusinessDays = (start, end, isHalfDay) => {
+    if (isHalfDay) return 0.5;
+
+    let count = 0;
+    let currentDate = new Date(start);
+
+    while (currentDate <= end) {
+      if (!isWeekend(currentDate)) {
+        count++;
+      }
+      currentDate = addDays(currentDate, 1);
+    }
+
+    return count;
+  };
+
+  const handleSubmit = async () => {
     try {
       setLoading(true);
+
+      const numberOfDays = calculateBusinessDays(
+        formData.startDate,
+        formData.endDate,
+        formData.halfDay
+      );
+
       const leaveData = {
-        employeeName: formData.employeeName,
-        employeeCode: formData.employeeCode,
+        employeeCode: EMPLOYEE.code,
+        employeeName: EMPLOYEE.name,
         leaveType: formData.leaveType,
         startDate: formData.startDate,
         endDate: formData.endDate,
         reason: formData.reason,
         halfDay: formData.halfDay,
         halfDayType: formData.halfDayType,
-        // Status will be set to 'pending' by the backend
+        numberOfDays,
       };
-      const response = await axios.post(API_URL, leaveData);
-      setLeaves([...leaves, response.data]);
-      setSuccess("Leave request created successfully");
+
+      await axios.post(API_URL, leaveData);
+
       setOpenDialog(false);
-      resetForm();
-    } catch (err) {
-      setError("Failed to create leave request");
-      console.error(err);
-    } finally {
+      fetchLeaveRequests();
+      fetchLeaveBalance();
+      fetchLeaveStatistics();
+      showSnackbar("Leave request submitted successfully");
+      setLoading(false);
+    } catch (error) {
+      console.error("Error submitting leave request:", error);
+      showSnackbar(
+        error.response?.data?.message || "Error submitting leave request",
+        "error"
+      );
       setLoading(false);
     }
   };
 
-  const handleUpdateLeave = async () => {
-    try {
-      setLoading(true);
-      // Only allow updating if status is pending
-      if (selectedLeave.status !== "pending") {
-        setError("Cannot edit a request that has already been processed");
-        setLoading(false);
-        return;
-      }
-      
-      const response = await axios.put(
-        `${API_URL}/${selectedLeave._id}`,
-        formData
-      );
-      setLeaves(
-        leaves.map((leave) =>
-          leave._id === selectedLeave._id ? response.data : leave
-        )
-      );
-      setSuccess("Leave request updated successfully");
-      setOpenDialog(false);
-      resetForm();
-    } catch (err) {
-      setError("Failed to update leave request");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteLeave = async (id) => {
-    // Find the leave to check its status
-    const leaveToDelete = leaves.find(leave => leave._id === id);
-    
-    if (leaveToDelete.status !== "pending") {
-      setError("Cannot delete a request that has already been processed");
-      return;
-    }
-    
-    if (!window.confirm("Are you sure you want to delete this leave request?")) {
-      return;
-    }
-    
+  const handleDeleteRequest = async (id) => {
     try {
       setLoading(true);
       await axios.delete(`${API_URL}/${id}`);
-      setLeaves(leaves.filter((leave) => leave._id !== id));
-      setSuccess("Leave request deleted successfully");
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete leave request");
-      console.error("Delete error:", err);
-    } finally {
+      fetchLeaveRequests();
+      fetchLeaveBalance();
+      fetchLeaveStatistics();
+      showSnackbar("Leave request deleted successfully");
+      setLoading(false);
+    } catch (error) {
+      console.error("Error deleting leave request:", error);
+      showSnackbar("Error deleting leave request", "error");
       setLoading(false);
     }
   };
 
-  const calculateDays = (startDate, endDate, isHalfDay) => {
-    if (isHalfDay) return 0.5;
-    
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end - start);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  };
-
-  const handleEdit = (leave) => {
-    // Only allow editing if status is pending
-    if (leave.status !== "pending") {
-      setError("Cannot edit a request that has already been processed");
-      return;
-    }
-    
-    setSelectedLeave(leave);
-    setFormData({
-      employeeName: leave.employeeName,
-      employeeCode: leave.employeeCode,
-      leaveType: leave.leaveType,
-      startDate: format(new Date(leave.startDate), "yyyy-MM-dd"),
-      endDate: format(new Date(leave.endDate), "yyyy-MM-dd"),
-      reason: leave.reason,
-      halfDay: leave.halfDay || false,
-      halfDayType: leave.halfDayType || "morning",
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
     });
-    setEditMode(true);
-    setOpenDialog(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      employeeName: "",
-      employeeCode: "",
-      leaveType: "",
-      startDate: format(new Date(), "yyyy-MM-dd"),
-      endDate: format(new Date(), "yyyy-MM-dd"),
-      reason: "",
-      halfDay: false,
-      halfDayType: "morning",
-    });
-    setSelectedLeave(null);
-    setEditMode(false);
-  };
-
-  const filteredLeaves = useMemo(() => {
-    return leaves.filter((leave) => {
-      const matchesSearch =
-        leave.reason?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        leave.employeeName?.toLowerCase().includes(filters.search.toLowerCase());
-      const matchesStatus =
-        filters.status === "all" || leave.status === filters.status;
-      const matchesType =
-        filters.type === "all" || leave.leaveType === filters.type;
-      return matchesSearch && matchesStatus && matchesType;
-    });
-  }, [leaves, filters]);
-
-  const viewRejectionReason = (leave) => {
-    if (leave.status === "rejected" && leave.rejectionReason) {
-      setSelectedLeave(leave);
-      setRejectionReasonDialogOpen(true);
-    }
   };
 
   const handleCloseSnackbar = () => {
-    setError(null);
-    setSuccess(null);
+    setSnackbar({
+      ...snackbar,
+      open: false,
+    });
+  };
+
+  const getStatusChip = (status) => {
+    switch (status) {
+      case "approved":
+        return <Chip label="Approved" color="success" size="small" />;
+      case "rejected":
+        return <Chip label="Rejected" color="error" size="small" />;
+      default:
+        return <Chip label="Pending" color="warning" size="small" />;
+    }
+  };
+
+  const getLeaveTypeName = (type) => {
+    const leaveType = LEAVE_TYPES.find((t) => t.value === type);
+    return leaveType ? leaveType.label : type;
+  };
+
+  // Fix for the error: Convert object to array for chart data
+  const getMonthlyChartData = (statistics) => {
+    if (
+      !statistics ||
+      !statistics.statistics ||
+      !statistics.statistics.monthlyUsage
+    ) {
+      return [];
+    }
+
+    // Convert the monthlyUsage object to an array of objects
+    return Object.entries(statistics.statistics.monthlyUsage).map(
+      ([month, days]) => ({
+        month,
+        days,
+      })
+    );
+  };
+
+  // Fix for the error: Convert object to array for chart data
+  const getLeaveTypeChartData = (statistics) => {
+    if (
+      !statistics ||
+      !statistics.statistics ||
+      !statistics.statistics.leaveTypeUsage
+    ) {
+      return [];
+    }
+
+    // Convert the leaveTypeUsage object to an array of objects
+    return Object.entries(statistics.statistics.leaveTypeUsage).map(
+      ([type, days]) => ({
+        type: getLeaveTypeName(type),
+        days,
+        value: days, // For pie chart
+      })
+    );
+  };
+
+  const getAvailableBalance = (type) => {
+    if (!leaveBalance) return 0;
+
+    const balance = leaveBalance[type];
+    return balance ? balance.total - balance.used - balance.pending : 0;
   };
 
   return (
-    <Box sx={styles.mainContainer}>
-      {/* Success Snackbar */}
-      <Snackbar
-        open={!!success}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success">
-          {success}
-        </Alert>
-      </Snackbar>
-
-      {/* Error Snackbar */}
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="error">
-          {error}
-        </Alert>
-      </Snackbar>
-
-      <Box sx={styles.headerSection}>
-        <Typography sx={styles.pageTitle}>My Leave Requests</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            resetForm();
-            setOpenDialog(true);
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Box sx={{ p: 3, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
           }}
-          sx={styles.newRequestButton}
         >
-          New Leave Request
-        </Button>
-      </Box>
+          <Typography variant="h4" sx={{ fontWeight: 600, color: "#1a237e" }}>
+            My Leave Requests
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenDialog}
+          >
+            Request Leave
+          </Button>
+        </Box>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {statsCards.map((stat) => (
-          <Grid item xs={12} sm={6} md={3} key={stat.id}>
-            <Paper
-              sx={{
-                ...styles.statsCard,
-                borderLeft: `4px solid ${stat.color}`,
-              }}
-            >
-              <Typography variant="h6" sx={{ color: "#64748b", mb: 1 }}>
-                {stat.label}
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 600, color: stat.color }}>
-                {stat.getValue(leaves)}
-              </Typography>
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
+        >
+          <Tab label="Dashboard" />
+          <Tab label="My Requests" />
+          <Tab label="Leave Balance" />
+        </Tabs>
 
-      <Paper sx={{ 
-          p: 3, 
-          mb: 3,
-          borderRadius: '12px',
-          backgroundColor: 'white',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-      }}>
-          <Grid container spacing={3}>
-              <Grid item xs={12} sm={4}>
-                  <TextField 
-                      fullWidth
-                      size="small"
-                      placeholder="Search by name or reason"
-                      value={filters.search}
-                      onChange={(e) => setFilters({...filters, search: e.target.value})}
-                      InputProps={{
-                          startAdornment: (
-                              <InputAdornment position="start">
-                                  <SearchIcon fontSize="small" />
-                              </InputAdornment>
-                          ),
-                      }}
-                  />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                  <TextField
-                      select
-                      fullWidth
-                      size="small"
-                      label="Status"
-                      value={filters.status}
-                      onChange={(e) => setFilters({...filters, status: e.target.value})}
-                  >
-                      <MenuItem value="all">All Statuses</MenuItem>
-                      <MenuItem value="pending">Pending</MenuItem>
-                      <MenuItem value="approved">Approved</MenuItem>
-                      <MenuItem value="rejected">Rejected</MenuItem>
-                  </TextField>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                  <TextField
-                      select
-                      fullWidth
-                      size="small"
-                      label="Leave Type"
-                      value={filters.type}
-                      onChange={(e) => setFilters({...filters, type: e.target.value})}
-                  >
-                      <MenuItem value="all">All Types</MenuItem>
-                      {leaveTypes.map((type) => (
-                          <MenuItem key={type.id} value={type.id}>
-                              {type.label}
-                          </MenuItem>
-                      ))}
-                  </TextField>
-              </Grid>
-          </Grid>
-      </Paper>
-
-      <TableContainer component={Paper} sx={styles.tableContainer}>
-        <Table>
-          <TableHead sx={styles.tableHeader}>
-            <TableRow>
-              <TableCell>Employee</TableCell>
-              <TableCell>Leave Type</TableCell>
-              <TableCell>Duration</TableCell>
-              <TableCell>Reason</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading && !filteredLeaves.length ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                  <CircularProgress size={40} />
-                </TableCell>
-              </TableRow>
-            ) : !filteredLeaves.length ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                  <Typography variant="body1" color="textSecondary">
-                    No leave requests found
+        {tabValue === 0 && (
+          <Box>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={8}>
+                <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 2 }}>
+                    Leave Usage by Month
                   </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredLeaves.map((leave) => (
-                <TableRow key={leave._id} hover>
-                  <TableCell>
-                    <Box>
-                      <Typography variant="body2" fontWeight={500}>
-                        {leave.employeeName}
-                      </Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        {leave.employeeCode}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    {leaveTypes.find(t => t.id === leave.leaveType)?.label || leave.leaveType}
-                  </TableCell>
-                  <TableCell>
-                    <Box>
-                      <Typography variant="body2">
-                        {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
-                      </Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        {leave.halfDay ? "Half Day" : `${calculateDays(leave.startDate, leave.endDate, leave.halfDay)} days`}
-                        {leave.halfDay && ` (${leave.halfDayType})`}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
+                  <Box sx={{ height: 300 }}>
+                    {statistics ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={getMonthlyChartData(statistics)}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <RechartsTooltip />
+                          <Legend />
+                          <Bar
+                            dataKey="days"
+                            fill="#8884d8"
+                            name="Days Taken"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          height: "100%",
+                        }}
+                      >
+                        <CircularProgress />
+                      </Box>
+                    )}
+                  </Box>
+                </Paper>
+
+                <Paper sx={{ p: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 2 }}>
+                    Upcoming Leaves
+                  </Typography>
+                  {statistics &&
+                  statistics.upcomingLeaves &&
+                  statistics.upcomingLeaves.length > 0 ? (
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Type</TableCell>
+                            <TableCell>From</TableCell>
+                            <TableCell>To</TableCell>
+                            <TableCell>Days</TableCell>
+                            <TableCell>Status</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {statistics.upcomingLeaves.map((leave) => (
+                            <TableRow key={leave._id}>
+                              <TableCell>
+                                {getLeaveTypeName(leave.leaveType)}
+                              </TableCell>
+                              <TableCell>
+                                {new Date(leave.startDate).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                {new Date(leave.endDate).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>{leave.numberOfDays}</TableCell>
+                              <TableCell>
+                                {getStatusChip(leave.status)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  ) : (
                     <Typography
                       variant="body2"
-                      sx={{
-                        maxWidth: "200px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
+                      color="textSecondary"
+                      sx={{ textAlign: "center", py: 2 }}
                     >
-                      {leave.reason}
+                      No upcoming leaves
                     </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={leave.status}
-                      sx={styles.statusChip(leave.status)}
-                      size="small"
-                    />
-                    {leave.status === "rejected" && leave.rejectionReason && (
-                      <Tooltip title="View rejection reason">
-                        <IconButton
-                          size="small"
-                          onClick={() => viewRejectionReason(leave)}
-                          sx={{ ml: 1 }}
-                        >
-                          <InfoIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: "flex" }}>
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => handleEdit(leave)}
-                        disabled={leave.status !== "pending"}
-                        sx={styles.actionButton}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDeleteLeave(leave._id)}
-                        disabled={leave.status !== "pending"}
-                        sx={styles.actionButton}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                  )}
+                </Paper>
+              </Grid>
 
-      {/* Create/Edit Leave Request Dialog */}
-      <Dialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: "0 8px 40px rgba(0,0,0,0.12)",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #2196f3, #1976d2)",
-            color: "white",
-            py: 2,
-          }}
+              <Grid item xs={12} md={4}>
+                <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 2 }}>
+                    Leave Type Distribution
+                  </Typography>
+                  <Box sx={{ height: 300 }}>
+                    {statistics ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={getLeaveTypeChartData(statistics)}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            nameKey="type"
+                            label={({ type, value }) => `${type}: ${value}`}
+                          >
+                            {getLeaveTypeChartData(statistics).map(
+                              (entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={COLORS[index % COLORS.length]}
+                                />
+                              )
+                            )}
+                          </Pie>
+                          <RechartsTooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          height: "100%",
+                        }}
+                      >
+                        <CircularProgress />
+                      </Box>
+                    )}
+                  </Box>
+                </Paper>
+
+                <Paper sx={{ p: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 2 }}>
+                    Leave Balance Summary
+                  </Typography>
+                  {leaveBalance ? (
+                    <Box>
+                      {LEAVE_TYPES.map((type) => {
+                        const balance = leaveBalance[type.value];
+                        if (!balance) return null;
+
+                        const total = balance.total;
+                        const used = balance.used;
+                        const pending = balance.pending;
+                        const available = total - used - pending;
+                        const usedPercentage = (used / total) * 100;
+                        const pendingPercentage = (pending / total) * 100;
+
+                        return (
+                          <Box key={type.value} sx={{ mb: 2 }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                mb: 0.5,
+                              }}
+                            >
+                              <Typography variant="body2">
+                                {type.label}
+                              </Typography>
+                              <Typography variant="body2">
+                                {available} / {total} days
+                              </Typography>
+                            </Box>
+                            <Box
+                              sx={{
+                                position: "relative",
+                                height: 8,
+                                bgcolor: "#eee",
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  left: 0,
+                                  top: 0,
+                                  height: "100%",
+                                  width: `${usedPercentage}%`,
+                                  bgcolor: "#f44336",
+                                  borderRadius: "4px 0 0 4px",
+                                }}
+                              />
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  left: `${usedPercentage}%`,
+                                  top: 0,
+                                  height: "100%",
+                                  width: `${pendingPercentage}%`,
+                                  bgcolor: "#ff9800",
+                                }}
+                              />
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                mt: 0.5,
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                Used: {used} days
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                Pending: {pending} days
+                              </Typography>
+                            </Box>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  ) : (
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", py: 2 }}
+                    >
+                      <CircularProgress size={24} />
+                    </Box>
+                  )}
+                </Paper>
+              </Grid>
+            </Grid>
+          </Box>
+        )}
+
+        {tabValue === 1 && (
+          <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ mb: 3 }}>
+              My Leave Requests
+            </Typography>
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : leaveRequests.length > 0 ? (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Leave Type</TableCell>
+                      <TableCell>From</TableCell>
+                      <TableCell>To</TableCell>
+                      <TableCell>Days</TableCell>
+                      <TableCell>Reason</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {leaveRequests.map((request) => (
+                      <TableRow key={request._id}>
+                        <TableCell>
+                          {getLeaveTypeName(request.leaveType)}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(request.startDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(request.endDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{request.numberOfDays}</TableCell>
+                        <TableCell>
+                          <Tooltip title={request.reason}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                maxWidth: 150,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {request.reason}
+                            </Typography>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          {getStatusChip(request.status)}
+                          {request.rejectionReason && (
+                            <Tooltip
+                              title={`Reason: ${request.rejectionReason}`}
+                            >
+                              <InfoIcon
+                                fontSize="small"
+                                color="error"
+                                sx={{ ml: 1, verticalAlign: "middle" }}
+                              />
+                            </Tooltip>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {request.status === "pending" && (
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDeleteRequest(request._id)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Box sx={{ textAlign: "center", py: 3 }}>
+                <Typography variant="body1" color="textSecondary">
+                  No leave requests found
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={handleOpenDialog}
+                  sx={{ mt: 2 }}
+                >
+                  Request Leave
+                </Button>
+              </Box>
+            )}
+          </Paper>
+        )}
+
+        {tabValue === 2 && (
+          <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ mb: 3 }}>
+              Leave Balance
+            </Typography>
+            {leaveBalance ? (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Leave Type</TableCell>
+                      <TableCell>Total</TableCell>
+                      <TableCell>Used</TableCell>
+                      <TableCell>Pending</TableCell>
+                      <TableCell>Available</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {LEAVE_TYPES.map((type) => {
+                      const balance = leaveBalance[type.value];
+                      if (!balance) return null;
+
+                      return (
+                        <TableRow key={type.value}>
+                          <TableCell>{type.label}</TableCell>
+                          <TableCell>{balance.total}</TableCell>
+                          <TableCell>{balance.used}</TableCell>
+                          <TableCell>{balance.pending}</TableCell>
+                          <TableCell>
+                            {balance.total - balance.used - balance.pending}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+                <CircularProgress />
+              </Box>
+            )}
+          </Paper>
+        )}
+
+        <Dialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          maxWidth="sm"
+          fullWidth
         >
-          {editMode ? "Edit Leave Request" : "Create New Leave Request"}
-        </DialogTitle>
-        <DialogContent sx={{ py: 3 }}>
-          <Grid container spacing={3} sx={{ mt: 0 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Employee Name"
-                fullWidth
-                value={formData.employeeName}
-                onChange={(e) =>
-                  setFormData({ ...formData, employeeName: e.target.value })
-                }
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Employee Code"
-                fullWidth
-                value={formData.employeeCode}
-                onChange={(e) =>
-                  setFormData({ ...formData, employeeCode: e.target.value })
-                }
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+          <DialogTitle>Request Leave</DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2 }}>
               <TextField
                 select
                 label="Leave Type"
-                fullWidth
                 value={formData.leaveType}
-                onChange={(e) =>
-                  setFormData({ ...formData, leaveType: e.target.value })
-                }
-                required
+                onChange={(e) => handleInputChange("leaveType", e.target.value)}
+                fullWidth
+                margin="normal"
+                helperText={`Available balance: ${getAvailableBalance(
+                  formData.leaveType
+                )} days`}
               >
-                {leaveTypes.map((type) => (
-                  <MenuItem key={type.id} value={type.id}>
-                    {type.label}
+                {LEAVE_TYPES.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
                   </MenuItem>
                 ))}
               </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6}>
+
+              {/* In the Dialog content section, modify the date picker section
+              to conditionally render the end date picker */}
+              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <DatePicker
+                  label="Start Date"
+                  value={formData.startDate}
+                  onChange={(date) => handleInputChange("startDate", date)}
+                  renderInput={(params) => <TextField {...params} fullWidth />}
+                  disablePast
+                />
+
+                {!formData.halfDay && (
+                  <DatePicker
+                    label="End Date"
+                    value={formData.endDate}
+                    onChange={(date) => handleInputChange("endDate", date)}
+                    renderInput={(params) => (
+                      <TextField {...params} fullWidth />
+                    )}
+                    disablePast
+                    minDate={formData.startDate}
+                  />
+                )}
+              </Box>
               <FormControlLabel
                 control={
                   <Switch
                     checked={formData.halfDay}
                     onChange={(e) =>
-                      setFormData({ ...formData, halfDay: e.target.checked })
+                      handleInputChange("halfDay", e.target.checked)
                     }
                   />
                 }
                 label="Half Day"
+                sx={{ mt: 2 }}
               />
               {formData.halfDay && (
                 <TextField
                   select
                   label="Half Day Type"
-                  fullWidth
                   value={formData.halfDayType}
                   onChange={(e) =>
-                    setFormData({ ...formData, halfDayType: e.target.value })
+                    handleInputChange("halfDayType", e.target.value)
                   }
-                  sx={{ mt: 2 }}
+                  fullWidth
+                  margin="normal"
                 >
                   <MenuItem value="morning">Morning</MenuItem>
                   <MenuItem value="afternoon">Afternoon</MenuItem>
                 </TextField>
               )}
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Start Date"
-                type="date"
-                fullWidth
-                value={formData.startDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, startDate: e.target.value })
-                }
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="End Date"
-                type="date"
-                fullWidth
-                value={formData.endDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, endDate: e.target.value })
-                }
-                InputLabelProps={{ shrink: true }}
-                required
-                disabled={formData.halfDay}
-              />
-            </Grid>
-            <Grid item xs={12}>
               <TextField
                 label="Reason"
+                value={formData.reason}
+                onChange={(e) => handleInputChange("reason", e.target.value)}
                 fullWidth
+                margin="normal"
                 multiline
                 rows={4}
-                value={formData.reason}
-                onChange={(e) =>
-                  setFormData({ ...formData, reason: e.target.value })
-                }
-                required
               />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
-            onClick={() => setOpenDialog(false)}
-            variant="outlined"
-            sx={{ borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={editMode ? handleUpdateLeave : handleCreateLeave}
-            variant="contained"
-            sx={{
-              borderRadius: 2,
-              background: "linear-gradient(45deg, #2196f3, #1976d2)",
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1976d2, #1565c0)",
-                boxShadow: "0 6px 16px rgba(25, 118, 210, 0.3)",
-              },
-            }}
-            disabled={loading}
-          >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : editMode ? (
-              "Update Request"
-            ) : (
-              "Submit Request"
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Rejection Reason Dialog */}
-      <Dialog
-        open={rejectionReasonDialogOpen}
-        onClose={() => setRejectionReasonDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: "0 8px 40px rgba(0,0,0,0.12)",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #f44336, #e53935)",
-            color: "white",
-            py: 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <InfoIcon sx={{ mr: 1 }} />
-            Rejection Reason
-          </Box>
-          <IconButton
-            size="small"
-            onClick={() => setRejectionReasonDialogOpen(false)}
-            sx={{ color: "white" }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ py: 3 }}>
-          {selectedLeave && (
-            <Box>
-              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                Your leave request was rejected for the following reason:
-              </Typography>
-              <Paper
-                sx={{
-                  p: 2,
-                  mt: 1,
-                  backgroundColor: "#fef2f2",
-                  borderLeft: "4px solid #dc2626",
-                }}
-              >
-                <Typography variant="body1">{selectedLeave.rejectionReason}</Typography>
-              </Paper>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" color="textSecondary">
+                  Number of days:{" "}
+                  {calculateBusinessDays(
+                    formData.startDate,
+                    formData.endDate,
+                    formData.halfDay
+                  )}
+                </Typography>
+              </Box>
             </Box>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
-            onClick={() => setRejectionReasonDialogOpen(false)}
-            variant="outlined"
-            sx={{ borderRadius: 2 }}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              color="primary"
+              disabled={!formData.reason || loading}
+            >
+              {loading ? <CircularProgress size={24} /> : "Submit"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
           >
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </LocalizationProvider>
   );
 };
 
 export default MyLeaveRequests;
-

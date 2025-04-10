@@ -1,4 +1,3 @@
-// models/ApplicantProfile.js
 import mongoose from 'mongoose';
 
 const applicantProfileSchema = new mongoose.Schema({
@@ -13,6 +12,10 @@ const applicantProfileSchema = new mongoose.Schema({
   color: {
     type: String,
     default: '#ff9800',
+  },
+  employeeId: {
+    type: String,
+    default: '',
   },
 });
 

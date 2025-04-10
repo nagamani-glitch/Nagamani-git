@@ -25,6 +25,8 @@ import {
   Snackbar,
   Alert,
   Paper,
+  Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import {
   Add,
@@ -35,6 +37,7 @@ import {
   MoreVert,
   Delete,
   GroupWork,
+  Person,
 } from "@mui/icons-material";
 import axios from "axios";
 
@@ -177,23 +180,22 @@ const RecruitmentCandidate = () => {
     message: "",
     severity: "success",
   });
-  // const [newCandidate, setNewCandidate] = useState({
-  //   name: "",
-  //   email: "",
-  //   position: "",
-  //   status: "Not-Hired",
-  //   color: statusColors["Not-Hired"],
-  // });
+  const [registeredEmployees, setRegisteredEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
   const [newCandidate, setNewCandidate] = useState({
     name: "",
     email: "",
     position: "",
     status: "Not-Hired",
     color: statusColors["Not-Hired"],
+    employeeId: "",
   });
 
   useEffect(() => {
     fetchCandidates();
+    fetchRegisteredEmployees();
   }, []);
 
   const fetchCandidates = async () => {
@@ -204,6 +206,37 @@ const RecruitmentCandidate = () => {
       setCandidates(response.data);
     } catch (error) {
       showSnackbar("Error fetching candidates", "error");
+    }
+  };
+
+  const fetchRegisteredEmployees = async () => {
+    try {
+      setLoadingEmployees(true);
+      const response = await axios.get(
+        "http://localhost:5000/api/employees/registered"
+      );
+      setRegisteredEmployees(response.data);
+      setLoadingEmployees(false);
+    } catch (error) {
+      console.error("Error fetching registered employees:", error);
+      showSnackbar("Error fetching employees", "error");
+      setLoadingEmployees(false);
+    }
+  };
+
+  const handleEmployeeSelect = (event, employee) => {
+    setSelectedEmployee(employee);
+    if (employee) {
+      // Populate the candidate form with employee data
+      setNewCandidate({
+        ...newCandidate,
+        name: `${employee.personalInfo?.firstName || ""} ${
+          employee.personalInfo?.lastName || ""
+        }`.trim(),
+        email: employee.personalInfo?.email || "",
+        position: employee.joiningDetails?.initialDesignation || "",
+        employeeId: employee.Emp_ID || "",
+      });
     }
   };
 
@@ -233,14 +266,6 @@ const RecruitmentCandidate = () => {
     }
   };
 
-  // const handleStatusChange = (event) => {
-  //   const status = event.target.value;
-  //   setNewCandidate({
-  //     ...newCandidate,
-  //     status: status,
-  //     color: statusColors[status],
-  //   });
-  // };
   const handleStatusChange = (event) => {
     const status = event.target.value;
     setNewCandidate({
@@ -248,6 +273,17 @@ const RecruitmentCandidate = () => {
       status: status,
       color: statusColors[status],
     });
+
+    // If changing to a status that doesn't support employee selection, clear the selected employee
+    if (status !== "Hired") {
+      setSelectedEmployee(null);
+      setNewCandidate((prev) => ({
+        ...prev,
+        status: status,
+        color: statusColors[status],
+        employeeId: "",
+      }));
+    }
   };
 
   const showSnackbar = (message, severity = "success") => {
@@ -261,7 +297,9 @@ const RecruitmentCandidate = () => {
       position: "",
       status: "Not-Hired",
       color: statusColors["Not-Hired"],
+      employeeId: "",
     });
+    setSelectedEmployee(null);
   };
 
   const filteredCandidates = candidates.filter(
@@ -278,6 +316,11 @@ const RecruitmentCandidate = () => {
         return groups;
       }, {})
     : { All: filteredCandidates };
+
+  // Check if employee selection should be enabled
+  const isEmployeeSelectionEnabled = () => {
+    return newCandidate.status === "Hired";
+  };
 
   return (
     <Box sx={styles.root}>
@@ -401,6 +444,22 @@ const RecruitmentCandidate = () => {
                               color="#1a2027"
                             >
                               {candidate.name}
+                              {candidate.employeeId && (
+                                <Typography
+                                  component="span"
+                                  variant="caption"
+                                  sx={{
+                                    ml: 1,
+                                    color: "#1976d2",
+                                    backgroundColor: "#e3f2fd",
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                    fontSize: "0.7rem",
+                                  }}
+                                >
+                                  {candidate.employeeId}
+                                </Typography>
+                              )}
                             </Typography>
                             <Typography color="text.secondary" sx={{ mb: 1 }}>
                               {candidate.email}
@@ -447,268 +506,230 @@ const RecruitmentCandidate = () => {
             </Box>
           </Fade>
         ))}
-      </Box>
 
-      <Dialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        PaperProps={{
-          sx: {
-            width: "600px",
-            borderRadius: "20px",
-            overflow: "hidden",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            padding: "24px 32px",
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
+        {/* Menu for candidate actions */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          TransitionComponent={Fade}
+          PaperProps={{
+            sx: {
+              borderRadius: "12px",
+              boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+              padding: "8px 0",
+            },
           }}
         >
-          Add New Candidate
-        </DialogTitle>
+          <MenuItem
+            onClick={() => {
+              setAnchorEl(null);
+              setDeleteDialogOpen(true);
+            }}
+            sx={styles.menuItem}
+          >
+            <Delete sx={{ color: "#ef4444" }} />
+            <Typography color="#ef4444">Delete</Typography>
+          </MenuItem>
+        </Menu>
 
-        <DialogContent
-          sx={{
-            padding: "32px",
-            backgroundColor: "#f8fafc",
-          }}
+        {/* Delete confirmation dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          sx={styles.dialog}
         >
-          <Box
+          <DialogTitle sx={{ fontWeight: 600, pb: 1 }}>
+            Delete Candidate
+          </DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete{" "}
+              <strong>{selectedCandidate?.name}</strong>? This action cannot be
+              undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ padding: "16px 24px" }}>
+            <Button
+              onClick={() => setDeleteDialogOpen(false)}
+              sx={{
+                color: "#64748b",
+                "&:hover": { backgroundColor: "#f1f5f9" },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => handleDeleteCandidate(selectedCandidate?._id)}
+              variant="contained"
+              color="error"
+              sx={{
+                textTransform: "none",
+                borderRadius: "8px",
+                fontWeight: 600,
+              }}
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Create candidate dialog */}
+        <Dialog
+          open={createDialogOpen}
+          onClose={() => {
+            setCreateDialogOpen(false);
+            resetNewCandidate();
+          }}
+          sx={styles.dialog}
+        >
+          <DialogTitle
             sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 3,
+              fontWeight: 600,
+              pb: 1,
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              color: "white",
+              borderRadius: "12px 12px 0 0",
+              padding: "16px 24px",
             }}
           >
-            <TextField
-              fullWidth
-              label="Name"
-              name="name"
-              value={newCandidate.name}
-              onChange={(e) =>
-                setNewCandidate({ ...newCandidate, name: e.target.value })
-              }
-              sx={{
-                mt: 2,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1976d2",
-                },
-                mt: 2,
-              }}
-            />
+            Add New Candidate
+          </DialogTitle>
+          <DialogContent>
+            <Box
+              sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}
+            >
+              <TextField
+                label="Name"
+                fullWidth
+                value={newCandidate.name}
+                onChange={(e) =>
+                  setNewCandidate({ ...newCandidate, name: e.target.value })
+                }
+              />
+              <TextField
+                label="Email"
+                fullWidth
+                value={newCandidate.email}
+                onChange={(e) =>
+                  setNewCandidate({ ...newCandidate, email: e.target.value })
+                }
+              />
+              <TextField
+                label="Position"
+                fullWidth
+                value={newCandidate.position}
+                onChange={(e) =>
+                  setNewCandidate({ ...newCandidate, position: e.target.value })
+                }
+              />
+              <FormControl fullWidth>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={newCandidate.status}
+                  label="Status"
+                  onChange={handleStatusChange}
+                >
+                  <MenuItem value="Hired">Hired</MenuItem>
+                  <MenuItem value="Not-Hired">Not Hired</MenuItem>
+                </Select>
+              </FormControl>
 
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={newCandidate.email}
-              onChange={(e) =>
-                setNewCandidate({ ...newCandidate, email: e.target.value })
-              }
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Position"
-              name="position"
-              value={newCandidate.position}
-              onChange={(e) =>
-                setNewCandidate({ ...newCandidate, position: e.target.value })
-              }
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-              }}
-            />
-
-            <FormControl fullWidth>
-              <InputLabel sx={{ "&.Mui-focused": { color: "#1976d2" } }}>
-                Status
-              </InputLabel>
-              <Select
-                value={newCandidate.status}
-                onChange={handleStatusChange}
-                label="Status"
+              {/* Employee Selection Autocomplete - only enabled for Hired status */}
+              <Autocomplete
+                id="employee-select"
+                options={registeredEmployees}
+                getOptionLabel={(option) =>
+                  `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
+                    option.personalInfo?.lastName || ""
+                  }`
+                }
+                value={selectedEmployee}
+                onChange={handleEmployeeSelect}
+                loading={loadingEmployees}
+                disabled={!isEmployeeSelectionEnabled()}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={
+                      isEmployeeSelectionEnabled()
+                        ? "Select Onboarded Employee"
+                        : "Employee selection only available for Hired status"
+                    }
+                    variant="outlined"
+                    fullWidth
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingEmployees ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                    helperText={
+                      !isEmployeeSelectionEnabled() &&
+                      "Change status to Hired to enable employee selection"
+                    }
+                  />
+                )}
                 sx={{
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    "&:hover": {
-                      borderColor: "#1976d2",
-                    },
+                  "& .Mui-disabled": {
+                    opacity: 0.7,
+                    backgroundColor: "#f5f5f5",
                   },
                 }}
-              >
-                <MenuItem value="Not-Hired" sx={{ color: "#ef4444" }}>
-                  Not Hired
-                </MenuItem>
-                <MenuItem value="Hired" sx={{ color: "#4caf50" }}>
-                  Hired
-                </MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </DialogContent>
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ padding: "16px 24px" }}>
+            <Button
+              onClick={() => {
+                setCreateDialogOpen(false);
+                resetNewCandidate();
+              }}
+              sx={{
+                color: "#64748b",
+                "&:hover": { backgroundColor: "#f1f5f9" },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateSubmit}
+              variant="contained"
+              sx={{
+                textTransform: "none",
+                borderRadius: "8px",
+                fontWeight: 600,
+                backgroundColor: "#1976d2",
+                "&:hover": { backgroundColor: "#1565c0" },
+              }}
+              disabled={!newCandidate.name || !newCandidate.email}
+            >
+              Create
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-        <DialogActions
-          sx={{
-            padding: "24px 32px",
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
-        >
-          <Button
-            onClick={() => setCreateDialogOpen(false)}
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleCreateSubmit}
-            variant="contained"
-            sx={{
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              fontSize: "0.95rem",
-              textTransform: "none",
-              padding: "8px 32px",
-              borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-              },
-            }}
-          >
-            Create Candidate
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={() => setAnchorEl(null)}
-        PaperProps={{
-          elevation: 3,
-          sx: {
-            mt: 1,
-            borderRadius: "8px",
-            minWidth: "160px",
-          },
-        }}
-      >
-        <MenuItem
-          onClick={() => {
-            setDeleteDialogOpen(true);
-            setAnchorEl(null);
-          }}
-          sx={styles.menuItem}
-        >
-          <Delete sx={{ color: "#ef4444" }} />
-          <Typography color="#ef4444">Delete</Typography>
-        </MenuItem>
-      </Menu>
-
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        sx={styles.dialog}
-      >
-        <DialogTitle sx={{ pb: 2, fontWeight: 600 }}>
-          Delete Candidate
-        </DialogTitle>
-        <DialogContent>
-          <Typography color="text.secondary">
-            Are you sure you want to delete this candidate? This action cannot
-            be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 2 }}>
-          <Button
-            onClick={() => setDeleteDialogOpen(false)}
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={() => handleDeleteCandidate(selectedCandidate?._id)}
-            color="error"
-            variant="contained"
-            sx={styles.actionButton}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          severity={snackbar.severity}
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
-          sx={{ borderRadius: "8px", fontWeight: 500 }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: "100%", borderRadius: "8px" }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
     </Box>
   );
 };
