@@ -1,193 +1,157 @@
+/* EmployeeReport.css */
 .employee-report-wrapper {
-    padding: 24px;
-    background: #f0f2f5;
-    min-height: 100vh;
-    transition: all 0.3s ease;
+  background-color: #f0f2f5;
+  padding: 24px;
+}
+
+.employee-report-header {
+  margin-bottom: 24px;
+}
+
+.employee-report-title {
+  color: #1a237e;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* Stats cards styling */
+.employee-report-stats-container {
+  margin-bottom: 24px;
+}
+
+.employee-report-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -8px !important;
+  margin-right: -8px !important;
+}
+
+.employee-report-stat-col {
+  padding: 8px !important;
+  flex: 0 0 25%;
+  max-width: 25%;
+  box-sizing: border-box;
+}
+
+.employee-report-stat-card {
+  height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+  transition: all 0.3s;
+  padding: 16px;
+  background-color: #ffffff;
+}
+
+.employee-report-stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Chart cards styling */
+.employee-report-chart-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+  height: 100%;
+  background-color: #ffffff;
+  overflow: hidden;
+}
+
+.employee-report-chart-container {
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Table card styling */
+.employee-report-table-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+  margin-top: 16px;
+  background-color: #ffffff;
+}
+
+.employee-report-table-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Avatar styling */
+.employee-report-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Status badge styling */
+.employee-report-status-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.employee-report-status-active {
+  background-color: #e6f7ff;
+  color: #1890ff;
+  border: 1px solid #91d5ff;
+}
+
+.employee-report-status-inactive {
+  background-color: #fff1f0;
+  color: #ff4d4f;
+  border: 1px solid #ffa39e;
+}
+
+.employee-report-status-incomplete {
+  background-color: #fff7e6;
+  color: #fa8c16;
+  border: 1px solid #ffd591;
+}
+
+/* Progress bar styling */
+.employee-report-progress {
+  margin-bottom: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .employee-report-stat-col {
+    flex: 0 0 50%;
+    max-width: 50%;
   }
-  
-  .report-header {
-    margin-bottom: 24px;
-    background: white;
-    padding: 16px 24px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  }
-  
-  .report-header h1 {
-    margin: 0;
-    color: #1a1a1a;
-    font-size: 24px;
-    font-weight: 600;
-    line-height: 1.4;
-  }
-  
-  .stats-cards .ant-card {
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    border: none;
-    background: white;
-  }
-  
-  .stats-cards .ant-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .stat-trend {
-    font-size: 12px;
-    color: #8c8c8c;
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-  }
-  
-  .charts-section {
-    margin: 24px 0;
-  }
-  
-  .charts-section .ant-card {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    border: none;
-  }
-  
-  .charts-section .ant-card-head {
-    border-bottom: 1px solid #f0f0f0;
-    padding: 16px 24px;
-  }
-  
-  .charts-section .ant-card-head-title {
-    font-size: 16px;
-    font-weight: 600;
-  }
-  
-  .table-section {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    background: white;
-    border: none;
-  }
-  
-  .table-header {
-    margin-bottom: 16px;
-    padding: 16px 24px;
-    border-bottom: 1px solid #f0f0f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .ant-table-wrapper {
-    padding: 0 12px;
-  }
-  
-  .ant-table-thead > tr > th {
-    background: #fafafa;
-    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .employee-report-wrapper {
     padding: 16px;
-    border-bottom: 1px solid #f0f0f0;
   }
   
-  .ant-table-tbody > tr > td {
-    padding: 16px;
-    transition: background 0.3s ease;
+  .employee-report-stats-row {
+    margin-left: -4px !important;
+    margin-right: -4px !important;
   }
   
-  .ant-table-tbody > tr:hover > td {
-    background: #f5f5f5;
+  .employee-report-stat-col {
+    padding: 4px !important;
   }
   
-  .ant-progress-bg {
-    height: 8px !important;
-    border-radius: 4px;
+  .employee-report-table-filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 576px) {
+  .employee-report-stat-col {
+    flex: 0 0 100%;
+    max-width: 100%;
   }
   
-  .ant-statistic-title {
-    color: #8c8c8c;
-    font-size: 14px;
-    margin-bottom: 8px;
+  .employee-report-chart-container {
+    height: 250px;
   }
-  
-  .ant-statistic-content {
-    font-size: 24px;
-    font-weight: 600;
-    color: #262626;
-  }
-  
-  .ant-select-selector {
-    border-radius: 6px !important;
-  }
-  
-  .ant-btn {
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .ant-picker {
-    border-radius: 6px;
-  }
-  
-  .chart-tooltip {
-    background: white;
-    border-radius: 4px;
-    padding: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
-  
-  .department-legend {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    margin-top: 16px;
-  }
-  
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
-  }
-  
-  @media (max-width: 1200px) {
-    .stats-cards .ant-col {
-      flex: 0 0 50%;
-      max-width: 50%;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .employee-report-wrapper {
-      padding: 16px;
-    }
-    
-    .stats-cards .ant-col {
-      flex: 0 0 100%;
-      max-width: 100%;
-    }
-    
-    .charts-section .ant-col {
-      flex: 0 0 100%;
-      max-width: 100%;
-    }
-  
-    .report-header {
-      padding: 12px 16px;
-    }
-  
-    .report-header h1 {
-      font-size: 20px;
-    }
-  
-    .table-header {
-      flex-direction: column;
-      gap: 12px;
-    }
-  }
-  
+}
