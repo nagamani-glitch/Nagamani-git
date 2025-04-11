@@ -38,6 +38,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
   IconButton,
   TextField,
   Button,
@@ -100,6 +101,7 @@ const Contract = () => {
     department: "",
     minSalary: "",
     maxSalary: "",
+    filingStatus: "",
   });
   const [filteredContracts, setFilteredContracts] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]);
@@ -128,6 +130,9 @@ const Contract = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewContract, setPreviewContract] = useState(null);
 
+  // Add a state for filter dialog
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+
   const handlePreview = (contract) => {
     setPreviewContract(contract);
     setShowPreviewModal(true);
@@ -143,16 +148,31 @@ const Contract = () => {
   // Handle click outside filter popup
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Don't close if clicking on a select or menu item
+      if (
+        event.target.closest(".MuiSelect-select") ||
+        event.target.closest(".MuiMenuItem-root") ||
+        event.target.closest(".MuiList-root") ||
+        event.target.closest(".MuiBackdrop-root")
+      ) {
+        return;
+      }
+
+      // Only close if clicking outside the filter popup
       if (filterRef.current && !filterRef.current.contains(event.target)) {
         setShowFilterPopup(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    // Only add the listener when the popup is shown
+    if (showFilterPopup) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [showFilterPopup]);
 
   // Update filtered contracts when contracts change
   useEffect(() => {
@@ -334,60 +354,6 @@ const Contract = () => {
     });
   };
 
-  // Handle form submission for creating a new contract
-  // const handleSaveCreate = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const newContract = {
-  //       contract: formData.contractTitle,
-  //       contractStatus: formData.contractStatus,
-  //       employee: formData.employee,
-  //       startDate: formData.startDate,
-  //       endDate: formData.endDate,
-  //       wageType: formData.wageType,
-  //       payFrequency: formData.payFrequency,
-  //       basicSalary: Number(formData.basicSalary),
-  //       filingStatus: formData.filingStatus,
-  //       department: formData.department,
-  //       position: formData.position,
-  //       role: formData.role,
-  //       shift: formData.shift,
-  //       workType: formData.workType,
-  //       noticePeriod: Number(formData.noticePeriod),
-  //       deductFromBasicPay: formData.deductFromBasicPay,
-  //       calculateDailyLeave: formData.calculateDailyLeave,
-  //       note: formData.note,
-  //     };
-
-  //     // Handle file upload if a document is selected
-  //     if (formData.contractDocument) {
-  //       const formDataWithFile = new FormData();
-  //       formDataWithFile.append('document', formData.contractDocument);
-
-  //       // Upload file first (this would be a separate endpoint in a real app)
-  //       // const uploadResponse = await axios.post('http://localhost:5000/api/upload', formDataWithFile);
-  //       // newContract.documentUrl = uploadResponse.data.url;
-  //     }
-
-  //     const response = await axios.post(
-  //       "http://localhost:5000/api/payroll-contracts",
-  //       newContract
-  //     );
-
-  //     if (response.data.success) {
-  //       toast.success("Contract created successfully");
-  //       setContracts([...contracts, response.data.data]);
-  //       setFilteredContracts([...filteredContracts, response.data.data]);
-  //       setShowCreatePage(false);
-  //     }
-  //     setLoading(false);
-  //   } catch (error) {
-  //     console.error("Contract creation error:", error);
-  //     toast.error(error.response?.data?.error || "Failed to create contract");
-  //     setLoading(false);
-  //   }
-  // };
-
   // Handle sorting
   const handleSort = (key) => {
     let direction = "asc";
@@ -403,22 +369,6 @@ const Contract = () => {
     });
     setFilteredContracts(sortedContracts);
   };
-
-  // Handle edit button click
-  // const handleEdit = (contract) => {
-  //   setEditingId(contract._id);
-  //   setEditedData({
-  //     _id: contract._id,
-  //     contract: contract.contract,
-  //     employee: contract.employee,
-  //     startDate: contract.startDate,
-  //     endDate: contract.endDate,
-  //     wageType: contract.wageType,
-  //     basicSalary: contract.basicSalary,
-  //     filingStatus: contract.filingStatus,
-  //     contractStatus: contract.contractStatus
-  //   });
-  // };
 
   // 1. First, modify the handleEdit function to populate the formData and show the create page
   const handleEdit = (contract) => {
@@ -637,12 +587,15 @@ const Contract = () => {
 
   // Handle filter icon click
   const handleFilterIconClick = () => {
-    setShowFilterPopup(true);
+    // Use Dialog instead of popup
+    setShowFilterDialog(true);
   };
 
   // Handle filter changes
   const handleFilterChange = (e) => {
+    e.stopPropagation(); // Stop event propagation
     const { name, value } = e.target;
+    console.log(`Filter changed: ${name} = ${value}`);
     setFilterData({ ...filterData, [name]: value });
   };
 
@@ -658,192 +611,170 @@ const Contract = () => {
       department: "",
       minSalary: "",
       maxSalary: "",
+      filingStatus: "",
     });
     setFilteredContracts(contracts);
-    setShowFilterPopup(false);
+    setShowFilterDialog(false);
     setCurrentPage(1);
   };
-
-  // Apply filters
-  // const handleApplyFilter = async () => {
-  //   try {
-  //     setLoading(true);
-
-  //     // Prepare filter query
-  //     const filterQuery = {};
-  //     if (filterData.employeeName)
-  //       filterQuery.employeeName = filterData.employeeName;
-  //     if (filterData.contractStatus)
-  //       filterQuery.contractStatus = filterData.contractStatus;
-  //     if (filterData.startDate) filterQuery.startDate = filterData.startDate;
-  //     if (filterData.endDate) filterQuery.endDate = filterData.endDate;
-  //     if (filterData.contract) filterQuery.contract = filterData.contract;
-  //     if (filterData.wageType) filterQuery.wageType = filterData.wageType;
-  //     if (filterData.department) filterQuery.department = filterData.department;
-
-  //     // Try to filter using API
-  //     try {
-  //       const response = await axios.get(
-  //         "http://localhost:5000/api/payroll-contracts/filter",
-  //         { params: filterQuery }
-  //       );
-  //       if (response.data.success) {
-  //         setFilteredContracts(response.data.data);
-  //       }
-  //     } catch (apiError) {
-  //       console.error(
-  //         "API filter failed, using client-side filtering:",
-  //         apiError
-  //       );
-
-  //       // Fallback to client-side filtering
-  //       const newFilteredContracts = contracts.filter((contract) => {
-  //         const matchesEmployeeName =
-  //           !filterData.employeeName ||
-  //           (contract.employee &&
-  //             contract.employee
-  //               .toLowerCase()
-  //               .includes(filterData.employeeName.toLowerCase()));
-
-  //         const matchesContract =
-  //           !filterData.contract ||
-  //           (contract.contract &&
-  //             contract.contract.toLowerCase() ===
-  //               filterData.contract.toLowerCase());
-
-  //         const matchesWageType =
-  //           !filterData.wageType ||
-  //           (contract.wageType &&
-  //             contract.wageType.toLowerCase() ===
-  //               filterData.wageType.toLowerCase());
-
-  //         const matchesContractStatus =
-  //           !filterData.contractStatus ||
-  //           (contract.contractStatus &&
-  //             contract.contractStatus.toLowerCase() ===
-  //               filterData.contractStatus.toLowerCase());
-
-  //         const matchesStartDate =
-  //           !filterData.startDate ||
-  //           (contract.startDate &&
-  //             new Date(contract.startDate) >= new Date(filterData.startDate));
-
-  //         const matchesEndDate =
-  //           !filterData.endDate ||
-  //           (contract.endDate &&
-  //             new Date(contract.endDate) <= new Date(filterData.endDate));
-
-  //         const matchesDepartment =
-  //           !filterData.department ||
-  //           (contract.department &&
-  //             contract.department.toLowerCase() ===
-  //               filterData.department.toLowerCase());
-
-  //         const matchesMinSalary =
-  //           !filterData.minSalary ||
-  //           (contract.basicSalary &&
-  //             contract.basicSalary >= Number(filterData.minSalary));
-
-  //         const matchesMaxSalary =
-  //           !filterData.maxSalary ||
-  //           (contract.basicSalary &&
-  //             contract.basicSalary <= Number(filterData.maxSalary));
-
-  //         return (
-  //           matchesEmployeeName &&
-  //           matchesContract &&
-  //           matchesWageType &&
-  //           matchesContractStatus &&
-  //           matchesStartDate &&
-  //           matchesEndDate &&
-  //           matchesDepartment &&
-  //           matchesMinSalary &&
-  //           matchesMaxSalary
-  //         );
-  //       });
-
-  //       setFilteredContracts(newFilteredContracts);
-  //     }
-
-  //     setShowFilterPopup(false);
-  //     setCurrentPage(1);
-  //     setLoading(false);
-  //   } catch (error) {
-  //     console.error("Filtering error:", error);
-  //     toast.error("Error applying filters");
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleApplyFilter = async () => {
     try {
       setLoading(true);
-  
-      // Prepare filter query
-      const filterQuery = {};
-      if (filterData.employeeName) filterQuery.employeeName = filterData.employeeName;
-      if (filterData.contractStatus) filterQuery.contractStatus = filterData.contractStatus;
-      if (filterData.startDate) filterQuery.startDate = filterData.startDate;
-      if (filterData.endDate) filterQuery.endDate = filterData.endDate;
-      if (filterData.contract) filterQuery.contract = filterData.contract;
-      if (filterData.wageType) filterQuery.wageType = filterData.wageType;
-      if (filterData.department) filterQuery.department = filterData.department;
-  
-      // Try to filter using API
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/api/payroll-contracts/filter",
-          { params: filterQuery }
-        );
-        if (response.data.success) {
-          setFilteredContracts(response.data.data);
-        }
-      } catch (apiError) {
-        console.error("API filter failed, using client-side filtering:", apiError);
-        
-        // Fallback to client-side filtering
-        const newFilteredContracts = contracts.filter((contract) => {
-          const matchesEmployeeName = !filterData.employeeName || 
-            (contract.employee && contract.employee.toLowerCase().includes(filterData.employeeName.toLowerCase()));
-          
-          const matchesContract = !filterData.contract || 
-            (contract.contract && contract.contract.toLowerCase() === filterData.contract.toLowerCase());
-          
-          const matchesWageType = !filterData.wageType || 
-            (contract.wageType && contract.wageType.toLowerCase() === filterData.wageType.toLowerCase());
-          
-          const matchesContractStatus = !filterData.contractStatus || 
-            (contract.contractStatus && contract.contractStatus.toLowerCase() === filterData.contractStatus.toLowerCase());
-          
-          const matchesStartDate = !filterData.startDate || 
-            (contract.startDate && new Date(contract.startDate) >= new Date(filterData.startDate));
-          
-          const matchesEndDate = !filterData.endDate || 
-            (contract.endDate && new Date(contract.endDate) <= new Date(filterData.endDate));
-          
-          const matchesDepartment = !filterData.department || 
-            (contract.department && contract.department.toLowerCase() === filterData.department.toLowerCase());
-          
-          const matchesMinSalary = !filterData.minSalary || 
-            (contract.basicSalary && contract.basicSalary >= Number(filterData.minSalary));
-          
-          const matchesMaxSalary = !filterData.maxSalary || 
-            (contract.basicSalary && contract.basicSalary <= Number(filterData.maxSalary));
-          
-          return matchesEmployeeName && matchesContract && matchesWageType && 
-                 matchesContractStatus && matchesStartDate && matchesEndDate && 
-                 matchesDepartment && matchesMinSalary && matchesMaxSalary;
-        });
-        
-        setFilteredContracts(newFilteredContracts);
+
+      // Create a clean filter object with only non-empty values
+      const filterParams = {};
+
+      if (filterData.employeeName && filterData.employeeName.trim() !== "") {
+        filterParams.employeeName = filterData.employeeName.trim();
       }
-  
-      setShowFilterPopup(false);
+
+      if (filterData.contractStatus && filterData.contractStatus !== "") {
+        filterParams.contractStatus = filterData.contractStatus;
+      }
+
+      if (filterData.wageType && filterData.wageType !== "") {
+        filterParams.wageType = filterData.wageType;
+      }
+
+      if (filterData.department && filterData.department !== "") {
+        filterParams.department = filterData.department;
+      }
+
+      if (filterData.startDate && filterData.startDate !== "") {
+        filterParams.startDate = filterData.startDate;
+      }
+
+      if (filterData.endDate && filterData.endDate !== "") {
+        filterParams.endDate = filterData.endDate;
+      }
+
+      if (filterData.minSalary && filterData.minSalary !== "") {
+        filterParams.minSalary = filterData.minSalary;
+      }
+
+      if (filterData.maxSalary && filterData.maxSalary !== "") {
+        filterParams.maxSalary = filterData.maxSalary;
+      }
+
+      if (filterData.filingStatus && filterData.filingStatus !== "") {
+        filterParams.filingStatus = filterData.filingStatus;
+      }
+
+      console.log("Sending filter parameters to API:", filterParams);
+
+      // Make the API request with the filter parameters
+      const response = await axios.get(
+        "http://localhost:5000/api/payroll-contracts/filter",
+        { params: filterParams }
+      );
+
+      console.log("API response:", response.data);
+
+      if (response.data.success) {
+        setFilteredContracts(response.data.data);
+        toast.success(`Found ${response.data.data.length} matching contracts`);
+      } else {
+        toast.error("Failed to filter contracts");
+        // Keep the current filtered contracts
+      }
+
+      // Close the filter dialog and reset pagination
+      setShowFilterDialog(false);
       setCurrentPage(1);
+      calculateTotalPages();
       setLoading(false);
     } catch (error) {
-      console.error("Filtering error:", error);
-      toast.error("Error applying filters");
+      console.error("Filter API error:", error);
+      toast.error(
+        "Error applying filters. Using client-side filtering instead."
+      );
+
+      // Fallback to client-side filtering
+      const filtered = contracts.filter((contract) => {
+        // Check each filter condition
+        if (
+          filterData.employeeName &&
+          (!contract.employee ||
+            !contract.employee
+              .toLowerCase()
+              .includes(filterData.employeeName.toLowerCase()))
+        ) {
+          return false;
+        }
+
+        if (
+          filterData.contractStatus &&
+          contract.contractStatus !== filterData.contractStatus
+        ) {
+          return false;
+        }
+
+        if (filterData.wageType && contract.wageType !== filterData.wageType) {
+          return false;
+        }
+
+        if (
+          filterData.department &&
+          (!contract.department ||
+            !contract.department
+              .toLowerCase()
+              .includes(filterData.department.toLowerCase()))
+        ) {
+          return false;
+        }
+
+        if (
+          filterData.startDate &&
+          (!contract.startDate ||
+            new Date(contract.startDate) < new Date(filterData.startDate))
+        ) {
+          return false;
+        }
+
+        if (
+          filterData.endDate &&
+          (!contract.endDate ||
+            new Date(contract.endDate) > new Date(filterData.endDate))
+        ) {
+          return false;
+        }
+
+        if (
+          filterData.minSalary &&
+          (!contract.basicSalary ||
+            Number(contract.basicSalary) < Number(filterData.minSalary))
+        ) {
+          return false;
+        }
+
+        if (
+          filterData.maxSalary &&
+          (!contract.basicSalary ||
+            Number(contract.basicSalary) > Number(filterData.maxSalary))
+        ) {
+          return false;
+        }
+        if (
+          filterData.filingStatus &&
+          contract.filingStatus !== filterData.filingStatus
+        ) {
+          return false;
+        }
+
+        // If all conditions pass, include this contract
+        return true;
+      });
+
+      setFilteredContracts(filtered);
+      toast.info(
+        `Found ${filtered.length} matching contracts (client-side filtering)`
+      );
+
+      // Close the filter dialog and reset pagination
+      setShowFilterDialog(false);
+      setCurrentPage(1);
+      calculateTotalPages();
       setLoading(false);
     }
   };
@@ -1127,7 +1058,7 @@ const Contract = () => {
             {editingId ? "Edit Contract" : "New Contract"}
           </Typography>
           <IconButton
-            onClick={() => {  
+            onClick={() => {
               setShowCreatePage(false);
               setEditingId(null);
             }}
@@ -1166,7 +1097,7 @@ const Contract = () => {
                   name="contractTitle"
                   value={formData.contractTitle}
                   onChange={handleInputChange}
-                  placeholder="e.g., Contractor Name" 
+                  placeholder="e.g., Contractor Name"
                   variant="outlined"
                   size="small"
                   InputProps={{
@@ -1283,16 +1214,28 @@ const Contract = () => {
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Filing Status"
-                  name="filingStatus"
-                  value={formData.filingStatus}
-                  onChange={handleInputChange}
-                  placeholder="Filing status"
-                  variant="outlined"
-                  size="small"
-                />
+                <FormControl fullWidth variant="outlined" size="small">
+                  <InputLabel>Filing Status</InputLabel>
+                  <Select
+                    name="filingStatus"
+                    value={formData.filingStatus}
+                    onChange={handleInputChange}
+                    label="Filing Status"
+                  >
+                    <MenuItem value="">Select Filing Status</MenuItem>
+                    <MenuItem value="Individual">Individual</MenuItem>
+                    <MenuItem value="Head of Household (HOH)">
+                      Head of Household (HOH)
+                    </MenuItem>
+                    <MenuItem value="Married Filing Jointly (MFJ)">
+                      Married Filing Jointly (MFJ)
+                    </MenuItem>
+                    <MenuItem value="Married Filing Separately (MFS)">
+                      Married Filing Separately (MFS)
+                    </MenuItem>
+                    <MenuItem value="Single Filer">Single Filer</MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
 
               <Grid item xs={12} sm={6}>
@@ -1420,46 +1363,6 @@ const Contract = () => {
                   }}
                 />
               </Grid>
-
-              {/* <Grid item xs={12} sm={6}>
-              <FormControl component="fieldset" variant="outlined" sx={{ width: '100%' }}>
-                <Typography variant="body2" sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
-                  Deduct from Basic Pay
-                  <FaInfoCircle style={{ marginLeft: '5px', color: '#1976d2', fontSize: '14px' }} title="Deduct the leave amount from basic pay" />
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Switch
-                    name="deductFromBasicPay"
-                    checked={formData.deductFromBasicPay}
-                    onChange={handleInputChange}
-                    color="primary"
-                  />
-                  <Typography variant="body2" color="textSecondary">
-                    {formData.deductFromBasicPay ? 'Yes' : 'No'}
-                  </Typography>
-                </Box>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <FormControl component="fieldset" variant="outlined" sx={{ width: '100%' }}>
-                <Typography variant="body2" sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
-                  Calculate Daily Leave Amount
-                  <FaInfoCircle style={{ marginLeft: '5px', color: '#1976d2', fontSize: '14px' }} title="Leave amount will be calculated by dividing basic pay by working days" />
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Switch
-                    name="calculateDailyLeave"
-                    checked={formData.calculateDailyLeave}
-                    onChange={handleInputChange}
-                    color="primary"
-                  />
-                  <Typography variant="body2" color="textSecondary">
-                    {formData.calculateDailyLeave ? 'Yes' : 'No'}
-                  </Typography>
-                </Box>
-              </FormControl>
-            </Grid> */}
 
               <Grid item xs={12}>
                 <Button
@@ -1629,146 +1532,22 @@ const Contract = () => {
                 }}
               />
 
-              <Box sx={{ position: "relative" }} ref={filterRef}>
-                <Button
-                  variant="outlined"
-                  startIcon={<FaFilter />}
-                  onClick={handleFilterIconClick}
-                  sx={{
-                    borderRadius: "8px",
-                    borderColor: "#e0e0e0",
-                    color: "#475569",
-                    "&:hover": {
-                      borderColor: "#1976d2",
-                      backgroundColor: "#f0f7ff",
-                    },
-                  }}
-                >
-                  Filter
-                </Button>
-
-                {showFilterPopup && (
-                  <Paper
-                    sx={{
-                      position: "absolute",
-                      top: "100%",
-                      right: 0,
-                      width: "500px",
-                      maxWidth: "90vw",
-                      zIndex: 1000,
-                      mt: 1,
-                      p: 3,
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                    }}
-                  >
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                      Filter Contracts
-                    </Typography>
-
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Employee Name"
-                          name="employeeName"
-                          value={filterData.employeeName}
-                          onChange={handleFilterChange}
-                          size="small"
-                          placeholder="Search by name"
-                        />
-                      </Grid>
-
-                      <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth size="small">
-                          <InputLabel>Contract Status</InputLabel>
-                          <Select
-                            name="contractStatus"
-                            value={filterData.contractStatus}
-                            onChange={handleFilterChange}
-                            label="Contract Status"
-                          >
-                            <MenuItem value="">All</MenuItem>
-                            <MenuItem value="Draft">Draft</MenuItem>
-                            <MenuItem value="Active">Active</MenuItem>
-                            <MenuItem value="Expired">Expired</MenuItem>
-                            <MenuItem value="Terminated">Terminated</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Grid>
-
-                      <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth size="small">
-                          <InputLabel>Contract Type</InputLabel>
-                          <Select
-                            name="contract"
-                            value={filterData.contract}
-                            onChange={handleFilterChange}
-                            label="Contract Type"
-                          >
-                            <MenuItem value="">All</MenuItem>
-                            <MenuItem value="Full-time">Full-time</MenuItem>
-                            <MenuItem value="Part-time">Part-time</MenuItem>
-                            <MenuItem value="Temporary">Temporary</MenuItem>
-                            <MenuItem value="Internship">Internship</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Grid>
-
-                      <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth size="small">
-                          <InputLabel>Wage Type</InputLabel>
-                          <Select
-                            name="wageType"
-                            value={filterData.wageType}
-                            onChange={handleFilterChange}
-                            label="Wage Type"
-                          >
-                            <MenuItem value="">All</MenuItem>
-                            <MenuItem value="Monthly">Monthly</MenuItem>
-                            <MenuItem value="Hourly">Hourly</MenuItem>
-                            <MenuItem value="Daily">Daily</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Grid>
-
-                      <Grid item xs={12}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            gap: 1,
-                            mt: 2,
-                          }}
-                        >
-                          <Button
-                            variant="outlined"
-                            onClick={handleResetFilter}
-                            sx={{ borderRadius: "8px" }}
-                          >
-                            Reset
-                          </Button>
-                          <Button
-                            variant="contained"
-                            onClick={handleApplyFilter}
-                            sx={{
-                              borderRadius: "8px",
-                              background:
-                                "linear-gradient(45deg, #1976d2, #64b5f6)",
-                              "&:hover": {
-                                background:
-                                  "linear-gradient(45deg, #1565c0, #42a5f5)",
-                              },
-                            }}
-                          >
-                            Apply Filters
-                          </Button>
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </Paper>
-                )}
-              </Box>
+              <Button
+                variant="outlined"
+                startIcon={<FaFilter />}
+                onClick={handleFilterIconClick}
+                sx={{
+                  borderRadius: "8px",
+                  borderColor: "#e0e0e0",
+                  color: "#475569",
+                  "&:hover": {
+                    borderColor: "#1976d2",
+                    backgroundColor: "#f0f7ff",
+                  },
+                }}
+              >
+                Filter
+              </Button>
 
               <Button
                 variant="contained"
@@ -1790,6 +1569,133 @@ const Contract = () => {
           </Grid>
         </Grid>
       </Box>
+
+      {/* Filter Dialog - Using Dialog instead of popup */}
+      <Dialog
+        open={showFilterDialog}
+        onClose={() => setShowFilterDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "12px",
+            p: 2,
+          },
+        }}
+      >
+        <DialogTitle>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Filter Contracts
+          </Typography>
+        </DialogTitle>
+
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            {/* Employee Name Filter */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Employee Name"
+                name="employeeName"
+                value={filterData.employeeName}
+                onChange={handleFilterChange}
+                size="small"
+                placeholder="Search by employee name"
+              />
+            </Grid>
+
+            {/* Contract Status Filter */}
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Contract Status</InputLabel>
+                <Select
+                  name="contractStatus"
+                  value={filterData.contractStatus}
+                  onChange={handleFilterChange}
+                  label="Contract Status"
+                >
+                  <MenuItem value="">All</MenuItem>
+                  <MenuItem value="Draft">Draft</MenuItem>
+                  <MenuItem value="Active">Active</MenuItem>
+                  <MenuItem value="Expired">Expired</MenuItem>
+                  <MenuItem value="Terminated">Terminated</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Wage Type Filter */}
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Wage Type</InputLabel>
+                <Select
+                  name="wageType"
+                  value={filterData.wageType}
+                  onChange={handleFilterChange}
+                  label="Wage Type"
+                >
+                  <MenuItem value="">All</MenuItem>
+                  <MenuItem value="Monthly">Monthly</MenuItem>
+                  <MenuItem value="Hourly">Hourly</MenuItem>
+                  <MenuItem value="Daily">Daily</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+          {/* Add more filters as needed */}
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Filing Status</InputLabel>
+              <Select
+                name="filingStatus"
+                value={filterData.filingStatus}
+                onChange={handleFilterChange}
+                label="Filing Status"
+                onClick={(e) => e.stopPropagation()}
+                MenuProps={{
+                  onClick: (e) => e.stopPropagation(),
+                  disableScrollLock: true,
+                }}
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value="Individual">Individual</MenuItem>
+                <MenuItem value="Head of Household (HOH)">
+                  Head of Household (HOH)
+                </MenuItem>
+                <MenuItem value="Married Filing Jointly (MFJ)">
+                  Married Filing Jointly (MFJ)
+                </MenuItem>
+                <MenuItem value="Married Filing Separately (MFS)">
+                  Married Filing Separately (MFS)
+                </MenuItem>
+                <MenuItem value="Single Filer">Single Filer</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={handleResetFilter}
+            sx={{ borderRadius: "8px" }}
+          >
+            Reset
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleApplyFilter}
+            sx={{
+              borderRadius: "8px",
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
+          >
+            Apply Filters
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Export toolbar - Styled version */}
       <Paper
@@ -1983,477 +1889,198 @@ const Contract = () => {
       )}
 
       {/* Table */}
-      {/* <table className="contract-table">
-        <thead>
-          <tr>
-            <th>
-              <input
-                type="checkbox"
-                checked={selectAll}
-                onChange={handleSelectAll}
-              />
-            </th>
-            <th onClick={() => handleSort("contract")}>
-              Contractor Name{" "}
-              {sortConfig.key === "contract" ? (
-                sortConfig.direction === "asc" ? (
-                  <FaSortUp />
-                ) : (
-                  <FaSortDown />
-                )
-              ) : null}
-            </th>
-            <th onClick={() => handleSort("employee")}>
-              Employee{" "}
-              {sortConfig.key === "employee" ? (
-                sortConfig.direction === "asc" ? (
-                  <FaSortUp />
-                ) : (
-                  <FaSortDown />
-                )
-              ) : null}
-            </th>
-            <th onClick={() => handleSort("startDate")}>
-              Start Date{" "}
-              {sortConfig.key === "startDate" ? (
-                sortConfig.direction === "asc" ? (
-                  <FaSortUp />
-                ) : (
-                  <FaSortDown />
-                )
-              ) : null}
-            </th>
-            <th onClick={() => handleSort("endDate")}>
-              End Date{" "}
-              {sortConfig.key === "endDate" ? (
-                sortConfig.direction === "asc" ? (
-                  <FaSortUp />
-                ) : (
-                  <FaSortDown />
-                )
-              ) : null}
-            </th>
-            <th onClick={() => handleSort("wageType")}>
-              Wage Type{" "}
-              {sortConfig.key === "wageType" ? (
-                sortConfig.direction === "asc" ? (
-                  <FaSortUp />
-                ) : (
-                  <FaSortDown />
-                )
-              ) : null}
-            </th>
-            <th onClick={() => handleSort("basicSalary")}>
-              Basic Salary{" "}
-              {sortConfig.key === "basicSalary" ? (
-                sortConfig.direction === "asc" ? (
-                  <FaSortUp />
-                ) : (
-                  <FaSortDown />
-                )
-              ) : null}
-            </th>
-            <th onClick={() => handleSort("filingStatus")}>
-              Filing Status{" "}
-              {sortConfig.key === "filingStatus" ? (
-                sortConfig.direction === "asc" ? (
-                  <FaSortUp />
-                ) : (
-                  <FaSortDown />
-                )
-              ) : null}
-            </th>
-            <th onClick={() => handleSort("contractStatus")}>
-              Contract Status{" "}
-              {sortConfig.key === "contractStatus" ? (
-                sortConfig.direction === "asc" ? (
-                  <FaSortUp />
-                ) : (
-                  <FaSortDown />
-                )
-              ) : null}
-            </th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {getCurrentPageItems().length > 0 ? (
-            getCurrentPageItems().map((contract, index) => (
-              <tr key={contract._id}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedContracts.includes(contract._id)}
-                    onChange={() => handleSelectContract(contract._id)}
-                  />
-                </td>
-                <td>
-                  {editingId === contract._id ? (
-                    <input
-                      type="text"
-                      name="contract"
-                      value={editedData.contract || ""}
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    contract.contract
-                  )}
-                </td>
-                <td>
-                  {editingId === contract._id ? (
-                    <input
-                      type="text"
-                      name="employee"
-                      value={editedData.employee || ""}
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    contract.employee
-                  )}
-                </td>
-                <td>
-                  {editingId === contract._id ? (
-                    <input
-                      type="date"
-                      name="startDate"
-                      value={editedData.startDate || ""}
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    contract.startDate
-                  )}
-                </td>
-                <td>
-                  {editingId === contract._id ? (
-                    <input
-                      type="date"
-                      name="endDate"
-                      value={editedData.endDate || ""}
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    contract.endDate || "N/A"
-                  )}
-                </td>
-                <td>
-                  {editingId === contract._id ? (
-                    <select
-                      name="wageType"
-                      value={editedData.wageType || ""}
-                      onChange={handleChange}
-                    >
-                      <option value="Daily">Daily</option>
-                      <option value="Monthly">Monthly</option>
-                      <option value="Hourly">Hourly</option>
-                    </select>
-                  ) : (
-                    contract.wageType
-                  )}
-                </td>
-                <td>
-                  {editingId === contract._id ? (
-                    <input
-                      type="number"
-                      name="basicSalary"
-                      value={editedData.basicSalary || ""}
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    contract.basicSalary
-                  )}
-                </td>
-                <td>
-                  {editingId === contract._id ? (
-                    <input
-                      type="text"
-                      name="filingStatus"
-                      value={editedData.filingStatus || ""}
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    contract.filingStatus || "N/A"
-                  )}
-                </td>
-                <td>
-                  {editingId === contract._id ? (
-                    <select
-                      name="contractStatus"
-                      value={editedData.contractStatus || "Active"}
-                      onChange={handleChange}
-                    >
-                      <option value="Draft">Draft</option>
-                      <option value="Active">Active</option>
-                      <option value="Expired">Expired</option>
-                      <option value="Terminated">Terminated</option>
-                    </select>
-                  ) : (
-                    <span
-                      className={`status-badge status-badge-${(
-                        contract.contractStatus || "active"
-                      ).toLowerCase()}`}
-                    >
-                      {contract.contractStatus || "Active"}
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {editingId === contract._id ? (
-                    <button
-                      className="contract-table-action-save-button"
-                      onClick={handleSave}
-                      title="Save changes"
-                    >
-                      <FaSave />
-                    </button>
-                  ) : (
-                    // Replace your existing dropdown implementation in the table with this:
-                    <div className="dropdown">
-                      <button className="dropdown-button">
-                        <FaEllipsisV />
-                      </button>
-                      <div
-                        className="dropdown-content"
-                        style={{
-                          // Dynamically position the dropdown based on row position
-                          bottom:
-                            index > filteredContracts.length - 3
-                              ? "100%"
-                              : "auto",
-                          top:
-                            index > filteredContracts.length - 3
-                              ? "auto"
-                              : "100%",
-                          marginBottom:
-                            index > filteredContracts.length - 3 ? "5px" : "0",
-                          marginTop:
-                            index > filteredContracts.length - 3 ? "0" : "5px",
-                        }}
-                      >
-                        <button onClick={() => handlePreview(contract)}>
-                          <FaEye /> Preview
-                        </button>
-                        <button onClick={() => handleEdit(contract)}>
-                          <FaEdit /> Edit
-                        </button>
-                        <button onClick={() => handleDelete(contract._id)}>
-                          <FaTrash /> Delete
-                        </button>
-                        <button
-                          onClick={() => {
-                            setRenewalData({
-                              id: contract._id,
-                              startDate:
-                                contract.endDate ||
-                                new Date().toISOString().split("T")[0],
-                              endDate: "",
-                              basicSalary: contract.basicSalary,
-                              renewalReason: "",
-                            });
-                            setShowRenewModal(true);
-                          }}
-                        >
-                          <FaRedo /> Renew
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))
-          ) : (
+      <div className="contract-table-container">
+        <table className="contract-table">
+          <thead>
             <tr>
-              <td colSpan="10" className="no-data">
-                No contracts found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table> */}
-
-      {/* Table */}
-<div className="contract-table-container">
-  <table className="contract-table">
-    <thead>
-      <tr>
-        <th>
-          <input
-            type="checkbox"
-            checked={selectAll}
-            onChange={handleSelectAll}
-          />
-        </th>
-        <th onClick={() => handleSort("contract")}>
-          Contractor Name{" "}
-          {sortConfig.key === "contract" ? (
-            sortConfig.direction === "asc" ? (
-              <FaSortUp />
-            ) : (
-              <FaSortDown />
-            )
-          ) : null}
-        </th>
-        <th onClick={() => handleSort("employee")}>
-          Employee{" "}
-          {sortConfig.key === "employee" ? (
-            sortConfig.direction === "asc" ? (
-              <FaSortUp />
-            ) : (
-              <FaSortDown />
-            )
-          ) : null}
-        </th>
-        <th onClick={() => handleSort("startDate")}>
-          Start Date{" "}
-          {sortConfig.key === "startDate" ? (
-            sortConfig.direction === "asc" ? (
-              <FaSortUp />
-            ) : (
-              <FaSortDown />
-            )
-          ) : null}
-        </th>
-        <th onClick={() => handleSort("endDate")}>
-          End Date{" "}
-          {sortConfig.key === "endDate" ? (
-            sortConfig.direction === "asc" ? (
-              <FaSortUp />
-            ) : (
-              <FaSortDown />
-            )
-          ) : null}
-        </th>
-        <th onClick={() => handleSort("wageType")}>
-          Wage Type{" "}
-          {sortConfig.key === "wageType" ? (
-            sortConfig.direction === "asc" ? (
-              <FaSortUp />
-            ) : (
-              <FaSortDown />
-            )
-          ) : null}
-        </th>
-        <th onClick={() => handleSort("basicSalary")}>
-          Basic Salary{" "}
-          {sortConfig.key === "basicSalary" ? (
-            sortConfig.direction === "asc" ? (
-              <FaSortUp />
-            ) : (
-              <FaSortDown />
-            )
-          ) : null}
-        </th>
-        <th onClick={() => handleSort("filingStatus")}>
-          Filing Status{" "}
-          {sortConfig.key === "filingStatus" ? (
-            sortConfig.direction === "asc" ? (
-              <FaSortUp />
-            ) : (
-              <FaSortDown />
-            )
-          ) : null}
-        </th>
-        <th onClick={() => handleSort("contractStatus")}>
-          Contract Status{" "}
-          {sortConfig.key === "contractStatus" ? (
-            sortConfig.direction === "asc" ? (
-              <FaSortUp />
-            ) : (
-              <FaSortDown />
-            )
-          ) : null}
-        </th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {getCurrentPageItems().length > 0 ? (
-        getCurrentPageItems().map((contract, index) => {
-          // Determine if this is one of the last rows
-          const isLastRows = index >= getCurrentPageItems().length - 2;
-          
-          return (
-            <tr key={contract._id}>
-              <td>
+              <th>
                 <input
                   type="checkbox"
-                  checked={selectedContracts.includes(contract._id)}
-                  onChange={() => handleSelectContract(contract._id)}
+                  checked={selectAll}
+                  onChange={handleSelectAll}
                 />
-              </td>
-              <td>{contract.contract}</td>
-              <td>{contract.employee}</td>
-              <td>{contract.startDate}</td>
-              <td>{contract.endDate || "N/A"}</td>
-              <td>{contract.wageType}</td>
-              <td>{contract.basicSalary}</td>
-              <td>{contract.filingStatus || "N/A"}</td>
-              <td>
-                <span
-                  className={`status-badge status-badge-${(
-                    contract.contractStatus || "active"
-                  ).toLowerCase()}`}
-                >
-                  {contract.contractStatus || "Active"}
-                </span>
-              </td>
-              <td>
-                {editingId === contract._id ? (
-                  <button
-                    className="contract-table-action-save-button"
-                    onClick={handleSave}
-                    title="Save changes"
-                  >
-                    <FaSave />
-                  </button>
-                ) : (
-                  <div className="dropdown">
-                    <button className="dropdown-button">
-                      <FaEllipsisV />
-                    </button>
-                    <div 
-                      className={`dropdown-content ${isLastRows ? 'dropdown-content-up' : 'dropdown-content-down'}`}
-                    >
-                      <button onClick={() => handlePreview(contract)}>
-                        <FaEye /> Preview
-                      </button>
-                      <button onClick={() => handleEdit(contract)}>
-                        <FaEdit /> Edit
-                      </button>
-                      <button onClick={() => handleDelete(contract._id)}>
-                        <FaTrash /> Delete
-                      </button>
-                      <button onClick={() => {
-                        setRenewalData({
-                          id: contract._id,
-                          startDate: contract.endDate || new Date().toISOString().split('T')[0],
-                          endDate: "",
-                          basicSalary: contract.basicSalary,
-                          renewalReason: ""
-                        });
-                        setShowRenewModal(true);
-                      }}>
-                        <FaRedo /> Renew
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </td>
+              </th>
+              <th onClick={() => handleSort("contract")}>
+                Contractor Name{" "}
+                {sortConfig.key === "contract" ? (
+                  sortConfig.direction === "asc" ? (
+                    <FaSortUp />
+                  ) : (
+                    <FaSortDown />
+                  )
+                ) : null}
+              </th>
+              <th onClick={() => handleSort("employee")}>
+                Employee{" "}
+                {sortConfig.key === "employee" ? (
+                  sortConfig.direction === "asc" ? (
+                    <FaSortUp />
+                  ) : (
+                    <FaSortDown />
+                  )
+                ) : null}
+              </th>
+              <th onClick={() => handleSort("startDate")}>
+                Start Date{" "}
+                {sortConfig.key === "startDate" ? (
+                  sortConfig.direction === "asc" ? (
+                    <FaSortUp />
+                  ) : (
+                    <FaSortDown />
+                  )
+                ) : null}
+              </th>
+              <th onClick={() => handleSort("endDate")}>
+                End Date{" "}
+                {sortConfig.key === "endDate" ? (
+                  sortConfig.direction === "asc" ? (
+                    <FaSortUp />
+                  ) : (
+                    <FaSortDown />
+                  )
+                ) : null}
+              </th>
+              <th onClick={() => handleSort("wageType")}>
+                Wage Type{" "}
+                {sortConfig.key === "wageType" ? (
+                  sortConfig.direction === "asc" ? (
+                    <FaSortUp />
+                  ) : (
+                    <FaSortDown />
+                  )
+                ) : null}
+              </th>
+              <th onClick={() => handleSort("basicSalary")}>
+                Basic Salary{" "}
+                {sortConfig.key === "basicSalary" ? (
+                  sortConfig.direction === "asc" ? (
+                    <FaSortUp />
+                  ) : (
+                    <FaSortDown />
+                  )
+                ) : null}
+              </th>
+              <th onClick={() => handleSort("filingStatus")}>
+                Filing Status{" "}
+                {sortConfig.key === "filingStatus" ? (
+                  sortConfig.direction === "asc" ? (
+                    <FaSortUp />
+                  ) : (
+                    <FaSortDown />
+                  )
+                ) : null}
+              </th>
+              <th onClick={() => handleSort("contractStatus")}>
+                Contract Status{" "}
+                {sortConfig.key === "contractStatus" ? (
+                  sortConfig.direction === "asc" ? (
+                    <FaSortUp />
+                  ) : (
+                    <FaSortDown />
+                  )
+                ) : null}
+              </th>
+              <th>Actions</th>
             </tr>
-          );
-        })
-      ) : (
-        <tr>
-          <td colSpan="10" className="no-data">
-            No contracts found
-          </td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
+          </thead>
 
+          <tbody>
+            {getCurrentPageItems().length > 0 ? (
+              getCurrentPageItems().map((contract, index) => {
+                // Determine if this is one of the last rows
+                const isLastRows = index >= getCurrentPageItems().length - 2;
+
+                return (
+                  <tr key={contract._id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedContracts.includes(contract._id)}
+                        onChange={() => handleSelectContract(contract._id)}
+                      />
+                    </td>
+                    <td>{contract.contract}</td>
+                    <td>{contract.employee}</td>
+                    <td>{contract.startDate}</td>
+                    <td>{contract.endDate || "N/A"}</td>
+                    <td>{contract.wageType}</td>
+                    <td>{contract.basicSalary}</td>
+                    <td>{contract.filingStatus || "N/A"}</td>
+                    <td>
+                      <span
+                        className={`status-badge status-badge-${(
+                          contract.contractStatus || "active"
+                        ).toLowerCase()}`}
+                      >
+                        {contract.contractStatus || "Active"}
+                      </span>
+                    </td>
+                    <td className="action-buttons-cell">
+                      {editingId === contract._id ? (
+                        <button
+                          className="action-button save-button"
+                          onClick={handleSave}
+                          title="Save changes"
+                        >
+                          <FaSave />
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            className="action-button view-button"
+                            onClick={() => handlePreview(contract)}
+                            title="Preview"
+                          >
+                            <FaEye />
+                          </button>
+                          <button
+                            className="action-button edit-button"
+                            onClick={() => handleEdit(contract)}
+                            title="Edit"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            className="action-button delete-button"
+                            onClick={() => handleDelete(contract._id)}
+                            title="Delete"
+                          >
+                            <FaTrash />
+                          </button>
+                          <button
+                            className="action-button renew-button"
+                            onClick={() => {
+                              setRenewalData({
+                                id: contract._id,
+                                startDate:
+                                  contract.endDate ||
+                                  new Date().toISOString().split("T")[0],
+                                endDate: "",
+                                basicSalary: contract.basicSalary,
+                                renewalReason: "",
+                              });
+                              setShowRenewModal(true);
+                            }}
+                            title="Renew"
+                          >
+                            <FaRedo />
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="10" className="no-data">
+                  No contracts found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Preview Contract Modal */}
       {showPreviewModal && previewContract && (

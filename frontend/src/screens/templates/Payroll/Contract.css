@@ -203,55 +203,47 @@
   outline: none;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
+  /* Action buttons styling */
+  .action-buttons-cell {
+    white-space: nowrap;
+    min-width: 140px;
+  }
 
-.contract-table-action-edit-button {
-  padding: 6px 10px;
-  margin-right: 5px;
-  background-color: transparent;
-  color: #2ecc71;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+  .action-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin: 0 3px;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s, transform 0.1s;
+  }
 
-.contract-table-action-edit-button:hover {
-  color: #27ae60;
-  transform: scale(1.1);
-}
+  .action-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: scale(1.1);
+  }
 
-.contract-table-action-del-button {
-  padding: 6px 10px;
-  margin-right: 5px;
-  background-color: transparent;
-  color: #e74c3c;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+  .view-button {
+    color: #3498db;
+  }
 
-.contract-table-action-del-button:hover {
-  color: #c0392b;
-  transform: scale(1.1);
-}
+  .edit-button {
+    color: #2ecc71;
+  }
 
-.contract-table-action-save-button {
-  padding: 6px 10px;
-  margin-right: 5px;
-  background-color: transparent;
-  color: #2ecc71;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+  .delete-button {
+    color: #e74c3c;
+  }
 
-.contract-table-action-save-button:hover {
-  color: #27ae60;
-  transform: scale(1.1);
-}
+  .renew-button {
+    color: #f39c12;
+  }
 
+  .save-button {
+    color: #3498db;
+    font-size: 1.1em;
+  }
 /* For create page */
 .create-page {
   border: 1.5px solid #f6ebeb;
@@ -823,34 +815,6 @@ input:checked + .slider:before {
   border-radius: 4px;
 }
 
-/* Loading state */
-/* .loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.loading-spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-} */
-
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -1129,3 +1093,49 @@ input:checked + .slider:before {
   display: none;
 }
 
+/* Custom styling for the filing status filter if needed */
+.filing-status-filter .MuiSelect-select {
+  font-weight: 500;
+}
+
+.filing-status-filter .MuiMenuItem-root {
+  font-size: 14px;
+  padding: 8px 16px;
+}
+/* Hidden element for CSV export */
+.hidden {
+  display: none;
+}
+
+/* Custom styling for the filing status filter if needed */
+.filing-status-filter .MuiSelect-select {
+  font-weight: 500;
+}
+
+.filing-status-filter .MuiMenuItem-root {
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+/* Styling for the employee autocomplete */
+.MuiAutocomplete-root .MuiOutlinedInput-root {
+  padding: 3px 9px;
+}
+
+.MuiAutocomplete-option {
+  padding: 8px 16px;
+}
+
+.MuiAutocomplete-option:hover {
+  background-color: rgba(25, 118, 210, 0.08);
+}
+
+.MuiAutocomplete-listbox {
+  max-height: 300px;
+}
+
+/* Highlight matched text in autocomplete */
+.MuiAutocomplete-option strong {
+  font-weight: 600;
+  color: #1976d2;
+}

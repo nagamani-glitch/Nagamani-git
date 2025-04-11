@@ -1,29 +1,3 @@
-// import mongoose from 'mongoose';
-
-// const contractSchema = new mongoose.Schema({
-//   contract: { type: String, required: true },
-//   employee: { type: String, required: true },
-//   startDate: { type: String, required: true },
-//   endDate: { type: String },
-//   wageType: { type: String, required: true },
-//   basicSalary: { type: Number, required: true },
-//   filingStatus: { type: String },
-//   contractStatus: { type: String },
-//   department: { type: String },
-//   position: { type: String },
-//   role: { type: String },
-//   shift: { type: String },
-//   workType: { type: String },
-//   noticePeriod: { type: Number },
-//   deductFromBasicPay: { type: Boolean, default: false },
-//   calculateDailyLeave: { type: Boolean, default: false },
-//   note: { type: String }
-// }, {
-//   timestamps: true
-// });
-
-// export default mongoose.model('payrollContractModel', contractSchema);
-
 import mongoose from 'mongoose';
 
 const contractSchema = new mongoose.Schema({
@@ -33,7 +7,16 @@ const contractSchema = new mongoose.Schema({
   endDate: { type: String },
   wageType: { type: String, required: true },
   basicSalary: { type: Number, required: true },
-  filingStatus: { type: String },
+  filingStatus: { 
+    type: String, 
+    enum: [
+      'Individual', 
+      'Head of Household (HOH)', 
+      'Married Filing Jointly (MFJ)', 
+      'Married Filing Separately (MFS)', 
+      'Single Filer'
+    ] 
+  },
   contractStatus: { type: String, enum: ['Draft', 'Active', 'Expired', 'Terminated'], default: 'Active' },
   department: { type: String },
   position: { type: String },
