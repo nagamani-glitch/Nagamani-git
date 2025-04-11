@@ -33,6 +33,7 @@ import {
   InputLabel,
   Fade,
   Checkbox,
+  FormHelperText,
 } from "@mui/material";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -100,6 +101,10 @@ const PayrollSystem = () => {
   const [selectedDeductions, setSelectedDeductions] = useState([]);
   const [deductionPercentages, setDeductionPercentages] = useState({});
   const [bulkDeductionEmployeeId, setBulkDeductionEmployeeId] = useState("");
+
+  // Add state for registered employees
+  const [registeredEmployees, setRegisteredEmployees] = useState([]);
+  const [selectedRegisteredEmployee, setSelectedRegisteredEmployee] = useState("");
 
   // Add this function to handle multiple deduction selection
   const handleDeductionSelection = (deductionType, isChecked) => {
@@ -199,6 +204,34 @@ const PayrollSystem = () => {
       ...allowancePercentages,
       [allowanceType]: percentage,
     });
+  };
+
+  // Add this function to handle registered employee selection
+  const handleRegisteredEmployeeSelect = (empId) => {
+    if (!empId) {
+      setSelectedRegisteredEmployee("");
+      return;
+    }
+    
+    setSelectedRegisteredEmployee(empId);
+    
+    // Find the selected employee
+    const selectedEmp = registeredEmployees.find(emp => emp.Emp_ID === empId);
+    
+    if (selectedEmp) {
+      // Map the fields from registered employee to payroll employee
+      setNewEmployee({
+        ...newEmployee,
+        empId: selectedEmp.Emp_ID || "",
+        empName: `${selectedEmp.personalInfo?.firstName || ""} ${selectedEmp.personalInfo?.lastName || ""}`,
+        department: selectedEmp.joiningDetails?.department || "",
+        designation: selectedEmp.joiningDetails?.initialDesignation || "",
+        email: selectedEmp.personalInfo?.email || "",
+        // Keep other fields as they are since they might not have direct mappings
+      });
+      
+      showAlert('Employee data loaded successfully', 'success');
+    }
   };
 
   // Update the handleAddMultipleAllowances function (if you have one)
@@ -397,18 +430,330 @@ const PayrollSystem = () => {
       reader.readAsArrayBuffer(file);
     } catch (error) {
       console.error("Import error:", error);
-      showAlert(
-        "Import failed: " + (error.response?.data?.message || error.message),
-        "error"
-      );
-      // Clear the file input
-      if (event.target) {
-        event.target.value = "";
-      }
+      showAlert(        "Import failed: " + (error.response?.data?.message || error.message),
+      "error"
+    );
+    // Clear the file input
+    if (event.target) {
+      event.target.value = "";
     }
-  };
+  }
+};
 
-  const [newEmployee, setNewEmployee] = useState({
+const [newEmployee, setNewEmployee] = useState({
+  empId: "",
+  empName: "",
+  basicPay: "",
+  bankName: "",
+  bankAccountNo: "",
+  pfNo: "",
+  uanNo: "",
+  panNo: "",
+  payableDays: 30,
+  lop: 0.0,
+  department: "",
+  designation: "",
+  email: "",
+  status: "Active",
+});
+
+const [newAllowance, setNewAllowance] = useState({
+  empId: "",
+  name: "",
+  amount: "",
+  percentage: 0,
+  category: "Regular",
+  status: "Active",
+  description: "",
+  isRecurring: true,
+});
+
+const [newDeduction, setNewDeduction] = useState({
+  empId: "",
+  name: "",
+  amount: "",
+  percentage: 0,
+  category: "Tax",
+  status: "Active",
+  description: "",
+  isRecurring: true,
+});
+
+useEffect(() => {
+  const fetchData = async () => {
+    await Promise.all([
+      fetchEmployees(),
+      fetchAllowances(),
+      fetchDeductions(),
+      fetchPayslips(),
+      fetchRegisteredEmployees(), // Added this line to fetch registered employees
+    ]);
+  };
+  fetchData();
+}, []);
+
+// Helper functions for calculations
+const calculatePerDayPay = (basicPay, payableDays) => {
+  const pay = parseFloat(basicPay) || 0;
+  const days = parseFloat(payableDays) || 30;
+  return Number((pay / days).toFixed(2));
+};
+
+const calculateAttendanceBasedPay = (basicPay, payableDays, lop) => {
+  const perDayPay = calculatePerDayPay(basicPay, payableDays);
+  const actualPayableDays =
+    (parseFloat(payableDays) || 30) - (parseFloat(lop) || 0);
+  return Number((perDayPay * actualPayableDays).toFixed(2));
+};
+
+const calculateAllowanceAmount = (basicPay, percentage) => {
+  const pay = parseFloat(basicPay) || 0;
+  const pct = parseFloat(percentage) || 0;
+  return Number(((pay * pct) / 100).toFixed(2));
+};
+
+const calculateDeductionAmount = (basicPay, percentage) => {
+  const pay = parseFloat(basicPay) || 0;
+  const pct = parseFloat(percentage) || 0;
+  return Number(((pay * pct) / 100).toFixed(2));
+};
+
+const calculateGrossSalary = (empId) => {
+  const employee = employeeData.find((e) => e.empId === empId);
+  if (!employee) return 0;
+
+  // Calculate attendance adjusted basic pay
+  const attendanceAdjustedBasicPay = calculateAttendanceBasedPay(
+    employee.basicPay,
+    employee.payableDays,
+    employee.lop
+  );
+
+  // Calculate allowances from full basic pay
+  const totalAllowances = allowanceData
+    .filter((a) => a.empId === empId && a.status === "Active")
+    .reduce((sum, item) => {
+      const allowanceAmount = calculateAllowanceAmount(
+        employee.basicPay,
+        item.percentage
+      );
+      return sum + allowanceAmount;
+    }, 0);
+
+  return Number((attendanceAdjustedBasicPay + totalAllowances).toFixed(2));
+};
+
+const calculateTotalDeductions = (empId) => {
+  const employee = employeeData.find((e) => e.empId === empId);
+  if (!employee) return 0;
+
+  return deductions
+    .filter((d) => d.empId === empId && d.status === "Active")
+    .reduce((sum, item) => {
+      const deductionAmount = calculateDeductionAmount(
+        employee.basicPay,
+        item.percentage
+      );
+      return sum + deductionAmount;
+    }, 0);
+};
+
+const calculateNetSalary = (empId) => {
+  const grossSalary = calculateGrossSalary(empId);
+  const totalDeductions = calculateTotalDeductions(empId);
+  return Number((grossSalary - totalDeductions).toFixed(2));
+};
+
+const handleLOPChange = (e) => {
+  const value = parseFloat(e.target.value);
+  if (isNaN(value)) {
+    setNewEmployee({ ...newEmployee, lop: 0 });
+    return;
+  }
+  const roundedValue = Math.round(value * 2) / 2;
+  setNewEmployee({ ...newEmployee, lop: roundedValue });
+};
+// API Calls and CRUD Operations
+const showAlert = (message, severity = "success") => {
+  setAlert({
+    open: true,
+    message,
+    severity,
+    transition: Fade,
+  });
+};
+
+const fetchEmployees = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/employees`);
+    setEmployeeData(response.data.data);
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error fetching employees",
+      "error"
+    );
+  }
+};
+
+const fetchAllowances = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/allowances`);
+    setAllowanceData(response.data.data);
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error fetching allowances",
+      "error"
+    );
+  }
+};
+
+const fetchDeductions = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/deductions`);
+    setDeductions(response.data.data);
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error fetching deductions",
+      "error"
+    );
+  }
+};
+
+const fetchPayslips = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/payslips`);
+    if (response.data.success) {
+      setPayslips(response.data.data);
+    } else {
+      showAlert("Failed to fetch payslips", "error");
+    }
+  } catch (error) {
+    console.error("Error fetching payslips:", error);
+    // If the endpoint doesn't exist yet, don't show an error to the user
+    // Just set an empty array
+    setPayslips([]);
+  }
+};
+
+// Add function to fetch registered employees
+const fetchRegisteredEmployees = async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/api/employees/registered');
+    setRegisteredEmployees(response.data);
+  } catch (error) {
+    console.error('Error fetching registered employees:', error);
+    // Don't show an error alert to avoid confusing users if this is optional
+    setRegisteredEmployees([]);
+  }
+};
+
+const handleDeleteEmployee = async (empId) => {
+  try {
+    await axios.delete(`${API_URL}/employees/${empId}`);
+    showAlert("Employee deleted successfully");
+    await Promise.all([
+      fetchEmployees(),
+      fetchAllowances(),
+      fetchDeductions(),
+    ]);
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error deleting employee",
+      "error"
+    );
+  }
+};
+
+const handleAddEmployee = async () => {
+  try {
+    if (!newEmployee.empId || !newEmployee.empName || !newEmployee.basicPay) {
+      showAlert("Please fill all required fields", "error");
+      return;
+    }
+
+    const payload = {
+      ...newEmployee,
+      basicPay: parseFloat(newEmployee.basicPay),
+      payableDays: parseInt(newEmployee.payableDays),
+      lop: parseFloat(newEmployee.lop),
+    };
+
+    if (editMode && selectedItem) {
+      await axios.put(`${API_URL}/employees/${selectedItem.empId}`, payload);
+      showAlert("Employee updated successfully");
+    } else {
+      await axios.post(`${API_URL}/employees`, payload);
+      showAlert("Employee added successfully");
+    }
+    await fetchEmployees();
+    handleCloseEmployeeDialog();
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error saving employee",
+      "error"
+    );
+  }
+};
+
+const handleAddAllowance = async () => {
+  try {
+    if (
+      !newAllowance.empId ||
+      !newAllowance.name ||
+      !newAllowance.percentage
+    ) {
+      showAlert("Please fill all required fields", "error");
+      return;
+    }
+
+    const employee = employeeData.find((e) => e.empId === newAllowance.empId);
+    if (!employee) {
+      showAlert("Invalid employee selected", "error");
+      return;
+    }
+
+    // Calculate the amount based on the percentage of basic pay
+    const calculatedAmount = calculateAllowanceAmount(
+      employee.basicPay,
+      newAllowance.percentage
+    );
+
+    const payload = {
+      empId: newAllowance.empId,
+      name: newAllowance.name,
+      amount: calculatedAmount.toString(),
+      percentage: parseFloat(newAllowance.percentage),
+      category: newAllowance.category || "Regular",
+      status: newAllowance.status || "Active",
+      isRecurring: true,
+    };
+
+    if (editMode && selectedItem) {
+      // For edit mode, we need to use the virtual ID format: empId_allowanceName
+      const id = `${selectedItem.empId}_${selectedItem.name}`;
+      await axios.put(`${API_URL}/allowances/${id}`, payload);
+      showAlert("Allowance updated successfully");
+    } else {
+      await axios.post(`${API_URL}/allowances`, payload);
+      showAlert("Allowance added successfully");
+    }
+
+    await fetchAllowances();
+    handleCloseDialog();
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error saving allowance",
+      "error"
+    );
+  }
+};
+
+const handleCloseEmployeeDialog = () => {
+  setOpenEmployeeDialog(false);
+  setEditMode(false);
+  setSelectedItem(null);
+  setSelectedRegisteredEmployee(""); // Reset the selected registered employee
+  setNewEmployee({
     empId: "",
     empName: "",
     basicPay: "",
@@ -418,14 +763,24 @@ const PayrollSystem = () => {
     uanNo: "",
     panNo: "",
     payableDays: 30,
-    lop: 0.0,
+    lop: 0,
     department: "",
     designation: "",
     email: "",
     status: "Active",
   });
+};
 
-  const [newAllowance, setNewAllowance] = useState({
+const handleCloseDialog = () => {
+  setOpenDialog(false);
+  setEditMode(false);
+  setSelectedItem(null);
+  setSelectedAllowances([]);
+  setAllowancePercentages({});
+  setBulkEmployeeId("");
+  setSelectedDeductions([]); // Reset deduction selections
+  setDeductionPercentages({}); // Reset deduction percentages
+  setNewAllowance({
     empId: "",
     name: "",
     amount: "",
@@ -435,601 +790,480 @@ const PayrollSystem = () => {
     description: "",
     isRecurring: true,
   });
+};
 
-  const [newDeduction, setNewDeduction] = useState({
-    empId: "",
-    name: "",
-    amount: "",
-    percentage: 0,
-    category: "Tax",
-    status: "Active",
-    description: "",
-    isRecurring: true,
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      await Promise.all([
-        fetchEmployees(),
-        fetchAllowances(),
-        fetchDeductions(),
-        fetchPayslips(),
-      ]);
-    };
-    fetchData();
-  }, []);
-
-  // Helper functions for calculations
-  const calculatePerDayPay = (basicPay, payableDays) => {
-    const pay = parseFloat(basicPay) || 0;
-    const days = parseFloat(payableDays) || 30;
-    return Number((pay / days).toFixed(2));
-  };
-
-  const calculateAttendanceBasedPay = (basicPay, payableDays, lop) => {
-    const perDayPay = calculatePerDayPay(basicPay, payableDays);
-    const actualPayableDays =
-      (parseFloat(payableDays) || 30) - (parseFloat(lop) || 0);
-    return Number((perDayPay * actualPayableDays).toFixed(2));
-  };
-
-  const calculateAllowanceAmount = (basicPay, percentage) => {
-    const pay = parseFloat(basicPay) || 0;
-    const pct = parseFloat(percentage) || 0;
-    return Number(((pay * pct) / 100).toFixed(2));
-  };
-
-  const calculateDeductionAmount = (basicPay, percentage) => {
-    const pay = parseFloat(basicPay) || 0;
-    const pct = parseFloat(percentage) || 0;
-    return Number(((pay * pct) / 100).toFixed(2));
-  };
-
-  const calculateGrossSalary = (empId) => {
+// Payslip Generation and Download
+const generatePayslip = async (empId) => {
+  try {
     const employee = employeeData.find((e) => e.empId === empId);
-    if (!employee) return 0;
-
-    // Calculate attendance adjusted basic pay
-    const attendanceAdjustedBasicPay = calculateAttendanceBasedPay(
-      employee.basicPay,
-      employee.payableDays,
-      employee.lop
-    );
-
-    // Calculate allowances from full basic pay
-    const totalAllowances = allowanceData
-      .filter((a) => a.empId === empId && a.status === "Active")
-      .reduce((sum, item) => {
-        const allowanceAmount = calculateAllowanceAmount(
-          employee.basicPay,
-          item.percentage
-        );
-        return sum + allowanceAmount;
-      }, 0);
-
-    return Number((attendanceAdjustedBasicPay + totalAllowances).toFixed(2));
-  };
-
-  const calculateTotalDeductions = (empId) => {
-    const employee = employeeData.find((e) => e.empId === empId);
-    if (!employee) return 0;
-
-    return deductions
-      .filter((d) => d.empId === empId && d.status === "Active")
-      .reduce((sum, item) => {
-        const deductionAmount = calculateDeductionAmount(
-          employee.basicPay,
-          item.percentage
-        );
-        return sum + deductionAmount;
-      }, 0);
-  };
-
-  const calculateNetSalary = (empId) => {
-    const grossSalary = calculateGrossSalary(empId);
-    const totalDeductions = calculateTotalDeductions(empId);
-    return Number((grossSalary - totalDeductions).toFixed(2));
-  };
-
-  const handleLOPChange = (e) => {
-    const value = parseFloat(e.target.value);
-    if (isNaN(value)) {
-      setNewEmployee({ ...newEmployee, lop: 0 });
-      return;
-    }
-    const roundedValue = Math.round(value * 2) / 2;
-    setNewEmployee({ ...newEmployee, lop: roundedValue });
-  };
-  // API Calls and CRUD Operations
-  const showAlert = (message, severity = "success") => {
-    setAlert({
-      open: true,
-      message,
-      severity,
-      transition: Fade,
-    });
-  };
-
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/employees`);
-      setEmployeeData(response.data.data);
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error fetching employees",
-        "error"
-      );
-    }
-  };
-
-  const fetchAllowances = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/allowances`);
-      setAllowanceData(response.data.data);
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error fetching allowances",
-        "error"
-      );
-    }
-  };
-
-  const fetchDeductions = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/deductions`);
-      setDeductions(response.data.data);
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error fetching deductions",
-        "error"
-      );
-    }
-  };
-
-  const fetchPayslips = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/payslips`);
-      if (response.data.success) {
-        setPayslips(response.data.data);
-      } else {
-        showAlert("Failed to fetch payslips", "error");
-      }
-    } catch (error) {
-      console.error("Error fetching payslips:", error);
-      // If the endpoint doesn't exist yet, don't show an error to the user
-      // Just set an empty array
-      setPayslips([]);
-    }
-  };
-
-  const handleDeleteEmployee = async (empId) => {
-    try {
-      await axios.delete(`${API_URL}/employees/${empId}`);
-      showAlert("Employee deleted successfully");
-      await Promise.all([
-        fetchEmployees(),
-        fetchAllowances(),
-        fetchDeductions(),
-      ]);
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error deleting employee",
-        "error"
-      );
-    }
-  };
-
-  const handleAddEmployee = async () => {
-    try {
-      if (!newEmployee.empId || !newEmployee.empName || !newEmployee.basicPay) {
-        showAlert("Please fill all required fields", "error");
-        return;
-      }
-
-      const payload = {
-        ...newEmployee,
-        basicPay: parseFloat(newEmployee.basicPay),
-        payableDays: parseInt(newEmployee.payableDays),
-        lop: parseFloat(newEmployee.lop),
-      };
-
-      if (editMode && selectedItem) {
-        await axios.put(`${API_URL}/employees/${selectedItem.empId}`, payload);
-        showAlert("Employee updated successfully");
-      } else {
-        await axios.post(`${API_URL}/employees`, payload);
-        showAlert("Employee added successfully");
-      }
-      await fetchEmployees();
-      handleCloseEmployeeDialog();
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error saving employee",
-        "error"
-      );
-    }
-  };
-
-  const handleAddAllowance = async () => {
-    try {
-      if (
-        !newAllowance.empId ||
-        !newAllowance.name ||
-        !newAllowance.percentage
-      ) {
-        showAlert("Please fill all required fields", "error");
-        return;
-      }
-
-      const employee = employeeData.find((e) => e.empId === newAllowance.empId);
-      if (!employee) {
-        showAlert("Invalid employee selected", "error");
-        return;
-      }
-
-      // Calculate the amount based on the percentage of basic pay
-      const calculatedAmount = calculateAllowanceAmount(
-        employee.basicPay,
-        newAllowance.percentage
-      );
-
-      const payload = {
-        empId: newAllowance.empId,
-        name: newAllowance.name,
-        amount: calculatedAmount.toString(),
-        percentage: parseFloat(newAllowance.percentage),
-        category: newAllowance.category || "Regular",
-        status: newAllowance.status || "Active",
-        isRecurring: true,
-      };
-
-      if (editMode && selectedItem) {
-        // For edit mode, we need to use the virtual ID format: empId_allowanceName
-        const id = `${selectedItem.empId}_${selectedItem.name}`;
-        await axios.put(`${API_URL}/allowances/${id}`, payload);
-        showAlert("Allowance updated successfully");
-      } else {
-        await axios.post(`${API_URL}/allowances`, payload);
-        showAlert("Allowance added successfully");
-      }
-
-      await fetchAllowances();
-      handleCloseDialog();
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error saving allowance",
-        "error"
-      );
-    }
-  };
-
-  const handleCloseEmployeeDialog = () => {
-    setOpenEmployeeDialog(false);
-    setEditMode(false);
-    setSelectedItem(null);
-    setNewEmployee({
-      empId: "",
-      empName: "",
-      basicPay: "",
-      bankName: "",
-      bankAccountNo: "",
-      pfNo: "",
-      uanNo: "",
-      panNo: "",
-      payableDays: 30,
-      lop: 0,
-      department: "",
-      designation: "",
-      email: "",
-      status: "Active",
-    });
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditMode(false);
-    setSelectedItem(null);
-    setSelectedAllowances([]);
-    setAllowancePercentages({});
-    setBulkEmployeeId("");
-    setSelectedDeductions([]); // Reset deduction selections
-    setDeductionPercentages({}); // Reset deduction percentages
-    setNewAllowance({
-      empId: "",
-      name: "",
-      amount: "",
-      percentage: 0,
-      category: "Regular",
-      status: "Active",
-      description: "",
-      isRecurring: true,
-    });
-  };
-
-  // Payslip Generation and Download
-  const generatePayslip = async (empId) => {
-    try {
-      const employee = employeeData.find((e) => e.empId === empId);
-      if (!employee) {
-        showAlert("Employee not found", "error");
-        return null;
-      }
-
-      const payslipData = {
-        empId: employee.empId,
-        empName: employee.empName,
-        department: employee.department,
-        designation: employee.designation,
-        pfNo: employee.pfNo,
-        uanNo: employee.uanNo,
-        panNo: employee.panNo,
-        email: employee.email,
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear(),
-        basicPay: employee.basicPay,
-        payableDays: employee.payableDays,
-        lopDays: employee.lop,
-        bankDetails: {
-          bankName: employee.bankName,
-          accountNo: employee.bankAccountNo,
-        },
-        allowances: allowanceData
-          .filter((a) => a.empId === empId && a.status === "Active")
-          .map((allowance) => ({
-            name: allowance.name,
-            amount: calculateAllowanceAmount(
-              employee.basicPay,
-              allowance.percentage
-            ),
-            percentage: allowance.percentage,
-          })),
-        deductions: deductions
-          .filter((d) => d.empId === empId && d.status === "Active")
-          .map((deduction) => ({
-            name: deduction.name,
-            amount: calculateDeductionAmount(
-              employee.basicPay,
-              deduction.percentage
-            ),
-            percentage: deduction.percentage,
-          })),
-        grossSalary: calculateGrossSalary(empId),
-        totalDeductions: calculateTotalDeductions(empId),
-        netSalary: calculateNetSalary(empId),
-      };
-
-      const response = await axios.post(
-        `${API_URL}/payslips/generate`,
-        payslipData
-      );
-      showAlert("Payslip generated successfully");
-      await fetchPayslips();
-      return response.data.data;
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error generating payslip",
-        "error"
-      );
+    if (!employee) {
+      showAlert("Employee not found", "error");
       return null;
     }
-  };
 
-  const downloadPayslip = async (payslipId) => {
-    try {
-      const response = await axios.get(
-        `${API_URL}/payslips/download/${payslipId}`,
-        {
-          responseType: "blob",
-        }
+    const payslipData = {
+      empId: employee.empId,
+      empName: employee.empName,
+      department: employee.department,
+      designation: employee.designation,
+      pfNo: employee.pfNo,
+      uanNo: employee.uanNo,
+      panNo: employee.panNo,
+      email: employee.email,
+      month: new Date().getMonth() + 1,
+      year: new Date().getFullYear(),
+      basicPay: employee.basicPay,
+      payableDays: employee.payableDays,
+      lopDays: employee.lop,
+      bankDetails: {
+        bankName: employee.bankName,
+        accountNo: employee.bankAccountNo,
+      },
+      allowances: allowanceData
+        .filter((a) => a.empId === empId && a.status === "Active")
+        .map((allowance) => ({
+          name: allowance.name,
+          amount: calculateAllowanceAmount(
+            employee.basicPay,
+            allowance.percentage
+          ),
+          percentage: allowance.percentage,
+        })),
+      deductions: deductions
+        .filter((d) => d.empId === empId && d.status === "Active")
+        .map((deduction) => ({
+          name: deduction.name,
+          amount: calculateDeductionAmount(
+            employee.basicPay,
+            deduction.percentage
+          ),
+          percentage: deduction.percentage,
+        })),
+      grossSalary: calculateGrossSalary(empId),
+      totalDeductions: calculateTotalDeductions(empId),
+      netSalary: calculateNetSalary(empId),
+    };
+
+    const response = await axios.post(
+      `${API_URL}/payslips/generate`,
+      payslipData
+    );
+    showAlert("Payslip generated successfully");
+    await fetchPayslips();
+    return response.data.data;
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error generating payslip",
+      "error"
+    );
+    return null;
+  }
+};
+
+const downloadPayslip = async (payslipId) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/payslips/download/${payslipId}`,
+      {
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `payslip_${payslipId}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error downloading payslip",
+      "error"
+    );
+  }
+};
+
+// Add this function to calculate net impact (total allowances - total deductions)
+const calculateNetImpact = (empId) => {
+  const employee = employeeData.find((e) => e.empId === empId);
+  if (!employee) return 0;
+
+  // Calculate total allowances
+  const totalAllowances = allowanceData
+    .filter((a) => a.empId === empId && a.status === "Active")
+    .reduce((sum, item) => {
+      return (
+        sum + calculateAllowanceAmount(employee.basicPay, item.percentage)
       );
+    }, 0);
 
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `payslip_${payslipId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error downloading payslip",
-        "error"
+  // Calculate total deductions
+  const totalDeductions = deductions
+    .filter((d) => d.empId === empId && d.status === "Active")
+    .reduce((sum, item) => {
+      return (
+        sum + calculateDeductionAmount(employee.basicPay, item.percentage)
       );
-    }
-  };
+    }, 0);
 
-  // Add this function to calculate net impact (total allowances - total deductions)
-  const calculateNetImpact = (empId) => {
-    const employee = employeeData.find((e) => e.empId === empId);
-    if (!employee) return 0;
-
-    // Calculate total allowances
-    const totalAllowances = allowanceData
-      .filter((a) => a.empId === empId && a.status === "Active")
-      .reduce((sum, item) => {
-        return (
-          sum + calculateAllowanceAmount(employee.basicPay, item.percentage)
-        );
-      }, 0);
-
-    // Calculate total deductions
-    const totalDeductions = deductions
-      .filter((d) => d.empId === empId && d.status === "Active")
-      .reduce((sum, item) => {
-        return (
-          sum + calculateDeductionAmount(employee.basicPay, item.percentage)
-        );
-      }, 0);
-
-    // Return the net impact
-    return totalAllowances - totalDeductions;
-  };
-  return (
-    <Container className="payroll-container">
-      <Snackbar
-        open={alert.open}
-        autoHideDuration={6000}
+  // Return the net impact
+  return totalAllowances - totalDeductions;
+};
+return (
+  <Container className="payroll-container">
+    <Snackbar
+      open={alert.open}
+      autoHideDuration={6000}
+      onClose={() => setAlert({ ...alert, open: false })}
+      TransitionComponent={alert.transition}
+      anchorOrigin={{ vertical: "top", horizontal: "right" }}
+    >
+      <Alert
+        severity={alert.severity}
         onClose={() => setAlert({ ...alert, open: false })}
-        TransitionComponent={alert.transition}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        variant="filled"
+        elevation={6}
+        sx={{ width: "100%" }}
       >
-        <Alert
-          severity={alert.severity}
-          onClose={() => setAlert({ ...alert, open: false })}
-          variant="filled"
-          elevation={6}
-          sx={{ width: "100%" }}
+        {alert.message}
+      </Alert>
+    </Snackbar>
+
+    <Paper className="main-paper" elevation={0}>
+      <AppBar position="static" className="payroll-appbar" elevation={0}>
+        <Tabs
+          value={tabIndex}
+          onChange={(e, newIndex) => setTabIndex(newIndex)}
+          variant="fullWidth"
+          className="payroll-tabs"
+          TabIndicatorProps={{
+            style: {
+              backgroundColor: "white",
+              height: "3px",
+            },
+          }}
         >
-          {alert.message}
-        </Alert>
-      </Snackbar>
+          <Tab
+            label="Employees"
+            icon={<AddCircleIcon />}
+            iconPosition="start"
+            className="tab-item"
+          />
+          <Tab
+            label="Allowances-Deductions"
+            icon={<AttachMoneyIcon />}
+            iconPosition="start"
+            className="tab-item"
+          />
+          <Tab
+            label="Payslips"
+            icon={<DescriptionIcon />}
+            iconPosition="start"
+            className="tab-item"
+          />
+        </Tabs>
+      </AppBar>
 
-      <Paper className="main-paper" elevation={0}>
-        <AppBar position="static" className="payroll-appbar" elevation={0}>
-          <Tabs
-            value={tabIndex}
-            onChange={(e, newIndex) => setTabIndex(newIndex)}
-            variant="fullWidth"
-            className="payroll-tabs"
-            TabIndicatorProps={{
-              style: {
-                backgroundColor: "white",
-                height: "3px",
-              },
-            }}
-          >
-            <Tab
-              label="Employees"
-              icon={<AddCircleIcon />}
-              iconPosition="start"
-              className="tab-item"
+      {/* Employees Tab */}
+      <TabPanel value={tabIndex} index={0}>
+        <Box className="header-container">
+          <Typography variant="h5" className="section-title">
+            Employee Management
+            <span className="title-badge">{employeeData.length} Total</span>
+          </Typography>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              style={{ display: "none" }}
+              id="excel-upload"
+              onChange={importFromExcel}
             />
-            <Tab
-              label="Allowances-Deductions"
-              icon={<AttachMoneyIcon />}
-              iconPosition="start"
-              className="tab-item"
-            />
-            <Tab
-              label="Payslips"
-              icon={<DescriptionIcon />}
-              iconPosition="start"
-              className="tab-item"
-            />
-          </Tabs>
-        </AppBar>
-
-        {/* Employees Tab */}
-        <TabPanel value={tabIndex} index={0}>
-          <Box className="header-container">
-            <Typography variant="h5" className="section-title">
-              Employee Management
-              <span className="title-badge">{employeeData.length} Total</span>
-            </Typography>
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                style={{ display: "none" }}
-                id="excel-upload"
-                onChange={importFromExcel}
-              />
-              <label htmlFor="excel-upload">
-                <Button
-                  variant="contained"
-                  component="span"
-                  startIcon={<CloudUploadIcon />}
-                  className="import-button"
-                >
-                  Import Excel
-                </Button>
-              </label>
+            <label htmlFor="excel-upload">
               <Button
                 variant="contained"
-                onClick={exportToExcel}
-                startIcon={<CloudDownloadIcon />}
-                className="export-button"
+                component="span"
+                startIcon={<CloudUploadIcon />}
+                className="import-button"
               >
-                Export Excel
+                Import Excel
               </Button>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setEditMode(false);
-                  setNewEmployee({
-                    empId: "",
-                    empName: "",
-                    basicPay: "",
-                    bankName: "",
-                    bankAccountNo: "",
-                    pfNo: "",
-                    uanNo: "",
-                    panNo: "",
-                    payableDays: 30,
-                    lop: 0,
-                    department: "",
-                    designation: "",
-                    email: "",
-                    status: "Active",
-                  });
-                  setOpenEmployeeDialog(true);
-                }}
-                startIcon={<AddCircleIcon />}
-                className="create-button"
-              >
-                Add Employee
-              </Button>
-            </Box>
+            </label>
+            <Button
+              variant="contained"
+              onClick={exportToExcel}
+              startIcon={<CloudDownloadIcon />}
+              className="export-button"
+            >
+              Export Excel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setEditMode(false);
+                setNewEmployee({
+                  empId: "",
+                  empName: "",
+                  basicPay: "",
+                  bankName: "",
+                  bankAccountNo: "",
+                  pfNo: "",
+                  uanNo: "",
+                  panNo: "",
+                  payableDays: 30,
+                  lop: 0,
+                  department: "",
+                  designation: "",
+                  email: "",
+                  status: "Active",
+                });
+                setOpenEmployeeDialog(true);
+              }}
+              startIcon={<AddCircleIcon />}
+              className="create-button"
+            >
+              Add Employee
+            </Button>
           </Box>
+        </Box>
 
-          <TableContainer component={Paper} className="table-container">
-            <Table>
-              <TableHead>
-                <TableRow className="table-header">
-                  <TableCell>Emp ID</TableCell>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Designation</TableCell>
-                  <TableCell>Basic Pay</TableCell>
-                  <TableCell>Bank Details</TableCell>
-                  <TableCell>PF/UAN</TableCell>
-                  <TableCell>Payable Days</TableCell>
-                  <TableCell>LOP Days</TableCell>
-                  <TableCell align="center">Actions</TableCell>
+        <TableContainer component={Paper} className="table-container">
+          <Table>
+            <TableHead>
+              <TableRow className="table-header">
+                <TableCell>Emp ID</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Department</TableCell>
+                <TableCell>Designation</TableCell>
+                <TableCell>Basic Pay</TableCell>
+                <TableCell>Bank Details</TableCell>
+                <TableCell>PF/UAN</TableCell>
+                <TableCell>Payable Days</TableCell>
+                <TableCell>LOP Days</TableCell>
+                <TableCell align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {employeeData.map((item) => (
+                <TableRow key={item.empId} className="table-row">
+                  <TableCell>{item.empId}</TableCell>
+                  <TableCell>{item.empName}</TableCell>
+                  <TableCell>{item.department}</TableCell>
+                  <TableCell>{item.designation}</TableCell>
+                  <TableCell className="amount-cell">
+                    Rs. {item.basicPay}
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{item.bankName}</Typography>
+                    <Typography variant="caption">
+                      {item.bankAccountNo}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">PF: {item.pfNo}</Typography>
+                    <Typography variant="caption">
+                      UAN: {item.uanNo}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>{item.payableDays}</TableCell>
+                  <TableCell>{item.lop}</TableCell>
+
+                  <TableCell className="action-cell">
+                    <Tooltip title="Preview">
+                      <IconButton
+                        className="preview-button"
+                        onClick={() => handleOpenEmployeePreview(item.empId)}
+                      >
+                        <PreviewIcon
+                          sx={{
+                            color: "#4caf50",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              color: "#2e7d32",
+                              transform: "scale(1.1)",
+                            },
+                          }}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Edit">
+                      <IconButton
+                        className="edit-button"
+                        onClick={() => {
+                          setEditMode(true);
+                          setSelectedItem(item);
+                          setNewEmployee({ ...item });
+                          setOpenEmployeeDialog(true);
+                        }}
+                      >
+                        <EditIcon
+                          sx={{
+                            color: "#007bff",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              color: "#0056b3",
+                              transform: "scale(1.1)",
+                            },
+                          }}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton
+                        className="delete-button"
+                        onClick={() => handleDeleteEmployee(item.empId)}
+                      >
+                        <DeleteIcon
+                          sx={{
+                            color: "#d32f2f",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              color: "#ff1744",
+                              transform: "scale(1.1)",
+                            },
+                          }}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {employeeData.map((item) => (
-                  <TableRow key={item.empId} className="table-row">
-                    <TableCell>{item.empId}</TableCell>
-                    <TableCell>{item.empName}</TableCell>
-                    <TableCell>{item.department}</TableCell>
-                    <TableCell>{item.designation}</TableCell>
-                    <TableCell className="amount-cell">
-                      Rs. {item.basicPay}
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{item.bankName}</Typography>
-                      <Typography variant="caption">
-                        {item.bankAccountNo}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">PF: {item.pfNo}</Typography>
-                      <Typography variant="caption">
-                        UAN: {item.uanNo}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{item.payableDays}</TableCell>
-                    <TableCell>{item.lop}</TableCell>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </TabPanel>
 
-                    <TableCell className="action-cell">
+      {/* Allowances & Deductions Tab */}
+
+      <TabPanel value={tabIndex} index={1}>
+        <Box className="header-container">
+          <Typography variant="h5" className="section-title">
+            Allowances & Deductions Management
+          </Typography>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setEditMode(false);
+                setNewAllowance({
+                  empId: "",
+                  name: "",
+                  percentage: 0,
+                  category: "Regular",
+                  status: "Active",
+                });
+                setOpenDialog(true);
+              }}
+              startIcon={<AddCircleIcon />}
+              className="create-button"
+              sx={{ bgcolor: "#4caf50" }}
+            >
+              Create
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Combined Employee-based Table */}
+
+        <TableContainer component={Paper} className="table-container">
+          <Table>
+            <TableHead>
+              <TableRow className="table-header">
+                <TableCell>Employee</TableCell>
+                <TableCell>Department</TableCell>
+                <TableCell>Basic Pay</TableCell>
+                <TableCell>Net Impact</TableCell>
+                <TableCell align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {employeeData.map((employee) => {
+                // Get all allowances for this employee
+                const employeeAllowances = allowanceData.filter(
+                  (a) => a.empId === employee.empId && a.status === "Active"
+                );
+
+                // Get all deductions for this employee
+                const employeeDeductions = deductions.filter(
+                  (d) => d.empId === employee.empId && d.status === "Active"
+                );
+
+                // Skip employees with no allowances or deductions
+                if (
+                  employeeAllowances.length === 0 &&
+                  employeeDeductions.length === 0
+                ) {
+                  return null;
+                }
+
+                // Calculate total allowance amount
+                const totalAllowanceAmount = employeeAllowances.reduce(
+                  (sum, item) => {
+                    return (
+                      sum +
+                      calculateAllowanceAmount(
+                        employee.basicPay,
+                        item.percentage
+                      )
+                    );
+                  },
+                  0
+                );
+
+                // Calculate total deduction amount
+                const totalDeductionAmount = employeeDeductions.reduce(
+                  (sum, item) => {
+                    return (
+                      sum +
+                      calculateDeductionAmount(
+                        employee.basicPay,
+                        item.percentage
+                      )
+                    );
+                  },
+                  0
+                );
+
+                // Calculate net impact
+                const netImpact = totalAllowanceAmount - totalDeductionAmount;
+
+                return (
+                  <TableRow key={employee.empId} className="table-row">
+                    <TableCell>
+                      <Typography variant="subtitle2">
+                        {employee.empName}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        ID: {employee.empId}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{employee.department}</TableCell>
+                    <TableCell>
+                      Rs. {parseFloat(employee.basicPay).toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          fontWeight: "bold",
+                          color: netImpact >= 0 ? "#4caf50" : "#f44336",
+                        }}
+                      >
+                        {netImpact >= 0 ? "+" : ""}
+                        {netImpact.toFixed(2)}
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell align="center">
                       <Tooltip title="Preview">
                         <IconButton
                           className="preview-button"
-                          onClick={() => handleOpenEmployeePreview(item.empId)}
+                          onClick={() =>
+                            handleOpenAllowancePreview(employee.empId)
+                          }
                         >
                           <PreviewIcon
                             sx={{
@@ -1043,14 +1277,63 @@ const PayrollSystem = () => {
                           />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Edit">
+
+                      <Tooltip title="Edit Allowances/Deductions">
                         <IconButton
                           className="edit-button"
                           onClick={() => {
-                            setEditMode(true);
-                            setSelectedItem(item);
-                            setNewEmployee({ ...item });
-                            setOpenEmployeeDialog(true);
+                            // First fetch the latest data
+                            Promise.all([
+                              fetchAllowances(),
+                              fetchDeductions(),
+                            ]).then(() => {
+                              // Get existing allowances and deductions for this employee
+                              const employeeAllowances = allowanceData.filter(
+                                (a) =>
+                                  a.empId === employee.empId &&
+                                  a.status === "Active"
+                              );
+                              const employeeDeductions = deductions.filter(
+                                (d) =>
+                                  d.empId === employee.empId &&
+                                  d.status === "Active"
+                              );
+
+                              // Pre-populate the selected allowances and their percentages
+                              const initialAllowancePercentages = {};
+                              const allowanceNames = employeeAllowances.map(
+                                (a) => {
+                                  initialAllowancePercentages[a.name] =
+                                    a.percentage;
+                                  return a.name;
+                                }
+                              );
+
+                              // Pre-populate the selected deductions and their percentages
+                              const initialDeductionPercentages = {};
+                              const deductionNames = employeeDeductions.map(
+                                (d) => {
+                                  initialDeductionPercentages[d.name] =
+                                    d.percentage;
+                                  return d.name;
+                                }
+                              );
+
+                              // Set the state with existing data
+                              setBulkEmployeeId(employee.empId);
+                              setSelectedAllowances(allowanceNames);
+                              setAllowancePercentages(
+                                initialAllowancePercentages
+                              );
+                              setSelectedDeductions(deductionNames);
+                              setDeductionPercentages(
+                                initialDeductionPercentages
+                              );
+
+                              // Open the dialog in edit mode
+                              setEditMode(false); // We're still using the bulk add dialog, not editing individual items
+                              setOpenDialog(true);
+                            });
                           }}
                         >
                           <EditIcon
@@ -1065,10 +1348,11 @@ const PayrollSystem = () => {
                           />
                         </IconButton>
                       </Tooltip>
+
                       <Tooltip title="Delete">
                         <IconButton
                           className="delete-button"
-                          onClick={() => handleDeleteEmployee(item.empId)}
+                          onClick={() => handleDeleteEmployee(employee.empId)}
                         >
                           <DeleteIcon
                             sx={{
@@ -1084,247 +1368,9 @@ const PayrollSystem = () => {
                       </Tooltip>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </TabPanel>
-
-        {/* Allowances & Deductions Tab */}
-
-        <TabPanel value={tabIndex} index={1}>
-          <Box className="header-container">
-            <Typography variant="h5" className="section-title">
-              Allowances & Deductions Management
-            </Typography>
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setEditMode(false);
-                  setNewAllowance({
-                    empId: "",
-                    name: "",
-                    percentage: 0,
-                    category: "Regular",
-                    status: "Active",
-                  });
-                  setOpenDialog(true);
-                }}
-                startIcon={<AddCircleIcon />}
-                className="create-button"
-                sx={{ bgcolor: "#4caf50" }}
-              >
-                Create
-              </Button>
-            </Box>
-          </Box>
-
-          {/* Combined Employee-based Table */}
-
-          <TableContainer component={Paper} className="table-container">
-            <Table>
-              <TableHead>
-                <TableRow className="table-header">
-                  <TableCell>Employee</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Basic Pay</TableCell>
-                  <TableCell>Net Impact</TableCell>
-                  <TableCell align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {employeeData.map((employee) => {
-                  // Get all allowances for this employee
-                  const employeeAllowances = allowanceData.filter(
-                    (a) => a.empId === employee.empId && a.status === "Active"
-                  );
-
-                  // Get all deductions for this employee
-                  const employeeDeductions = deductions.filter(
-                    (d) => d.empId === employee.empId && d.status === "Active"
-                  );
-
-                  // Skip employees with no allowances or deductions
-                  if (
-                    employeeAllowances.length === 0 &&
-                    employeeDeductions.length === 0
-                  ) {
-                    return null;
-                  }
-
-                  // Calculate total allowance amount
-                  const totalAllowanceAmount = employeeAllowances.reduce(
-                    (sum, item) => {
-                      return (
-                        sum +
-                        calculateAllowanceAmount(
-                          employee.basicPay,
-                          item.percentage
-                        )
-                      );
-                    },
-                    0
-                  );
-
-                  // Calculate total deduction amount
-                  const totalDeductionAmount = employeeDeductions.reduce(
-                    (sum, item) => {
-                      return (
-                        sum +
-                        calculateDeductionAmount(
-                          employee.basicPay,
-                          item.percentage
-                        )
-                      );
-                    },
-                    0
-                  );
-
-                  // Calculate net impact
-                  const netImpact = totalAllowanceAmount - totalDeductionAmount;
-
-                  return (
-                    <TableRow key={employee.empId} className="table-row">
-                      <TableCell>
-                        <Typography variant="subtitle2">
-                          {employee.empName}
-                        </Typography>
-                        <Typography variant="caption" color="textSecondary">
-                          ID: {employee.empId}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{employee.department}</TableCell>
-                      <TableCell>
-                        Rs. {parseFloat(employee.basicPay).toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="subtitle1"
-                          sx={{
-                            fontWeight: "bold",
-                            color: netImpact >= 0 ? "#4caf50" : "#f44336",
-                          }}
-                        >
-                          {netImpact >= 0 ? "+" : ""}
-                          {netImpact.toFixed(2)}
-                        </Typography>
-                      </TableCell>
-
-                      <TableCell align="center">
-                        <Tooltip title="Preview">
-                          <IconButton
-                            className="preview-button"
-                            onClick={() =>
-                              handleOpenAllowancePreview(employee.empId)
-                            }
-                          >
-                            <PreviewIcon
-                              sx={{
-                                color: "#4caf50",
-                                transition: "all 0.3s ease",
-                                "&:hover": {
-                                  color: "#2e7d32",
-                                  transform: "scale(1.1)",
-                                },
-                              }}
-                            />
-                          </IconButton>
-                        </Tooltip>
-
-                        <Tooltip title="Edit Allowances/Deductions">
-                          <IconButton
-                            className="edit-button"
-                            onClick={() => {
-                              // First fetch the latest data
-                              Promise.all([
-                                fetchAllowances(),
-                                fetchDeductions(),
-                              ]).then(() => {
-                                // Get existing allowances and deductions for this employee
-                                const employeeAllowances = allowanceData.filter(
-                                  (a) =>
-                                    a.empId === employee.empId &&
-                                    a.status === "Active"
-                                );
-                                const employeeDeductions = deductions.filter(
-                                  (d) =>
-                                    d.empId === employee.empId &&
-                                    d.status === "Active"
-                                );
-
-                                // Pre-populate the selected allowances and their percentages
-                                const initialAllowancePercentages = {};
-                                const allowanceNames = employeeAllowances.map(
-                                  (a) => {
-                                    initialAllowancePercentages[a.name] =
-                                      a.percentage;
-                                    return a.name;
-                                  }
-                                );
-
-                                // Pre-populate the selected deductions and their percentages
-                                const initialDeductionPercentages = {};
-                                const deductionNames = employeeDeductions.map(
-                                  (d) => {
-                                    initialDeductionPercentages[d.name] =
-                                      d.percentage;
-                                    return d.name;
-                                  }
-                                );
-
-                                // Set the state with existing data
-                                setBulkEmployeeId(employee.empId);
-                                setSelectedAllowances(allowanceNames);
-                                setAllowancePercentages(
-                                  initialAllowancePercentages
-                                );
-                                setSelectedDeductions(deductionNames);
-                                setDeductionPercentages(
-                                  initialDeductionPercentages
-                                );
-
-                                // Open the dialog in edit mode
-                                setEditMode(false); // We're still using the bulk add dialog, not editing individual items
-                                setOpenDialog(true);
-                              });
-                            }}
-                          >
-                            <EditIcon
-                              sx={{
-                                color: "#007bff",
-                                transition: "all 0.3s ease",
-                                "&:hover": {
-                                  color: "#0056b3",
-                                  transform: "scale(1.1)",
-                                },
-                              }}
-                            />
-                          </IconButton>
-                        </Tooltip>
-
-                        <Tooltip title="Delete">
-                          <IconButton
-                            className="delete-button"
-                            onClick={() => handleDeleteEmployee(employee.empId)}
-                          >
-                            <DeleteIcon
-                              sx={{
-                                color: "#d32f2f",
-                                transition: "all 0.3s ease",
-                                "&:hover": {
-                                  color: "#ff1744",
-                                  transform: "scale(1.1)",
-                                },
-                              }}
-                            />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
+                );
+              })}
+            </TableBody>
             </Table>
           </TableContainer>
         </TabPanel>
@@ -1773,914 +1819,958 @@ const PayrollSystem = () => {
                         <Typography variant="body1">
                           Rs.{" "}
                           {calculateAttendanceBasedPay(
-                            previewEmployee.basicPay,
-                            previewEmployee.payableDays,
-                            previewEmployee.lop
-                          ).toFixed(2)}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Paper>
-                </Grid>
-              </Grid>
-            </DialogContent>
-          )}
-
-          <DialogActions sx={{ p: 2, bgcolor: "#f5f5f5" }}>
-            <Button onClick={handleCloseEmployeePreview} variant="outlined">
-              Close
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<EditIcon />}
-              onClick={() => {
-                handleCloseEmployeePreview();
-                setEditMode(true);
-                setSelectedItem(previewEmployee);
-                setNewEmployee({ ...previewEmployee });
-                setOpenEmployeeDialog(true);
-              }}
-              sx={{ mr: 1 }}
-            >
-              Edit Employee
-            </Button>
-          </DialogActions>
-        </Dialog>
-        {/* Allowances & Deductions Preview Dialog */}
-        <Dialog
-          open={allowancePreviewDialogOpen}
-          onClose={handleCloseAllowancePreview}
-          maxWidth="md"
-          fullWidth
-          PaperProps={{
-            elevation: 3,
-            sx: { borderRadius: 2, overflow: "hidden" },
-          }}
-        >
-          <DialogTitle
-            sx={{
-              bgcolor: "#1976d2",
-              color: "white",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography variant="h6">
-              Allowances & Deductions for {previewEmployee?.empName}
-            </Typography>
-            <IconButton
-              onClick={handleCloseAllowancePreview}
-              sx={{ color: "white" }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-
-          {previewEmployee && (
-            <DialogContent sx={{ p: 3 }}>
-              <Grid container spacing={3}>
-                {/* Allowances */}
-                <Grid item xs={12}>
-                  <Paper sx={{ p: 2, borderRadius: 2 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        mb: 2,
-                        borderBottom: "1px solid #eee",
-                        pb: 1,
-                        color: "#4caf50",
-                      }}
-                    >
-                      Allowances
-                    </Typography>
-                    {allowanceData.filter(
-                      (a) =>
-                        a.empId === previewEmployee.empId &&
-                        a.status === "Active"
-                    ).length > 0 ? (
-                      <TableContainer sx={{ maxHeight: 300 }}>
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>Name</TableCell>
-                              <TableCell>Percentage</TableCell>
-                              <TableCell>Category</TableCell>
-                              <TableCell align="right">Amount</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {allowanceData
-                              .filter(
-                                (a) =>
-                                  a.empId === previewEmployee.empId &&
-                                  a.status === "Active"
-                              )
-                              .map((allowance) => (
-                                <TableRow
-                                  key={
-                                    allowance._id ||
-                                    `${allowance.empId}_${allowance.name}`
-                                  }
-                                >
-                                  <TableCell>{allowance.name}</TableCell>
-                                  <TableCell>{allowance.percentage}%</TableCell>
-                                  <TableCell>
-                                    <Chip
-                                      label={allowance.category}
-                                      size="small"
-                                      sx={{
-                                        bgcolor:
-                                          allowance.category === "Regular"
-                                            ? "#e3f2fd"
-                                            : allowance.category === "Travel"
-                                            ? "#e8f5e9"
-                                            : "#fff8e1",
+                                                       previewEmployee.basicPay,
+                                                       previewEmployee.payableDays,
+                                                       previewEmployee.lop
+                                                     ).toFixed(2)}
+                                                   </Typography>
+                                                 </Box>
+                                               </Box>
+                                             </Paper>
+                                           </Grid>
+                                         </Grid>
+                                       </DialogContent>
+                                     )}
+                           
+                                     <DialogActions sx={{ p: 2, bgcolor: "#f5f5f5" }}>
+                                       <Button onClick={handleCloseEmployeePreview} variant="outlined">
+                                         Close
+                                       </Button>
+                                       <Button
+                                         variant="contained"
+                                         startIcon={<EditIcon />}
+                                         onClick={() => {
+                                           handleCloseEmployeePreview();
+                                           setEditMode(true);
+                                           setSelectedItem(previewEmployee);
+                                           setNewEmployee({ ...previewEmployee });
+                                           setOpenEmployeeDialog(true);
+                                         }}
+                                         sx={{ mr: 1 }}
+                                       >
+                                         Edit Employee
+                                       </Button>
+                                     </DialogActions>
+                                   </Dialog>
+                                   {/* Allowances & Deductions Preview Dialog */}
+                                   <Dialog
+                                     open={allowancePreviewDialogOpen}
+                                     onClose={handleCloseAllowancePreview}
+                                     maxWidth="md"
+                                     fullWidth
+                                     PaperProps={{
+                                       elevation: 3,
+                                       sx: { borderRadius: 2, overflow: "hidden" },
+                                     }}
+                                   >
+                                     <DialogTitle
+                                       sx={{
+                                         bgcolor: "#1976d2",
+                                         color: "white",
+                                         display: "flex",
+                                         justifyContent: "space-between",
+                                         alignItems: "center",
+                                       }}
+                                     >
+                                       <Typography variant="h6">
+                                         Allowances & Deductions for {previewEmployee?.empName}
+                                       </Typography>
+                                       <IconButton
+                                         onClick={handleCloseAllowancePreview}
+                                         sx={{ color: "white" }}
+                                       >
+                                         <CloseIcon />
+                                       </IconButton>
+                                     </DialogTitle>
+                           
+                                     {previewEmployee && (
+                                       <DialogContent sx={{ p: 3 }}>
+                                         <Grid container spacing={3}>
+                                           {/* Allowances */}
+                                           <Grid item xs={12}>
+                                             <Paper sx={{ p: 2, borderRadius: 2 }}>
+                                               <Typography
+                                                 variant="h6"
+                                                 sx={{
+                                                   mb: 2,
+                                                   borderBottom: "1px solid #eee",
+                                                   pb: 1,
+                                                   color: "#4caf50",
+                                                 }}
+                                               >
+                                                 Allowances
+                                               </Typography>
+                                               {allowanceData.filter(
+                                                 (a) =>
+                                                   a.empId === previewEmployee.empId &&
+                                                   a.status === "Active"
+                                               ).length > 0 ? (
+                                                 <TableContainer sx={{ maxHeight: 300 }}>
+                                                   <Table size="small">
+                                                     <TableHead>
+                                                       <TableRow>
+                                                         <TableCell>Name</TableCell>
+                                                         <TableCell>Percentage</TableCell>
+                                                         <TableCell>Category</TableCell>
+                                                         <TableCell align="right">Amount</TableCell>
+                                                       </TableRow>
+                                                     </TableHead>
+                                                     <TableBody>
+                                                       {allowanceData
+                                                         .filter(
+                                                           (a) =>
+                                                             a.empId === previewEmployee.empId &&
+                                                             a.status === "Active"
+                                                         )
+                                                         .map((allowance) => (
+                                                           <TableRow
+                                                             key={
+                                                               allowance._id ||
+                                                               `${allowance.empId}_${allowance.name}`
+                                                             }
+                                                           >
+                                                             <TableCell>{allowance.name}</TableCell>
+                                                             <TableCell>{allowance.percentage}%</TableCell>
+                                                             <TableCell>
+                                                               <Chip
+                                                                 label={allowance.category}
+                                                                 size="small"
+                                                                 sx={{
+                                                                   bgcolor:
+                                                                     allowance.category === "Regular"
+                                                                       ? "#e3f2fd"
+                                                                       : allowance.category === "Travel"
+                                                                       ? "#e8f5e9"
+                                                                       : "#fff8e1",
+                                                                 }}
+                                                               />
+                                                             </TableCell>
+                                                             <TableCell align="right">
+                                                               Rs.{" "}
+                                                               {calculateAllowanceAmount(
+                                                                 previewEmployee.basicPay,
+                                                                 allowance.percentage
+                                                               ).toFixed(2)}
+                                                             </TableCell>
+                                                           </TableRow>
+                                                         ))}
+                                                       <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                                                         <TableCell
+                                                           colSpan={3}
+                                                           sx={{ fontWeight: "bold" }}
+                                                         >
+                                                           Total Allowances
+                                                         </TableCell>
+                                                         <TableCell
+                                                           align="right"
+                                                           sx={{ fontWeight: "bold" }}
+                                                         >
+                                                           Rs.{" "}
+                                                           {allowanceData
+                                                             .filter(
+                                                               (a) =>
+                                                                 a.empId === previewEmployee.empId &&
+                                                                 a.status === "Active"
+                                                             )
+                                                             .reduce((sum, item) => {
+                                                               return (
+                                                                 sum +
+                                                                 calculateAllowanceAmount(
+                                                                   previewEmployee.basicPay,
+                                                                   item.percentage
+                                                                 )
+                                                               );
+                                                             }, 0)
+                                                             .toFixed(2)}
+                                                         </TableCell>
+                                                       </TableRow>
+                                                     </TableBody>
+                                                   </Table>
+                                                 </TableContainer>
+                                               ) : (
+                                                 <Typography
+                                                   variant="body2"
+                                                   color="textSecondary"
+                                                   sx={{ py: 2, textAlign: "center" }}
+                                                 >
+                                                   No active allowances found
+                                                 </Typography>
+                                               )}
+                                             </Paper>
+                                           </Grid>
+                           
+                                           {/* Deductions */}
+                                           <Grid item xs={12}>
+                                             <Paper sx={{ p: 2, borderRadius: 2 }}>
+                                               <Typography
+                                                 variant="h6"
+                                                 sx={{
+                                                   mb: 2,
+                                                   borderBottom: "1px solid #eee",
+                                                   pb: 1,
+                                                   color: "#f44336",
+                                                 }}
+                                               >
+                                                 Deductions
+                                               </Typography>
+                                               {deductions.filter(
+                                                 (d) =>
+                                                   d.empId === previewEmployee.empId &&
+                                                   d.status === "Active"
+                                               ).length > 0 ? (
+                                                 <TableContainer sx={{ maxHeight: 300 }}>
+                                                   <Table size="small">
+                                                     <TableHead>
+                                                       <TableRow>
+                                                         <TableCell>Name</TableCell>
+                                                         <TableCell>Percentage</TableCell>
+                                                         <TableCell>Category</TableCell>
+                                                         <TableCell align="right">Amount</TableCell>
+                                                       </TableRow>
+                                                     </TableHead>
+                                                     <TableBody>
+                                                       {deductions
+                                                         .filter(
+                                                           (d) =>
+                                                             d.empId === previewEmployee.empId &&
+                                                             d.status === "Active"
+                                                         )
+                                                         .map((deduction) => (
+                                                           <TableRow
+                                                             key={
+                                                               deduction._id ||
+                                                               `${deduction.empId}_${deduction.name}`
+                                                             }
+                                                           >
+                                                             <TableCell>{deduction.name}</TableCell>
+                                                             <TableCell>{deduction.percentage}%</TableCell>
+                                                             <TableCell>
+                                                               <Chip
+                                                                 label={deduction.category}
+                                                                 size="small"
+                                                                 sx={{
+                                                                   bgcolor:
+                                                                     deduction.category === "Tax"
+                                                                       ? "#ffebee"
+                                                                       : deduction.category === "Insurance"
+                                                                       ? "#e8eaf6"
+                                                                       : "#fce4ec",
+                                                                 }}
+                                                               />
+                                                             </TableCell>
+                                                             <TableCell align="right">
+                                                               Rs.{" "}
+                                                               {calculateDeductionAmount(
+                                                                 previewEmployee.basicPay,
+                                                                 deduction.percentage
+                                                               ).toFixed(2)}
+                                                             </TableCell>
+                                                           </TableRow>
+                                                         ))}
+                                                       <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                                                         <TableCell
+                                                           colSpan={3}
+                                                           sx={{ fontWeight: "bold" }}
+                                                         >
+                                                           Total Deductions
+                                                         </TableCell>
+                                                         <TableCell
+                                                           align="right"
+                                                           sx={{ fontWeight: "bold" }}
+                                                         >
+                                                           Rs.{" "}
+                                                           {calculateTotalDeductions(
+                                                             previewEmployee.empId
+                                                           ).toFixed(2)}
+                                                         </TableCell>
+                                                       </TableRow>
+                                                     </TableBody>
+                                                   </Table>
+                                                 </TableContainer>
+                                               ) : (
+                                                 <Typography
+                                                   variant="body2"
+                                                   color="textSecondary"
+                                                   sx={{ py: 2, textAlign: "center" }}
+                                                 >
+                                                   No active deductions found
+                                                 </Typography>
+                                               )}
+                                             </Paper>
+                                           </Grid>
+                           
+                                           {/* Net Impact */}
+                                           <Grid item xs={12}>
+                                             <Paper sx={{ p: 2, borderRadius: 2, bgcolor: "#f8f9fa" }}>
+                                               <Box
+                                                 sx={{
+                                                   display: "flex",
+                                                   justifyContent: "space-between",
+                                                   alignItems: "center",
+                                                 }}
+                                               >
+                                                 <Typography variant="subtitle1">
+                                                   Net Impact on Salary
+                                                 </Typography>
+                                                 <Typography
+                                                   variant="h5"
+                                                   sx={{
+                                                     fontWeight: "bold",
+                                                     color:
+                                                       calculateNetImpact(previewEmployee.empId) >= 0
+                                                         ? "#4caf50"
+                                                         : "#f44336",
+                                                   }}
+                                                 >
+                                                   {calculateNetImpact(previewEmployee.empId) >= 0
+                                                     ? "+"
+                                                     : ""}
+                                                   Rs.{" "}
+                                                   {calculateNetImpact(previewEmployee.empId).toFixed(2)}
+                                                 </Typography>
+                                               </Box>
+                                             </Paper>
+                                           </Grid>
+                                         </Grid>
+                                       </DialogContent>
+                                     )}
+                           
+                                     <DialogActions sx={{ p: 2, bgcolor: "#f5f5f5" }}>
+                                       <Button onClick={handleCloseAllowancePreview} variant="outlined">
+                                         Close
+                                       </Button>
+                                       <Button
+                                         variant="contained"
+                                         startIcon={<EditIcon />}
+                                         onClick={() => {
+                                           handleCloseAllowancePreview();
+                                           setEditMode(false);
+                                           setBulkEmployeeId(previewEmployee.empId);
+                                           setOpenDialog(true);
+                                         }}
+                                       >
+                                         Manage Allowances & Deductions
+                                       </Button>
+                                     </DialogActions>
+                                   </Dialog>
+                                   {/* Create Employee Dialog */}
+                                   <Dialog
+                                     open={openEmployeeDialog}
+                                     onClose={handleCloseEmployeeDialog}
+                                     maxWidth="md"
+                                     fullWidth
+                                     PaperProps={{
+                                       elevation: 0,
+                                       className: "dialog-paper",
+                                     }}
+                                   >
+                                     <DialogTitle className="dialog-title">
+                                       {editMode ? "Edit Employee" : "Add New Employee"}
+                                     </DialogTitle>
+                                     <DialogContent className="dialog-content">
+                                       {/* Add this section at the top of the dialog content */}
+                                       {!editMode && (
+                                         <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+                                           <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold' }}>
+                                             Select from Onboarded Employees
+                                           </Typography>
+                                           <FormControl fullWidth>
+                                             <InputLabel>Select Onboarded Employee</InputLabel>
+                                             <Select
+                                               value={selectedRegisteredEmployee}
+                                               onChange={(e) => handleRegisteredEmployeeSelect(e.target.value)}
+                                               label="Select Onboarded Employee"
+                                             >
+                                               <MenuItem value="">
+                                                 <em>None</em>
+                                               </MenuItem>
+                                               {registeredEmployees.map((emp) => (
+                                                 <MenuItem key={emp.Emp_ID} value={emp.Emp_ID}>
+                                                   {emp.Emp_ID} - {emp.personalInfo?.firstName || ""} {emp.personalInfo?.lastName || ""}
+                                                   {emp.joiningDetails?.department ? ` (${emp.joiningDetails.department})` : ""}
+                                                 </MenuItem>
+                                               ))}
+                                             </Select>
+                                             <FormHelperText>
+                                               Select an employee to auto-fill available information
+                                             </FormHelperText>
+                                           </FormControl>
+                                         </Box>
+                                       )}
+                                       
+                                       <Grid container spacing={2}>
+                                         <Grid item xs={12} md={6}>
+                                           <TextField
+                                             label="Employee ID"
+                                             fullWidth
+                                             value={newEmployee.empId}
+                                             onChange={(e) =>
+                                               setNewEmployee({ ...newEmployee, empId: e.target.value })
+                                             }
+                                             disabled={editMode}
+                                             required
+                                           />
+                                         </Grid>
+                                         <Grid item xs={12} md={6}>
+                                           <TextField
+                                             label="Employee Name"
+                                             fullWidth
+                                             value={newEmployee.empName}
+                                             onChange={(e) =>
+                                               setNewEmployee({ ...newEmployee, empName: e.target.value })
+                                             }
+                                             required
+                                           />
+                                         </Grid>
+                                         <Grid item xs={12} md={6}>
+                                           <TextField
+                                             label="Department"
+                                             fullWidth
+                                             value={newEmployee.department}
+                                             onChange={(e) =>
+                                               setNewEmployee({
+                                                 ...newEmployee,
+                                                 department: e.target.value,
+                                               })
+                                             }
+                                             required
+                                           />
+                                         </Grid>
+                                         <Grid item xs={12} md={6}>
+                                           <TextField
+                                             label="Designation"
+                                             fullWidth
+                                             value={newEmployee.designation}
+                                             onChange={(e) =>
+                                               setNewEmployee({
+                                                 ...newEmployee,
+                                                 designation: e.target.value,
+                                               })
+                                             }
+                                             required
+                                           />
+                                         </Grid>
+                                         <Grid item xs={12} md={6}>
+                                           <TextField
+                                             label="Basic Pay"
+                                             type="number"
+                                             fullWidth
+                                             value={newEmployee.basicPay}
+                                             onChange={(e) =>
+                                               setNewEmployee({ ...newEmployee, basicPay: e.target.value })
+                                             }
+                                             required
+                                             InputProps={{
+                                               startAdornment: (
+                                                 <InputAdornment position="start">Rs.</InputAdornment>
+                                               ),
+                                             }}
+                                           />
+                                         </Grid>
+                                         <Grid item xs={12} md={6}>
+                                           <TextField
+                                             label="Bank Name"
+                                             fullWidth
+                                             value={newEmployee.bankName}
+                                             onChange={(e) =>
+                                               setNewEmployee({ ...newEmployee, bankName: e.target.value })
+                                             }
+                                             required
+                                           />
+                                         </Grid>
+                                         <Grid item xs={12} md={6}>
+                                           <TextField
+                                             label="Bank Account No"
+                                             fullWidth
+                                             value={newEmployee.bankAccountNo}
+                                             onChange={(e) =>
+                                               setNewEmployee({
+                                                 ...newEmployee,
+                                                 bankAccountNo: e.target.value,
+                                                })
+                                              }
+                                              required
+                                            />
+                                          </Grid>
+                                          <Grid item xs={12} md={6}>
+                                            <TextField
+                                              label="PF Number"
+                                              fullWidth
+                                              value={newEmployee.pfNo}
+                                              onChange={(e) =>
+                                                setNewEmployee({ ...newEmployee, pfNo: e.target.value })
+                                              }
+                                              required
+                                            />
+                                          </Grid>
+                                          <Grid item xs={12} md={6}>
+                                            <TextField
+                                              label="UAN Number"
+                                              fullWidth
+                                              value={newEmployee.uanNo}
+                                              onChange={(e) =>
+                                                setNewEmployee({ ...newEmployee, uanNo: e.target.value })
+                                              }
+                                              required
+                                            />
+                                          </Grid>
+                                          <Grid item xs={12} md={6}>
+                                            <TextField
+                                              label="PAN Number"
+                                              fullWidth
+                                              value={newEmployee.panNo}
+                                              onChange={(e) =>
+                                                setNewEmployee({ ...newEmployee, panNo: e.target.value })
+                                              }
+                                              required
+                                            />
+                                          </Grid>
+                                          <Grid item xs={12} md={6}>
+                                            <TextField
+                                              label="Payable Days"
+                                              type="number"
+                                              fullWidth
+                                              value={newEmployee.payableDays}
+                                              onChange={(e) =>
+                                                setNewEmployee({
+                                                  ...newEmployee,
+                                                  payableDays: e.target.value,
+                                                })
+                                              }
+                                              required
+                                            />
+                                          </Grid>
+                                          <Grid item xs={12} md={6}>
+                                            <TextField
+                                              label="LOP Days"
+                                              type="number"
+                                              fullWidth
+                                              value={newEmployee.lop}
+                                              onChange={handleLOPChange}
+                                              inputProps={{
+                                                step: 0.5,
+                                                min: 0,
+                                              }}
+                                              helperText="Enter values in 0.5 day increments"
+                                            />
+                                          </Grid>
+                                          <Grid item xs={12} md={6}>
+                                            <TextField
+                                              label="Email"
+                                              type="email"
+                                              fullWidth
+                                              value={newEmployee.email}
+                                              onChange={(e) =>
+                                                setNewEmployee({
+                                                  ...newEmployee,
+                                                  email: e.target.value,
+                                                })
+                                              }
+                                            />
+                                          </Grid>
+                                        </Grid>
+                                      </DialogContent>
+                                      <DialogActions className="dialog-actions">
+                                        <Button
+                                          onClick={handleCloseEmployeeDialog}
+                                          color="error"
+                                          variant="outlined"
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          onClick={handleAddEmployee}
+                                          color="primary"
+                                          variant="contained"
+                                        >
+                                          {editMode ? "Update" : "Add"} Employee
+                                        </Button>
+                                      </DialogActions>
+                                    </Dialog>
+                                    {/* Create Allowance Dialog */}
+                                    <Dialog
+                                      open={openDialog}
+                                      onClose={handleCloseDialog}
+                                      maxWidth="sm"
+                                      fullWidth
+                                      PaperProps={{
+                                        elevation: 0,
+                                        className: "dialog-paper",
                                       }}
-                                    />
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    Rs.{" "}
-                                    {calculateAllowanceAmount(
-                                      previewEmployee.basicPay,
-                                      allowance.percentage
-                                    ).toFixed(2)}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                              <TableCell
-                                colSpan={3}
-                                sx={{ fontWeight: "bold" }}
-                              >
-                                Total Allowances
-                              </TableCell>
-                              <TableCell
-                                align="right"
-                                sx={{ fontWeight: "bold" }}
-                              >
-                                Rs.{" "}
-                                {allowanceData
-                                  .filter(
-                                    (a) =>
-                                      a.empId === previewEmployee.empId &&
-                                      a.status === "Active"
-                                  )
-                                  .reduce((sum, item) => {
-                                    return (
-                                      sum +
-                                      calculateAllowanceAmount(
-                                        previewEmployee.basicPay,
-                                        item.percentage
-                                      )
-                                    );
-                                  }, 0)
-                                  .toFixed(2)}
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    ) : (
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ py: 2, textAlign: "center" }}
-                      >
-                        No active allowances found
-                      </Typography>
-                    )}
-                  </Paper>
-                </Grid>
-
-                {/* Deductions */}
-                <Grid item xs={12}>
-                  <Paper sx={{ p: 2, borderRadius: 2 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        mb: 2,
-                        borderBottom: "1px solid #eee",
-                        pb: 1,
-                        color: "#f44336",
-                      }}
-                    >
-                      Deductions
-                    </Typography>
-                    {deductions.filter(
-                      (d) =>
-                        d.empId === previewEmployee.empId &&
-                        d.status === "Active"
-                    ).length > 0 ? (
-                      <TableContainer sx={{ maxHeight: 300 }}>
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>Name</TableCell>
-                              <TableCell>Percentage</TableCell>
-                              <TableCell>Category</TableCell>
-                              <TableCell align="right">Amount</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {deductions
-                              .filter(
-                                (d) =>
-                                  d.empId === previewEmployee.empId &&
-                                  d.status === "Active"
-                              )
-                              .map((deduction) => (
-                                <TableRow
-                                  key={
-                                    deduction._id ||
-                                    `${deduction.empId}_${deduction.name}`
-                                  }
-                                >
-                                  <TableCell>{deduction.name}</TableCell>
-                                  <TableCell>{deduction.percentage}%</TableCell>
-                                  <TableCell>
-                                    <Chip
-                                      label={deduction.category}
-                                      size="small"
-                                      sx={{
-                                        bgcolor:
-                                          deduction.category === "Tax"
-                                            ? "#ffebee"
-                                            : deduction.category === "Insurance"
-                                            ? "#e8eaf6"
-                                            : "#fce4ec",
-                                      }}
-                                    />
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    Rs.{" "}
-                                    {calculateDeductionAmount(
-                                      previewEmployee.basicPay,
-                                      deduction.percentage
-                                    ).toFixed(2)}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                              <TableCell
-                                colSpan={3}
-                                sx={{ fontWeight: "bold" }}
-                              >
-                                Total Deductions
-                              </TableCell>
-                              <TableCell
-                                align="right"
-                                sx={{ fontWeight: "bold" }}
-                              >
-                                Rs.{" "}
-                                {calculateTotalDeductions(
-                                  previewEmployee.empId
-                                ).toFixed(2)}
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    ) : (
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ py: 2, textAlign: "center" }}
-                      >
-                        No active deductions found
-                      </Typography>
-                    )}
-                  </Paper>
-                </Grid>
-
-                {/* Net Impact */}
-                <Grid item xs={12}>
-                  <Paper sx={{ p: 2, borderRadius: 2, bgcolor: "#f8f9fa" }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Typography variant="subtitle1">
-                        Net Impact on Salary
-                      </Typography>
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: "bold",
-                          color:
-                            calculateNetImpact(previewEmployee.empId) >= 0
-                              ? "#4caf50"
-                              : "#f44336",
-                        }}
-                      >
-                        {calculateNetImpact(previewEmployee.empId) >= 0
-                          ? "+"
-                          : ""}
-                        Rs.{" "}
-                        {calculateNetImpact(previewEmployee.empId).toFixed(2)}
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Grid>
-              </Grid>
-            </DialogContent>
-          )}
-
-          <DialogActions sx={{ p: 2, bgcolor: "#f5f5f5" }}>
-            <Button onClick={handleCloseAllowancePreview} variant="outlined">
-              Close
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<EditIcon />}
-              onClick={() => {
-                handleCloseAllowancePreview();
-                setEditMode(false);
-                setBulkEmployeeId(previewEmployee.empId);
-                setOpenDialog(true);
-              }}
-            >
-              Manage Allowances & Deductions
-            </Button>
-          </DialogActions>
-        </Dialog>
-        {/* Create Employee Dialog */}
-        <Dialog
-          open={openEmployeeDialog}
-          onClose={handleCloseEmployeeDialog}
-          maxWidth="md"
-          fullWidth
-          PaperProps={{
-            elevation: 0,
-            className: "dialog-paper",
-          }}
-        >
-          <DialogTitle className="dialog-title">
-            {editMode ? "Edit Employee" : "Add New Employee"}
-          </DialogTitle>
-          <DialogContent className="dialog-content">
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Employee ID"
-                  fullWidth
-                  value={newEmployee.empId}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, empId: e.target.value })
-                  }
-                  disabled={editMode}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Employee Name"
-                  fullWidth
-                  value={newEmployee.empName}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, empName: e.target.value })
-                  }
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Department"
-                  fullWidth
-                  value={newEmployee.department}
-                  onChange={(e) =>
-                    setNewEmployee({
-                      ...newEmployee,
-                      department: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Designation"
-                  fullWidth
-                  value={newEmployee.designation}
-                  onChange={(e) =>
-                    setNewEmployee({
-                      ...newEmployee,
-                      designation: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Basic Pay"
-                  type="number"
-                  fullWidth
-                  value={newEmployee.basicPay}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, basicPay: e.target.value })
-                  }
-                  required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">Rs.</InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Bank Name"
-                  fullWidth
-                  value={newEmployee.bankName}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, bankName: e.target.value })
-                  }
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Bank Account No"
-                  fullWidth
-                  value={newEmployee.bankAccountNo}
-                  onChange={(e) =>
-                    setNewEmployee({
-                      ...newEmployee,
-                      bankAccountNo: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="PF Number"
-                  fullWidth
-                  value={newEmployee.pfNo}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, pfNo: e.target.value })
-                  }
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="UAN Number"
-                  fullWidth
-                  value={newEmployee.uanNo}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, uanNo: e.target.value })
-                  }
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="PAN Number"
-                  fullWidth
-                  value={newEmployee.panNo}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, panNo: e.target.value })
-                  }
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Payable Days"
-                  type="number"
-                  fullWidth
-                  value={newEmployee.payableDays}
-                  onChange={(e) =>
-                    setNewEmployee({
-                      ...newEmployee,
-                      payableDays: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="LOP Days"
-                  type="number"
-                  fullWidth
-                  value={newEmployee.lop}
-                  onChange={handleLOPChange}
-                  inputProps={{
-                    step: 0.5,
-                    min: 0,
-                  }}
-                  helperText="Enter values in 0.5 day increments"
-                />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions className="dialog-actions">
-            <Button
-              onClick={handleCloseEmployeeDialog}
-              color="error"
-              variant="outlined"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddEmployee}
-              color="primary"
-              variant="contained"
-            >
-              {editMode ? "Update" : "Add"} Employee
-            </Button>
-          </DialogActions>
-        </Dialog>
-        {/* Create Allowance Dialog */}
-        <Dialog
-          open={openDialog}
-          onClose={handleCloseDialog}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{
-            elevation: 0,
-            className: "dialog-paper",
-          }}
-        >
-          <DialogTitle className="dialog-title">
-            {editMode ? "Edit Allowance" : "Add New Allowance"}
-          </DialogTitle>
-          <DialogContent className="dialog-content">
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <FormControl fullWidth required>
-                  <InputLabel>Employee</InputLabel>
-                  <Select
-                    value={editMode ? newAllowance.empId : bulkEmployeeId}
-                    onChange={(e) => {
-                      if (editMode) {
-                        setNewAllowance({
-                          ...newAllowance,
-                          empId: e.target.value,
-                        });
-                      } else {
-                        setBulkEmployeeId(e.target.value);
-                      }
-                    }}
-                    label="Employee"
-                  >
-                    {employeeData.map((emp) => (
-                      <MenuItem key={emp.empId} value={emp.empId}>
-                        {emp.empId} - {emp.empName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              {editMode ? (
-                <>
-                  <Grid item xs={12}>
-                    <TextField
-                      label="Allowance Name"
-                      fullWidth
-                      value={newAllowance.name}
-                      onChange={(e) =>
-                        setNewAllowance({
-                          ...newAllowance,
-                          name: e.target.value,
-                        })
-                      }
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      label="Percentage"
-                      type="number"
-                      fullWidth
-                      value={newAllowance.percentage}
-                      onChange={(e) =>
-                        setNewAllowance({
-                          ...newAllowance,
-                          percentage: Math.max(
-                            0,
-                            Math.min(100, Number(e.target.value))
-                          ),
-                        })
-                      }
-                      required
-                      InputProps={{
-                        inputProps: { min: 0, max: 100 },
-                        endAdornment: (
-                          <InputAdornment position="end">%</InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth required>
-                      <InputLabel>Category</InputLabel>
-                      <Select
-                        value={newAllowance.category}
-                        onChange={(e) =>
-                          setNewAllowance({
-                            ...newAllowance,
-                            category: e.target.value,
-                          })
-                        }
-                        label="Category"
-                      >
-                        <MenuItem value="Regular">Regular</MenuItem>
-                        <MenuItem value="Travel">Travel</MenuItem>
-                        <MenuItem value="Special">Special</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth required>
-                      <InputLabel>Status</InputLabel>
-                      <Select
-                        value={newAllowance.status}
-                        onChange={(e) =>
-                          setNewAllowance({
-                            ...newAllowance,
-                            status: e.target.value,
-                          })
-                        }
-                        label="Status"
-                      >
-                        <MenuItem value="Active">Active</MenuItem>
-                        <MenuItem value="Inactive">Inactive</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </>
-              ) : (
-                <>
-                  {/* Table-like structure for allowances, similar to deduction dialog */}
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                      Select Allowances to Add
-                    </Typography>
-                    <TableContainer
-                      component={Paper}
-                      sx={{ maxHeight: 300, mb: 2 }}
-                    >
-                      <Table stickyHeader size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell padding="checkbox">Select</TableCell>
-                            <TableCell>Allowance Type</TableCell>
-                            <TableCell>Description</TableCell>
-                            <TableCell>Percentage (%)</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {[
-                            {
-                              name: "TRAVEL ALLOWANCE",
-                              desc: "For travel-related expenses",
-                            },
-                            {
-                              name: "MEDICAL ALLOWANCE",
-                              desc: "For healthcare expenses",
-                            },
-                            {
-                              name: "HOUSE RENT ALLOWANCE",
-                              desc: "For accommodation expenses",
-                            },
-                            {
-                              name: "DEARNESS ALLOWANCE",
-                              desc: "Cost of living adjustment",
-                            },
-                            {
-                              name: "SPECIAL ALLOWANCE",
-                              desc: "Additional benefits",
-                            },
-                            {
-                              name: "CONVEYANCE ALLOWANCE",
-                              desc: "For daily commute expenses",
-                            },
-                            {
-                              name: "EDUCATION ALLOWANCE",
-                              desc: "For educational expenses",
-                            },
-                            {
-                              name: "MEAL ALLOWANCE",
-                              desc: "For food expenses",
-                            },
-                            {
-                              name: "TELEPHONE ALLOWANCE",
-                              desc: "For communication expenses",
-                            },
-                            {
-                              name: "UNIFORM ALLOWANCE",
-                              desc: "For work attire",
-                            },
-                          ].map((allowance) => (
-                            <TableRow key={allowance.name}>
-                              <TableCell padding="checkbox">
-                                <Checkbox
-                                  checked={selectedAllowances.includes(
-                                    allowance.name
-                                  )}
-                                  onChange={(e) =>
-                                    handleAllowanceSelection(
-                                      allowance.name,
-                                      e.target.checked
-                                    )
-                                  }
-                                />
-                              </TableCell>
-                              <TableCell>{allowance.name}</TableCell>
-                              <TableCell>{allowance.desc}</TableCell>
-                              <TableCell>
-                                <TextField
-                                  type="number"
-                                  size="small"
-                                  value={
-                                    allowancePercentages[allowance.name] || 0
-                                  }
-                                  onChange={(e) =>
-                                    handlePercentageChange(
-                                      allowance.name,
-                                      e.target.value
-                                    )
-                                  }
-                                  disabled={
-                                    !selectedAllowances.includes(allowance.name)
-                                  }
-                                  InputProps={{
-                                    endAdornment: (
-                                      <InputAdornment position="end">
-                                        %
-                                      </InputAdornment>
-                                    ),
-                                    inputProps: { min: 0, max: 100, step: 0.5 },
-                                  }}
-                                  sx={{ width: "100px" }}
-                                />
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mt: 2,
-                      }}
-                    >
-                      <Typography>
-                        {selectedAllowances.length} allowance(s) selected
-                      </Typography>
-                      <Box sx={{ display: "flex", gap: 1 }}>
-                        <TextField
-                          label="Custom Allowance"
-                          size="small"
-                          id="custom-allowance"
-                        />
-                        <TextField
-                          label="Percentage"
-                          type="number"
-                          size="small"
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">%</InputAdornment>
-                            ),
-                            inputProps: { min: 0, max: 100 },
-                          }}
-                          sx={{ width: "100px" }}
-                          id="custom-percentage"
-                        />
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={() => {
-                            const customName =
-                              document.getElementById("custom-allowance").value;
-                            const customPercentage =
-                              document.getElementById(
-                                "custom-percentage"
-                              ).value;
-                            if (
-                              customName &&
-                              !selectedAllowances.includes(customName)
-                            ) {
-                              setSelectedAllowances([
-                                ...selectedAllowances,
-                                customName,
-                              ]);
-                              setAllowancePercentages({
-                                ...allowancePercentages,
-                                [customName]: parseFloat(customPercentage) || 0,
-                              });
-                              document.getElementById(
-                                "custom-allowance"
-                              ).value = "";
-                              document.getElementById(
-                                "custom-percentage"
-                              ).value = "";
-                            }
-                          }}
-                        >
-                          Add
-                        </Button>
-                      </Box>
-                    </Box>
-                  </Grid>
-
-                  {selectedAllowances.length > 0 && (
-                    <Grid item xs={12}>
-                      <Paper sx={{ p: 2, bgcolor: "#f5f5f5" }}>
-                        <Typography variant="subtitle2" gutterBottom>
-                          Preview of Allowances to Add:
-                        </Typography>
-                        <TableContainer sx={{ maxHeight: 150 }}>
-                          <Table size="small">
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>Allowance Name</TableCell>
-                                <TableCell>Percentage</TableCell>
-                                <TableCell>Amount (Est.)</TableCell>
-                                <TableCell>Action</TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {selectedAllowances.map((name, index) => {
-                                const employee = employeeData.find(
-                                  (e) => e.empId === bulkEmployeeId
-                                );
-                                const estimatedAmount = employee
-                                  ? calculateAllowanceAmount(
-                                      employee.basicPay,
-                                      allowancePercentages[name] || 0
-                                    )
-                                  : 0;
-
-                                return (
-                                  <TableRow key={index}>
-                                    <TableCell>{name}</TableCell>
-                                    <TableCell>
-                                      {allowancePercentages[name] || 0}%
-                                    </TableCell>
-                                    <TableCell>
-                                      Rs. {estimatedAmount.toFixed(2)}
-                                    </TableCell>
-                                    <TableCell>
-                                      <IconButton
-                                        size="small"
-                                        onClick={() =>
-                                          setSelectedAllowances(
-                                            selectedAllowances.filter(
-                                              (item) => item !== name
-                                            )
-                                          )
-                                        }
-                                      >
-                                        <DeleteIcon fontSize="small" />
-                                      </IconButton>
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      </Paper>
-                    </Grid>
-                  )}
-
-                  {/* Optional Deduction Selection */}
-                  <Grid item xs={12} sx={{ mt: 3 }}>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        mb: 1,
-                        borderBottom: "1px solid #eee",
-                        pb: 1,
-                        color: "#f44336",
-                      }}
-                    >
-                      Add Deductions (Optional)
-                    </Typography>
-                    <TableContainer
-                      component={Paper}
-                      sx={{ maxHeight: 300, mb: 2 }}
-                    >
-                      <Table stickyHeader size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell padding="checkbox">Select</TableCell>
-                            <TableCell>Deduction Type</TableCell>
-                            <TableCell>Description</TableCell>
-                            <TableCell>Percentage (%)</TableCell>
+                                    >
+                                      <DialogTitle className="dialog-title">
+                                        {editMode ? "Edit Allowance" : "Add New Allowance"}
+                                      </DialogTitle>
+                                      <DialogContent className="dialog-content">
+                                        <Grid container spacing={2}>
+                                          <Grid item xs={12}>
+                                            <FormControl fullWidth required>
+                                              <InputLabel>Employee</InputLabel>
+                                              <Select
+                                                value={editMode ? newAllowance.empId : bulkEmployeeId}
+                                                onChange={(e) => {
+                                                  if (editMode) {
+                                                    setNewAllowance({
+                                                      ...newAllowance,
+                                                      empId: e.target.value,
+                                                    });
+                                                  } else {
+                                                    setBulkEmployeeId(e.target.value);
+                                                  }
+                                                }}
+                                                label="Employee"
+                                              >
+                                                {employeeData.map((emp) => (
+                                                  <MenuItem key={emp.empId} value={emp.empId}>
+                                                    {emp.empId} - {emp.empName}
+                                                  </MenuItem>
+                                                ))}
+                                              </Select>
+                                            </FormControl>
+                                          </Grid>
+                            
+                                          {editMode ? (
+                                            <>
+                                              <Grid item xs={12}>
+                                                <TextField
+                                                  label="Allowance Name"
+                                                  fullWidth
+                                                  value={newAllowance.name}
+                                                  onChange={(e) =>
+                                                    setNewAllowance({
+                                                      ...newAllowance,
+                                                      name: e.target.value,
+                                                    })
+                                                  }
+                                                  required
+                                                />
+                                              </Grid>
+                                              <Grid item xs={12}>
+                                                <TextField
+                                                  label="Percentage"
+                                                  type="number"
+                                                  fullWidth
+                                                  value={newAllowance.percentage}
+                                                  onChange={(e) =>
+                                                    setNewAllowance({
+                                                      ...newAllowance,
+                                                      percentage: Math.max(
+                                                        0,
+                                                        Math.min(100, Number(e.target.value))
+                                                      ),
+                                                    })
+                                                  }
+                                                  required
+                                                  InputProps={{
+                                                    inputProps: { min: 0, max: 100 },
+                                                    endAdornment: (
+                                                      <InputAdornment position="end">%</InputAdornment>
+                                                    ),
+                                                  }}
+                                                />
+                                              </Grid>
+                                              <Grid item xs={12}>
+                                                <FormControl fullWidth required>
+                                                  <InputLabel>Category</InputLabel>
+                                                  <Select
+                                                    value={newAllowance.category}
+                                                    onChange={(e) =>
+                                                      setNewAllowance({
+                                                        ...newAllowance,
+                                                        category: e.target.value,
+                                                      })
+                                                    }
+                                                    label="Category"
+                                                  >
+                                                    <MenuItem value="Regular">Regular</MenuItem>
+                                                    <MenuItem value="Travel">Travel</MenuItem>
+                                                    <MenuItem value="Special">Special</MenuItem>
+                                                  </Select>
+                                                </FormControl>
+                                              </Grid>
+                                              <Grid item xs={12}>
+                                                <FormControl fullWidth required>
+                                                  <InputLabel>Status</InputLabel>
+                                                  <Select
+                                                    value={newAllowance.status}
+                                                    onChange={(e) =>
+                                                      setNewAllowance({
+                                                        ...newAllowance,
+                                                        status: e.target.value,
+                                                      })
+                                                    }
+                                                    label="Status"
+                                                  >
+                                                    <MenuItem value="Active">Active</MenuItem>
+                                                    <MenuItem value="Inactive">Inactive</MenuItem>
+                                                  </Select>
+                                                </FormControl>
+                                              </Grid>
+                                            </>
+                                          ) : (
+                                            <>
+                                              {/* Table-like structure for allowances, similar to deduction dialog */}
+                                              <Grid item xs={12}>
+                                                <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                                                  Select Allowances to Add
+                                                </Typography>
+                                                <TableContainer
+                                                  component={Paper}
+                                                  sx={{ maxHeight: 300, mb: 2 }}
+                                                >
+                                                  <Table stickyHeader size="small">
+                                                    <TableHead>
+                                                      <TableRow>
+                                                        <TableCell padding="checkbox">Select</TableCell>
+                                                        <TableCell>Allowance Type</TableCell>
+                                                        <TableCell>Description</TableCell>
+                                                        <TableCell>Percentage (%)</TableCell>
+                                                      </TableRow>
+                                                    </TableHead>
+                                                    <TableBody>
+                                                      {[
+                                                        {
+                                                          name: "TRAVEL ALLOWANCE",
+                                                          desc: "For travel-related expenses",
+                                                        },
+                                                        {
+                                                          name: "MEDICAL ALLOWANCE",
+                                                          desc: "For healthcare expenses",
+                                                        },
+                                                        {
+                                                          name: "HOUSE RENT ALLOWANCE",
+                                                          desc: "For accommodation expenses",
+                                                        },
+                                                        {
+                                                          name: "DEARNESS ALLOWANCE",
+                                                          desc: "Cost of living adjustment",
+                                                        },
+                                                        {
+                                                          name: "SPECIAL ALLOWANCE",
+                                                          desc: "Additional benefits",
+                                                        },
+                                                        {
+                                                          name: "CONVEYANCE ALLOWANCE",
+                                                          desc: "For daily commute expenses",
+                                                        },
+                                                        {
+                                                          name: "EDUCATION ALLOWANCE",
+                                                          desc: "For educational expenses",
+                                                        },
+                                                        {
+                                                          name: "MEAL ALLOWANCE",
+                                                          desc: "For food expenses",
+                                                        },
+                                                        {
+                                                          name: "TELEPHONE ALLOWANCE",
+                                                          desc: "For communication expenses",
+                                                        },
+                                                        {
+                                                          name: "UNIFORM ALLOWANCE",
+                                                          desc: "For work attire",
+                                                        },
+                                                      ].map((allowance) => (
+                                                        <TableRow key={allowance.name}>
+                                                          <TableCell padding="checkbox">
+                                                            <Checkbox
+                                                              checked={selectedAllowances.includes(
+                                                                allowance.name
+                                                              )}
+                                                              onChange={(e) =>
+                                                                handleAllowanceSelection(
+                                                                  allowance.name,
+                                                                  e.target.checked
+                                                                )
+                                                              }
+                                                            />
+                                                          </TableCell>
+                                                          <TableCell>{allowance.name}</TableCell>
+                                                          <TableCell>{allowance.desc}</TableCell>
+                                                          <TableCell>
+                                                            <TextField
+                                                              type="number"
+                                                              size="small"
+                                                              value={
+                                                                allowancePercentages[allowance.name] || 0
+                                                              }
+                                                              onChange={(e) =>
+                                                                handlePercentageChange(
+                                                                  allowance.name,
+                                                                  e.target.value
+                                                                )
+                                                              }
+                                                              disabled={
+                                                                !selectedAllowances.includes(allowance.name)
+                                                              }
+                                                              InputProps={{
+                                                                endAdornment: (
+                                                                  <InputAdornment position="end">
+                                                                    %
+                                                                  </InputAdornment>
+                                                                ),
+                                                                inputProps: { min: 0, max: 100, step: 0.5 },
+                                                              }}
+                                                              sx={{ width: "100px" }}
+                                                            />
+                                                          </TableCell>
+                                                        </TableRow>
+                                                      ))}
+                                                    </TableBody>
+                                                  </Table>
+                                                </TableContainer>
+                            
+                                                <Box
+                                                  sx={{
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    alignItems: "center",
+                                                    mt: 2,
+                                                  }}
+                                                >
+                                                  <Typography>
+                                                    {selectedAllowances.length} allowance(s) selected
+                                                  </Typography>
+                                                  <Box sx={{ display: "flex", gap: 1 }}>
+                                                    <TextField
+                                                      label="Custom Allowance"
+                                                      size="small"
+                                                      id="custom-allowance"
+                                                    />
+                                                    <TextField
+                                                      label="Percentage"
+                                                      type="number"
+                                                      size="small"
+                                                      InputProps={{
+                                                        endAdornment: (
+                                                          <InputAdornment position="end">%</InputAdornment>
+                                                        ),
+                                                        inputProps: { min: 0, max: 100 },
+                                                      }}
+                                                      sx={{ width: "100px" }}
+                                                      id="custom-percentage"
+                                                    />
+                                                    <Button
+                                                      size="small"
+                                                      variant="contained"
+                                                      onClick={() => {
+                                                        const customName =
+                                                          document.getElementById("custom-allowance").value;
+                                                        const customPercentage =
+                                                          document.getElementById(
+                                                            "custom-percentage"
+                                                          ).value;
+                                                        if (
+                                                          customName &&
+                                                          !selectedAllowances.includes(customName)
+                                                        ) {
+                                                          setSelectedAllowances([
+                                                            ...selectedAllowances,
+                                                            customName,
+                                                          ]);
+                                                          setAllowancePercentages({
+                                                            ...allowancePercentages,
+                                                            [customName]: parseFloat(customPercentage) || 0,
+                                                          });
+                                                          document.getElementById(
+                                                            "custom-allowance"
+                                                          ).value = "";
+                                                          document.getElementById(
+                                                            "custom-percentage"
+                                                          ).value = "";
+                                                        }
+                                                      }}
+                                                    >
+                                                      Add
+                                                    </Button>
+                                                  </Box>
+                                                </Box>
+                                              </Grid>
+                            
+                                              {selectedAllowances.length > 0 && (
+                                                <Grid item xs={12}>
+                                                  <Paper sx={{ p: 2, bgcolor: "#f5f5f5" }}>
+                                                    <Typography variant="subtitle2" gutterBottom>
+                                                      Preview of Allowances to Add:
+                                                    </Typography>
+                                                    <TableContainer sx={{ maxHeight: 150 }}>
+                                                      <Table size="small">
+                                                        <TableHead>
+                                                          <TableRow>
+                                                            <TableCell>Allowance Name</TableCell>
+                                                            <TableCell>Percentage</TableCell>
+                                                            <TableCell>Amount (Est.)</TableCell>
+                                                            <TableCell>Action</TableCell>
+                                                          </TableRow>
+                                                        </TableHead>
+                                                        <TableBody>
+                                                          {selectedAllowances.map((name, index) => {
+                                                            const employee = employeeData.find(
+                                                              (e) => e.empId === bulkEmployeeId
+                                                            );
+                                                            const estimatedAmount = employee
+                                                              ? calculateAllowanceAmount(
+                                                                  employee.basicPay,
+                                                                  allowancePercentages[name] || 0
+                                                                )
+                                                              : 0;
+                            
+                                                            return (
+                                                              <TableRow key={index}>
+                                                                <TableCell>{name}</TableCell>
+                                                                <TableCell>
+                                                                  {allowancePercentages[name] || 0}%
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                  Rs. {estimatedAmount.toFixed(2)}
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                  <IconButton
+                                                                    size="small"
+                                                                    onClick={() =>
+                                                                      setSelectedAllowances(
+                                                                        selectedAllowances.filter(
+                                                                          (item) => item !== name
+                                                                        )
+                                                                      )
+                                                                    }
+                                                                  >
+                                                                    <DeleteIcon fontSize="small" />
+                                                                  </IconButton>
+                                                                </TableCell>
+                                                              </TableRow>
+                                                            );
+                                                          })}
+                                                        </TableBody>
+                                                      </Table>
+                                                    </TableContainer>
+                                                  </Paper>
+                                                </Grid>
+                                              )}
+                            
+                                              {/* Optional Deduction Selection */}
+                                              <Grid item xs={12} sx={{ mt: 3 }}>
+                                                <Typography
+                                                  variant="subtitle1"
+                                                  sx={{
+                                                    mb: 1,
+                                                    borderBottom: "1px solid #eee",
+                                                    pb: 1,
+                                                    color: "#f44336",
+                                                  }}
+                                                >
+                                                  Add Deductions (Optional)
+                                                </Typography>
+                                                <TableContainer
+                                                  component={Paper}
+                                                  sx={{ maxHeight: 300, mb: 2 }}
+                                                >
+                                                  <Table stickyHeader size="small">
+                                                    <TableHead>
+                                                      <TableRow>
+                                                        <TableCell padding="checkbox">Select</TableCell>
+                                                        <TableCell>Deduction Type</TableCell>
+                                                        <TableCell>Description</TableCell>
+                                                        <TableCell>Percentage (%)</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -2863,3 +2953,11 @@ const PayrollSystem = () => {
 };
 
 export default PayrollSystem;
+
+                            
+
+                                                 
+                            
+
+
+
