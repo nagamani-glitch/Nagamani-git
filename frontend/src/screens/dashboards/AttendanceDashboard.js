@@ -687,7 +687,9 @@ function AttendanceDashboard() {
                     Refresh
                   </button>
                 </Card.Header>
+                
                 <Card.Body>
+
                   <div className="table-responsive">
                     <table className="table table-hover">
                       <thead>
@@ -726,6 +728,7 @@ function AttendanceDashboard() {
                       </tbody>
                     </table>
                   </div>
+
                 </Card.Body>
               </Card>
             </Col>
