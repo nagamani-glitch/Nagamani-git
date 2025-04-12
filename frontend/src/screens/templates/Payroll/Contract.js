@@ -133,6 +133,12 @@ const Contract = () => {
   // Add a state for filter dialog
   const [showFilterDialog, setShowFilterDialog] = useState(false);
 
+  // New state variables for employee selection feature
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
+
   const handlePreview = (contract) => {
     setPreviewContract(contract);
     setShowPreviewModal(true);
@@ -143,6 +149,7 @@ const Contract = () => {
   // Fetch contracts on component mount
   useEffect(() => {
     fetchContracts();
+    fetchEmployees(); // Fetch employees when component mounts
   }, []);
 
   // Handle click outside filter popup
@@ -230,6 +237,55 @@ const Contract = () => {
       ];
       setContracts(defaultData);
       setFilteredContracts(defaultData);
+    }
+  };
+
+  // Fetch employees from API
+  const fetchEmployees = async () => {
+    try {
+      setLoadingEmployees(true);
+      const response = await axios.get("http://localhost:5000/api/employees/registered");
+      if (response.data) {
+        setEmployees(response.data);
+      }
+      setLoadingEmployees(false);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      toast.error("Failed to fetch employees");
+      setLoadingEmployees(false);
+    }
+  };
+
+  // Handle employee selection
+  const handleEmployeeSelect = async (employeeId) => {
+    setSelectedEmployee(employeeId);
+    
+    if (!employeeId) return;
+    
+    try {
+      setLoading(true);
+      const response = await axios.get(`http://localhost:5000/api/employees/get-employee/${employeeId}`);
+      
+      if (response.data.success) {
+        const employee = response.data.data;
+        
+        // Autofill form fields with employee data
+        setFormData({
+          ...formData,
+          employee: `${employee.personalInfo?.firstName || ''} ${employee.personalInfo?.lastName || ''}`,
+          department: employee.joiningDetails?.department || '',
+          position: employee.joiningDetails?.initialDesignation || '',
+          role: employee.joiningDetails?.role || '',
+          // You can map more fields as needed
+        });
+        
+        toast.success("Employee data loaded successfully");
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching employee details:", error);
+      toast.error("Failed to load employee data");
+      setLoading(false);
     }
   };
 
@@ -341,6 +397,7 @@ const Contract = () => {
       calculateDailyLeave: false,
       note: "",
     });
+    setSelectedEmployee(""); // Reset selected employee
     setShowCreatePage(true);
   };
 
@@ -397,6 +454,9 @@ const Contract = () => {
 
     // Store the contract ID for updating
     setEditingId(contract._id);
+    
+    // Reset selected employee when editing
+    setSelectedEmployee("");
 
     // Show the create page (which will now function as an edit page)
     setShowCreatePage(true);
@@ -481,6 +541,7 @@ const Contract = () => {
       // Reset form and close create/edit page
       setShowCreatePage(false);
       setEditingId(null);
+      setSelectedEmployee("");
       setLoading(false);
     } catch (error) {
       console.error("Contract operation error:", error);
@@ -877,423 +938,478 @@ const Contract = () => {
         },
       });
 
-      // Save the PDF
-      doc.save("contracts_report.pdf");
-      toast.success("PDF exported successfully");
-    } catch (error) {
-      console.error("PDF export error:", error);
-      toast.error("Failed to export PDF");
-    }
-  };
-
-  // Handle print
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Handle bulk action change
-  const handleBulkActionChange = (e) => {
-    setBulkAction(e.target.value);
-  };
-
-  // Apply bulk action
-  const handleApplyBulkAction = () => {
-    if (!bulkAction || selectedContracts.length === 0) {
-      toast.warning("Please select an action and at least one contract");
-      return;
-    }
-
-    switch (bulkAction) {
-      case "delete":
-        if (
-          window.confirm(
-            `Are you sure you want to delete ${selectedContracts.length} contracts?`
-          )
-        ) {
-          Promise.all(selectedContracts.map((id) => handleDelete(id)))
-            .then(() => {
-              toast.success(`${selectedContracts.length} contracts deleted`);
-              setSelectedContracts([]);
-              setSelectAll(false);
-            })
-            .catch((error) => {
-              console.error("Bulk delete error:", error);
-              toast.error("Failed to delete some contracts");
+            // Save the PDF
+            doc.save("contracts_report.pdf");
+            toast.success("PDF exported successfully");
+          } catch (error) {
+            console.error("PDF export error:", error);
+            toast.error("Failed to export PDF");
+          }
+        };
+      
+        // Handle print
+        const handlePrint = () => {
+          window.print();
+        };
+      
+        // Handle bulk action change
+        const handleBulkActionChange = (e) => {
+          setBulkAction(e.target.value);
+        };
+      
+        // Apply bulk action
+        const handleApplyBulkAction = () => {
+          if (!bulkAction || selectedContracts.length === 0) {
+            toast.warning("Please select an action and at least one contract");
+            return;
+          }
+      
+          switch (bulkAction) {
+            case "delete":
+              if (
+                window.confirm(
+                  `Are you sure you want to delete ${selectedContracts.length} contracts?`
+                )
+              ) {
+                Promise.all(selectedContracts.map((id) => handleDelete(id)))
+                  .then(() => {
+                    toast.success(`${selectedContracts.length} contracts deleted`);
+                    setSelectedContracts([]);
+                    setSelectAll(false);
+                  })
+                  .catch((error) => {
+                    console.error("Bulk delete error:", error);
+                    toast.error("Failed to delete some contracts");
+                  });
+              }
+              break;
+            case "export":
+              exportToPDF();
+              break;
+            case "status":
+              setShowBulkUpdateModal(true);
+              setBulkUpdateData({ field: "contractStatus", value: "Active" });
+              break;
+            default:
+              toast.warning("Invalid action selected");
+          }
+        };
+      
+        // Handle bulk update
+        const handleBulkUpdate = async () => {
+          try {
+            setLoading(true);
+      
+            // In a real app, you would make API calls to update each contract
+            // For now, we'll update them locally
+            const updatedContracts = contracts.map((contract) => {
+              if (selectedContracts.includes(contract._id)) {
+                return { ...contract, [bulkUpdateData.field]: bulkUpdateData.value };
+              }
+              return contract;
             });
-        }
-        break;
-      case "export":
-        exportToPDF();
-        break;
-      case "status":
-        setShowBulkUpdateModal(true);
-        setBulkUpdateData({ field: "contractStatus", value: "Active" });
-        break;
-      default:
-        toast.warning("Invalid action selected");
-    }
-  };
-
-  // Handle bulk update
-  const handleBulkUpdate = async () => {
-    try {
-      setLoading(true);
-
-      // In a real app, you would make API calls to update each contract
-      // For now, we'll update them locally
-      const updatedContracts = contracts.map((contract) => {
-        if (selectedContracts.includes(contract._id)) {
-          return { ...contract, [bulkUpdateData.field]: bulkUpdateData.value };
-        }
-        return contract;
-      });
-
-      setContracts(updatedContracts);
-      setFilteredContracts(updatedContracts);
-      setShowBulkUpdateModal(false);
-      setSelectedContracts([]);
-      setSelectAll(false);
-      toast.success(`Updated ${selectedContracts.length} contracts`);
-      setLoading(false);
-    } catch (error) {
-      console.error("Bulk update error:", error);
-      toast.error("Failed to update contracts");
-      setLoading(false);
-    }
-  };
-
-  // Handle page change
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  // Handle items per page change
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1);
-  };
-
-  // Get current page items
-  const getCurrentPageItems = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredContracts.slice(startIndex, endIndex);
-  };
-
-  // Prepare CSV data
-  const csvData =
-    selectedContracts.length > 0
-      ? filteredContracts.filter((contract) =>
-          selectedContracts.includes(contract._id)
-        )
-      : filteredContracts;
-
-  // Define CSV headers
-  const csvHeaders = [
-    { label: "Contract", key: "contract" },
-    { label: "Employee", key: "employee" },
-    { label: "Start Date", key: "startDate" },
-    { label: "End Date", key: "endDate" },
-    { label: "Wage Type", key: "wageType" },
-    { label: "Basic Salary", key: "basicSalary" },
-    { label: "Filing Status", key: "filingStatus" },
-    { label: "Contract Status", key: "contractStatus" },
-    { label: "Department", key: "department" },
-  ];
-
-  // Render create page
-
-  if (showCreatePage) {
-    return (
-      <Dialog
-        open={true}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            width: "90%",
-            maxWidth: "900px",
-            borderRadius: "12px",
-            overflow: "hidden",
-          },
-        }}
-      >
-        {loading && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(255, 255, 255, 0.7)",
-              zIndex: 9999,
-            }}
-          >
-            <CircularProgress />
-          </Box>
-        )}
-
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            padding: "16px 24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ display: "flex", alignItems: "center" }}
-          >
-            <FaFileContract style={{ marginRight: "10px" }} />
-            {editingId ? "Edit Contract" : "New Contract"}
-          </Typography>
-          <IconButton
-            onClick={() => {
-              setShowCreatePage(false);
-              setEditingId(null);
-            }}
-            sx={{ color: "white" }}
-            size="small"
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-
-        <DialogContent sx={{ padding: "24px" }}>
-          <Box component="form" sx={{ mt: 1 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel>Contract Status</InputLabel>
-                  <Select
-                    name="contractStatus"
-                    value={formData.contractStatus}
-                    onChange={handleInputChange}
-                    label="Contract Status"
-                  >
-                    <MenuItem value="Draft">Draft</MenuItem>
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Expired">Expired</MenuItem>
-                    <MenuItem value="Terminated">Terminated</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  required
-                  label="Contract"
-                  name="contractTitle"
-                  value={formData.contractTitle}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Contractor Name"
-                  variant="outlined"
+      
+            setContracts(updatedContracts);
+            setFilteredContracts(updatedContracts);
+            setShowBulkUpdateModal(false);
+            setSelectedContracts([]);
+            setSelectAll(false);
+            toast.success(`Updated ${selectedContracts.length} contracts`);
+            setLoading(false);
+          } catch (error) {
+            console.error("Bulk update error:", error);
+            toast.error("Failed to update contracts");
+            setLoading(false);
+          }
+        };
+      
+        // Handle page change
+        const handlePageChange = (page) => {
+          setCurrentPage(page);
+        };
+      
+        // Handle items per page change
+        const handleItemsPerPageChange = (e) => {
+          setItemsPerPage(Number(e.target.value));
+          setCurrentPage(1);
+        };
+      
+        // Get current page items
+        const getCurrentPageItems = () => {
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          return filteredContracts.slice(startIndex, endIndex);
+        };
+      
+        // Prepare CSV data
+        const csvData =
+          selectedContracts.length > 0
+            ? filteredContracts.filter((contract) =>
+                selectedContracts.includes(contract._id)
+              )
+            : filteredContracts;
+      
+        // Define CSV headers
+        const csvHeaders = [
+          { label: "Contract", key: "contract" },
+          { label: "Employee", key: "employee" },
+          { label: "Start Date", key: "startDate" },
+          { label: "End Date", key: "endDate" },
+          { label: "Wage Type", key: "wageType" },
+          { label: "Basic Salary", key: "basicSalary" },
+          { label: "Filing Status", key: "filingStatus" },
+          { label: "Contract Status", key: "contractStatus" },
+          { label: "Department", key: "department" },
+        ];
+      
+        // Render create page
+      
+        if (showCreatePage) {
+          return (
+            <Dialog
+              open={true}
+              maxWidth="md"
+              fullWidth
+              PaperProps={{
+                sx: {
+                  width: "90%",
+                  maxWidth: "900px",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                },
+              }}
+            >
+              {loading && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(255, 255, 255, 0.7)",
+                    zIndex: 9999,
+                  }}
+                >
+                  <CircularProgress />
+                </Box>
+              )}
+      
+              <DialogTitle
+                sx={{
+                  background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                  color: "white",
+                  fontSize: "1.5rem",
+                  fontWeight: 600,
+                  padding: "16px 24px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  component="div"
+                  sx={{ display: "flex", alignItems: "center" }}
+                >
+                  <FaFileContract style={{ marginRight: "10px" }} />
+                  {editingId ? "Edit Contract" : "New Contract"}
+                </Typography>
+                <IconButton
+                  onClick={() => {
+                    setShowCreatePage(false);
+                    setEditingId(null);
+                    setSelectedEmployee("");
+                  }}
+                  sx={{ color: "white" }}
                   size="small"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <FaInfoCircle
-                          style={{ color: "#1976d2", fontSize: "14px" }}
+                >
+                  <Close />
+                </IconButton>
+              </DialogTitle>
+      
+              <DialogContent sx={{ padding: "24px" }}>
+                {/* Employee Selection Dropdown */}
+                <Box sx={{ mb: 3 }}>
+                  <FormControl fullWidth variant="outlined" size="small">
+                    <InputLabel>Select Onboarded Employee</InputLabel>
+                    <Select
+                      value={selectedEmployee}
+                      onChange={(e) => handleEmployeeSelect(e.target.value)}
+                      label="Select Onboarded Employee"
+                      disabled={loadingEmployees || editingId}
+                      startAdornment={
+                        loadingEmployees ? (
+                          <InputAdornment position="start">
+                            <CircularProgress size={20} />
+                          </InputAdornment>
+                        ) : null
+                      }
+                      MenuProps={{
+                        PaperProps: {
+                          style: {
+                            maxHeight: 300,
+                          },
+                        },
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        <em>Select an employee</em>
+                      </MenuItem>
+                      <MenuItem>
+                        <TextField
+                          size="small"
+                          autoFocus
+                          placeholder="Search employees..."
+                          fullWidth
+                          value={employeeSearchTerm}
+                          onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
                         />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  required
-                  label="Employee"
-                  name="employee"
-                  value={formData.employee}
-                  onChange={handleInputChange}
-                  placeholder="Employee name"
-                  variant="outlined"
-                  size="small"
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  required
-                  label="Start Date"
-                  name="startDate"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={handleInputChange}
-                  InputLabelProps={{ shrink: true }}
-                  variant="outlined"
-                  size="small"
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="End Date"
-                  name="endDate"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={handleInputChange}
-                  InputLabelProps={{ shrink: true }}
-                  variant="outlined"
-                  size="small"
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel>Wage Type</InputLabel>
-                  <Select
-                    required
-                    name="wageType"
-                    value={formData.wageType}
-                    onChange={handleInputChange}
-                    label="Wage Type"
-                  >
-                    <MenuItem value="">Select Wage Type</MenuItem>
-                    <MenuItem value="Daily">Daily</MenuItem>
-                    <MenuItem value="Monthly">Monthly</MenuItem>
-                    <MenuItem value="Hourly">Hourly</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel>Pay Frequency</InputLabel>
-                  <Select
-                    required
-                    name="payFrequency"
-                    value={formData.payFrequency}
-                    onChange={handleInputChange}
-                    label="Pay Frequency"
-                  >
-                    <MenuItem value="">Select Frequency</MenuItem>
-                    <MenuItem value="Weekly">Weekly</MenuItem>
-                    <MenuItem value="Monthly">Monthly</MenuItem>
-                    <MenuItem value="Semi-Monthly">Semi-Monthly</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  required
-                  label="Basic Salary"
-                  name="basicSalary"
-                  type="number"
-                  value={formData.basicSalary}
-                  onChange={handleInputChange}
-                  placeholder="Enter amount"
-                  variant="outlined"
-                  size="small"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <AttachMoneyIcon fontSize="small" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel>Filing Status</InputLabel>
-                  <Select
-                    name="filingStatus"
-                    value={formData.filingStatus}
-                    onChange={handleInputChange}
-                    label="Filing Status"
-                  >
-                    <MenuItem value="">Select Filing Status</MenuItem>
-                    <MenuItem value="Individual">Individual</MenuItem>
-                    <MenuItem value="Head of Household (HOH)">
-                      Head of Household (HOH)
-                    </MenuItem>
-                    <MenuItem value="Married Filing Jointly (MFJ)">
-                      Married Filing Jointly (MFJ)
-                    </MenuItem>
-                    <MenuItem value="Married Filing Separately (MFS)">
-                      Married Filing Separately (MFS)
-                    </MenuItem>
-                    <MenuItem value="Single Filer">Single Filer</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel>Department</InputLabel>
-                  <Select
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    label="Department"
-                  >
-                    <MenuItem value="">Select Department</MenuItem>
-                    <MenuItem value="HR Dept">HR Dept</MenuItem>
-                    <MenuItem value="Sales Dept">Sales Dept</MenuItem>
-                    <MenuItem value="S/W Dept">S/W Dept</MenuItem>
-                    <MenuItem value="Marketing Dept">Marketing Dept</MenuItem>
-                    <MenuItem value="Finance Dept">Finance Dept</MenuItem>
-                    <MenuItem value="IT Dept">IT Dept</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel>Job Position</InputLabel>
-                  <Select
-                    name="position"
-                    value={formData.position}
-                    onChange={handleInputChange}
-                    label="Job Position"
-                  >
-                    <MenuItem value="">Select Position</MenuItem>
-                    <MenuItem value="HR Manager">HR Manager</MenuItem>
-                    <MenuItem value="Sales Representative">
-                      Sales Representative
-                    </MenuItem>
-                    <MenuItem value="Software Developer">
-                      Software Developer
-                    </MenuItem>
-                    <MenuItem value="Marketing Specialist">
-                      Marketing Specialist
-                    </MenuItem>
-                    <MenuItem value="Accountant">Accountant</MenuItem>
-                    <MenuItem value="IT Support">IT Support</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel>Job Role</InputLabel>
-                  <Select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
-                    label="Job Role"
-                  >
-                    <MenuItem value="">Select Role</MenuItem>
+                      </MenuItem>
+                      {employees
+                        .filter(emp => 
+                          `${emp.personalInfo?.firstName || ''} ${emp.personalInfo?.lastName || ''} ${emp.Emp_ID || ''}`
+                            .toLowerCase()
+                            .includes(employeeSearchTerm.toLowerCase())
+                        )
+                        .map((emp) => (
+                          <MenuItem key={emp._id} value={emp.Emp_ID}>
+                            {emp.personalInfo?.firstName} {emp.personalInfo?.lastName} ({emp.Emp_ID})
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+      
+                <Box component="form" sx={{ mt: 1 }}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <FormControl fullWidth variant="outlined" size="small">
+                        <InputLabel>Contract Status</InputLabel>
+                        <Select
+                          name="contractStatus"
+                          value={formData.contractStatus}
+                          onChange={handleInputChange}
+                          label="Contract Status"
+                        >
+                          <MenuItem value="Draft">Draft</MenuItem>
+                          <MenuItem value="Active">Active</MenuItem>
+                          <MenuItem value="Expired">Expired</MenuItem>
+                          <MenuItem value="Terminated">Terminated</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        required
+                        label="Contract"
+                        name="contractTitle"
+                        value={formData.contractTitle}
+                        onChange={handleInputChange}
+                        placeholder="e.g., Contractor Name"
+                        variant="outlined"
+                        size="small"
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <FaInfoCircle
+                                style={{ color: "#1976d2", fontSize: "14px" }}
+                              />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        required
+                        label="Employee"
+                        name="employee"
+                        value={formData.employee}
+                        onChange={handleInputChange}
+                        placeholder="Employee name"
+                        variant="outlined"
+                        size="small"
+                      />
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        required
+                        label="Start Date"
+                        name="startDate"
+                        type="date"
+                        value={formData.startDate}
+                        onChange={handleInputChange}
+                        InputLabelProps={{ shrink: true }}
+                        variant="outlined"
+                        size="small"
+                      />
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="End Date"
+                        name="endDate"
+                        type="date"
+                        value={formData.endDate}
+                        onChange={handleInputChange}
+                        InputLabelProps={{ shrink: true }}
+                        variant="outlined"
+                        size="small"
+                      />
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth variant="outlined" size="small">
+                        <InputLabel>Wage Type</InputLabel>
+                        <Select
+                          required
+                          name="wageType"
+                          value={formData.wageType}
+                          onChange={handleInputChange}
+                          label="Wage Type"
+                        >
+                          <MenuItem value="">Select Wage Type</MenuItem>
+                          <MenuItem value="Daily">Daily</MenuItem>
+                          <MenuItem value="Monthly">Monthly</MenuItem>
+                          <MenuItem value="Hourly">Hourly</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth variant="outlined" size="small">
+                        <InputLabel>Pay Frequency</InputLabel>
+                        <Select
+                          required
+                          name="payFrequency"
+                          value={formData.payFrequency}
+                          onChange={handleInputChange}
+                          label="Pay Frequency"
+                        >
+                          <MenuItem value="">Select Frequency</MenuItem>
+                          <MenuItem value="Weekly">Weekly</MenuItem>
+                          <MenuItem value="Monthly">Monthly</MenuItem>
+                          <MenuItem value="Semi-Monthly">Semi-Monthly</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        required
+                        label="Basic Salary"
+                        name="basicSalary"
+                        type="number"
+                        value={formData.basicSalary}
+                        onChange={handleInputChange}
+                        placeholder="Enter amount"
+                        variant="outlined"
+                        size="small"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <AttachMoneyIcon fontSize="small" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth variant="outlined" size="small">
+                        <InputLabel>Filing Status</InputLabel>
+                        <Select
+                          name="filingStatus"
+                          value={formData.filingStatus}
+                          onChange={handleInputChange}
+                          label="Filing Status"
+                        >
+                          <MenuItem value="">Select Filing Status</MenuItem>
+                          <MenuItem value="Individual">Individual</MenuItem>
+                          <MenuItem value="Head of Household (HOH)">
+                            Head of Household (HOH)
+                          </MenuItem>
+                          <MenuItem value="Married Filing Jointly (MFJ)">
+                            Married Filing Jointly (MFJ)
+                          </MenuItem>
+                          <MenuItem value="Married Filing Separately (MFS)">
+                            Married Filing Separately (MFS)
+                          </MenuItem>
+                          <MenuItem value="Single Filer">Single Filer</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth variant="outlined" size="small">
+                        <InputLabel>Department</InputLabel>
+                        <Select
+                          name="department"
+                          value={formData.department}
+                          onChange={handleInputChange}
+                          label="Department"
+                        >
+                          <MenuItem value="">Select Department</MenuItem>
+                          <MenuItem value="HR Dept">HR Dept</MenuItem>
+                          <MenuItem value="Sales Dept">Sales Dept</MenuItem>
+                          <MenuItem value="S/W Dept">S/W Dept</MenuItem>
+                          <MenuItem value="Marketing Dept">Marketing Dept</MenuItem>
+                          <MenuItem value="Finance Dept">Finance Dept</MenuItem>
+                          <MenuItem value="IT Dept">IT Dept</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth variant="outlined" size="small">
+                        <InputLabel>Job Position</InputLabel>
+                        <Select
+                          name="position"
+                          value={formData.position}
+                          onChange={handleInputChange}
+                          label="Job Position"
+                        >
+                          <MenuItem value="">Select Position</MenuItem>
+                          <MenuItem value="HR Manager">HR Manager</MenuItem>
+                          <MenuItem value="Sales Representative">
+                            Sales Representative
+                          </MenuItem>
+                          <MenuItem value="Software Developer">
+                            Software Developer
+                          </MenuItem>
+                          <MenuItem value="Marketing Specialist">
+                            Marketing Specialist
+                          </MenuItem>
+                          <MenuItem value="Accountant">Accountant</MenuItem>
+                          <MenuItem value="IT Support">IT Support</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+      
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth variant="outlined" size="small">
+                        <InputLabel>Job Role</InputLabel>
+                        <Select
+                          name="role"
+                          value={formData.role}
+                          onChange={handleInputChange}
+                          label="Job Role"
+                        >
+                                              <MenuItem value="">Select Role</MenuItem>
                     <MenuItem value="Intern">Intern</MenuItem>
                     <MenuItem value="Junior">Junior</MenuItem>
                     <MenuItem value="Senior">Senior</MenuItem>
@@ -1415,6 +1531,7 @@ const Contract = () => {
                 onClick={() => {
                   setShowCreatePage(false);
                   setEditingId(null);
+                  setSelectedEmployee("");
                 }}
                 startIcon={<CancelIcon />}
                 sx={{
@@ -1508,7 +1625,7 @@ const Contract = () => {
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={2}
-              alignItems={{ xs: "stretch", sm: "center" }}
+              alignItems={{ xs: "flex-start", sm: "center" }}
               justifyContent="flex-end"
             >
               <TextField
@@ -2273,7 +2390,7 @@ const Contract = () => {
                     color="textSecondary"
                   >
                     Position
-                  </Typography>
+                    </Typography>
                   <Typography variant="body1">
                     {previewContract.position || "N/A"}
                   </Typography>
@@ -2631,3 +2748,9 @@ const Contract = () => {
 };
 
 export default Contract;
+
+
+
+
+      
+
