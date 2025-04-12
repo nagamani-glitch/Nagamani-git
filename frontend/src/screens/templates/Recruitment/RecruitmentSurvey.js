@@ -70,7 +70,7 @@ const RecruitmentSurvey = () => {
         showSnackbar("Error fetching templates", "error");
       }
     };
-    
+
     fetchTemplates();
     fetchRegisteredEmployees();
   }, []);
@@ -78,7 +78,9 @@ const RecruitmentSurvey = () => {
   const fetchRegisteredEmployees = async () => {
     try {
       setLoadingEmployees(true);
-      const response = await axios.get("http://localhost:5000/api/employees/registered");
+      const response = await axios.get(
+        "http://localhost:5000/api/employees/registered"
+      );
       console.log("Fetched employees:", response.data);
       setRegisteredEmployees(response.data);
       setLoadingEmployees(false);
@@ -122,39 +124,43 @@ const RecruitmentSurvey = () => {
     setCurrentQuestionId(null);
     setSelectedEmployee(null);
   };
-  
+
   const handleAddTemplate = async () => {
     if (newTemplateName && newQuestion && newType) {
       try {
         setLoading(true);
-        
+
         // Create the question object with employee data
         const questionData = {
           avatar: newTemplateName.charAt(0).toUpperCase(),
           question: newQuestion,
-          type: newType
+          type: newType,
         };
-        
+
         // Add employee data if an employee is selected
         if (selectedEmployee) {
           questionData.employeeId = selectedEmployee.Emp_ID;
-          questionData.employeeName = `${selectedEmployee.personalInfo?.firstName || ''} ${selectedEmployee.personalInfo?.lastName || ''}`.trim();
-          questionData.employeeDepartment = selectedEmployee.joiningDetails?.department || '';
-          questionData.employeeDesignation = selectedEmployee.joiningDetails?.initialDesignation || '';
+          questionData.employeeName = `${
+            selectedEmployee.personalInfo?.firstName || ""
+          } ${selectedEmployee.personalInfo?.lastName || ""}`.trim();
+          questionData.employeeDepartment =
+            selectedEmployee.joiningDetails?.department || "";
+          questionData.employeeDesignation =
+            selectedEmployee.joiningDetails?.initialDesignation || "";
         }
-        
+
         const newTemplate = {
           name: newTemplateName,
-          questions: [questionData]
+          questions: [questionData],
         };
-        
+
         console.log("Sending template data:", newTemplate);
-        
+
         const { data } = await axios.post(
           "http://localhost:5000/api/recruitment-survey/add",
           newTemplate
         );
-        
+
         console.log("Template added response:", data);
         setTemplates([...templates, data]);
         handleClose();
@@ -189,23 +195,27 @@ const RecruitmentSurvey = () => {
 
     try {
       setLoading(true);
-      
+
       // Create request data with employee fields directly
       const requestData = {
         question: newQuestion,
-        type: newType
+        type: newType,
       };
-      
+
       // Add employee data if an employee is selected
       if (selectedEmployee) {
         requestData.employeeId = selectedEmployee.Emp_ID;
-        requestData.employeeName = `${selectedEmployee.personalInfo?.firstName || ''} ${selectedEmployee.personalInfo?.lastName || ''}`.trim();
-        requestData.employeeDepartment = selectedEmployee.joiningDetails?.department || '';
-        requestData.employeeDesignation = selectedEmployee.joiningDetails?.initialDesignation || '';
+        requestData.employeeName = `${
+          selectedEmployee.personalInfo?.firstName || ""
+        } ${selectedEmployee.personalInfo?.lastName || ""}`.trim();
+        requestData.employeeDepartment =
+          selectedEmployee.joiningDetails?.department || "";
+        requestData.employeeDesignation =
+          selectedEmployee.joiningDetails?.initialDesignation || "";
       }
-      
+
       console.log("Sending question data:", requestData);
-      
+
       const { data } = await axios.post(
         `http://localhost:5000/api/recruitment-survey/${currentTemplateId}/questions`,
         requestData
@@ -214,8 +224,8 @@ const RecruitmentSurvey = () => {
       console.log("Question added response:", data);
 
       // Update templates state with the new question
-      setTemplates(prevTemplates =>
-        prevTemplates.map(template =>
+      setTemplates((prevTemplates) =>
+        prevTemplates.map((template) =>
           template._id === currentTemplateId ? data : template
         )
       );
@@ -238,22 +248,24 @@ const RecruitmentSurvey = () => {
     setNewType(question.type);
     setCurrentTemplateId(templateId);
     setCurrentQuestionId(questionId);
-    
+
     console.log("Editing question with employee data:", {
       employeeId: question.employeeId,
       employeeName: question.employeeName,
-      employeeDepartment: question.employeeDepartment
+      employeeDepartment: question.employeeDepartment,
     });
-    
+
     // If the question has employee data, find and set the corresponding employee
     if (question.employeeId) {
-      const employee = registeredEmployees.find(emp => emp.Emp_ID === question.employeeId);
+      const employee = registeredEmployees.find(
+        (emp) => emp.Emp_ID === question.employeeId
+      );
       console.log("Found employee for editing:", employee);
       setSelectedEmployee(employee || null);
     } else {
       setSelectedEmployee(null);
     }
-    
+
     setEditing(true);
     setOpen(true);
   };
@@ -261,23 +273,27 @@ const RecruitmentSurvey = () => {
   const handleSaveEdit = async () => {
     try {
       setLoading(true);
-      
+
       // Create request data with employee fields directly
       const requestData = {
         question: newQuestion,
-        type: newType
+        type: newType,
       };
-      
+
       // Add employee data if an employee is selected
       if (selectedEmployee) {
         requestData.employeeId = selectedEmployee.Emp_ID;
-        requestData.employeeName = `${selectedEmployee.personalInfo?.firstName || ''} ${selectedEmployee.personalInfo?.lastName || ''}`.trim();
-        requestData.employeeDepartment = selectedEmployee.joiningDetails?.department || '';
-        requestData.employeeDesignation = selectedEmployee.joiningDetails?.initialDesignation || '';
+        requestData.employeeName = `${
+          selectedEmployee.personalInfo?.firstName || ""
+        } ${selectedEmployee.personalInfo?.lastName || ""}`.trim();
+        requestData.employeeDepartment =
+          selectedEmployee.joiningDetails?.department || "";
+        requestData.employeeDesignation =
+          selectedEmployee.joiningDetails?.initialDesignation || "";
       }
-      
+
       console.log("Sending edit data:", requestData);
-      
+
       const { data } = await axios.put(
         `http://localhost:5000/api/recruitment-survey/${currentTemplateId}/questions/${currentQuestionId}`,
         requestData
@@ -286,8 +302,8 @@ const RecruitmentSurvey = () => {
       console.log("Edit saved response:", data);
 
       // Update templates state with the edited question
-      setTemplates(prevTemplates =>
-        prevTemplates.map(template =>
+      setTemplates((prevTemplates) =>
+        prevTemplates.map((template) =>
           template._id === currentTemplateId ? data : template
         )
       );
@@ -301,7 +317,7 @@ const RecruitmentSurvey = () => {
       setLoading(false);
     }
   };
-  
+
   const handleDeleteQuestion = async (templateId, questionId) => {
     try {
       setLoading(true);
@@ -348,7 +364,10 @@ const RecruitmentSurvey = () => {
   };
 
   return (
-    <Box p={4} sx={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+    <Box
+      p={{ xs: 2, sm: 3, md: 4 }}
+      sx={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}
+    >
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -364,11 +383,17 @@ const RecruitmentSurvey = () => {
         </Alert>
       </Snackbar>
 
-      <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+      <Paper elevation={3} sx={{ p: { xs: 2, sm: 3 }, mb: 4, borderRadius: 2 }}>
         <Typography
           variant="h4"
           gutterBottom
-          sx={{ color: "#2c3e50", fontWeight: 600, mb: 3 }}
+          sx={{
+            color: "#1976d2",
+            fontWeight: 600,
+            mb: 4,
+            letterSpacing: "0.05em",
+            fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+          }}
         >
           Survey Templates
         </Typography>
@@ -376,11 +401,13 @@ const RecruitmentSurvey = () => {
         <Box
           display="flex"
           justifyContent="space-between"
-          alignItems="center"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          flexDirection={{ xs: "column", sm: "row" }}
+          gap={{ xs: 2, sm: 0 }}
           mb={3}
           sx={{
             backgroundColor: "#fff",
-            padding: "15px 25px",
+            padding: { xs: "12px 16px", sm: "15px 25px" },
             borderRadius: 2,
             boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
           }}
@@ -395,98 +422,148 @@ const RecruitmentSurvey = () => {
             sx={{
               backgroundColor: "#3498db",
               "&:hover": { backgroundColor: "#2980b9" },
+              alignSelf: { xs: "flex-start", sm: "auto" },
+              width: { xs: "100%", sm: "auto" },
             }}
           >
             Add Template
           </Button>
         </Box>
-        {templates.length === 0 && !loading ? (
-          <Paper sx={{ p: 4, textAlign: "center", borderRadius: 2, mb: 2 }}>
-            <Typography variant="h6" color="textSecondary">
-              No templates found. Create your first template!
-            </Typography>
-          </Paper>
-        ) : (
-          templates.map((template) => (
-            <Accordion
-              key={template._id}
-              defaultExpanded
+
+        {templates.map((template) => (
+          <Accordion
+            key={template._id}
+            defaultExpanded
+            sx={{
+              mb: 2,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              "&:before": { display: "none" },
+              borderRadius: "8px !important",
+            }}
+          >
+            <AccordionSummary
+              expandIcon={<ExpandMore />}
               sx={{
-                mb: 2,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                "&:before": { display: "none" },
-                borderRadius: "8px !important",
+                backgroundColor: "#f8f9fa",
+                borderRadius: "8px 8px 0 0",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: { xs: "flex-start", sm: "center" },
+                padding: { xs: "12px 16px", sm: "16px" },
+                "& .MuiAccordionSummary-content": {
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: { xs: "flex-start", sm: "center" },
+                  gap: { xs: 1, sm: 0 },
+                  marginTop: { xs: 0 },
+                  marginBottom: { xs: 0 },
+                },
               }}
             >
-              <AccordionSummary
-                expandIcon={<ExpandMore />}
-                sx={{
-                  backgroundColor: "#f8f9fa",
-                  borderRadius: "8px 8px 0 0",
-                }}
+              <Box
+                display="flex"
+                alignItems="center"
+                width="100%"
+                flexDirection={{ xs: "column", sm: "row" }}
+                gap={{ xs: 1, sm: 0 }}
               >
-                <Box display="flex" alignItems="center" width="100%">
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 600, color: "#2c3e50" }}
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#2c3e50",
+                    width: { xs: "100%", sm: "auto" },
+                  }}
+                >
+                  {template.name}
+                  <span
+                    style={{
+                      color: "#e74c3c",
+                      marginLeft: 12,
+                      backgroundColor: "#fff",
+                      padding: "2px 8px",
+                      borderRadius: 12,
+                      fontSize: "0.8rem",
+                    }}
                   >
-                    {template.name}
-                    <span
-                      style={{
-                        color: "#e74c3c",
-                        marginLeft: 12,
-                        backgroundColor: "#fff",
-                        padding: "2px 8px",
-                        borderRadius: 12,
-                        fontSize: "0.8rem",
+                    {template.questions.length}
+                  </span>
+                </Typography>
+                <Box
+                  sx={{
+                    ml: { xs: 0, sm: "auto" },
+                    display: "flex",
+                    alignItems: "center",
+                    width: { xs: "100%", sm: "auto" },
+                    justifyContent: { xs: "flex-end", sm: "flex-end" },
+                    mt: { xs: 1, sm: 0 },
+                  }}
+                >
+                  <Tooltip title="Add Question">
+                    <IconButton
+                      size="small"
+                      color="info"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenAddQuestionDialog(template._id);
+                      }}
+                      sx={{ mr: 1 }}
+                    >
+                      <QuestionAnswer />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete Template">
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTemplate(template._id);
                       }}
                     >
-                      {template.questions.length}
-                    </span>
-                  </Typography>
-                  <Box sx={{ ml: "auto", display: "flex", alignItems: "center" }}>
-                    <Tooltip title="Add Question">
-                      <IconButton
-                        size="small"
-                        color="info"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenAddQuestionDialog(template._id);
-                        }}
-                        sx={{ mr: 1 }}
-                      >
-                        <QuestionAnswer />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete Template">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTemplate(template._id);
-                        }}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
+                      <Delete />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
-              </AccordionSummary>
-              <AccordionDetails sx={{ p: 0 }}>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 0 }}>
+              <Box sx={{ overflowX: "auto" }}>
                 <Table>
                   <TableHead>
                     <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
-                      <TableCell sx={{ fontWeight: 600, color: "#34495e" }}>
+                      <TableCell
+                        sx={{
+                          fontWeight: 600,
+                          color: "#34495e",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         Question
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: "#34495e" }}>
+                      <TableCell
+                        sx={{
+                          fontWeight: 600,
+                          color: "#34495e",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         Type
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: "#34495e" }}>
+                      <TableCell
+                        sx={{
+                          fontWeight: 600,
+                          color: "#34495e",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         Raised By
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: "#34495e" }}>
+                      <TableCell
+                        sx={{
+                          fontWeight: 600,
+                          color: "#34495e",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         Actions
                       </TableCell>
                     </TableRow>
@@ -496,7 +573,8 @@ const RecruitmentSurvey = () => {
                       <TableRow>
                         <TableCell colSpan={4} align="center">
                           <Typography variant="body2" color="textSecondary">
-                            No questions added yet. Click the "Add Question" button to add questions.
+                            No questions added yet. Click the "Add Question"
+                            button to add questions.
                           </Typography>
                         </TableCell>
                       </TableRow>
@@ -506,7 +584,7 @@ const RecruitmentSurvey = () => {
                           key={question._id}
                           sx={{ "&:hover": { backgroundColor: "#f8f9fa" } }}
                         >
-                          <TableCell>
+                          <TableCell sx={{ minWidth: "200px" }}>
                             <Box display="flex" alignItems="center" gap={2}>
                               <Avatar
                                 sx={{
@@ -514,54 +592,96 @@ const RecruitmentSurvey = () => {
                                   width: 35,
                                   height: 35,
                                   fontSize: "0.9rem",
+                                  flexShrink: 0,
                                 }}
                               >
                                 {question.avatar}
                               </Avatar>
-                              <Typography sx={{ color: "#2c3e50" }}>
+                              <Typography
+                                sx={{
+                                  color: "#2c3e50",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: "vertical",
+                                }}
+                              >
                                 {question.question}
                               </Typography>
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ color: "#7f8c8d" }}>
-                            <Chip 
-                              label={question.type} 
-                              size="small" 
+                          <TableCell
+                            sx={{ color: "#7f8c8d", whiteSpace: "nowrap" }}
+                          >
+                            <Chip
+                              label={question.type}
+                              size="small"
                               color={
-                                question.type === "Text" ? "primary" :
-                                question.type === "Multiple Choice" ? "secondary" :
-                                question.type === "Checkbox" ? "success" : "info"
+                                question.type === "Text"
+                                  ? "primary"
+                                  : question.type === "Multiple Choice"
+                                  ? "secondary"
+                                  : question.type === "Checkbox"
+                                  ? "success"
+                                  : "info"
                               }
                               variant="outlined"
                             />
                           </TableCell>
-                          <TableCell>
-                            {console.log("Question employee data:", {
-                              id: question.employeeId,
-                              name: question.employeeName,
-                              dept: question.employeeDepartment
-                            })}
+                          <TableCell sx={{ minWidth: "180px" }}>
                             {question.employeeId ? (
                               <Box display="flex" alignItems="center" gap={1}>
                                 <Person fontSize="small" color="primary" />
                                 <Box>
-                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      fontWeight: 500,
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                      maxWidth: {
+                                        xs: "100px",
+                                        sm: "150px",
+                                        md: "200px",
+                                      },
+                                    }}
+                                  >
                                     {question.employeeName || "Unknown"}
                                   </Typography>
-                                  <Typography variant="caption" color="text.secondary">
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{
+                                      display: "block",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                      maxWidth: {
+                                        xs: "100px",
+                                        sm: "150px",
+                                        md: "200px",
+                                      },
+                                    }}
+                                  >
                                     {question.employeeId}
-                                    {question.employeeDepartment ? ` • ${question.employeeDepartment}` : ''}
-                                    {question.employeeDesignation ? ` • ${question.employeeDesignation}` : ''}
+                                    {question.employeeDepartment
+                                      ? ` • ${question.employeeDepartment}`
+                                      : ""}
                                   </Typography>
                                 </Box>
                               </Box>
                             ) : (
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
                                 Not specified
                               </Typography>
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
                             <IconButton
                               size="small"
                               onClick={() =>
@@ -586,19 +706,19 @@ const RecruitmentSurvey = () => {
                     )}
                   </TableBody>
                 </Table>
-                </AccordionDetails>
-            </Accordion>
-          ))
-        )}
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+        ))}
       </Paper>
 
-      {/* Add/Edit Template Dialog */}
       <Dialog
         open={open}
         onClose={handleClose}
         PaperProps={{
           sx: {
-            width: "600px",
+            width: { xs: "95%", sm: "600px" },
+            maxWidth: "600px",
             borderRadius: "20px",
             overflow: "hidden",
           },
@@ -657,8 +777,10 @@ const RecruitmentSurvey = () => {
             <Autocomplete
               id="employee-select"
               options={registeredEmployees}
-              getOptionLabel={(option) => 
-                `${option.Emp_ID} - ${option.personalInfo?.firstName || ''} ${option.personalInfo?.lastName || ''}`
+              getOptionLabel={(option) =>
+                `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
+                  option.personalInfo?.lastName || ""
+                }`
               }
               value={selectedEmployee}
               onChange={handleEmployeeSelect}
@@ -673,7 +795,9 @@ const RecruitmentSurvey = () => {
                     ...params.InputProps,
                     endAdornment: (
                       <>
-                        {loadingEmployees ? <CircularProgress color="inherit" size={20} /> : null}
+                        {loadingEmployees ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
                         {params.InputProps.endAdornment}
                       </>
                     ),
@@ -778,20 +902,22 @@ const RecruitmentSurvey = () => {
           >
             {loading ? (
               <CircularProgress size={24} color="inherit" />
+            ) : editing ? (
+              "Save Changes"
             ) : (
-              editing ? "Save Changes" : "Add Template"
+              "Add Template"
             )}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Add Question to Template Dialog */}
       <Dialog
         open={addQuestionDialogOpen}
         onClose={handleCloseAddQuestionDialog}
         PaperProps={{
           sx: {
-            width: "600px",
+            width: { xs: "95%", sm: "600px" },
+            maxWidth: "600px",
             borderRadius: "20px",
             overflow: "hidden",
           },
@@ -830,8 +956,10 @@ const RecruitmentSurvey = () => {
             <Autocomplete
               id="employee-select-dialog"
               options={registeredEmployees}
-              getOptionLabel={(option) => 
-                `${option.Emp_ID} - ${option.personalInfo?.firstName || ''} ${option.personalInfo?.lastName || ''}`
+              getOptionLabel={(option) =>
+                `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
+                  option.personalInfo?.lastName || ""
+                }`
               }
               value={selectedEmployee}
               onChange={handleEmployeeSelect}
@@ -846,7 +974,9 @@ const RecruitmentSurvey = () => {
                     ...params.InputProps,
                     endAdornment: (
                       <>
-                        {loadingEmployees ? <CircularProgress color="inherit" size={20} /> : null}
+                        {loadingEmployees ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
                         {params.InputProps.endAdornment}
                       </>
                     ),
@@ -971,7 +1101,3 @@ const RecruitmentSurvey = () => {
 };
 
 export default RecruitmentSurvey;
-
-  
-                          
-

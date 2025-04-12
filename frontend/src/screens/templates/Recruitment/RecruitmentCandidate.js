@@ -27,6 +27,8 @@ import {
   Paper,
   Autocomplete,
   CircularProgress,
+  InputAdornment,
+  alpha,
 } from "@mui/material";
 import {
   Add,
@@ -37,7 +39,6 @@ import {
   MoreVert,
   Delete,
   GroupWork,
-  Person,
 } from "@mui/icons-material";
 import axios from "axios";
 
@@ -323,77 +324,216 @@ const RecruitmentCandidate = () => {
   };
 
   return (
-    <Box sx={styles.root}>
+    <Box
+      sx={{
+        p: { xs: 2, sm: 3, md: 4 },
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+      }}
+    >
       <Box maxWidth="1800px" margin="0 auto">
-        <Paper elevation={0} sx={styles.header}>
-          <Typography variant="h6" fontWeight="700" color="#1a2027">
-            Recruitment Candidates
-          </Typography>
-          <Box sx={styles.actionButtons}>
+        <Typography
+          variant="h4"
+          sx={{
+            mb: { xs: 2, sm: 3, md: 4 },
+            color: "#1976d2",
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            fontSize: { xs: "1.75rem", sm: "2rem", md: "2.125rem" },
+          }}
+        >
+          Recruitment Candidates
+        </Typography>
+
+        <Paper
+          elevation={0}
+          sx={{
+            padding: { xs: 2, sm: 3 },
+            marginBottom: 3,
+            borderRadius: 2,
+            boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+          }}
+        >
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            alignItems={{ xs: "stretch", sm: "center" }}
+            gap={2}
+            sx={{
+              width: "100%",
+            }}
+          >
             <TextField
               variant="outlined"
               placeholder="Search candidates..."
               size="small"
               InputProps={{
-                startAdornment: <Search sx={{ color: "#94a3b8", mr: 1 }} />,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search sx={{ color: "#94a3b8" }} />
+                  </InputAdornment>
+                ),
               }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              sx={styles.searchBar}
+              sx={{
+                width: { xs: "100%", sm: "300px", md: "350px" },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             />
 
-            <ToggleButtonGroup
-              value={view}
-              exclusive
-              onChange={(e, nextView) => nextView && setView(nextView)}
-              sx={{ backgroundColor: "white" }}
-            >
-              <ToggleButton value="list" sx={styles.toggleButton}>
-                <List />
-              </ToggleButton>
-              <ToggleButton value="grid" sx={styles.toggleButton}>
-                <GridView />
-              </ToggleButton>
-            </ToggleButtonGroup>
-
-            <Button
-              variant="outlined"
-              startIcon={<FilterList />}
-              onClick={() =>
-                setFilter(
-                  filter === ""
-                    ? "Hired"
-                    : filter === "Hired"
-                    ? "Not-Hired"
-                    : ""
-                )
-              }
-              sx={styles.actionButton}
-            >
-              {filter || "All Status"}
-            </Button>
-
-            <Button
-              variant="outlined"
-              startIcon={<GroupWork />}
-              onClick={() => setGroupBy(!groupBy)}
-              sx={styles.actionButton}
-            >
-              {groupBy ? "Ungroup" : "Group by Position"}
-            </Button>
-
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => setCreateDialogOpen(true)}
+            <Box
               sx={{
-                ...styles.actionButton,
-                backgroundColor: "#1976d2",
-                "&:hover": { backgroundColor: "#1565c0" },
+                display: "flex",
+                gap: 1.5,
+                ml: { sm: "auto" },
+                flexWrap: { xs: "wrap", md: "nowrap" },
+                justifyContent: { xs: "space-between", sm: "flex-end" },
               }}
             >
-              Add Candidate
-            </Button>
+              <ToggleButtonGroup
+                value={view}
+                exclusive
+                onChange={(e, nextView) => nextView && setView(nextView)}
+                size="small"
+                sx={{
+                  height: 40,
+                  backgroundColor: "white",
+                  "& .MuiToggleButton-root": {
+                    border: "1px solid rgba(0, 0, 0, 0.12)",
+                  },
+                }}
+              >
+                <ToggleButton
+                  value="list"
+                  sx={{
+                    "&.Mui-selected": {
+                      backgroundColor: alpha("#1976d2", 0.1),
+                      color: "#1976d2",
+                    },
+                  }}
+                >
+                  <List />
+                </ToggleButton>
+                <ToggleButton
+                  value="grid"
+                  sx={{
+                    "&.Mui-selected": {
+                      backgroundColor: alpha("#1976d2", 0.1),
+                      color: "#1976d2",
+                    },
+                  }}
+                >
+                  <GridView />
+                </ToggleButton>
+              </ToggleButtonGroup>
+
+              <Button
+                variant="outlined"
+                startIcon={<FilterList />}
+                onClick={() =>
+                  setFilter(
+                    filter === ""
+                      ? "Hired"
+                      : filter === "Hired"
+                      ? "Not-Hired"
+                      : ""
+                  )
+                }
+                sx={{
+                  height: 40,
+                  whiteSpace: "nowrap",
+                  borderColor: "#1976d2",
+                  color: "#1976d2",
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  padding: { xs: "6px 8px", sm: "6px 16px" },
+                }}
+              >
+                {filter || "All Status"}
+              </Button>
+
+              <Button
+                variant="outlined"
+                startIcon={<GroupWork />}
+                onClick={() => setGroupBy(!groupBy)}
+                sx={{
+                  height: 40,
+                  whiteSpace: "nowrap",
+                  borderColor: "#1976d2",
+                  color: "#1976d2",
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  padding: { xs: "6px 8px", sm: "6px 16px" },
+                  display: { xs: "none", sm: "flex" },
+                }}
+              >
+                {groupBy ? "Ungroup" : "Group by Position"}
+              </Button>
+
+              <Button
+                variant="contained"
+                // startIcon={<Add />}
+                onClick={() => setCreateDialogOpen(true)}
+                sx={{
+                  height: 40,
+                  background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
+                  color: "white",
+                  "&:hover": {
+                    background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
+                  },
+                  display: { xs: "none", sm: "flex" },
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Add Candidate
+              </Button>
+            </Box>
+
+            {/* Add a second row of buttons for mobile */}
+            <Box
+              sx={{
+                display: { xs: "flex", sm: "none" },
+                width: "100%",
+                gap: 1,
+                mt: 1,
+              }}
+            >
+              <Button
+                variant="outlined"
+                startIcon={<GroupWork />}
+                onClick={() => setGroupBy(!groupBy)}
+                sx={{
+                  height: 40,
+                  whiteSpace: "nowrap",
+                  borderColor: "#1976d2",
+                  color: "#1976d2",
+                  flex: 1,
+                }}
+              >
+                {groupBy ? "Ungroup" : "Group"}
+              </Button>
+
+              <Button
+                variant="contained"
+                // startIcon={<Add />}
+                onClick={() => setCreateDialogOpen(true)}
+                sx={{
+                  height: 50,
+                  background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
+                  color: "white",
+                  "&:hover": {
+                    background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
+                  },
+                  flex: 1,
+                }}
+              >
+                Add Candidate
+              </Button>
+            </Box>
           </Box>
         </Paper>
 
@@ -405,17 +545,22 @@ const RecruitmentCandidate = () => {
                   variant="h5"
                   fontWeight="600"
                   color="#1a2027"
-                  sx={{ mb: 3, pl: 1 }}
+                  sx={{
+                    mb: 3,
+                    pl: 1,
+                    fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                  }}
                 >
                   {position || "Unspecified Position"}
                 </Typography>
               )}
 
-              <Grid container spacing={3}>
+              <Grid container spacing={{ xs: 2, sm: 3 }}>
                 {candidates.map((candidate) => (
                   <Grid
                     item
                     xs={12}
+                    sm={view === "grid" ? 6 : 12}
                     md={view === "grid" ? 4 : 12}
                     key={candidate._id}
                   >
@@ -426,42 +571,101 @@ const RecruitmentCandidate = () => {
                         backgroundColor: "white",
                       }}
                     >
-                      <CardContent sx={styles.cardContent}>
-                        <Box display="flex" alignItems="center" gap={2}>
+                      <CardContent
+                        sx={{
+                          ...styles.cardContent,
+                          padding: { xs: "16px", sm: "24px" },
+                        }}
+                      >
+                        <Box
+                          display="flex"
+                          alignItems={{ xs: "flex-start", sm: "center" }}
+                          flexDirection={{ xs: "column", sm: "row" }}
+                          gap={2}
+                        >
                           <Avatar
                             sx={{
                               ...styles.avatar,
-                              bgcolor: "#9e9e9e", // Grey color for all avatars
+                              bgcolor: "#9e9e9e",
                               color: "white",
+                              width: { xs: 40, sm: 56 },
+                              height: { xs: 40, sm: 56 },
+                              fontSize: { xs: "1rem", sm: "1.2rem" },
                             }}
                           >
                             {(candidate?.name?.[0] || "U").toUpperCase()}
                           </Avatar>
-                          <Box flexGrow={1}>
-                            <Typography
-                              variant="h6"
-                              fontWeight="600"
-                              color="#1a2027"
+                          <Box flexGrow={1} width={{ xs: "100%", sm: "auto" }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: { xs: "flex-start", sm: "center" },
+                                flexDirection: { xs: "column", sm: "row" },
+                                mb: 1,
+                              }}
                             >
-                              {candidate.name}
-                              {candidate.employeeId && (
-                                <Typography
-                                  component="span"
-                                  variant="caption"
+                              <Typography
+                                variant="h6"
+                                fontWeight="600"
+                                color="#1a2027"
+                                sx={{
+                                  fontSize: { xs: "1rem", sm: "1.125rem" },
+                                  mb: { xs: 0.5, sm: 0 },
+                                }}
+                              >
+                                {candidate.name}
+                                {candidate.employeeId && (
+                                  <Typography
+                                    component="span"
+                                    variant="caption"
+                                    sx={{
+                                      ml: 1,
+                                      color: "#1976d2",
+                                      backgroundColor: "#e3f2fd",
+                                      padding: "2px 6px",
+                                      borderRadius: "4px",
+                                      fontSize: "0.7rem",
+                                    }}
+                                  >
+                                    {candidate.employeeId}
+                                  </Typography>
+                                )}
+                              </Typography>
+
+                              <Box
+                                sx={{
+                                  display: { xs: "flex", sm: "none" },
+                                  gap: 1,
+                                  alignSelf: "flex-end",
+                                  mt: { xs: 1, sm: 0 },
+                                }}
+                              >
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    setAnchorEl(e.currentTarget);
+                                    setSelectedCandidate(candidate);
+                                  }}
                                   sx={{
-                                    ml: 1,
-                                    color: "#1976d2",
-                                    backgroundColor: "#e3f2fd",
-                                    padding: "2px 6px",
-                                    borderRadius: "4px",
-                                    fontSize: "0.7rem",
+                                    color: "#64748b",
+                                    "&:hover": {
+                                      backgroundColor: "#f1f5f9",
+                                    },
                                   }}
                                 >
-                                  {candidate.employeeId}
-                                </Typography>
-                              )}
-                            </Typography>
-                            <Typography color="text.secondary" sx={{ mb: 1 }}>
+                                  <MoreVert />
+                                </IconButton>
+                              </Box>
+                            </Box>
+
+                            <Typography
+                              color="text.secondary"
+                              sx={{
+                                mb: 1,
+                                fontSize: { xs: "0.875rem", sm: "1rem" },
+                              }}
+                            >
                               {candidate.email}
                             </Typography>
                             <Typography
@@ -470,6 +674,7 @@ const RecruitmentCandidate = () => {
                                 color: "#64748b",
                                 fontWeight: 500,
                                 mb: 1,
+                                fontSize: { xs: "0.8rem", sm: "0.875rem" },
                               }}
                             >
                               {candidate.position}
@@ -480,6 +685,8 @@ const RecruitmentCandidate = () => {
                                 bgcolor: candidate.color,
                                 color: "white",
                                 ...styles.statusChip,
+                                fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                                height: { xs: "24px", sm: "28px" },
                               }}
                             />
                           </Box>
@@ -493,6 +700,8 @@ const RecruitmentCandidate = () => {
                               "&:hover": {
                                 backgroundColor: "#f1f5f9",
                               },
+                              display: { xs: "none", sm: "flex" },
+                              ml: "auto",
                             }}
                           >
                             <MoreVert />
@@ -534,10 +743,19 @@ const RecruitmentCandidate = () => {
         </Menu>
 
         {/* Delete confirmation dialog */}
+
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
-          sx={styles.dialog}
+          sx={{
+            "& .MuiDialog-paper": {
+              width: { xs: "95%", sm: "600px" },
+              maxWidth: "600px",
+              borderRadius: "20px",
+              overflow: "hidden",
+              margin: { xs: "16px", sm: "32px" },
+            },
+          }}
         >
           <DialogTitle sx={{ fontWeight: 600, pb: 1 }}>
             Delete Candidate
@@ -575,13 +793,22 @@ const RecruitmentCandidate = () => {
         </Dialog>
 
         {/* Create candidate dialog */}
+
         <Dialog
           open={createDialogOpen}
           onClose={() => {
             setCreateDialogOpen(false);
             resetNewCandidate();
           }}
-          sx={styles.dialog}
+          sx={{
+            "& .MuiDialog-paper": {
+              width: { xs: "95%", sm: "600px" },
+              maxWidth: "600px",
+              borderRadius: "20px",
+              overflow: "hidden",
+              margin: { xs: "16px", sm: "32px" },
+            },
+          }}
         >
           <DialogTitle
             sx={{

@@ -19,8 +19,12 @@ import {
   FormControl,
   Select,
   MenuItem,
+  InputAdornment,
+  Paper,
+  Snackbar,
+  Alert,
 } from "@mui/material";
-import { Edit, Delete, Add } from "@mui/icons-material";
+import { Edit, Delete, Add, Search as SearchIcon } from "@mui/icons-material";
 
 const Interview = () => {
   const [data, setData] = useState([]);
@@ -35,6 +39,47 @@ const Interview = () => {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  // Add this function to handle opening the delete dialog
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setOpenDeleteDialog(true);
+  };
+
+  // Add this function to handle the actual deletion
+  const confirmDelete = () => {
+    if (deleteId) {
+      axios
+        .delete(`http://localhost:5000/api/interviews/${deleteId}`)
+        .then(() => {
+          setData(data.filter((item) => item._id !== deleteId));
+          setSnackbar({
+            open: true,
+            message: "Interview deleted successfully",
+            severity: "success",
+          });
+        })
+        .catch((error) => {
+          console.error("Error deleting interview:", error);
+          setSnackbar({
+            open: true,
+            message: "Error deleting interview",
+            severity: "error",
+          });
+        });
+    }
+    setOpenDeleteDialog(false);
+    setDeleteId(null);
+  };
 
   useEffect(() => {
     fetchInterviews();
@@ -112,131 +157,209 @@ const Interview = () => {
     }
   };
 
-  const handleDelete = (id) => {
-    axios
-      .delete(`http://localhost:5000/api/interviews/${id}`)
-      .then(() => setData(data.filter((item) => item._id !== id)))
-      .catch((error) => console.error("Error deleting interview:", error));
-  };
-
   return (
     <Box
       sx={{
-        padding: 4,
-        backgroundColor: "#f8f9fa",
-        borderRadius: 2,
-        boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+        p: { xs: 2, sm: 3, md: 4 },
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
       }}
     >
       <Typography
-
         variant="h4"
         sx={{
+          mb: { xs: 2, sm: 3, md: 4 },
+          color: "#1976d2",
           fontWeight: 600,
-          color: "#1a237e",
-          marginBottom: 4,
-          borderBottom: "2px solid #1a237e",
-
-          paddingBottom: 2,
+          letterSpacing: 0.5,
+          fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
         }}
       >
         Interview Management
       </Typography>
 
-      <Box
+      <Paper
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 4,
+          padding: { xs: 2, sm: 3 },
+          marginBottom: 3,
+          borderRadius: 2,
+          boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
         }}
       >
-        <TextField
-          label="Search Candidate"
-          variant="outlined"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ width: "300px" }}
-        />
-
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <FormControl sx={{ minWidth: 200 }}>
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              displayEmpty
-              sx={{ height: "56px" }}
-            >
-              <MenuItem value="All">All Status</MenuItem>
-              <MenuItem value="Scheduled">Scheduled</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
-              <MenuItem value="Cancelled">Cancelled</MenuItem>
-            </Select>
-          </FormControl>
-
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => handleOpenDialog()}
+        <Box
+          display="flex"
+          flexDirection={{ xs: "column", sm: "row" }}
+          alignItems={{ xs: "stretch", sm: "center" }}
+          gap={2}
+          sx={{
+            width: "100%",
+          }}
+        >
+          <TextField
+            label="Search Candidate"
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             sx={{
-              backgroundColor: "#1a237e",
-              "&:hover": { backgroundColor: "#0d47a1" },
-              height: "56px",
+              width: "100%",
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                "&:hover fieldset": {
+                  borderColor: "#1976d2",
+                },
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              width: { xs: "100%", sm: "auto" },
+              flexDirection: { xs: "column", sm: "row" },
             }}
           >
-            Add Interview
-          </Button>
-        </Box>
-      </Box>
+            <FormControl sx={{ width: "100%" }}>
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                displayEmpty
+                size="small"
+                sx={{
+                  height: "40px",
+                  borderRadius: 2,
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    "&:hover": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="All">All Status</MenuItem>
+                <MenuItem value="Scheduled">Scheduled</MenuItem>
+                <MenuItem value="Completed">Completed</MenuItem>
+                <MenuItem value="Cancelled">Cancelled</MenuItem>
+              </Select>
+            </FormControl>
 
-      <Box
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => handleOpenDialog()}
+              sx={{
+                height: 50,
+                background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
+                color: "white",
+                "&:hover": {
+                  background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
+                },
+                whiteSpace: "nowrap",
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
+              Add Interview
+            </Button>
+          </Box>
+        </Box>
+      </Paper>
+
+      <Paper
         sx={{
           backgroundColor: "white",
-          borderRadius: 1,
-          boxShadow: "0 0 5px rgba(0,0,0,0.05)",
+          borderRadius: 2,
+          boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+          overflow: "auto", // Changed from "hidden" to "auto" for mobile scrolling
         }}
       >
-        <Table>
+        <Table sx={{ minWidth: 650 }}>
+          {" "}
+          {/* Added minWidth for better mobile handling */}
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
               <TableCell
-                sx={{ color: "#000000", fontWeight: "bold", fontSize: "16px" }}
+                sx={{
+                  color: "#000000",
+                  fontWeight: "bold",
+                  fontSize: { xs: "14px", sm: "16px" },
+                  padding: { xs: "12px 8px", sm: "16px" },
+                }}
               >
                 Candidate
               </TableCell>
               <TableCell
-                sx={{ color: "#000000", fontWeight: "bold", fontSize: "16px" }}
+                sx={{
+                  color: "#000000",
+                  fontWeight: "bold",
+                  fontSize: { xs: "14px", sm: "16px" },
+                  padding: { xs: "12px 8px", sm: "16px" },
+                  display: { xs: "none", sm: "table-cell" }, // Hide on mobile
+                }}
               >
                 Interviewer
               </TableCell>
               <TableCell
-                sx={{ color: "#000000", fontWeight: "bold", fontSize: "16px" }}
+                sx={{
+                  color: "#000000",
+                  fontWeight: "bold",
+                  fontSize: { xs: "14px", sm: "16px" },
+                  padding: { xs: "12px 8px", sm: "16px" },
+                }}
               >
                 Date
               </TableCell>
               <TableCell
-                sx={{ color: "#000000", fontWeight: "bold", fontSize: "16px" }}
+                sx={{
+                  color: "#000000",
+                  fontWeight: "bold",
+                  fontSize: { xs: "14px", sm: "16px" },
+                  padding: { xs: "12px 8px", sm: "16px" },
+                  display: { xs: "none", sm: "table-cell" }, // Hide on mobile
+                }}
               >
                 Time
               </TableCell>
               <TableCell
-                sx={{ color: "#000000", fontWeight: "bold", fontSize: "16px" }}
+                sx={{
+                  color: "#000000",
+                  fontWeight: "bold",
+                  fontSize: { xs: "14px", sm: "16px" },
+                  padding: { xs: "12px 8px", sm: "16px" },
+                  display: { xs: "none", sm: "table-cell" }, // Hide on mobile
+                }}
               >
                 Description
               </TableCell>
               <TableCell
-                sx={{ color: "#000000", fontWeight: "bold", fontSize: "16px" }}
+                sx={{
+                  color: "#000000",
+                  fontWeight: "bold",
+                  fontSize: { xs: "14px", sm: "16px" },
+                  padding: { xs: "12px 8px", sm: "16px" },
+                }}
               >
                 Status
               </TableCell>
               <TableCell
-                sx={{ color: "#000000", fontWeight: "bold", fontSize: "16px" }}
+                align="center"
+                sx={{
+                  color: "#000000",
+                  fontWeight: "bold",
+                  fontSize: { xs: "14px", sm: "16px" },
+                  padding: { xs: "12px 8px", sm: "16px" },
+                }}
               >
                 Actions
               </TableCell>
             </TableRow>
           </TableHead>
-
           <TableBody>
             {data
               .filter((item) =>
@@ -247,12 +370,55 @@ const Interview = () => {
                   key={row._id}
                   sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}
                 >
-                  <TableCell>{row.candidate}</TableCell>
-                  <TableCell>{row.interviewer}</TableCell>
-                  <TableCell>{row.date}</TableCell>
-                  <TableCell>{row.time}</TableCell>
-                  <TableCell>{row.description}</TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      padding: { xs: "12px 8px", sm: "16px" },
+                      fontSize: { xs: "13px", sm: "14px" },
+                    }}
+                  >
+                    {row.candidate}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      padding: { xs: "12px 8px", sm: "16px" },
+                      fontSize: { xs: "13px", sm: "14px" },
+                      display: { xs: "none", sm: "table-cell" }, // Hide on mobile
+                    }}
+                  >
+                    {row.interviewer}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      padding: { xs: "12px 8px", sm: "16px" },
+                      fontSize: { xs: "13px", sm: "14px" },
+                    }}
+                  >
+                    {row.date}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      padding: { xs: "12px 8px", sm: "16px" },
+                      fontSize: { xs: "13px", sm: "14px" },
+                      display: { xs: "none", sm: "table-cell" }, // Hide on mobile
+                    }}
+                  >
+                    {row.time}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      padding: { xs: "12px 8px", sm: "16px" },
+                      fontSize: { xs: "13px", sm: "14px" },
+                      display: { xs: "none", sm: "table-cell" }, // Hide on mobile
+                    }}
+                  >
+                    {row.description}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      padding: { xs: "12px 8px", sm: "16px" },
+                      fontSize: { xs: "13px", sm: "14px" },
+                    }}
+                  >
                     <Box
                       sx={{
                         backgroundColor:
@@ -267,305 +433,374 @@ const Interview = () => {
                             : row.status === "Scheduled"
                             ? "#1565c0"
                             : "#c62828",
-                        padding: "6px 12px",
+                        padding: { xs: "4px 8px", sm: "6px 12px" },
                         borderRadius: "4px",
                         display: "inline-block",
                         fontWeight: "medium",
+                        fontSize: { xs: "11px", sm: "13px" },
                       }}
                     >
                       {row.status}
                     </Box>
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      padding: { xs: "12px 8px", sm: "16px" },
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     <IconButton
                       onClick={() => handleOpenDialog(row)}
-                      sx={{ color: "#1a237e" }}
+                      sx={{
+                        color: "#1a237e",
+                        padding: { xs: "4px", sm: "8px" },
+                      }}
+                      size="small"
                     >
-                      <Edit />
+                      <Edit fontSize="small" />
                     </IconButton>
+
                     <IconButton
-                      onClick={() => handleDelete(row._id)}
-                      sx={{ color: "#c62828" }}
+                      onClick={() => handleDeleteClick(row._id)}
+                      sx={{
+                        color: "#c62828",
+                        padding: { xs: "4px", sm: "8px" },
+                      }}
+                      size="small"
                     >
-                      <Delete />
+                      <Delete fontSize="small" />
                     </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
           </TableBody>
         </Table>
-      </Box>
+      </Paper>
 
       <Box sx={{ display: "flex", justifyContent: "center", marginTop: 3 }}>
         <Pagination
           count={Math.ceil(data.length / 10)}
           color="primary"
-          sx={{ "& .MuiPaginationItem-root": { fontSize: "1.1rem" } }}
+          sx={{
+            "& .MuiPaginationItem-root": {
+              fontSize: { xs: "0.9rem", sm: "1.1rem" },
+              minWidth: { xs: "30px", sm: "32px" },
+              height: { xs: "30px", sm: "32px" },
+            },
+          }}
         />
       </Box>
 
-      {/* <Dialog
+      <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
-        maxWidth="sm"
-        fullWidth
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "600px" },
+            maxWidth: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
       >
-        <DialogTitle sx={{ backgroundColor: "#1a237e", color: "white" }}>
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+            color: "white",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+          }}
+        >
           {editMode ? "Edit Interview" : "Add Interview"}
         </DialogTitle>
-        <DialogContent sx={{ padding: 3 }}>
-          <TextField
-            label="Candidate"
-            value={candidate}
-            onChange={(e) => setCandidate(e.target.value)}
-            fullWidth
-            sx={{ marginBottom: 2, marginTop: 2.5 }}
-          />
-          <TextField
-            label="Interviewer"
-            value={interviewer}
-            onChange={(e) => setInterviewer(e.target.value)}
-            fullWidth
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            label="Date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            label="Time"
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            fullWidth
-            multiline
-            rows={3}
-            sx={{ marginBottom: 2 }}
-          />
-          <FormControl fullWidth>
-            <Select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              displayEmpty
-            >
-              <MenuItem value="Scheduled">Scheduled</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
-              <MenuItem value="Cancelled">Cancelled</MenuItem>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions sx={{ padding: 2 }}>
-          <Button onClick={() => setOpenDialog(false)} sx={{ color: "#fff",
-            backgroundColor: "#1a237e",
 
-          }}>
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+          }}
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <TextField
+              label="Candidate"
+              value={candidate}
+              onChange={(e) => setCandidate(e.target.value)}
+              fullWidth
+              sx={{
+                mt: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#1976d2",
+                },
+              }}
+            />
+
+            <TextField
+              label="Interviewer"
+              value={interviewer}
+              onChange={(e) => setInterviewer(e.target.value)}
+              fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              label="Date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              label="Time"
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              fullWidth
+              multiline
+              rows={3}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+
+            <FormControl fullWidth>
+              <Select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                displayEmpty
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    "&:hover": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="Scheduled">Scheduled</MenuItem>
+                <MenuItem value="Completed">Completed</MenuItem>
+                <MenuItem value="Cancelled">Cancelled</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setOpenDialog(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
             Cancel
           </Button>
+
           <Button
             onClick={handleSave}
             variant="contained"
             sx={{
-              backgroundColor: "#1a237e",
-              "&:hover": { backgroundColor: "#0d47a1" },
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
             }}
           >
-            Save
+            {editMode ? "Update" : "Save"}
           </Button>
         </DialogActions>
-      </Dialog> */}
+      </Dialog>
 
-<Dialog
-  open={openDialog}
-  onClose={() => setOpenDialog(false)}
-  PaperProps={{
-    sx: {
-      width: '600px',
-      borderRadius: '20px',
-      overflow: 'hidden'
-    }
-  }}
->
-  <DialogTitle
-    sx={{
-      background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
-      color: 'white',
-      fontSize: '1.5rem',
-      fontWeight: 600,
-      padding: '24px 32px'
-    }}
-  >
-    {editMode ? "Edit Interview" : "Add Interview"}
-  </DialogTitle>
-
-  <DialogContent sx={{ padding: '32px', backgroundColor: '#f8fafc' }}>
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <TextField
-        label="Candidate"
-        value={candidate}
-        onChange={(e) => setCandidate(e.target.value)}
-        fullWidth
-        sx={{
-          mt: 2,
-          "& .MuiOutlinedInput-root": {
-            backgroundColor: "white",
-            borderRadius: "12px",
-            "&:hover fieldset": {
-              borderColor: "#1976d2",
-            },
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
           },
-          "& .MuiInputLabel-root.Mui-focused": {
-            color: "#1976d2",
-          }
         }}
-      />
-
-      <TextField
-        label="Interviewer"
-        value={interviewer}
-        onChange={(e) => setInterviewer(e.target.value)}
-        fullWidth
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            backgroundColor: "white",
-            borderRadius: "12px",
-            "&:hover fieldset": {
-              borderColor: "#1976d2",
-            },
-          }
-        }}
-      />
-
-      <TextField
-        label="Date"
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        fullWidth
-        InputLabelProps={{ shrink: true }}
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            backgroundColor: "white",
-            borderRadius: "12px",
-            "&:hover fieldset": {
-              borderColor: "#1976d2",
-            },
-          }
-        }}
-      />
-
-      <TextField
-        label="Time"
-        type="time"
-        value={time}
-        onChange={(e) => setTime(e.target.value)}
-        fullWidth
-        InputLabelProps={{ shrink: true }}
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            backgroundColor: "white",
-            borderRadius: "12px",
-            "&:hover fieldset": {
-              borderColor: "#1976d2",
-            },
-          }
-        }}
-      />
-
-      <TextField
-        label="Description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        fullWidth
-        multiline
-        rows={3}
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            backgroundColor: "white",
-            borderRadius: "12px",
-            "&:hover fieldset": {
-              borderColor: "#1976d2",
-            },
-          }
-        }}
-      />
-
-      <FormControl fullWidth>
-        <Select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          displayEmpty
+      >
+        <DialogTitle
           sx={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            "& .MuiOutlinedInput-notchedOutline": {
-              "&:hover": {
-                borderColor: "#1976d2",
-              },
-            },
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            color: "white",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
           }}
         >
-          <MenuItem value="Scheduled">Scheduled</MenuItem>
-          <MenuItem value="Completed">Completed</MenuItem>
-          <MenuItem value="Cancelled">Cancelled</MenuItem>
-        </Select>
-      </FormControl>
-    </Box>
-  </DialogContent>
+          Confirm Delete
+        </DialogTitle>
 
-  <DialogActions sx={{ padding: '24px 32px', backgroundColor: '#f8fafc', borderTop: '1px solid #e0e0e0', gap: 2 }}>
-    <Button
-      onClick={() => setOpenDialog(false)}
-      sx={{
-        border: '2px solid #1976d2',
-        color: '#1976d2',
-        '&:hover': {
-          border: '2px solid #64b5f6',
-          backgroundColor: '#e3f2fd',
-          color: '#1976d2'
-        },
-        textTransform: 'none',
-        borderRadius: '8px',
-        px: 3,
-        fontWeight: 600
-      }}
-    >
-      Cancel
-    </Button>
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Typography variant="body1">
+            Are you sure you want to delete this interview? This action cannot
+            be undone.
+          </Typography>
+        </DialogContent>
 
-    <Button
-      onClick={handleSave}
-      variant="contained"
-      sx={{
-        background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
-        fontSize: '0.95rem',
-        textTransform: 'none',
-        padding: '8px 32px',
-        borderRadius: '10px',
-        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
-        '&:hover': {
-          background: 'linear-gradient(45deg, #1565c0, #42a5f5)',
-        }
-      }}
-    >
-      {editMode ? 'Save Changes' : 'Create Interview'}
-    </Button>
-  </DialogActions>
-</Dialog>
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setOpenDeleteDialog(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
 
+          <Button
+            onClick={confirmDelete}
+            variant="contained"
+            color="error"
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
 
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        sx={{
+          position: "fixed",
+          zIndex: 9999,
+          "& .MuiAlert-root": {
+            width: "100%",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          },
+        }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          variant="filled"
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          sx={{
+            width: "100%",
+            fontSize: { xs: "0.875rem", sm: "1rem" },
+            alignItems: "center",
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

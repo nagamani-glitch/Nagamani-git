@@ -216,6 +216,7 @@
   border-spacing: 0 8px;
 }
 
+
 .custom-table thead th {
   background: #f8f9fa;
   font-weight: 600;
@@ -371,5 +372,69 @@
   .quick-stat {
     width: 100%;
     justify-content: center;
+  }
+}
+
+
+
+/* Add these styles at the end of your CSS file */
+
+.table-responsive-mobile {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .custom-table {
+    min-width: 650px;
+  }
+  
+  .table-responsive-mobile {
+    margin: 0 -1rem;
+    padding: 0 1rem;
+    width: calc(100% + 2rem);
+  }
+  
+  .custom-table thead th,
+  .custom-table tbody td {
+    padding: 1rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .status-badge {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+  
+  .duration-cell,
+  .date-cell {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 576px) {
+  .timesheet-dashboard {
+    padding: 1rem;
+  }
+  
+  .dashboard-header {
+    padding: 1.5rem;
+  }
+  
+  .header-text h1 {
+    font-size: 2.5rem;
+  }
+  
+  .header-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .card-header {
+    padding: 1.25rem;
+  }
+  
+  .card-header h4 {
+    font-size: 1.2rem;
   }
 }

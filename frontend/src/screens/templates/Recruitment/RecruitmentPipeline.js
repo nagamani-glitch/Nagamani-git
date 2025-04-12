@@ -20,6 +20,7 @@ import {
   MenuItem,
   Autocomplete,
   CircularProgress,
+  InputAdornment
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
@@ -269,116 +270,112 @@ const RecruitmentPipeline = () => {
   const columns = initialColumns[tabLabels[tabIndex]];
 
   return (
+
+    <Box sx={{ p: 4, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+  <Typography
+    variant="h4"
+    sx={{
+      mb: 4,
+      color: "#1976d2",
+      fontWeight: 600,
+      letterSpacing: 0.5,
+    }}
+  >
+    Recruitment Pipeline
+  </Typography>
+
+  <Paper
+    sx={{
+      padding: 3,
+      marginBottom: 3,
+      borderRadius: 2,
+      boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+    }}
+  >
     <Box
+      display="flex"
+      alignItems="center"
+      gap={2}
       sx={{
-        backgroundColor: "#f9f9f9",
-        padding: { xs: "16px", sm: "24px", md: "32px" },
         width: "100%",
-        minHeight: "100vh",
-        overflow: "hidden",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
       }}
     >
-      <Box
+      <TextField
+        placeholder="Search candidates..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+        size="small"
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-          flexWrap: { xs: "wrap", md: "nowrap" },
-          gap: { xs: 2, md: 3 },
-        }}
-      >
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 500,
-            color: "#1a237e",
-            flexShrink: 0,
-          }}
-        >
-          Recruitment Pipeline
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            width: { xs: "100%", md: "auto" },
-            justifyContent: { xs: "space-between", md: "flex-end" },
-          }}
-        >
-          <Paper
-            component="form"
-            sx={{
-              p: "2px 8px",
-              display: "flex",
-              alignItems: "center",
-              width: { xs: "60%", sm: "300px" },
-              borderRadius: "8px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              "&:hover": {
-                boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
-              },
-            }}
-          >
-            <SearchIcon sx={{ color: "action.active", mr: 1 }} />
-            <InputBase
-              sx={{ flex: 1 }}
-              placeholder="Search candidates..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </Paper>
-
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<AddIcon />}
-            onClick={() => handleDialogOpen()}
-            sx={{
-              borderRadius: "8px",
-              textTransform: "none",
-              px: 3,
-              py: 1,
-              whiteSpace: "nowrap",
-              minWidth: "fit-content",
-            }}
-          >
-            Add Candidate
-          </Button>
-        </Box>
-      </Box>
-
-      <Tabs
-        value={tabIndex}
-        onChange={handleTabChange}
-        indicatorColor="primary"
-        textColor="inherit"
-        sx={{
-          mb: 2,
-          "& .MuiTabs-flexContainer": {
-            borderBottom: "2px solid #e0e0e0",
-          },
-          "& .MuiTab-root": {
-            textTransform: "none",
-            fontWeight: 600,
-            fontSize: "1rem",
-            minWidth: "auto",
-            padding: "12px 24px",
-            color: "#64748b",
-            "&.Mui-selected": {
-              color: "#1976d2",
+          width: { xs: "100%", sm: "300px" },
+          marginRight: "auto",
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 2,
+            "&:hover fieldset": {
+              borderColor: "#1976d2",
             },
           },
         }}
-        variant="scrollable"
-        scrollButtons="auto"
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon color="primary" />
+            </InputAdornment>
+          ),
+        }}
+      />
+
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => handleDialogOpen()}
+        sx={{
+          height: 40,
+          background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
+          color: "white",
+          "&:hover": {
+            background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
+          },
+        }}
       >
-        {tabLabels.map((label, index) => (
-          <Tab key={index} label={label} />
-        ))}
-      </Tabs>
+        Add Candidate
+      </Button>
+    </Box>
+  </Paper>
+
+  <Paper sx={{ boxShadow: 3, borderRadius: 2, mb: 3 }}>
+    <Tabs
+      value={tabIndex}
+      onChange={handleTabChange}
+      indicatorColor="primary"
+      textColor="inherit"
+      sx={{
+        "& .MuiTabs-flexContainer": {
+          borderBottom: "2px solid #e0e0e0",
+        },
+        "& .MuiTab-root": {
+          textTransform: "none",
+          fontWeight: 600,
+          fontSize: "1rem",
+          minWidth: "auto",
+          padding: "12px 24px",
+          color: "#64748b",
+          "&.Mui-selected": {
+            color: "#1976d2",
+          },
+        },
+      }}
+      variant="scrollable"
+      scrollButtons="auto"
+    >
+      {tabLabels.map((label, index) => (
+        <Tab key={index} label={label} />
+      ))}
+    </Tabs>
+  </Paper>
+
+
       <Box
         sx={{
           overflowX: "auto",
@@ -404,7 +401,7 @@ const RecruitmentPipeline = () => {
         >
           {columns.map((column) => (
             <Grid item key={column} sx={{ width: 330 }}>
-              <Paper
+              {/* <Paper
                 sx={{
                   height: "100%",
                   display: "flex",
@@ -647,7 +644,287 @@ const RecruitmentPipeline = () => {
                       </Paper>
                     ))}
                 </Box>
-              </Paper>
+              </Paper> */}
+              <Paper
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: "16px",
+        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+        backgroundColor: "#ffffff",
+        position: "relative",
+        overflow: "hidden",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        "&:hover": {
+          boxShadow: "0 8px 30px rgba(0, 0, 0, 0.12)",
+          transform: "translateY(-4px)",
+        },
+      }}
+    >
+      <Box
+        sx={{
+          p: 2.5,
+          borderBottom: "2px solid #f1f5f9",
+          position: "sticky",
+          top: 0,
+          backgroundColor: "#ffffff",
+          zIndex: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            color: "#1976d2",
+            fontSize: { xs: "1rem", sm: "1.25rem" },
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          {column}
+        </Typography>
+        <Typography
+          component="span"
+          sx={{
+            backgroundColor: "#e3f2fd",
+            color: "#1976d2",
+            borderRadius: "16px",
+            padding: "6px 14px",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: "40px",
+          }}
+        >
+          {filteredCandidates.filter((c) => c.column === column).length}
+        </Typography>
+      </Box>
+
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          p: 2,
+          "&::-webkit-scrollbar": {
+            width: "6px",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#cbd5e1",
+            borderRadius: "3px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "#f8fafc",
+          },
+        }}
+      >
+        {filteredCandidates
+          .filter((candidate) => candidate.column === column)
+          .map((candidate) => (
+            <Paper
+              key={candidate._id}
+              elevation={0}
+              sx={{
+                mb: 2,
+                p: 2.5,
+                borderRadius: "12px",
+                transition: "all 0.3s ease",
+                border: "1px solid #f1f5f9",
+                backgroundColor: "#ffffff",
+                "&:hover": {
+                  transform: "translateY(-4px)",
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+                  borderColor: "#e3f2fd",
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 2,
+                  width: "100%",
+                  minWidth: 0,
+                }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: candidate.stars >= 4 ? "#4caf50" : 
+                            candidate.stars >= 3 ? "#2196f3" : 
+                            candidate.stars >= 2 ? "#ff9800" : "#FF5C8D",
+                    width: 44,
+                    height: 44,
+                    fontSize: "1.2rem",
+                    flexShrink: 0,
+                    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                    border: "2px solid #ffffff",
+                  }}
+                >
+                  {candidate?.name?.[0]?.toUpperCase() || "U"}
+                </Avatar>
+
+                <Box
+                  sx={{
+                    flexGrow: 1,
+                    minWidth: 0,
+                    width: "calc(100% - 120px)",
+                  }}
+                >
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#334155",
+                      mb: 0.5,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    {candidate.name}
+                    {candidate.employeeId && (
+                      <Typography
+                        component="span"
+                        variant="caption"
+                        sx={{
+                          ml: 1,
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                          padding: "3px 8px",
+                          borderRadius: "6px",
+                          fontSize: "0.7rem",
+                          fontWeight: 600,
+                          letterSpacing: "0.3px",
+                        }}
+                      >
+                        {candidate.employeeId}
+                      </Typography>
+                    )}
+                  </Typography>
+
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#64748b",
+                      mb: 1.5,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {candidate.email}
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: 1,
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        backgroundColor: "#f8fafc",
+                        padding: "5px 10px",
+                        borderRadius: "6px",
+                        color: "#475569",
+                        maxWidth: "100%",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        fontWeight: 500,
+                        border: "1px solid #e2e8f0",
+                      }}
+                    >
+                      {candidate.department || "No Department"}
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {Array.from({ length: 5 }).map((_, idx) => (
+                        <StarIcon
+                          key={idx}
+                          sx={{
+                            fontSize: 16,
+                            color:
+                              idx < candidate.stars
+                                ? "#FFD700"
+                                : "#E0E0E0",
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    flexShrink: 0,
+                    ml: "auto",
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDialogOpen(candidate)}
+                    sx={{
+                      color: "#64748b",
+                      backgroundColor: "#f8fafc",
+                      "&:hover": {
+                        color: "#1976d2",
+                        backgroundColor: "#e3f2fd",
+                      },
+                      width: 32,
+                      height: 32,
+                    }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      handleDeleteCandidate(candidate._id)
+                    }
+                    sx={{
+                      color: "#64748b",
+                      backgroundColor: "#f8fafc",
+                      "&:hover": {
+                        color: "#ef4444",
+                        backgroundColor: "#fee2e2",
+                      },
+                      width: 32,
+                      height: 32,
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              </Box>
+            </Paper>
+          ))}
+      </Box>
+    </Paper>
             </Grid>
           ))}
         </Grid>

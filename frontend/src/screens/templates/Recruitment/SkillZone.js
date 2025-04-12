@@ -119,7 +119,9 @@ const SkillZone = () => {
   const fetchRegisteredEmployees = async () => {
     try {
       setLoadingEmployees(true);
-      const response = await axios.get("http://localhost:5000/api/employees/registered");
+      const response = await axios.get(
+        "http://localhost:5000/api/employees/registered"
+      );
       console.log("Fetched employees:", response.data);
       setRegisteredEmployees(response.data);
       setLoadingEmployees(false);
@@ -135,15 +137,17 @@ const SkillZone = () => {
     setSelectedEmployee(employee);
     if (employee) {
       // Populate the candidate form with employee data
-      const fullName = `${employee.personalInfo?.firstName || ''} ${employee.personalInfo?.lastName || ''}`.trim();
+      const fullName = `${employee.personalInfo?.firstName || ""} ${
+        employee.personalInfo?.lastName || ""
+      }`.trim();
       setNewCandidateName(fullName);
-      
+
       // Store additional employee data to be used when adding candidate
       const employeeDataObj = {
         employeeId: employee.Emp_ID,
-        email: employee.personalInfo?.email || '',
-        department: employee.joiningDetails?.department || '',
-        designation: employee.joiningDetails?.initialDesignation || ''
+        email: employee.personalInfo?.email || "",
+        department: employee.joiningDetails?.department || "",
+        designation: employee.joiningDetails?.initialDesignation || "",
       };
       console.log("Setting employee data:", employeeDataObj);
       setEmployeeData(employeeDataObj);
@@ -236,14 +240,14 @@ const SkillZone = () => {
 
     try {
       setLoading(true);
-      
+
       // Create the candidate data object
       const candidateData = {
         name: newCandidateName,
         reason: newReason,
-        addedOn: new Date().toLocaleDateString()
+        addedOn: new Date().toLocaleDateString(),
       };
-      
+
       // Add employee data if available
       if (employeeData) {
         console.log("Adding employee data to candidate:", employeeData);
@@ -254,7 +258,7 @@ const SkillZone = () => {
       }
 
       console.log("Sending candidate data:", candidateData);
-      
+
       const response = await axios.post(
         `http://localhost:5000/api/skill-zone/${currentSkillId}/candidates`,
         candidateData
@@ -262,12 +266,12 @@ const SkillZone = () => {
 
       console.log("Response after adding candidate:", response.data);
 
-      setSkills(prevSkills =>
-        prevSkills.map(skill =>
+      setSkills((prevSkills) =>
+        prevSkills.map((skill) =>
           skill._id === currentSkillId ? response.data : skill
         )
       );
-      
+
       handleCloseAddCandidateDialog();
       showSnackbar("Candidate added successfully");
     } catch (error) {
@@ -281,48 +285,50 @@ const SkillZone = () => {
   const handleEditCandidate = (skillId, candidateId) => {
     const skill = skills.find((s) => s._id === skillId);
     const candidate = skill.candidates.find((c) => c._id === candidateId);
-    
+
     console.log("Editing candidate:", candidate);
-    
+
     setCurrentSkillId(skillId);
     setCurrentCandidateId(candidateId);
     setNewCandidateName(candidate.name);
     setNewReason(candidate.reason);
     setNewSkillName(skill.name);
     setEditing(true);
-    
+
     // If candidate has employee data, try to find the corresponding employee
     if (candidate.employeeId) {
-      const employee = registeredEmployees.find(emp => emp.Emp_ID === candidate.employeeId);
+      const employee = registeredEmployees.find(
+        (emp) => emp.Emp_ID === candidate.employeeId
+      );
       setSelectedEmployee(employee || null);
-      
+
       // Store employee data even if we can't find the employee in the list
       setEmployeeData({
         employeeId: candidate.employeeId,
-        email: candidate.email || '',
-        department: candidate.department || '',
-        designation: candidate.designation || ''
+        email: candidate.email || "",
+        department: candidate.department || "",
+        designation: candidate.designation || "",
       });
-      
+
       console.log("Found employee for candidate:", employee);
     } else {
       setSelectedEmployee(null);
       setEmployeeData(null);
     }
-    
+
     setOpen(true);
   };
 
   const handleSaveEdit = async () => {
     try {
       setLoading(true);
-      
+
       // Create the updated candidate data
       const updatedCandidate = {
         name: newCandidateName,
-        reason: newReason
+        reason: newReason,
       };
-      
+
       // Include employee data if available
       if (employeeData) {
         console.log("Including employee data in update:", employeeData);
@@ -331,16 +337,16 @@ const SkillZone = () => {
         updatedCandidate.department = employeeData.department;
         updatedCandidate.designation = employeeData.designation;
       }
-      
+
       console.log("Sending updated candidate data:", updatedCandidate);
-      
+
       const response = await axios.put(
         `http://localhost:5000/api/skill-zone/${currentSkillId}/candidates/${currentCandidateId}`,
         updatedCandidate
       );
-      
+
       console.log("Response after updating candidate:", response.data);
-      
+
       setSkills((prevSkills) =>
         prevSkills.map((skill) =>
           skill._id === currentSkillId ? response.data : skill
@@ -419,7 +425,7 @@ const SkillZone = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
         <Snackbar
           open={snackbar.open}
           autoHideDuration={4000}
@@ -434,11 +440,15 @@ const SkillZone = () => {
             {snackbar.message}
           </Alert>
         </Snackbar>
-        
+
         <Fade in={true} timeout={800}>
           <Paper
             elevation={3}
-            sx={{ p: 4, borderRadius: 2, bgcolor: "#ffffff" }}
+            sx={{
+              p: { xs: 2, sm: 3, md: 4 },
+              borderRadius: 2,
+              bgcolor: "#ffffff",
+            }}
           >
             <Box
               sx={{
@@ -447,10 +457,17 @@ const SkillZone = () => {
                 mb: 4,
                 borderBottom: "2px solid #1976d2",
                 pb: 2,
+                flexDirection: { xs: "column", sm: "row" },
+                textAlign: { xs: "center", sm: "left" },
               }}
             >
               <WorkOutline
-                sx={{ fontSize: 40, color: "primary.main", mr: 2 }}
+                sx={{
+                  fontSize: { xs: 32, sm: 40 },
+                  color: "primary.main",
+                  mr: { xs: 0, sm: 2 },
+                  mb: { xs: 1, sm: 0 },
+                }}
               />
               <Typography
                 variant="h4"
@@ -459,12 +476,14 @@ const SkillZone = () => {
                   fontWeight: 600,
                   flexGrow: 1,
                   textAlign: "center",
+                  fontSize: { xs: "1.5rem", sm: "2rem", md: "2.25rem" },
                 }}
               >
                 Skill Zone Management
               </Typography>
             </Box>
 
+            {/* Search and Add Button - Make responsive */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
               <Grid item xs={12} md={8}>
                 <TextField
@@ -482,6 +501,7 @@ const SkillZone = () => {
                   }}
                   sx={{
                     bgcolor: "#f8f9fa",
+                    borderRadius: "15px",
                     "& .MuiOutlinedInput-root": {
                       "&:hover fieldset": {
                         borderColor: "primary.main",
@@ -497,7 +517,7 @@ const SkillZone = () => {
                   startIcon={<WorkOutline />}
                   onClick={handleClickOpen}
                   sx={{
-                    height: "56px",
+                    height: { xs: "48px", sm: "56px" },
                     boxShadow: 2,
                     "&:hover": {
                       boxShadow: 4,
@@ -510,7 +530,7 @@ const SkillZone = () => {
             </Grid>
 
             {loading && skills.length === 0 ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+              <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
                 <CircularProgress />
               </Box>
             ) : filteredSkills.length === 0 ? (
@@ -527,6 +547,7 @@ const SkillZone = () => {
                 </Typography>
               </Paper>
             ) : (
+              /* Skills Accordion - Make responsive */
               filteredSkills.map((skill) => (
                 <Accordion
                   key={skill._id}
@@ -543,38 +564,54 @@ const SkillZone = () => {
                     sx={{
                       bgcolor: "#f8f9fa",
                       borderBottom: "1px solid #e0e0e0",
+                      padding: { xs: "0 8px", sm: "0 16px" },
                     }}
                   >
                     <Box
                       sx={{
                         display: "flex",
-                        alignItems: "center",
+                        alignItems: { xs: "flex-start", sm: "center" },
                         width: "100%",
                         justifyContent: "space-between",
+                        flexDirection: { xs: "column", sm: "row" },
                       }}
                     >
                       <Typography
                         variant="h6"
-                        sx={{ fontWeight: 600, color: "primary.main" }}
+                        sx={{
+                          fontWeight: 600,
+                          color: "primary.main",
+                          fontSize: { xs: "1rem", sm: "1.25rem" },
+                          mb: { xs: 1, sm: 0 },
+                          display: "flex",
+                          alignItems: { xs: "flex-start", sm: "center" },
+                          flexDirection: { xs: "column", sm: "row" },
+                          gap: { xs: 1, sm: 2 },
+                        }}
                       >
                         {skill.name}
                         <Typography
                           component="span"
                           sx={{
-                            ml: 2,
                             bgcolor: "primary.light",
                             color: "white",
                             px: 1.5,
                             py: 0.5,
                             borderRadius: 10,
                             fontSize: "0.8rem",
+                            alignSelf: { xs: "flex-start", sm: "auto" },
                           }}
                         >
                           {skill.candidates.length} candidates
                         </Typography>
                       </Typography>
 
-                      <Box sx={{ display: "flex" }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignSelf: { xs: "flex-end", sm: "auto" },
+                        }}
+                      >
                         <Tooltip title="Add Candidate">
                           <IconButton
                             onClick={(e) => {
@@ -600,134 +637,252 @@ const SkillZone = () => {
                       </Box>
                     </Box>
                   </AccordionSummary>
+
                   <AccordionDetails sx={{ p: 0 }}>
-                    <Table>
-                      <TableHead>
-                        <TableRow sx={{ bgcolor: "#f8f9fa" }}>
-                          <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-                          <TableCell sx={{ fontWeight: 600 }}>Employee ID</TableCell>
-                          <TableCell sx={{ fontWeight: 600 }}>Department</TableCell>
-                          <TableCell sx={{ fontWeight: 600 }}>Reason</TableCell>
-                          <TableCell sx={{ fontWeight: 600 }}>Added On</TableCell>
-                          <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {skill.candidates.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} align="center">
-                              <Typography
-                                variant="body2"
-                                sx={{ py: 2, color: "text.secondary" }}
-                              >
-                                No candidates added yet. Click the "Add
-                                Candidate" button to add candidates.
-                              </Typography>
+                    {/* Table - Make responsive with horizontal scroll */}
+                    <Box sx={{ overflowX: "auto" }}>
+                      <Table>
+                        <TableHead>
+                          <TableRow sx={{ bgcolor: "#f8f9fa" }}>
+                            <TableCell
+                              sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+                            >
+                              Name
                             </TableCell>
-                          </TableRow>
-                        ) : (
-                          skill.candidates.map((candidate) => (
-                            <TableRow
-                              key={candidate._id}
+                            <TableCell
                               sx={{
-                                "&:hover": { bgcolor: "#f8f9fa" },
+                                fontWeight: 600,
+                                whiteSpace: "nowrap",
+                                display: { xs: "none", md: "table-cell" },
                               }}
                             >
-                              <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Typography fontWeight={500}>
-                                    {candidate.name}
-                                  </Typography>
-                                  {candidate.email && (
-                                    <Tooltip title={candidate.email}>
-                                      <Email fontSize="small" color="action" />
-                                    </Tooltip>
-                                  )}
-                                </Box>
-                                {candidate.email && (
-                                  <Typography variant="caption" display="block" color="text.secondary">
-                                    {candidate.email}
-                                  </Typography>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {candidate.employeeId ? (
-                                  <Typography
-                                    component="span"
-                                    sx={{
-                                      bgcolor: "#e3f2fd",
-                                      color: "primary.main",
-                                      px: 1,
-                                      py: 0.5,
-                                      borderRadius: 1,
-                                      fontSize: "0.8rem",
-                                      fontWeight: 500,
-                                    }}
-                                  >
-                                    {candidate.employeeId}
-                                  </Typography>
-                                ) : (
-                                  <Typography variant="body2" color="text.secondary">
-                                    Not assigned
-                                  </Typography>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {candidate.department ? (
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Work fontSize="small" color="action" />
-                                    <Typography variant="body2">
-                                      {candidate.department}
-                                    </Typography>
-                                  </Box>
-                                ) : (
-                                  <Typography variant="body2" color="text.secondary">
-                                    N/A
-                                  </Typography>
-                                )}
-                                {candidate.designation && (
-                                  <Typography variant="caption" display="block" color="text.secondary">
-                                    {candidate.designation}
-                                  </Typography>
-                                )}
-                              </TableCell>
-                              <TableCell>{candidate.reason}</TableCell>
-                              <TableCell>{candidate.addedOn}</TableCell>
-                              <TableCell>
-                                <Tooltip title="Edit Candidate">
-                                  <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                      handleEditCandidate(
-                                        skill._id,
-                                        candidate._id
-                                      )
-                                    }
-                                    sx={{ color: "primary.main" }}
-                                  >
-                                    <Edit fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Delete Candidate">
-                                  <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                      handleDeleteCandidate(
-                                        skill._id,
-                                        candidate._id
-                                      )
-                                    }
-                                    sx={{ color: "error.main" }}
-                                  >
-                                    <Delete fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
+                              Employee ID
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                fontWeight: 600,
+                                whiteSpace: "nowrap",
+                                display: { xs: "none", md: "table-cell" },
+                              }}
+                            >
+                              Department
+                            </TableCell>
+                            <TableCell
+                              sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+                            >
+                              Reason
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                fontWeight: 600,
+                                whiteSpace: "nowrap",
+                                display: { xs: "none", sm: "table-cell" },
+                              }}
+                            >
+                              Added On
+                            </TableCell>
+                            <TableCell
+                              sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+                            >
+                              Actions
+                            </TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {skill.candidates.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} align="center">
+                                <Typography
+                                  variant="body2"
+                                  sx={{ py: 2, color: "text.secondary" }}
+                                >
+                                  No candidates added yet. Click the "Add
+                                  Candidate" button to add candidates.
+                                </Typography>
                               </TableCell>
                             </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
+                          ) : (
+                            skill.candidates.map((candidate) => (
+                              <TableRow
+                                key={candidate._id}
+                                sx={{
+                                  "&:hover": { bgcolor: "#f8f9fa" },
+                                }}
+                              >
+                                <TableCell
+                                  sx={{
+                                    whiteSpace: "nowrap",
+                                    maxWidth: { xs: "150px", sm: "200px" },
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <Typography
+                                      fontWeight={500}
+                                      sx={{
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {candidate.name}
+                                    </Typography>
+                                    {candidate.email && (
+                                      <Tooltip title={candidate.email}>
+                                        <Email
+                                          fontSize="small"
+                                          color="action"
+                                        />
+                                      </Tooltip>
+                                    )}
+                                  </Box>
+                                  {candidate.email && (
+                                    <Typography
+                                      variant="caption"
+                                      display="block"
+                                      color="text.secondary"
+                                      sx={{
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {candidate.email}
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                <TableCell
+                                  sx={{
+                                    whiteSpace: "nowrap",
+                                    display: { xs: "none", md: "table-cell" },
+                                  }}
+                                >
+                                  {candidate.employeeId ? (
+                                    <Typography
+                                      component="span"
+                                      sx={{
+                                        bgcolor: "#e3f2fd",
+                                        color: "primary.main",
+                                        px: 1,
+                                        py: 0.5,
+                                        borderRadius: 1,
+                                        fontSize: "0.8rem",
+                                        fontWeight: 500,
+                                      }}
+                                    >
+                                      {candidate.employeeId}
+                                    </Typography>
+                                  ) : (
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                    >
+                                      Not assigned
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                <TableCell
+                                  sx={{
+                                    whiteSpace: "nowrap",
+                                    display: { xs: "none", md: "table-cell" },
+                                  }}
+                                >
+                                  {candidate.department ? (
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                      }}
+                                    >
+                                      <Work fontSize="small" color="action" />
+                                      <Typography variant="body2">
+                                        {candidate.department}
+                                      </Typography>
+                                    </Box>
+                                  ) : (
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                    >
+                                      N/A
+                                    </Typography>
+                                  )}
+                                  {candidate.designation && (
+                                    <Typography
+                                      variant="caption"
+                                      display="block"
+                                      color="text.secondary"
+                                    >
+                                      {candidate.designation}
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                <TableCell
+                                  sx={{
+                                    maxWidth: {
+                                      xs: "120px",
+                                      sm: "200px",
+                                      md: "300px",
+                                    },
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: { xs: "nowrap", md: "normal" },
+                                  }}
+                                >
+                                  {candidate.reason}
+                                </TableCell>
+                                <TableCell
+                                  sx={{
+                                    whiteSpace: "nowrap",
+                                    display: { xs: "none", sm: "table-cell" },
+                                  }}
+                                >
+                                  {candidate.addedOn}
+                                </TableCell>
+                                <TableCell sx={{ whiteSpace: "nowrap" }}>
+                                  <Tooltip title="Edit Candidate">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        handleEditCandidate(
+                                          skill._id,
+                                          candidate._id
+                                        )
+                                      }
+                                      sx={{ color: "primary.main" }}
+                                    >
+                                      <Edit fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Delete Candidate">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        handleDeleteCandidate(
+                                          skill._id,
+                                          candidate._id
+                                        )
+                                      }
+                                      sx={{ color: "error.main" }}
+                                    >
+                                      <Delete fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </Box>
                   </AccordionDetails>
                 </Accordion>
               ))
@@ -741,7 +896,8 @@ const SkillZone = () => {
           onClose={handleClose}
           PaperProps={{
             sx: {
-              width: "500px",
+              width: { xs: "95%", sm: "500px" },
+              maxWidth: "500px",
               borderRadius: "16px",
               p: 1,
             },
@@ -753,11 +909,14 @@ const SkillZone = () => {
               color: "white",
               borderRadius: "12px 12px 0 0",
               fontWeight: 600,
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              padding: { xs: "16px", sm: "24px" },
             }}
           >
             {editing ? "Edit Candidate" : "Add New Skill"}
           </DialogTitle>
-          <DialogContent sx={{ mt: 2 }}>
+
+          <DialogContent sx={{ mt: 2, p: { xs: 2, sm: 3 } }}>
             {editing ? (
               <>
                 <TextField
@@ -767,13 +926,15 @@ const SkillZone = () => {
                   disabled
                   margin="normal"
                 />
-                
+
                 {/* Employee Selection Autocomplete */}
                 <Autocomplete
                   id="employee-select"
                   options={registeredEmployees}
-                  getOptionLabel={(option) => 
-                    `${option.Emp_ID} - ${option.personalInfo?.firstName || ''} ${option.personalInfo?.lastName || ''}`
+                  getOptionLabel={(option) =>
+                    `${option.Emp_ID} - ${
+                      option.personalInfo?.firstName || ""
+                    } ${option.personalInfo?.lastName || ""}`
                   }
                   value={selectedEmployee}
                   onChange={handleEmployeeSelect}
@@ -781,7 +942,7 @@ const SkillZone = () => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Select Onboarded Employee (Optional)"
+                      label="Select Employee (Optional)"
                       variant="outlined"
                       fullWidth
                       margin="normal"
@@ -789,16 +950,17 @@ const SkillZone = () => {
                         ...params.InputProps,
                         endAdornment: (
                           <>
-                            {loadingEmployees ? <CircularProgress color="inherit" size={20} /> : null}
+                            {loadingEmployees ? (
+                              <CircularProgress color="inherit" size={20} />
+                            ) : null}
                             {params.InputProps.endAdornment}
                           </>
                         ),
                       }}
-                      helperText="Link this candidate to an onboarded employee"
                     />
                   )}
                 />
-                
+
                 <TextField
                   label="Candidate Name"
                   value={newCandidateName}
@@ -806,14 +968,15 @@ const SkillZone = () => {
                   fullWidth
                   margin="normal"
                 />
+
                 <TextField
                   label="Reason"
                   value={newReason}
                   onChange={(e) => setNewReason(e.target.value)}
                   fullWidth
-                  margin="normal"
                   multiline
                   rows={3}
+                  margin="normal"
                 />
               </>
             ) : (
@@ -827,36 +990,32 @@ const SkillZone = () => {
               />
             )}
           </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button
-              onClick={handleClose}
-              variant="outlined"
-              sx={{ borderRadius: 8 }}
-            >
+          <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
+            <Button onClick={handleClose} color="primary" variant="outlined">
               Cancel
             </Button>
             <Button
               onClick={editing ? handleSaveEdit : handleAddSkill}
+              color="primary"
               variant="contained"
               disabled={
-                editing
-                  ? !newCandidateName || !newReason
-                  : !newSkillName
+                editing ? !newCandidateName.trim() : !newSkillName.trim()
               }
-              sx={{ borderRadius: 8 }}
             >
-              {editing ? "Save Changes" : "Add Skill"}
+              {editing ? "Update Candidate" : "Add Skill"}
             </Button>
           </DialogActions>
         </Dialog>
 
         {/* Add Candidate Dialog */}
+
         <Dialog
           open={addCandidateDialogOpen}
-          onClose={handleCloseAddCandidateDialog}
+          onClose={() => setAddCandidateDialogOpen(false)}
           PaperProps={{
             sx: {
-              width: "500px",
+              width: { xs: "95%", sm: "500px" },
+              maxWidth: "500px",
               borderRadius: "16px",
               p: 1,
             },
@@ -868,42 +1027,13 @@ const SkillZone = () => {
               color: "white",
               borderRadius: "12px 12px 0 0",
               fontWeight: 600,
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              padding: { xs: "16px", sm: "24px" },
             }}
           >
             Add Candidate to Skill
           </DialogTitle>
-          <DialogContent sx={{ mt: 2 }}>
-            {/* Employee Selection Autocomplete */}
-            <Autocomplete
-              id="employee-select-dialog"
-              options={registeredEmployees}
-              getOptionLabel={(option) => 
-                `${option.Emp_ID} - ${option.personalInfo?.firstName || ''} ${option.personalInfo?.lastName || ''}`
-              }
-              value={selectedEmployee}
-              onChange={handleEmployeeSelect}
-              loading={loadingEmployees}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Select Onboarded Employee (Optional)"
-                  variant="outlined"
-                  fullWidth
-                  margin="normal"
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {loadingEmployees ? <CircularProgress color="inherit" size={20} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                  helperText="Link this candidate to an onboarded employee"
-                />
-              )}
-            />
-            
+          <DialogContent sx={{ mt: 2, p: { xs: 2, sm: 3 } }}>
             <TextField
               autoFocus
               label="Candidate Name"
@@ -912,29 +1042,64 @@ const SkillZone = () => {
               fullWidth
               margin="normal"
             />
+
+            {/* Employee Selection Autocomplete */}
+            <Autocomplete
+              id="employee-select"
+              options={registeredEmployees}
+              getOptionLabel={(option) =>
+                `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
+                  option.personalInfo?.lastName || ""
+                }`
+              }
+              value={selectedEmployee}
+              onChange={handleEmployeeSelect}
+              loading={loadingEmployees}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Employee (Optional)"
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingEmployees ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+            />
+
             <TextField
-              label="Reason"
+              label="Reason for Adding"
               value={newReason}
               onChange={(e) => setNewReason(e.target.value)}
               fullWidth
-              margin="normal"
               multiline
               rows={3}
+              margin="normal"
             />
           </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
+          <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
             <Button
-              onClick={handleCloseAddCandidateDialog}
+              onClick={() => setAddCandidateDialogOpen(false)}
+              color="primary"
               variant="outlined"
-              sx={{ borderRadius: 8 }}
             >
               Cancel
             </Button>
             <Button
               onClick={handleAddCandidate}
+              color="primary"
               variant="contained"
-              disabled={!newCandidateName || !newReason}
-              sx={{ borderRadius: 8 }}
+              disabled={!newCandidateName.trim()}
             >
               Add Candidate
             </Button>
@@ -961,4 +1126,3 @@ const SkillZone = () => {
 };
 
 export default SkillZone;
- 
