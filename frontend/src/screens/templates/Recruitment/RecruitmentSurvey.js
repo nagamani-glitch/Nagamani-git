@@ -57,6 +57,82 @@ const RecruitmentSurvey = () => {
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
+  // Add these state variables at the top of the component with other state declarations
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState(""); // "template" or "question"
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [parentTemplateId, setParentTemplateId] = useState(null); // For question deletion
+
+  // Replace the existing handleDeleteTemplate function with this:
+  const handleDeleteTemplateClick = (templateId) => {
+    setDeleteType("template");
+    setItemToDelete(templates.find((t) => t._id === templateId));
+    setDeleteDialogOpen(true);
+  };
+
+  // Replace the existing handleDeleteQuestion function with this:
+  const handleDeleteQuestionClick = (templateId, questionId) => {
+    const template = templates.find((t) => t._id === templateId);
+    const question = template.questions.find((q) => q._id === questionId);
+
+    setDeleteType("question");
+    setItemToDelete(question);
+    setParentTemplateId(templateId);
+    setDeleteDialogOpen(true);
+  };
+
+  // Add this function to close the delete dialog
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+    setParentTemplateId(null);
+  };
+
+  // Add this function to handle the confirmed deletion
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true);
+
+      if (deleteType === "template" && itemToDelete) {
+        await axios.delete(
+          `http://localhost:5000/api/recruitment-survey/${itemToDelete._id}`
+        );
+        setTemplates((prevTemplates) =>
+          prevTemplates.filter((template) => template._id !== itemToDelete._id)
+        );
+        showSnackbar("Template deleted successfully");
+      } else if (
+        deleteType === "question" &&
+        itemToDelete &&
+        parentTemplateId
+      ) {
+        await axios.delete(
+          `http://localhost:5000/api/recruitment-survey/${parentTemplateId}/questions/${itemToDelete._id}`
+        );
+        setTemplates((prevTemplates) =>
+          prevTemplates.map((template) =>
+            template._id === parentTemplateId
+              ? {
+                  ...template,
+                  questions: template.questions.filter(
+                    (question) => question._id !== itemToDelete._id
+                  ),
+                }
+              : template
+          )
+        );
+        showSnackbar("Question deleted successfully");
+      }
+
+      handleCloseDeleteDialog();
+    } catch (error) {
+      console.error(`Error deleting ${deleteType}:`, error);
+      showSnackbar(`Error deleting ${deleteType}`, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
@@ -318,51 +394,6 @@ const RecruitmentSurvey = () => {
     }
   };
 
-  const handleDeleteQuestion = async (templateId, questionId) => {
-    try {
-      setLoading(true);
-      await axios.delete(
-        `http://localhost:5000/api/recruitment-survey/${templateId}/questions/${questionId}`
-      );
-      setTemplates((prevTemplates) =>
-        prevTemplates.map((template) =>
-          template._id === templateId
-            ? {
-                ...template,
-                questions: template.questions.filter(
-                  (question) => question._id !== questionId
-                ),
-              }
-            : template
-        )
-      );
-      showSnackbar("Question deleted successfully");
-    } catch (error) {
-      console.error("Error deleting question:", error);
-      showSnackbar("Error deleting question", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteTemplate = async (templateId) => {
-    try {
-      setLoading(true);
-      await axios.delete(
-        `http://localhost:5000/api/recruitment-survey/${templateId}`
-      );
-      setTemplates((prevTemplates) =>
-        prevTemplates.filter((template) => template._id !== templateId)
-      );
-      showSnackbar("Template deleted successfully");
-    } catch (error) {
-      console.error("Error deleting template:", error);
-      showSnackbar("Error deleting template", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <Box
       p={{ xs: 2, sm: 3, md: 4 }}
@@ -510,13 +541,14 @@ const RecruitmentSurvey = () => {
                       <QuestionAnswer />
                     </IconButton>
                   </Tooltip>
+
                   <Tooltip title="Delete Template">
                     <IconButton
                       size="small"
                       color="error"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteTemplate(template._id);
+                        handleDeleteTemplateClick(template._id);
                       }}
                     >
                       <Delete />
@@ -691,10 +723,14 @@ const RecruitmentSurvey = () => {
                             >
                               <Edit />
                             </IconButton>
+
                             <IconButton
                               size="small"
                               onClick={() =>
-                                handleDeleteQuestion(template._id, question._id)
+                                handleDeleteQuestionClick(
+                                  template._id,
+                                  question._id
+                                )
                               }
                               sx={{ color: "#e74c3c" }}
                             >
@@ -711,6 +747,116 @@ const RecruitmentSurvey = () => {
           </Accordion>
         ))}
       </Paper>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        PaperProps={{
+          sx: {
+            borderRadius: "16px",
+            padding: "8px",
+            maxWidth: "500px",
+            width: "100%",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontSize: "1.25rem",
+            fontWeight: 600,
+            color: "#e74c3c",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Delete color="error" />
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {deleteType === "template"
+              ? "Are you sure you want to delete this template? All questions in this template will also be deleted."
+              : "Are you sure you want to delete this question?"}
+          </Alert>
+          {itemToDelete && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+              {deleteType === "template" ? (
+                <>
+                  <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                    Template: {itemToDelete.name}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    This template contains {itemToDelete.questions?.length || 0}{" "}
+                    questions.
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                    Question:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      mt: 1,
+                      p: 1,
+                      bgcolor: "#fff",
+                      borderRadius: 1,
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    {itemToDelete.question}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    Type: {itemToDelete.type}
+                  </Typography>
+                  {itemToDelete.employeeName && (
+                    <Typography variant="body2" color="text.secondary">
+                      Raised by: {itemToDelete.employeeName}
+                    </Typography>
+                  )}
+                </>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={handleCloseDeleteDialog}
+            sx={{
+              color: "#64748b",
+              "&:hover": { backgroundColor: "#f1f5f9" },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+            sx={{
+              boxShadow: "none",
+              "&:hover": { boxShadow: "none", backgroundColor: "#dc2626" },
+            }}
+          >
+            {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={open}

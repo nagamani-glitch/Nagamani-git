@@ -31,7 +31,6 @@ import {
   alpha,
 } from "@mui/material";
 import {
-  Add,
   Search,
   List,
   GridView,
@@ -918,8 +917,17 @@ const RecruitmentCandidate = () => {
                 resetNewCandidate();
               }}
               sx={{
-                color: "#64748b",
-                "&:hover": { backgroundColor: "#f1f5f9" },
+                border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
               }}
             >
               Cancel
@@ -928,11 +936,16 @@ const RecruitmentCandidate = () => {
               onClick={handleCreateSubmit}
               variant="contained"
               sx={{
+                background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                fontSize: "0.95rem",
                 textTransform: "none",
-                borderRadius: "8px",
-                fontWeight: 600,
-                backgroundColor: "#1976d2",
-                "&:hover": { backgroundColor: "#1565c0" },
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+                color: "white",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                },
               }}
               disabled={!newCandidate.name || !newCandidate.email}
             >
@@ -960,5 +973,7 @@ const RecruitmentCandidate = () => {
     </Box>
   );
 };
+
+
 
 export default RecruitmentCandidate;

@@ -97,6 +97,78 @@ const SkillZone = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employeeData, setEmployeeData] = useState(null);
 
+  // Add these state variables at the top of the component with other state declarations
+const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+const [deleteType, setDeleteType] = useState(""); // "skill" or "candidate"
+const [itemToDelete, setItemToDelete] = useState(null);
+const [parentSkillId, setParentSkillId] = useState(null); // For candidate deletion
+
+// Replace the existing handleDeleteSkill function with this:
+const handleDeleteSkillClick = (skillId) => {
+  setDeleteType("skill");
+  setItemToDelete(skills.find(s => s._id === skillId));
+  setDeleteDialogOpen(true);
+};
+
+// Replace the existing handleDeleteCandidate function with this:
+const handleDeleteCandidateClick = (skillId, candidateId) => {
+  const skill = skills.find(s => s._id === skillId);
+  const candidate = skill.candidates.find(c => c._id === candidateId);
+  
+  setDeleteType("candidate");
+  setItemToDelete(candidate);
+  setParentSkillId(skillId);
+  setDeleteDialogOpen(true);
+};
+
+// Add this function to close the delete dialog
+const handleCloseDeleteDialog = () => {
+  setDeleteDialogOpen(false);
+  setItemToDelete(null);
+  setParentSkillId(null);
+};
+
+// Add this function to handle the confirmed deletion
+const handleConfirmDelete = async () => {
+  try {
+    setLoading(true);
+    
+    if (deleteType === "skill" && itemToDelete) {
+      await axios.delete(`http://localhost:5000/api/skill-zone/${itemToDelete._id}`);
+      setSkills((prevSkills) =>
+        prevSkills.filter((skill) => skill._id !== itemToDelete._id)
+      );
+      showSnackbar("Skill deleted successfully");
+    } 
+    else if (deleteType === "candidate" && itemToDelete && parentSkillId) {
+      await axios.delete(
+        `http://localhost:5000/api/skill-zone/${parentSkillId}/candidates/${itemToDelete._id}`
+      );
+      setSkills((prevSkills) =>
+        prevSkills.map((skill) =>
+          skill._id === parentSkillId
+            ? {
+                ...skill,
+                candidates: skill.candidates.filter(
+                  (c) => c._id !== itemToDelete._id
+                ),
+              }
+            : skill
+        )
+      );
+      showSnackbar("Candidate deleted successfully");
+    }
+    
+    handleCloseDeleteDialog();
+  } catch (error) {
+    console.error(`Error deleting ${deleteType}:`, error);
+    showSnackbar(`Error deleting ${deleteType}`, "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   useEffect(() => {
     fetchSkills();
     fetchRegisteredEmployees();
@@ -362,58 +434,6 @@ const SkillZone = () => {
     }
   };
 
-  const handleDeleteCandidate = async (skillId, candidateId) => {
-    if (!window.confirm("Are you sure you want to delete this candidate?"))
-      return;
-
-    try {
-      setLoading(true);
-      await axios.delete(
-        `http://localhost:5000/api/skill-zone/${skillId}/candidates/${candidateId}`
-      );
-      setSkills((prevSkills) =>
-        prevSkills.map((skill) =>
-          skill._id === skillId
-            ? {
-                ...skill,
-                candidates: skill.candidates.filter(
-                  (c) => c._id !== candidateId
-                ),
-              }
-            : skill
-        )
-      );
-      showSnackbar("Candidate deleted successfully");
-    } catch (error) {
-      console.error("Error deleting candidate:", error);
-      showSnackbar("Error deleting candidate", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteSkill = async (skillId) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this skill and all its candidates?"
-      )
-    )
-      return;
-
-    try {
-      setLoading(true);
-      await axios.delete(`http://localhost:5000/api/skill-zone/${skillId}`);
-      setSkills((prevSkills) =>
-        prevSkills.filter((skill) => skill._id !== skillId)
-      );
-      showSnackbar("Skill deleted successfully");
-    } catch (error) {
-      console.error("Error deleting skill:", error);
-      showSnackbar("Error deleting skill", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filteredSkills = skills.filter(
     (skill) =>
@@ -623,7 +643,7 @@ const SkillZone = () => {
                             <PersonAdd />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Delete Skill">
+                        {/* <Tooltip title="Delete Skill">
                           <IconButton
                             onClick={(e) => {
                               e.stopPropagation();
@@ -633,7 +653,21 @@ const SkillZone = () => {
                           >
                             <Delete />
                           </IconButton>
-                        </Tooltip>
+                        </Tooltip> */}
+
+<Tooltip title="Delete Skill">
+  <IconButton
+    onClick={(e) => {
+      e.stopPropagation();
+      handleDeleteSkillClick(skill._id);
+    }}
+    sx={{ color: "error.main" }}
+  >
+    <Delete />
+  </IconButton>
+</Tooltip>
+
+
                       </Box>
                     </Box>
                   </AccordionSummary>
@@ -862,7 +896,7 @@ const SkillZone = () => {
                                       <Edit fontSize="small" />
                                     </IconButton>
                                   </Tooltip>
-                                  <Tooltip title="Delete Candidate">
+                                  {/* <Tooltip title="Delete Candidate">
                                     <IconButton
                                       size="small"
                                       onClick={() =>
@@ -875,7 +909,18 @@ const SkillZone = () => {
                                     >
                                       <Delete fontSize="small" />
                                     </IconButton>
-                                  </Tooltip>
+                                  </Tooltip> */}
+
+<Tooltip title="Delete Candidate">
+  <IconButton
+    size="small"
+    onClick={() => handleDeleteCandidateClick(skill._id, candidate._id)}
+    sx={{ color: "error.main" }}
+  >
+    <Delete fontSize="small" />
+  </IconButton>
+</Tooltip>
+
                                 </TableCell>
                               </TableRow>
                             ))
@@ -890,6 +935,120 @@ const SkillZone = () => {
           </Paper>
         </Fade>
 
+
+        {/* Delete Confirmation Dialog */}
+<Dialog
+  open={deleteDialogOpen}
+  onClose={handleCloseDeleteDialog}
+  PaperProps={{
+    sx: {
+      borderRadius: "16px",
+      overflow: "hidden",
+      p: 0,
+      maxWidth: "500px",
+      width: "100%"
+    },
+  }}
+>
+  <DialogTitle sx={{ 
+    background: "linear-gradient(45deg, #f44336, #e57373)",
+    color: "white",
+    fontSize: "1.25rem", 
+    fontWeight: 600,
+    display: "flex",
+    alignItems: "center",
+    gap: 1,
+    padding: { xs: "16px", sm: "24px" },
+    margin: 0
+  }}>
+    <Delete />
+    Confirm Deletion
+  </DialogTitle>
+  <DialogContent sx={{ p: 3, pt: 3 }}>
+    <Alert severity="warning" sx={{ mb: 2 }}>
+      {deleteType === "skill" 
+        ? "Are you sure you want to delete this skill? All candidates in this skill will also be deleted."
+        : "Are you sure you want to delete this candidate?"}
+    </Alert>
+    {itemToDelete && (
+      <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+        {deleteType === "skill" ? (
+          <>
+            <Typography variant="body1" fontWeight={600} color="#2c3e50">
+              Skill: {itemToDelete.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              This skill contains {itemToDelete.candidates?.length || 0} candidates.
+            </Typography>
+          </>
+        ) : (
+          <>
+            <Typography variant="body1" fontWeight={600} color="#2c3e50">
+              Candidate: {itemToDelete.name}
+            </Typography>
+            {itemToDelete.employeeId && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Employee ID: {itemToDelete.employeeId}
+              </Typography>
+            )}
+            {itemToDelete.department && (
+              <Typography variant="body2" color="text.secondary">
+                Department: {itemToDelete.department}
+              </Typography>
+            )}
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Reason: {itemToDelete.reason}
+            </Typography>
+          </>
+        )}
+      </Box>
+    )}
+  </DialogContent>
+  <DialogActions sx={{ p: 3, backgroundColor: "#f8fafc", borderTop: "1px solid #e0e0e0" }}>
+    <Button 
+      onClick={handleCloseDeleteDialog}
+      sx={{ 
+        border: "2px solid #1976d2",
+        color: "#1976d2",
+        "&:hover": {
+          border: "2px solid #64b5f6",
+          backgroundColor: "#e3f2fd",
+          color: "#1976d2",
+        },
+        textTransform: "none",
+        borderRadius: "8px",
+        px: 3,
+        fontWeight: 600,
+      }}
+    >
+      Cancel
+    </Button>
+    <Button 
+      onClick={handleConfirmDelete} 
+      variant="contained" 
+      color="error"
+      disabled={loading}
+      startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+      sx={{ 
+        background: "linear-gradient(45deg, #f44336, #e57373)",
+        fontSize: "0.95rem",
+        textTransform: "none",
+        padding: "8px 32px",
+        borderRadius: "10px",
+        boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+        color: "white",
+        "&:hover": {
+          background: "linear-gradient(45deg, #d32f2f, #ef5350)",
+        },
+      }}
+    >
+      {loading ? "Deleting..." : "Delete"}
+    </Button>
+  </DialogActions>
+</Dialog>
+
+
+
         {/* Add Skill Dialog */}
         <Dialog
           open={open}
@@ -899,7 +1058,8 @@ const SkillZone = () => {
               width: { xs: "95%", sm: "500px" },
               maxWidth: "500px",
               borderRadius: "16px",
-              p: 1,
+              overflow: "hidden",
+              p: 0,
             },
           }}
         >
@@ -907,10 +1067,11 @@ const SkillZone = () => {
             sx={{
               background: "linear-gradient(45deg, #1976d2, #42a5f5)",
               color: "white",
-              borderRadius: "12px 12px 0 0",
+              borderRadius: "0",  
               fontWeight: 600,
               fontSize: { xs: "1.25rem", sm: "1.5rem" },
               padding: { xs: "16px", sm: "24px" },
+              margin: 0,
             }}
           >
             {editing ? "Edit Candidate" : "Add New Skill"}
@@ -991,13 +1152,39 @@ const SkillZone = () => {
             )}
           </DialogContent>
           <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
-            <Button onClick={handleClose} color="primary" variant="outlined">
+            <Button onClick={handleClose} color="primary" variant="outlined"
+              sx={{
+                border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+              }}
+            >
               Cancel
             </Button>
             <Button
               onClick={editing ? handleSaveEdit : handleAddSkill}
               color="primary"
               variant="contained"
+              sx={{
+                background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                fontSize: "0.95rem",
+                textTransform: "none",
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+                color: "white",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                },
+              }}
               disabled={
                 editing ? !newCandidateName.trim() : !newSkillName.trim()
               }
@@ -1017,7 +1204,8 @@ const SkillZone = () => {
               width: { xs: "95%", sm: "500px" },
               maxWidth: "500px",
               borderRadius: "16px",
-              p: 1,
+              overflow: "hidden",
+              p: 0,
             },
           }}
         >
@@ -1025,10 +1213,11 @@ const SkillZone = () => {
             sx={{
               background: "linear-gradient(45deg, #1976d2, #42a5f5)",
               color: "white",
-              borderRadius: "12px 12px 0 0",
+              borderRadius: "0",
               fontWeight: 600,
               fontSize: { xs: "1.25rem", sm: "1.5rem" },
               padding: { xs: "16px", sm: "24px" },
+              margin: 0,
             }}
           >
             Add Candidate to Skill
@@ -1092,6 +1281,19 @@ const SkillZone = () => {
               onClick={() => setAddCandidateDialogOpen(false)}
               color="primary"
               variant="outlined"
+              sx={{
+                border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+              }}
             >
               Cancel
             </Button>
@@ -1100,6 +1302,18 @@ const SkillZone = () => {
               color="primary"
               variant="contained"
               disabled={!newCandidateName.trim()}
+              sx={{
+                background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                fontSize: "0.95rem",
+                textTransform: "none",
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+                color: "white",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                },
+              }}
             >
               Add Candidate
             </Button>

@@ -10,8 +10,6 @@ import {
   IconButton,
   Paper,
   Avatar,
-  Divider,
-  InputBase,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -20,10 +18,10 @@ import {
   MenuItem,
   Autocomplete,
   CircularProgress,
-  InputAdornment
+  InputAdornment,
+  Alert,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import StarIcon from "@mui/icons-material/Star";
@@ -78,7 +76,42 @@ const RecruitmentPipeline = () => {
     ],
     []
   );
-  
+
+  // Add these state variables at the top of the component with other state declarations
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [candidateToDelete, setCandidateToDelete] = useState(null);
+
+  // Replace the existing handleDeleteCandidate function with these two functions:
+
+  // This function will open the confirmation dialog
+  const handleDeleteClick = (candidate) => {
+    setCandidateToDelete(candidate);
+    setDeleteDialogOpen(true);
+  };
+
+  // This function will perform the actual deletion after confirmation
+  const handleDeleteCandidate = async () => {
+    if (!candidateToDelete) return;
+
+    const selectedTabLabel = tabLabels[tabIndex];
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/recruitment/${candidateToDelete._id}`
+      );
+      fetchCandidates(selectedTabLabel);
+      setDeleteDialogOpen(false);
+      setCandidateToDelete(null);
+    } catch (error) {
+      console.error("Error deleting candidate:", error);
+    }
+  };
+
+  // Add this function to close the delete dialog
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setCandidateToDelete(null);
+  };
+
   useEffect(() => {
     fetchCandidates(tabLabels[tabIndex]);
   }, [tabIndex, tabLabels]);
@@ -91,15 +124,15 @@ const RecruitmentPipeline = () => {
     // Get the current column from newCandidate
     const currentColumn = newCandidate.column;
     const currentTab = tabLabels[tabIndex];
-    
+
     // Define which columns should enable employee selection for each tab
     const enabledColumns = {
       "Recruitment Drive": ["Hired"],
       "FutureForce Recruitment": ["Offered"],
       "Operating Manager": ["Completed"],
-      "Hiring Employees": ["Joined"]
+      "Hiring Employees": ["Joined"],
     };
-    
+
     // Check if the current column is in the enabled list for the current tab
     return enabledColumns[currentTab]?.includes(currentColumn) || false;
   };
@@ -132,7 +165,9 @@ const RecruitmentPipeline = () => {
   const fetchRegisteredEmployees = async () => {
     try {
       setLoadingEmployees(true);
-      const response = await axios.get("http://localhost:5000/api/employees/registered");
+      const response = await axios.get(
+        "http://localhost:5000/api/employees/registered"
+      );
       setRegisteredEmployees(response.data);
       setLoadingEmployees(false);
     } catch (error) {
@@ -147,10 +182,12 @@ const RecruitmentPipeline = () => {
       // Populate the candidate form with employee data
       setNewCandidate({
         ...newCandidate,
-        name: `${employee.personalInfo?.firstName || ''} ${employee.personalInfo?.lastName || ''}`.trim(),
-        email: employee.personalInfo?.email || '',
-        department: employee.joiningDetails?.department || '',
-        employeeId: employee.Emp_ID || '',
+        name: `${employee.personalInfo?.firstName || ""} ${
+          employee.personalInfo?.lastName || ""
+        }`.trim(),
+        email: employee.personalInfo?.email || "",
+        department: employee.joiningDetails?.department || "",
+        employeeId: employee.Emp_ID || "",
       });
     }
   };
@@ -161,7 +198,9 @@ const RecruitmentPipeline = () => {
       setNewCandidate({ ...candidate });
       // If candidate has an employeeId, find and set the corresponding employee
       if (candidate.employeeId) {
-        const employee = registeredEmployees.find(emp => emp.Emp_ID === candidate.employeeId);
+        const employee = registeredEmployees.find(
+          (emp) => emp.Emp_ID === candidate.employeeId
+        );
         setSelectedEmployee(employee || null);
       } else {
         setSelectedEmployee(null);
@@ -193,14 +232,18 @@ const RecruitmentPipeline = () => {
         "Recruitment Drive": ["Hired"],
         "FutureForce Recruitment": ["Offered"],
         "Operating Manager": ["Completed"],
-        "Hiring Employees": ["Joined"]
+        "Hiring Employees": ["Joined"],
       };
-      
+
       // If new column doesn't support employee selection, clear the selected employee
       if (!enabledColumns[currentTab]?.includes(value)) {
         setSelectedEmployee(null);
         // Also clear the employeeId in the candidate data
-        setNewCandidate(prev => ({...prev, employeeId: "", [field]: value}));
+        setNewCandidate((prev) => ({
+          ...prev,
+          employeeId: "",
+          [field]: value,
+        }));
       }
     }
 
@@ -220,7 +263,7 @@ const RecruitmentPipeline = () => {
       });
     }
   };
-  
+
   const handleAddOrEditCandidate = async () => {
     if (
       !validateName(newCandidate.name) ||
@@ -249,18 +292,6 @@ const RecruitmentPipeline = () => {
     }
   };
 
-  const handleDeleteCandidate = async (candidateId) => {
-    const selectedTabLabel = tabLabels[tabIndex];
-    try {
-      await axios.delete(
-        `http://localhost:5000/api/recruitment/${candidateId}`
-      );
-      fetchCandidates(selectedTabLabel);
-    } catch (error) {
-      console.error("Error deleting candidate:", error);
-    }
-  };
-
   const handleSearchChange = (event) => setSearchTerm(event.target.value);
 
   const filteredCandidates = candidates.filter((candidate) =>
@@ -270,111 +301,109 @@ const RecruitmentPipeline = () => {
   const columns = initialColumns[tabLabels[tabIndex]];
 
   return (
-
     <Box sx={{ p: 4, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
-  <Typography
-    variant="h4"
-    sx={{
-      mb: 4,
-      color: "#1976d2",
-      fontWeight: 600,
-      letterSpacing: 0.5,
-    }}
-  >
-    Recruitment Pipeline
-  </Typography>
-
-  <Paper
-    sx={{
-      padding: 3,
-      marginBottom: 3,
-      borderRadius: 2,
-      boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
-    }}
-  >
-    <Box
-      display="flex"
-      alignItems="center"
-      gap={2}
-      sx={{
-        width: "100%",
-        justifyContent: "space-between",
-        flexWrap: "wrap",
-      }}
-    >
-      <TextField
-        placeholder="Search candidates..."
-        value={searchTerm}
-        onChange={handleSearchChange}
-        size="small"
+      <Typography
+        variant="h4"
         sx={{
-          width: { xs: "100%", sm: "300px" },
-          marginRight: "auto",
-          "& .MuiOutlinedInput-root": {
-            borderRadius: 2,
-            "&:hover fieldset": {
-              borderColor: "#1976d2",
-            },
-          },
-        }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon color="primary" />
-            </InputAdornment>
-          ),
-        }}
-      />
-
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        onClick={() => handleDialogOpen()}
-        sx={{
-          height: 40,
-          background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
-          color: "white",
-          "&:hover": {
-            background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
-          },
+          mb: 4,
+          color: "#1976d2",
+          fontWeight: 600,
+          letterSpacing: 0.5,
         }}
       >
-        Add Candidate
-      </Button>
-    </Box>
-  </Paper>
+        Recruitment Pipeline
+      </Typography>
 
-  <Paper sx={{ boxShadow: 3, borderRadius: 2, mb: 3 }}>
-    <Tabs
-      value={tabIndex}
-      onChange={handleTabChange}
-      indicatorColor="primary"
-      textColor="inherit"
-      sx={{
-        "& .MuiTabs-flexContainer": {
-          borderBottom: "2px solid #e0e0e0",
-        },
-        "& .MuiTab-root": {
-          textTransform: "none",
-          fontWeight: 600,
-          fontSize: "1rem",
-          minWidth: "auto",
-          padding: "12px 24px",
-          color: "#64748b",
-          "&.Mui-selected": {
-            color: "#1976d2",
-          },
-        },
-      }}
-      variant="scrollable"
-      scrollButtons="auto"
-    >
-      {tabLabels.map((label, index) => (
-        <Tab key={index} label={label} />
-      ))}
-    </Tabs>
-  </Paper>
+      <Paper
+        sx={{
+          padding: 3,
+          marginBottom: 3,
+          borderRadius: 2,
+          boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+        }}
+      >
+        <Box
+          display="flex"
+          alignItems="center"
+          gap={2}
+          sx={{
+            width: "100%",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+          }}
+        >
+          <TextField
+            placeholder="Search candidates..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            size="small"
+            sx={{
+              width: { xs: "100%", sm: "300px" },
+              marginRight: "auto",
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                "&:hover fieldset": {
+                  borderColor: "#1976d2",
+                },
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
 
+          <Button
+            variant="contained"
+            // startIcon={<AddIcon />}
+            onClick={() => handleDialogOpen()}
+            sx={{
+              height: 50,
+              background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
+              color: "white",
+              "&:hover": {
+                background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
+              },
+            }}
+          >
+            Add Candidate
+          </Button>
+        </Box>
+      </Paper>
+
+      <Paper sx={{ boxShadow: 3, borderRadius: 2, mb: 3 }}>
+        <Tabs
+          value={tabIndex}
+          onChange={handleTabChange}
+          indicatorColor="primary"
+          textColor="inherit"
+          sx={{
+            "& .MuiTabs-flexContainer": {
+              borderBottom: "2px solid #e0e0e0",
+            },
+            "& .MuiTab-root": {
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "1rem",
+              minWidth: "auto",
+              padding: "12px 24px",
+              color: "#64748b",
+              "&.Mui-selected": {
+                color: "#1976d2",
+              },
+            },
+          }}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          {tabLabels.map((label, index) => (
+            <Tab key={index} label={label} />
+          ))}
+        </Tabs>
+      </Paper>
 
       <Box
         sx={{
@@ -401,26 +430,34 @@ const RecruitmentPipeline = () => {
         >
           {columns.map((column) => (
             <Grid item key={column} sx={{ width: 330 }}>
-              {/* <Paper
+              <Paper
                 sx={{
                   height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
                   backgroundColor: "#ffffff",
                   position: "relative",
                   overflow: "hidden",
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  "&:hover": {
+                    boxShadow: "0 8px 30px rgba(0, 0, 0, 0.12)",
+                    transform: "translateY(-4px)",
+                  },
                 }}
               >
                 <Box
                   sx={{
-                    p: 2,
+                    p: 2.5,
                     borderBottom: "2px solid #f1f5f9",
                     position: "sticky",
                     top: 0,
                     backgroundColor: "#ffffff",
                     zIndex: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                   }}
                 >
                   <Typography
@@ -435,22 +472,26 @@ const RecruitmentPipeline = () => {
                     }}
                   >
                     {column}
-                    <Typography
-                      component="span"
-                      sx={{
-                        ml: "auto",
-                        backgroundColor: "#e3f2fd",
-                        color: "#1976d2",
-                        borderRadius: "16px",
-                        padding: "4px 12px",
-                        fontSize: "0.875rem",
-                      }}
-                    >
-                      {
-                        filteredCandidates.filter((c) => c.column === column)
-                          .length
-                      }
-                    </Typography>
+                  </Typography>
+                  <Typography
+                    component="span"
+                    sx={{
+                      backgroundColor: "#e3f2fd",
+                      color: "#1976d2",
+                      borderRadius: "16px",
+                      padding: "6px 14px",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: "40px",
+                    }}
+                  >
+                    {
+                      filteredCandidates.filter((c) => c.column === column)
+                        .length
+                    }
                   </Typography>
                 </Box>
 
@@ -467,6 +508,9 @@ const RecruitmentPipeline = () => {
                       backgroundColor: "#cbd5e1",
                       borderRadius: "3px",
                     },
+                    "&::-webkit-scrollbar-track": {
+                      backgroundColor: "#f8fafc",
+                    },
                   }}
                 >
                   {filteredCandidates
@@ -474,14 +518,18 @@ const RecruitmentPipeline = () => {
                     .map((candidate) => (
                       <Paper
                         key={candidate._id}
+                        elevation={0}
                         sx={{
                           mb: 2,
-                          p: 2,
-                          borderRadius: "8px",
-                          transition: "all 0.2s ease",
+                          p: 2.5,
+                          borderRadius: "12px",
+                          transition: "all 0.3s ease",
+                          border: "1px solid #f1f5f9",
+                          backgroundColor: "#ffffff",
                           "&:hover": {
-                            transform: "translateY(-2px)",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                            transform: "translateY(-4px)",
+                            boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+                            borderColor: "#e3f2fd",
                           },
                         }}
                       >
@@ -496,11 +544,20 @@ const RecruitmentPipeline = () => {
                         >
                           <Avatar
                             sx={{
-                              bgcolor: "#FF5C8D",
-                              width: 40,
-                              height: 40,
+                              bgcolor:
+                                candidate.stars >= 4
+                                  ? "#4caf50"
+                                  : candidate.stars >= 3
+                                  ? "#2196f3"
+                                  : candidate.stars >= 2
+                                  ? "#ff9800"
+                                  : "#FF5C8D",
+                              width: 44,
+                              height: 44,
                               fontSize: "1.2rem",
                               flexShrink: 0,
+                              boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                              border: "2px solid #ffffff",
                             }}
                           >
                             {candidate?.name?.[0]?.toUpperCase() || "U"}
@@ -522,6 +579,9 @@ const RecruitmentPipeline = () => {
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
                               }}
                             >
                               {candidate.name}
@@ -533,9 +593,11 @@ const RecruitmentPipeline = () => {
                                     ml: 1,
                                     color: "#1976d2",
                                     backgroundColor: "#e3f2fd",
-                                    padding: "2px 6px",
-                                    borderRadius: "4px",
+                                    padding: "3px 8px",
+                                    borderRadius: "6px",
                                     fontSize: "0.7rem",
+                                    fontWeight: 600,
+                                    letterSpacing: "0.3px",
                                   }}
                                 >
                                   {candidate.employeeId}
@@ -547,10 +609,11 @@ const RecruitmentPipeline = () => {
                               variant="body2"
                               sx={{
                                 color: "#64748b",
-                                mb: 1,
+                                mb: 1.5,
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
+                                fontSize: "0.875rem",
                               }}
                             >
                               {candidate.email}
@@ -560,24 +623,27 @@ const RecruitmentPipeline = () => {
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 1,
+                                justifyContent: "space-between",
                                 flexWrap: "wrap",
+                                gap: 1,
                               }}
                             >
                               <Typography
                                 variant="caption"
                                 sx={{
-                                  backgroundColor: "#f1f5f9",
-                                  padding: "4px 8px",
-                                  borderRadius: "4px",
+                                  backgroundColor: "#f8fafc",
+                                  padding: "5px 10px",
+                                  borderRadius: "6px",
                                   color: "#475569",
                                   maxWidth: "100%",
                                   overflow: "hidden",
                                   textOverflow: "ellipsis",
                                   whiteSpace: "nowrap",
+                                  fontWeight: 500,
+                                  border: "1px solid #e2e8f0",
                                 }}
                               >
-                                {candidate.department}
+                                {candidate.department || "No Department"}
                               </Typography>
 
                               <Box
@@ -609,6 +675,7 @@ const RecruitmentPipeline = () => {
                               gap: 1,
                               flexShrink: 0,
                               ml: "auto",
+                              alignSelf: "flex-start",
                             }}
                           >
                             <IconButton
@@ -616,25 +683,30 @@ const RecruitmentPipeline = () => {
                               onClick={() => handleDialogOpen(candidate)}
                               sx={{
                                 color: "#64748b",
+                                backgroundColor: "#f8fafc",
                                 "&:hover": {
                                   color: "#1976d2",
                                   backgroundColor: "#e3f2fd",
                                 },
+                                width: 32,
+                                height: 32,
                               }}
                             >
                               <EditIcon fontSize="small" />
                             </IconButton>
+
                             <IconButton
                               size="small"
-                              onClick={() =>
-                                handleDeleteCandidate(candidate._id)
-                              }
+                              onClick={() => handleDeleteClick(candidate)}
                               sx={{
                                 color: "#64748b",
+                                backgroundColor: "#f8fafc",
                                 "&:hover": {
                                   color: "#ef4444",
                                   backgroundColor: "#fee2e2",
                                 },
+                                width: 32,
+                                height: 32,
                               }}
                             >
                               <DeleteIcon fontSize="small" />
@@ -644,291 +716,67 @@ const RecruitmentPipeline = () => {
                       </Paper>
                     ))}
                 </Box>
-              </Paper> */}
-              <Paper
-      sx={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        borderRadius: "16px",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-        backgroundColor: "#ffffff",
-        position: "relative",
-        overflow: "hidden",
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        "&:hover": {
-          boxShadow: "0 8px 30px rgba(0, 0, 0, 0.12)",
-          transform: "translateY(-4px)",
-        },
-      }}
-    >
-      <Box
-        sx={{
-          p: 2.5,
-          borderBottom: "2px solid #f1f5f9",
-          position: "sticky",
-          top: 0,
-          backgroundColor: "#ffffff",
-          zIndex: 2,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography
-          variant="h6"
-          sx={{
-            color: "#1976d2",
-            fontSize: { xs: "1rem", sm: "1.25rem" },
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-          }}
-        >
-          {column}
-        </Typography>
-        <Typography
-          component="span"
-          sx={{
-            backgroundColor: "#e3f2fd",
-            color: "#1976d2",
-            borderRadius: "16px",
-            padding: "6px 14px",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minWidth: "40px",
-          }}
-        >
-          {filteredCandidates.filter((c) => c.column === column).length}
-        </Typography>
-      </Box>
-
-      <Box
-        sx={{
-          flexGrow: 1,
-          overflowY: "auto",
-          overflowX: "hidden",
-          p: 2,
-          "&::-webkit-scrollbar": {
-            width: "6px",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            backgroundColor: "#cbd5e1",
-            borderRadius: "3px",
-          },
-          "&::-webkit-scrollbar-track": {
-            backgroundColor: "#f8fafc",
-          },
-        }}
-      >
-        {filteredCandidates
-          .filter((candidate) => candidate.column === column)
-          .map((candidate) => (
-            <Paper
-              key={candidate._id}
-              elevation={0}
-              sx={{
-                mb: 2,
-                p: 2.5,
-                borderRadius: "12px",
-                transition: "all 0.3s ease",
-                border: "1px solid #f1f5f9",
-                backgroundColor: "#ffffff",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-                  borderColor: "#e3f2fd",
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 2,
-                  width: "100%",
-                  minWidth: 0,
-                }}
-              >
-                <Avatar
-                  sx={{
-                    bgcolor: candidate.stars >= 4 ? "#4caf50" : 
-                            candidate.stars >= 3 ? "#2196f3" : 
-                            candidate.stars >= 2 ? "#ff9800" : "#FF5C8D",
-                    width: 44,
-                    height: 44,
-                    fontSize: "1.2rem",
-                    flexShrink: 0,
-                    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                    border: "2px solid #ffffff",
-                  }}
-                >
-                  {candidate?.name?.[0]?.toUpperCase() || "U"}
-                </Avatar>
-
-                <Box
-                  sx={{
-                    flexGrow: 1,
-                    minWidth: 0,
-                    width: "calc(100% - 120px)",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{
-                      fontWeight: 600,
-                      color: "#334155",
-                      mb: 0.5,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    {candidate.name}
-                    {candidate.employeeId && (
-                      <Typography
-                        component="span"
-                        variant="caption"
-                        sx={{
-                          ml: 1,
-                          color: "#1976d2",
-                          backgroundColor: "#e3f2fd",
-                          padding: "3px 8px",
-                          borderRadius: "6px",
-                          fontSize: "0.7rem",
-                          fontWeight: 600,
-                          letterSpacing: "0.3px",
-                        }}
-                      >
-                        {candidate.employeeId}
-                      </Typography>
-                    )}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#64748b",
-                      mb: 1.5,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    {candidate.email}
-                  </Typography>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      flexWrap: "wrap",
-                      gap: 1,
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        backgroundColor: "#f8fafc",
-                        padding: "5px 10px",
-                        borderRadius: "6px",
-                        color: "#475569",
-                        maxWidth: "100%",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        fontWeight: 500,
-                        border: "1px solid #e2e8f0",
-                      }}
-                    >
-                      {candidate.department || "No Department"}
-                    </Typography>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 0.5,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {Array.from({ length: 5 }).map((_, idx) => (
-                        <StarIcon
-                          key={idx}
-                          sx={{
-                            fontSize: 16,
-                            color:
-                              idx < candidate.stars
-                                ? "#FFD700"
-                                : "#E0E0E0",
-                          }}
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-                </Box>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                    flexShrink: 0,
-                    ml: "auto",
-                    alignSelf: "flex-start",
-                  }}
-                >
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDialogOpen(candidate)}
-                    sx={{
-                      color: "#64748b",
-                      backgroundColor: "#f8fafc",
-                      "&:hover": {
-                        color: "#1976d2",
-                        backgroundColor: "#e3f2fd",
-                      },
-                      width: 32,
-                      height: 32,
-                    }}
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() =>
-                      handleDeleteCandidate(candidate._id)
-                    }
-                    sx={{
-                      color: "#64748b",
-                      backgroundColor: "#f8fafc",
-                      "&:hover": {
-                        color: "#ef4444",
-                        backgroundColor: "#fee2e2",
-                      },
-                      width: 32,
-                      height: 32,
-                    }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Paper>
-          ))}
-      </Box>
-    </Paper>
+              </Paper>
             </Grid>
           ))}
         </Grid>
       </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        PaperProps={{
+          sx: {
+            borderRadius: "16px",
+            padding: "8px",
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontSize: "1.25rem", fontWeight: 600 }}>
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Are you sure you want to delete this candidate?
+          </Alert>
+          {candidateToDelete && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body1" fontWeight={500}>
+                {candidateToDelete.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {candidateToDelete.email}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Department: {candidateToDelete.department || "Not specified"}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseDeleteDialog}
+            sx={{
+              color: "#64748b",
+              "&:hover": { backgroundColor: "#f1f5f9" },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteCandidate}
+            variant="contained"
+            color="error"
+            sx={{
+              boxShadow: "none",
+              "&:hover": { boxShadow: "none", backgroundColor: "#dc2626" },
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={isDialogOpen}
@@ -974,9 +822,7 @@ const RecruitmentPipeline = () => {
             fullWidth
             label="Department"
             value={newCandidate.department}
-            onChange={(e) =>
-              handleInputChange("department", e.target.value)
-            }
+            onChange={(e) => handleInputChange("department", e.target.value)}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -984,9 +830,7 @@ const RecruitmentPipeline = () => {
             fullWidth
             label="Column"
             value={newCandidate.column}
-            onChange={(e) =>
-              handleInputChange("column", e.target.value)
-            }
+            onChange={(e) => handleInputChange("column", e.target.value)}
             sx={{ mb: 2 }}
           >
             {columns.map((column) => (
@@ -995,13 +839,15 @@ const RecruitmentPipeline = () => {
               </MenuItem>
             ))}
           </TextField>
-          
+
           {/* Employee Selection Autocomplete - only enabled for specific columns */}
           <Autocomplete
             id="employee-select"
             options={registeredEmployees}
-            getOptionLabel={(option) => 
-              `${option.Emp_ID} - ${option.personalInfo?.firstName || ''} ${option.personalInfo?.lastName || ''}`
+            getOptionLabel={(option) =>
+              `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
+                option.personalInfo?.lastName || ""
+              }`
             }
             value={selectedEmployee}
             onChange={handleEmployeeSelect}
@@ -1010,33 +856,39 @@ const RecruitmentPipeline = () => {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label={isEmployeeSelectionEnabled() 
-                  ? "Select Onboarded Employee" 
-                  : "Employee selection only available for Hired/Completed/Joined candidates"}
+                label={
+                  isEmployeeSelectionEnabled()
+                    ? "Select Onboarded Employee"
+                    : "Employee selection only available for Hired/Completed/Joined candidates"
+                }
                 variant="outlined"
                 fullWidth
                 InputProps={{
                   ...params.InputProps,
                   endAdornment: (
                     <>
-                      {loadingEmployees ? <CircularProgress color="inherit" size={20} /> : null}
+                      {loadingEmployees ? (
+                        <CircularProgress color="inherit" size={20} />
+                      ) : null}
                       {params.InputProps.endAdornment}
                     </>
                   ),
                 }}
-                helperText={!isEmployeeSelectionEnabled() && 
-                  "Change column to Hired/Completed/Joined to enable employee selection"}
+                helperText={
+                  !isEmployeeSelectionEnabled() &&
+                  "Change column to Hired/Completed/Joined to enable employee selection"
+                }
               />
             )}
-            sx={{ 
+            sx={{
               mb: 2,
               "& .Mui-disabled": {
                 opacity: 0.7,
-                backgroundColor: "#f5f5f5"
-              }
+                backgroundColor: "#f5f5f5",
+              },
             }}
           />
-          
+
           <Box sx={{ mt: 2 }}>
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               Rating
@@ -1093,4 +945,3 @@ const RecruitmentPipeline = () => {
 };
 
 export default RecruitmentPipeline;
-
