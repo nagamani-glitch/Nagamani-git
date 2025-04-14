@@ -12,6 +12,8 @@ import {
   Statistic,
   Progress,
   message,
+  Tabs,
+  Empty,
 } from "antd";
 import {
   LineChart,
@@ -34,12 +36,14 @@ import {
   UserAddOutlined,
   UserDeleteOutlined,
   FilterOutlined,
+  InboxOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import FileSaver from "file-saver";
-import "./EmployeeReport.css"; // Add a separate CSS file for this component
+import "./EmployeeReport.css";
 
+const { TabPane } = Tabs;
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 const EmployeeReport = () => {
@@ -50,15 +54,20 @@ const EmployeeReport = () => {
       totalOffboarded: 0,
       averageOnboardingTime: 0,
       completionRate: 0,
+      recentOffboardings: 0,
     },
     trendData: [],
     departmentData: [],
     employeeData: [],
+    offboardingData: [],
+    offboardingReasons: [],
+    offboardingByDepartment: [],
   });
   const [filterDepartment, setFilterDepartment] = useState([]);
   const [filterStatus, setFilterStatus] = useState("all");
   const [dateRange, setDateRange] = useState(null);
   const [timePeriod, setTimePeriod] = useState("6m");
+  const [activeTab, setActiveTab] = useState("1");
 
   const { RangePicker } = DatePicker;
   const { Option } = Select;
@@ -89,80 +98,221 @@ const EmployeeReport = () => {
           startDate.setMonth(today.getMonth() - 6);
       }
 
-      const response = await axios.get(
+      // Fetch employee data
+      const employeeResponse = await axios.get(
         `/api/employees/report?period=${period}&startDate=${startDate.toISOString()}`
       );
-      if (response.data.success) {
-        setReportData(response.data.data);
+
+      // Fetch offboarding data
+      const offboardingResponse = await axios.get(
+        "http://localhost:5000/api/offboarding"
+      );
+
+      // Process offboarding data
+      const offboardingData = offboardingResponse.data || [];
+      
+      // Calculate offboarding statistics
+      const offboardingStats = processOffboardingData(offboardingData, startDate);
+
+      if (employeeResponse.data.success) {
+        setReportData({
+          ...employeeResponse.data.data,
+          offboardingData: offboardingData,
+          offboardingReasons: offboardingStats.reasonsData,
+          offboardingByDepartment: offboardingStats.departmentData,
+          stats: {
+            ...employeeResponse.data.data.stats,
+            totalOffboarded: offboardingStats.totalOffboarded,
+            recentOffboardings: offboardingStats.recentOffboardings,
+          }
+        });
       } else {
         message.error("Failed to load report data");
+        
+        // Set demo data with offboarding information
+        setDemoData(startDate);
       }
     } catch (error) {
       console.error("Error fetching report data:", error);
       message.error("Error loading report data");
 
-      // Set some demo data for development/testing
-      setReportData({
-        stats: {
-          totalOnboarded: 156,
-          totalOffboarded: 42,
-          averageOnboardingTime: 14,
-          completionRate: 92,
-        },
-        trendData: [
-          { month: "Jan", onboarded: 30, offboarded: 10 },
-          { month: "Feb", onboarded: 25, offboarded: 8 },
-          { month: "Mar", onboarded: 35, offboarded: 12 },
-          { month: "Apr", onboarded: 28, offboarded: 15 },
-          { month: "May", onboarded: 32, offboarded: 9 },
-          { month: "Jun", onboarded: 40, offboarded: 7 },
-        ],
-        departmentData: [
-          { name: "IT", value: 40 },
-          { name: "HR", value: 25 },
-          { name: "Finance", value: 20 },
-          { name: "Marketing", value: 15 },
-          { name: "Operations", value: 30 },
-        ],
-        employeeData: [
-          {
-            key: "1",
-            empId: "EMP001",
-            name: "John Doe",
-            department: "IT",
-            status: "Active",
-            progress: 100,
-            email: "john.doe@example.com",
-            joiningDate: "2023-01-15",
-            avatar: "https://xsgames.co/randomusers/avatar.php?g=male",
-          },
-          {
-            key: "2",
-            empId: "EMP002",
-            name: "Jane Smith",
-            department: "HR",
-            status: "Active",
-            progress: 85,
-            email: "jane.smith@example.com",
-            joiningDate: "2023-02-20",
-            avatar: "https://xsgames.co/randomusers/avatar.php?g=female",
-          },
-          {
-            key: "3",
-            empId: "EMP003",
-            name: "Mike Johnson",
-            department: "Finance",
-            status: "Inactive",
-            progress: 90,
-            email: "mike.johnson@example.com",
-            joiningDate: "2022-11-05",
-            avatar: "https://xsgames.co/randomusers/avatar.php?g=male",
-          },
-        ],
-      });
+      // Set demo data with offboarding information
+      setDemoData(new Date());
     } finally {
       setLoading(false);
     }
+  };
+
+  // Process offboarding data to get statistics
+  const processOffboardingData = (offboardingData, startDate) => {
+    // For the current implementation, we'll consider all offboarding records
+    // In a real implementation, you might want to filter by a status field
+    const totalOffboarded = offboardingData.length;
+    
+    // Count recent offboardings (within the selected time period)
+    const recentOffboardings = offboardingData.filter(emp => {
+      const endDate = emp.endDate ? new Date(emp.endDate) : null;
+      return endDate && endDate >= startDate;
+    }).length;
+
+    // Group by reason for leaving
+    const reasonsMap = {};
+    offboardingData.forEach(emp => {
+      if (emp.reason) {
+        reasonsMap[emp.reason] = (reasonsMap[emp.reason] || 0) + 1;
+      } else {
+        reasonsMap["Not Specified"] = (reasonsMap["Not Specified"] || 0) + 1;
+      }
+    });
+
+    // Convert to array format for charts
+    const reasonsData = Object.keys(reasonsMap).map(reason => ({
+      name: reason,
+      value: reasonsMap[reason]
+    }));
+
+    // Group by department
+    const departmentMap = {};
+    offboardingData.forEach(emp => {
+      if (emp.department) {
+        departmentMap[emp.department] = (departmentMap[emp.department] || 0) + 1;
+      } else {
+        departmentMap["Not Specified"] = (departmentMap["Not Specified"] || 0) + 1;
+      }
+    });
+
+    // Convert to array format for charts
+    const departmentData = Object.keys(departmentMap).map(dept => ({
+      name: dept,
+      value: departmentMap[dept]
+    }));
+
+    return {
+      totalOffboarded,
+      recentOffboardings,
+      reasonsData,
+      departmentData
+    };
+  };
+
+  // Set demo data for development/testing
+  const setDemoData = (startDate) => {
+    // Demo offboarding data
+    const demoOffboardingData = [
+      {
+        _id: "off1",
+        employeeName: "John Smith",
+        employeeId: "EMP001",
+        department: "IT",
+        position: "Software Engineer",
+        stage: "Clearance Process",
+        startDate: new Date(startDate).setDate(startDate.getDate() - 60),
+        endDate: new Date(startDate).setDate(startDate.getDate() - 30),
+        reason: "Better Opportunity",
+      },
+      {
+        _id: "off2",
+        employeeName: "Sarah Johnson",
+        employeeId: "EMP015",
+        department: "Marketing",
+        position: "Marketing Manager",
+        stage: "Clearance Process",
+        startDate: new Date(startDate).setDate(startDate.getDate() - 45),
+        endDate: new Date(startDate).setDate(startDate.getDate() - 15),
+        reason: "Relocation",
+      },
+      {
+        _id: "off3",
+        employeeName: "Michael Brown",
+        employeeId: "EMP023",
+        department: "Finance",
+        position: "Financial Analyst",
+        stage: "Clearance Process",
+        startDate: new Date(startDate).setDate(startDate.getDate() - 30),
+        endDate: new Date(startDate).setDate(startDate.getDate() - 1),
+        reason: "Work-Life Balance",
+      },
+      {
+        _id: "off4",
+        employeeName: "Emily Davis",
+        employeeId: "EMP042",
+        department: "HR",
+        position: "HR Specialist",
+        stage: "Work Handover",
+        startDate: new Date(startDate).setDate(startDate.getDate() - 20),
+        endDate: new Date(startDate).setDate(startDate.getDate() + 10),
+        reason: "Career Change",
+      },
+    ];
+
+    // Process demo offboarding data
+    const offboardingStats = processOffboardingData(demoOffboardingData, startDate);
+
+    setReportData({
+      stats: {
+        totalOnboarded: 156,
+        totalOffboarded: offboardingStats.totalOffboarded,
+        averageOnboardingTime: 14,
+        completionRate: 92,
+        recentOffboardings: offboardingStats.recentOffboardings,
+      },
+      trendData: [
+        { month: "Jan", onboarded: 30, offboarded: 10 },
+        { month: "Feb", onboarded: 25, offboarded: 8 },
+        { month: "Mar", onboarded: 35, offboarded: 12 },
+        { month: "Apr", onboarded: 28, offboarded: 15 },
+        { month: "May", onboarded: 32, offboarded: 9 },
+        { month: "Jun", onboarded: 40, offboarded: 7 },
+      ],
+      departmentData: [
+        { name: "IT", value: 40 },
+        { name: "HR", value: 25 },
+        { name: "Finance", value: 20 },
+        { name: "Marketing", value: 15 },
+        { name: "Operations", value: 30 },
+      ],
+      employeeData: [
+        {
+          key: "1",
+          empId: "EMP001",
+          name: "John Doe",
+          department: "IT",
+          designation: "Software Engineer",
+          status: "Active",
+          progress: 100,
+          email: "john.doe@example.com",
+          joiningDate: "2023-01-15",
+          avatar: "https://xsgames.co/randomusers/avatar.php?g=male",
+        },
+        {
+          key: "2",
+          empId: "EMP002",
+          name: "Jane Smith",
+          department: "HR",
+          designation: "HR Manager",
+          status: "Active",
+          progress: 85,
+          email: "jane.smith@example.com",
+          joiningDate: "2023-02-20",
+          avatar: "https://xsgames.co/randomusers/avatar.php?g=female",
+        },
+        {
+          key: "3",
+          empId: "EMP003",
+          name: "Mike Johnson",
+          department: "Finance",
+          designation: "Financial Analyst",
+          status: "Inactive",
+          progress: 90,
+          email: "mike.johnson@example.com",
+          joiningDate: "2022-11-05",
+          avatar: "https://xsgames.co/randomusers/avatar.php?g=male",
+        },
+      ],
+      offboardingData: demoOffboardingData,
+      offboardingReasons: offboardingStats.reasonsData,
+      offboardingByDepartment: offboardingStats.departmentData,
+    });
   };
 
   useEffect(() => {
@@ -179,6 +329,7 @@ const EmployeeReport = () => {
     try {
       // Get filtered data
       const filteredData = getFilteredEmployeeData();
+      const filteredOffboardingData = getFilteredOffboardingData();
 
       // Create a new workbook
       const workbook = XLSX.utils.book_new();
@@ -200,7 +351,22 @@ const EmployeeReport = () => {
       const employeeWorksheet = XLSX.utils.json_to_sheet(employeeWorksheetData);
       XLSX.utils.book_append_sheet(workbook, employeeWorksheet, "Employees");
 
-      // 2. Department Distribution worksheet
+      // 2. Offboarding Data worksheet
+      const offboardingWorksheetData = filteredOffboardingData.map((emp) => ({
+        "Employee ID": emp.employeeId,
+        Name: emp.employeeName,
+        Department: emp.department,
+        Position: emp.position,
+        "Notice Period Start": new Date(emp.startDate).toLocaleDateString(),
+        "Notice Period End": new Date(emp.endDate).toLocaleDateString(),
+        "Reason for Leaving": emp.reason || "Not Specified",
+        Stage: emp.stage,
+      }));
+
+      const offboardingWorksheet = XLSX.utils.json_to_sheet(offboardingWorksheetData);
+      XLSX.utils.book_append_sheet(workbook, offboardingWorksheet, "Offboarded Employees");
+
+      // 3. Department Distribution worksheet
       const departmentWorksheetData = reportData.departmentData.map((dept) => ({
         Department: dept.name,
         "Number of Employees": dept.value,
@@ -215,7 +381,16 @@ const EmployeeReport = () => {
         "Departments"
       );
 
-      // 3. Monthly Trends worksheet
+      // 4. Offboarding Reasons worksheet
+      const reasonsWorksheetData = reportData.offboardingReasons.map((reason) => ({
+        "Reason for Leaving": reason.name,
+        "Number of Employees": reason.value,
+      }));
+
+      const reasonsWorksheet = XLSX.utils.json_to_sheet(reasonsWorksheetData);
+      XLSX.utils.book_append_sheet(workbook, reasonsWorksheet, "Offboarding Reasons");
+
+      // 5. Monthly Trends worksheet
       const trendWorksheetData = reportData.trendData.map((trend) => ({
         Month: trend.month,
         Onboarded: trend.onboarded,
@@ -225,10 +400,16 @@ const EmployeeReport = () => {
       const trendWorksheet = XLSX.utils.json_to_sheet(trendWorksheetData);
       XLSX.utils.book_append_sheet(workbook, trendWorksheet, "Monthly Trends");
 
-      // 4. Summary Statistics worksheet
-      const statsWorksheetData = [
-        { Metric: "Total Onboarded", Value: reportData.stats.totalOnboarded },
-        { Metric: "Total Offboarded", Value: reportData.stats.totalOffboarded },
+      // 6. Summary worksheet
+      const summaryWorksheetData = [
+        {
+          Metric: "Total Onboarded Employees",
+          Value: reportData.stats.totalOnboarded,
+        },
+        {
+          Metric: "Total Offboarded Employees",
+          Value: reportData.stats.totalOffboarded,
+        },
         {
           Metric: "Average Onboarding Time (days)",
           Value: reportData.stats.averageOnboardingTime,
@@ -237,14 +418,14 @@ const EmployeeReport = () => {
           Metric: "Completion Rate (%)",
           Value: reportData.stats.completionRate,
         },
+        {
+          Metric: "Recent Offboardings",
+          Value: reportData.stats.recentOffboardings || 0,
+        },
       ];
 
-      const statsWorksheet = XLSX.utils.json_to_sheet(statsWorksheetData);
-      XLSX.utils.book_append_sheet(
-        workbook,
-        statsWorksheet,
-        "Summary Statistics"
-      );
+      const summaryWorksheet = XLSX.utils.json_to_sheet(summaryWorksheetData);
+      XLSX.utils.book_append_sheet(workbook, summaryWorksheet, "Summary");
 
       // Generate Excel file
       const excelBuffer = XLSX.write(workbook, {
@@ -255,161 +436,50 @@ const EmployeeReport = () => {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
 
-      // Get current date for filename
-      const date = new Date();
-      const dateString = `${date.getFullYear()}-${String(
-        date.getMonth() + 1
-      ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-
-      // Save file
-      FileSaver.saveAs(data, `Employee_Report_${dateString}.xlsx`);
-
+      // Save the file
+      FileSaver.saveAs(data, `Employee_Report_${new Date().toISOString().split("T")[0]}.xlsx`);
       message.success("Report exported successfully");
     } catch (error) {
-      console.error("Error exporting report:", error);
+      console.error("Export error:", error);
       message.error("Failed to export report");
     }
   };
-
-  const handleDateRangeChange = (dates) => {
-    setDateRange(dates);
-    // Filter data based on date range
-  };
-
-  const columns = [
-    {
-      title: "Employee ID",
-      dataIndex: "empId",
-      key: "empId",
-      sorter: (a, b) => a.empId.localeCompare(b.empId),
-    },
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (text, record) => (
-        <Space>
-          <img
-            src={record.avatar}
-            alt={text}
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: "50%",
-              objectFit: "cover",
-            }}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src =
-                "https://xsgames.co/randomusers/avatar.php?g=pixel";
-            }}
-          />
-          {text}
-        </Space>
-      ),
-    },
-    {
-      title: "Department",
-      dataIndex: "department",
-      key: "department",
-      filters: [
-        { text: "Unassigned", value: "Unassigned" },
-        ...reportData.departmentData
-          .filter((dept) => dept.name !== "Unassigned")
-          .map((dept) => ({ text: dept.name, value: dept.name })),
-      ],
-      onFilter: (value, record) => record.department === value,
-      render: (department) => <span>{department}</span>,
-    },
-    {
-      title: "Designation",
-      dataIndex: "designation",
-      key: "designation",
-      sorter: (a, b) => a.designation.localeCompare(b.designation),
-      render: (designation) => <span>{designation}</span>,
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      filters: [
-        { text: "Active", value: "Active" },
-        { text: "Incomplete", value: "Incomplete" },
-        { text: "Inactive", value: "Inactive" },
-      ],
-      onFilter: (value, record) => record.status === value,
-      render: (status) => (
-        <Badge
-          status={
-            status === "Active"
-              ? "success"
-              : status === "Incomplete"
-              ? "warning"
-              : "error"
-          }
-          text={status}
-        />
-      ),
-    },
-    {
-      title: "Progress",
-      dataIndex: "progress",
-      key: "progress",
-      sorter: (a, b) => a.progress - b.progress,
-      render: (progress) => (
-        <Progress
-          percent={progress}
-          size="small"
-          status={progress < 100 ? "active" : "success"}
-        />
-      ),
-    },
-    {
-      title: "Joining Date",
-      dataIndex: "joiningDate",
-      key: "joiningDate",
-      sorter: (a, b) => {
-        if (!a.joiningDate) return -1;
-        if (!b.joiningDate) return 1;
-        return new Date(a.joiningDate) - new Date(b.joiningDate);
-      },
-    },
-
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="link"
-            size="small"
-            onClick={() =>
-              (window.location.href = `/Dashboards/profile/${record.empId}`)
-            }
-          >
-            View
-          </Button>
-        </Space>
-      ),
-    },
-  ];
 
   // Filter employee data based on selected filters
   const getFilteredEmployeeData = () => {
     let filteredData = [...reportData.employeeData];
 
-    // Filter by status
-    if (filterStatus !== "all") {
-      const statusMap = {
-        onboarded: "Active",
-        offboarded: "Inactive",
-        incomplete: "Incomplete",
-      };
-      filteredData = filteredData.filter(
-        (emp) => emp.status === statusMap[filterStatus]
+    // Filter by department
+    if (filterDepartment.length > 0) {
+      filteredData = filteredData.filter((emp) =>
+        filterDepartment.includes(emp.department)
       );
     }
+
+    // Filter by status
+    if (filterStatus !== "all") {
+      filteredData = filteredData.filter(
+        (emp) => emp.status.toLowerCase() === filterStatus.toLowerCase()
+      );
+    }
+
+    // Filter by date range
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      const startDate = dateRange[0].startOf("day").valueOf();
+      const endDate = dateRange[1].endOf("day").valueOf();
+
+      filteredData = filteredData.filter((emp) => {
+        const joiningDate = new Date(emp.joiningDate).getTime();
+        return joiningDate >= startDate && joiningDate <= endDate;
+      });
+    }
+
+    return filteredData;
+  };
+
+  // Filter offboarding data based on selected filters
+  const getFilteredOffboardingData = () => {
+    let filteredData = [...(reportData.offboardingData || [])];
 
     // Filter by department
     if (filterDepartment.length > 0) {
@@ -420,250 +490,526 @@ const EmployeeReport = () => {
 
     // Filter by date range
     if (dateRange && dateRange[0] && dateRange[1]) {
+      const startDate = dateRange[0].startOf("day").valueOf();
+      const endDate = dateRange[1].endOf("day").valueOf();
+
       filteredData = filteredData.filter((emp) => {
-        if (!emp.joiningDate) return false;
-        const joinDate = new Date(emp.joiningDate);
-        return joinDate >= dateRange[0] && joinDate <= dateRange[1];
+        const offboardDate = new Date(emp.endDate).getTime();
+        return offboardDate >= startDate && offboardDate <= endDate;
       });
     }
 
     return filteredData;
   };
 
-  // Get time period options for trend chart
-  const getTimePeriodOptions = () => {
-    return [
-      { label: "Last Month", value: "1m" },
-      { label: "Last 3 Months", value: "3m" },
-      { label: "Last 6 Months", value: "6m" },
-      { label: "Last Year", value: "1y" },
-    ];
+  // Get all unique departments from employee and offboarding data
+  const getAllDepartments = () => {
+    const departments = new Set();
+    
+    // Add departments from employee data
+    reportData.employeeData.forEach(emp => {
+      if (emp.department) departments.add(emp.department);
+    });
+    
+    // Add departments from offboarding data
+    (reportData.offboardingData || []).forEach(emp => {
+      if (emp.department) departments.add(emp.department);
+    });
+    
+    return Array.from(departments).sort();
   };
 
-  // Handle time period change for trend chart
-  const handleTimePeriodChange = (value) => {
-    setTimePeriod(value);
-    message.info(`Showing data for ${value}`);
-  };
+  // Columns for employee table
+  const employeeColumns = [
+    {
+      title: "Employee ID",
+      dataIndex: "empId",
+      key: "empId",
+      sorter: (a, b) => a.empId.localeCompare(b.empId),
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      render: (text, record) => (
+        <div className="er-employee-name">
+          <img
+            src={record.avatar}
+            alt={text}
+            className="er-employee-avatar"
+          />
+          <span>{text}</span>
+        </div>
+      ),
+      sorter: (a, b) => a.name.localeCompare(b.name),
+    },
+    {
+      title: "Department",
+      dataIndex: "department",
+      key: "department",
+      sorter: (a, b) => a.department.localeCompare(b.department),
+    },
+    {
+      title: "Designation",
+      dataIndex: "designation",
+      key: "designation",
+      sorter: (a, b) => a.designation.localeCompare(b.designation),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Badge
+          status={status === "Active" ? "success" : "error"}
+          text={status}
+        />
+      ),
+      sorter: (a, b) => a.status.localeCompare(b.status),
+    },
+    {
+      title: "Progress",
+      dataIndex: "progress",
+      key: "progress",
+      render: (progress) => (
+        <Progress
+          percent={progress}
+          size="small"
+          status={progress === 100 ? "success" : "active"}
+        />
+      ),
+      sorter: (a, b) => a.progress - b.progress,
+    },
+    {
+      title: "Joining Date",
+      dataIndex: "joiningDate",
+      key: "joiningDate",
+      sorter: (a, b) => new Date(a.joiningDate) - new Date(b.joiningDate),
+    },
+  ];
+
+  // Columns for offboarding table
+  const offboardingColumns = [
+    {
+      title: "Employee ID",
+      dataIndex: "employeeId",
+      key: "employeeId",
+      sorter: (a, b) => (a.employeeId || '').localeCompare(b.employeeId || ''),
+    },
+    {
+      title: "Name",
+      dataIndex: "employeeName",
+      key: "employeeName",
+      sorter: (a, b) => a.employeeName.localeCompare(b.employeeName),
+    },
+    {
+      title: "Department",
+      dataIndex: "department",
+      key: "department",
+      sorter: (a, b) => (a.department || '').localeCompare(b.department || ''),
+    },
+    {
+      title: "Position",
+      dataIndex: "position",
+      key: "position",
+      sorter: (a, b) => (a.position || '').localeCompare(b.position || ''),
+    },
+    {
+      title: "Reason",
+      dataIndex: "reason",
+      key: "reason",
+      render: (reason) => (
+        <span className={`er-reason-tag er-reason-${reason?.toLowerCase().replace(/\s+/g, '-') || 'other'}`}>
+          {reason || "Not Specified"}
+        </span>
+      ),
+      sorter: (a, b) => (a.reason || '').localeCompare(b.reason || ''),
+    },
+    {
+      title: "Start Date",
+      dataIndex: "startDate",
+      key: "startDate",
+      render: (date) => new Date(date).toLocaleDateString(),
+      sorter: (a, b) => new Date(a.startDate) - new Date(b.startDate),
+    },
+    {
+      title: "End Date",
+      dataIndex: "endDate",
+      key: "endDate",
+      render: (date) => new Date(date).toLocaleDateString(),
+      sorter: (a, b) => new Date(a.endDate) - new Date(b.endDate),
+    },
+    {
+      title: "Stage",
+      dataIndex: "stage",
+      key: "stage",
+      render: (stage) => (
+        <Badge
+          status={stage === "Clearance Process" ? "success" : "processing"}
+          text={stage}
+        />
+      ),
+      sorter: (a, b) => a.stage.localeCompare(b.stage),
+    },
+  ];
 
   return (
-    <div className="employee-report-wrapper" style={{ padding: "24px" }}>
-      <div className="employee-report-header" style={{ marginBottom: "24px" }}>
-      <Row justify="space-between" align="middle" style={{ marginBottom: "16px" }}>
-          <Col>
-            <h1 className="employee-report-title" style={{ margin: 0, fontSize: "24px", fontWeight: "600" }}>
-              Employee Analytics Dashboard
-            </h1>
-          </Col>
-          <Col>
-            <Space>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={handleRefresh}
-                loading={loading}
-              >
-                Refresh
-              </Button>
-              <Button
-                type="primary"
-                icon={<DownloadOutlined />}
-                onClick={handleExport}
-              >
-                Export Report
-              </Button>
-            </Space>
-          </Col>
-        </Row>
+    <div className="er-container">
+      <div className="er-header">
+        <h1 className="er-header-title">Employee Analytics Dashboard</h1>
+        <div className="er-action-buttons">
+          <Space>
+            <Select
+              value={timePeriod}
+              onChange={setTimePeriod}
+              style={{ width: 120 }}
+            >
+              <Option value="1m">Last Month</Option>
+              <Option value="3m">Last 3 Months</Option>
+              <Option value="6m">Last 6 Months</Option>
+              <Option value="1y">Last Year</Option>
+            </Select>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={handleRefresh}
+              loading={loading}
+            >
+              Refresh
+            </Button>
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              onClick={handleExport}
+            >
+              Export Report
+            </Button>
+          </Space>
+        </div>
       </div>
 
-      {/* Stats Cards - Fixed with specific class names and improved spacing */}
-      <div className="employee-report-stats-container" style={{ marginBottom: "24px" }}>
-        <Row gutter={[16, 16]} className="employee-report-stats-row">
-          <Col xs={24} sm={12} md={6} className="employee-report-stat-col">
-            <Card className="employee-report-stat-card" loading={loading} bordered={false}>
-              <Statistic
-                title="Total Onboarded"
-                value={reportData.stats.totalOnboarded}
-                prefix={<UserAddOutlined style={{ color: "#52c41a" }} />}
-                valueStyle={{ color: "#52c41a" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6} className="employee-report-stat-col">
-            <Card className="employee-report-stat-card" loading={loading} bordered={false}>
-              <Statistic
-                title="Total Offboarded"
-                value={reportData.stats.totalOffboarded}
-                prefix={<UserDeleteOutlined style={{ color: "#ff4d4f" }} />}
-                valueStyle={{ color: "#ff4d4f" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6} className="employee-report-stat-col">
-            <Card className="employee-report-stat-card" loading={loading} bordered={false}>
-              <Statistic
-                title="Avg. Onboarding Time"
-                value={reportData.stats.averageOnboardingTime}
-                suffix="days"
-                prefix={<span style={{ color: "#1890ff" }}>~</span>}
-                valueStyle={{ color: "#1890ff" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6} className="employee-report-stat-col">
-            <Card className="employee-report-stat-card" loading={loading} bordered={false}>
-              <Statistic
-                title="Completion Rate"
-                value={reportData.stats.completionRate}
-                suffix="%"
-                prefix={
-                  <Progress
-                    type="circle"
-                    percent={reportData.stats.completionRate}
-                    width={20}
-                    style={{ marginRight: 8 }}
-                    showInfo={false}
-                  />
-                }
-                valueStyle={{ color: "#722ed1" }}
-              />
-            </Card>
-          </Col>
-        </Row>
-      </div>
-
-      <Row gutter={[16, 16]}>
-        {/* Trend Chart */}
-        <Col xs={24} lg={16}>
-          <Card
-            title="Employee Onboarding Trends"
-            className="employee-report-chart-card"
-            extra={
-              <Select
-                defaultValue={timePeriod}
-                style={{ width: 140 }}
-                onChange={handleTimePeriodChange}
-                options={getTimePeriodOptions()}
-              />
-            }
-            loading={loading}
-          >
-            <div style={{ height: 300 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={reportData.trendData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="onboarded"
-                    stroke="#52c41a"
-                    activeDot={{ r: 8 }}
-                    name="Onboarded"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="offboarded"
-                    stroke="#ff4d4f"
-                    name="Offboarded"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+      <Row gutter={[16, 16]} className="er-stats-row">
+        <Col xs={24} sm={12} md={6} className="er-stat-col">
+          <Card className="er-stat-card er-stat-onboarded">
+            <Statistic
+              title="Total Onboarded"
+              value={reportData.stats.totalOnboarded}
+              prefix={<UserAddOutlined />}
+              loading={loading}
+            />
           </Card>
         </Col>
-
-        {/* Department Distribution */}
-        <Col xs={24} lg={8}>
-          <Card
-            title="Department Distribution"
-            className="employee-report-chart-card"
-            loading={loading}
-          >
-            <div style={{ height: 300, display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={reportData.departmentData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    nameKey="name"
-                    label={({ name, percent }) =>
-                      `${name}: ${(percent * 100).toFixed(0)}%`
-                    }
-                  >
-                    {reportData.departmentData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value, name) => [`${value} employees`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+        <Col xs={24} sm={12} md={6} className="er-stat-col">
+          <Card className="er-stat-card er-stat-offboarded">
+            <Statistic
+              title="Total Offboarded"
+              value={reportData.stats.totalOffboarded || 0}
+              prefix={<UserDeleteOutlined />}
+              loading={loading}
+            />
+            {reportData.stats.recentOffboardings > 0 && (
+              <div className="er-recent-stat">
+                +{reportData.stats.recentOffboardings} in selected period
+              </div>
+            )}
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6} className="er-stat-col">
+          <Card className="er-stat-card er-stat-avg-time">
+            <Statistic
+              title="Avg. Onboarding Time"
+              value={reportData.stats.averageOnboardingTime}
+              suffix="days"
+              loading={loading}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6} className="er-stat-col">
+          <Card className="er-stat-card er-stat-completion">
+            <Statistic
+              title="Completion Rate"
+              value={reportData.stats.completionRate}
+              suffix="%"
+              loading={loading}
+            />
+            <Progress
+              percent={reportData.stats.completionRate}
+              showInfo={false}
+              status="active"
+              strokeColor={{
+                "0%": "#108ee9",
+                "100%": "#87d068",
+              }}
+            />
           </Card>
         </Col>
       </Row>
 
-      {/* Employee Table */}
-      <Card
-        title="Employee List"
-        className="employee-report-table-card"
-        style={{ marginTop: "16px" }}
-        extra={
-          <Space>
-            <RangePicker onChange={handleDateRangeChange} />
-            <Select
-              placeholder="Filter by Status"
-              style={{ width: 150 }}
-              onChange={(value) => setFilterStatus(value)}
-              defaultValue="all"
-            >
-              <Option value="all">All Status</Option>
-              <Option value="onboarded">Active</Option>
-              <Option value="offboarded">Inactive</Option>
-              <Option value="incomplete">Incomplete</Option>
-            </Select>
-            <Select
-              mode="multiple"
-              placeholder="Filter by Department"
-              style={{ width: 200 }}
-              onChange={(value) => setFilterDepartment(value)}
-              allowClear
-              maxTagCount={2}
-            >
-              {reportData.departmentData.map((dept) => (
-                <Option key={dept.name} value={dept.name}>
-                  {dept.name}
-                </Option>
-              ))}
-            </Select>
-          </Space>
-        }
-      >
-        <Table
-          columns={columns}
-          dataSource={getFilteredEmployeeData()}
-          loading={loading}
-          rowKey="key"
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: "max-content" }}
-        />
-      </Card>
+      <Tabs activeKey={activeTab} onChange={setActiveTab} className="er-tabs">
+        <TabPane tab="Overview" key="1">
+          <Row gutter={[16, 16]}>
+            <Col xs={24} lg={16} className="er-chart-col">
+              <Card
+                title="Employee Trends"
+                className="er-chart-card"
+                loading={loading}
+              >
+                <div className="er-chart-container">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={reportData.trendData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="onboarded"
+                        stroke="#1890ff"
+                        activeDot={{ r: 8 }}
+                        name="Onboarded"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="offboarded"
+                        stroke="#ff4d4f"
+                        name="Offboarded"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+            </Col>
+            <Col xs={24} lg={8} className="er-chart-col">
+              <Card
+                title="Department Distribution"
+                className="er-chart-card"
+                loading={loading}
+              >
+                <div className="er-chart-container">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={reportData.departmentData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) =>
+                          `${name}: ${(percent * 100).toFixed(0)}%`
+                        }
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {reportData.departmentData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${value} employees`, ""]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+
+          <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
+            <Col xs={24} lg={12} className="er-chart-col">
+              <Card
+                title="Offboarding Reasons"
+                className="er-chart-card"
+                loading={loading}
+              >
+                <div className="er-offboarding-chart-container">
+                  {reportData.offboardingReasons && reportData.offboardingReasons.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart
+                        data={reportData.offboardingReasons}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="value" name="Employees" fill="#ff4d4f">
+                          {reportData.offboardingReasons.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="er-empty-state">
+                      <InboxOutlined className="er-empty-icon" />
+                      <p>No offboarding data available</p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </Col>
+            <Col xs={24} lg={12} className="er-chart-col">
+              <Card
+                title="Offboarding by Department"
+                className="er-chart-card"
+                loading={loading}
+              >
+                <div className="er-offboarding-chart-container">
+                  {reportData.offboardingByDepartment && reportData.offboardingByDepartment.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={reportData.offboardingByDepartment}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) =>
+                            `${name}: ${(percent * 100).toFixed(0)}%`
+                          }
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {reportData.offboardingByDepartment.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => [`${value} employees`, ""]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="er-empty-state">
+                      <InboxOutlined className="er-empty-icon" />
+                      <p>No offboarding data available</p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        </TabPane>
+
+        <TabPane tab="Employee Data" key="2">
+          <Card className="er-table-card">
+            <div className="er-table-filters">
+              <Space wrap>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="Filter by Department"
+                  style={{ minWidth: 200 }}
+                  value={filterDepartment}
+                  onChange={setFilterDepartment}
+                >
+                  {getAllDepartments().map((dept) => (
+                    <Option key={dept} value={dept}>
+                      {dept}
+                    </Option>
+                  ))}
+                </Select>
+                <Select
+                  allowClear
+                  placeholder="Filter by Status"
+                  style={{ minWidth: 150 }}
+                  value={filterStatus}
+                  onChange={setFilterStatus}
+                >
+                  <Option value="all">All Statuses</Option>
+                  <Option value="active">Active</Option>
+                  <Option value="inactive">Inactive</Option>
+                </Select>
+                <RangePicker
+                  onChange={(dates) => setDateRange(dates)}
+                  placeholder={["Start Date", "End Date"]}
+                />
+                <Button
+                  icon={<FilterOutlined />}
+                  onClick={() => {
+                    setFilterDepartment([]);
+                    setFilterStatus("all");
+                    setDateRange(null);
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </Space>
+            </div>
+            <Table
+              columns={employeeColumns}
+              dataSource={getFilteredEmployeeData()}
+              rowKey="key"
+              loading={loading}
+              pagination={{ pageSize: 10 }}
+            />
+          </Card>
+        </TabPane>
+
+        <TabPane tab="Offboarding Data" key="3">
+          <Card className="er-table-card">
+            <div className="er-table-filters">
+              <Space wrap>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="Filter by Department"
+                  style={{ minWidth: 200 }}
+                  value={filterDepartment}
+                  onChange={setFilterDepartment}
+                >
+                  {getAllDepartments().map((dept) => (
+                    <Option key={dept} value={dept}>
+                      {dept}
+                    </Option>
+                  ))}
+                </Select>
+                <RangePicker
+                  onChange={(dates) => setDateRange(dates)}
+                  placeholder={["Start Date", "End Date"]}
+                />
+                <Button
+                  icon={<FilterOutlined />}
+                  onClick={() => {
+                    setFilterDepartment([]);
+                    setDateRange(null);
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </Space>
+            </div>
+            {reportData.offboardingData && reportData.offboardingData.length > 0 ? (
+              <Table
+                columns={offboardingColumns}
+                dataSource={getFilteredOffboardingData()}
+                rowKey="_id"
+                loading={loading}
+                pagination={{ pageSize: 10 }}
+              />
+            ) : (
+              <div className="er-empty-state">
+                <InboxOutlined className="er-empty-icon" />
+                <p>No offboarding data available</p>
+              </div>
+            )}
+          </Card>
+        </TabPane>
+      </Tabs>
     </div>
   );
 };
 
 export default EmployeeReport;
+
+
+                    
 

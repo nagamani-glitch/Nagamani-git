@@ -1,157 +1,316 @@
-/* EmployeeReport.css */
-.employee-report-wrapper {
+/* EmployeeReport.css - with specific class names to avoid conflicts */
+.er-container {
   background-color: #f0f2f5;
   padding: 24px;
+  min-height: 100vh;
 }
 
-.employee-report-header {
+.er-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
 }
 
-.employee-report-title {
+.er-header-title {
   color: #1a237e;
   margin: 0;
   font-size: 24px;
   font-weight: 600;
 }
 
+.er-action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
 /* Stats cards styling */
-.employee-report-stats-container {
+.er-stats-row {
   margin-bottom: 24px;
 }
 
-.employee-report-stats-row {
-  display: flex;
-  flex-wrap: wrap;
-  margin-left: -8px !important;
-  margin-right: -8px !important;
-}
-
-.employee-report-stat-col {
-  padding: 8px !important;
-  flex: 0 0 25%;
-  max-width: 25%;
-  box-sizing: border-box;
-}
-
-.employee-report-stat-card {
+.er-stat-card {
   height: 100%;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
   transition: all 0.3s;
-  padding: 16px;
-  background-color: #ffffff;
 }
 
-.employee-report-stat-card:hover {
+.er-stat-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
 }
 
+.er-stat-onboarded .ant-statistic-title,
+.er-stat-onboarded .ant-statistic-content {
+  color: #1890ff;
+}
+
+.er-stat-offboarded .ant-statistic-title,
+.er-stat-offboarded .ant-statistic-content {
+  color: #ff4d4f;
+}
+
+.er-stat-avg-time .ant-statistic-title,
+.er-stat-avg-time .ant-statistic-content {
+  color: #722ed1;
+}
+
+.er-stat-completion .ant-statistic-title,
+.er-stat-completion .ant-statistic-content {
+  color: #52c41a;
+}
+
+.er-recent-stat {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #ff4d4f;
+  font-weight: 500;
+}
+
 /* Chart cards styling */
-.employee-report-chart-card {
+.er-chart-card {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
   height: 100%;
-  background-color: #ffffff;
   overflow: hidden;
 }
 
-.employee-report-chart-container {
+.er-chart-card .ant-card-head {
+  background-color: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.er-chart-card .ant-card-head-title {
+  font-weight: 600;
+  color: #1a237e;
+}
+
+.er-chart-container {
   height: 300px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 /* Table card styling */
-.employee-report-table-card {
+.er-table-card {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
   margin-top: 16px;
-  background-color: #ffffff;
 }
 
-.employee-report-table-filters {
+.er-table-filters {
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #fafafa;
+  border-radius: 8px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-/* Avatar styling */
-.employee-report-avatar {
+/* Employee name with avatar styling */
+.er-employee-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.er-employee-avatar {
   width: 30px;
   height: 30px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-/* Status badge styling */
-.employee-report-status-badge {
+/* Tab styling */
+.er-tabs .ant-tabs-tab {
+  font-weight: 500;
+}
+
+.er-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+/* Offboarding specific styles */
+.er-offboarded-badge {
+  background-color: #ff4d4f;
+  color: white;
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 12px;
   font-weight: 500;
 }
 
-.employee-report-status-active {
-  background-color: #e6f7ff;
+.er-in-progress-badge {
+  background-color: #faad14;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Reason for leaving tags */
+.er-reason-tag {
+  margin: 2px;
+  font-size: 12px;
+}
+
+.er-reason-better-opportunity {
   color: #1890ff;
-  border: 1px solid #91d5ff;
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
 }
 
-.employee-report-status-inactive {
-  background-color: #fff1f0;
-  color: #ff4d4f;
-  border: 1px solid #ffa39e;
+.er-reason-relocation {
+  color: #722ed1;
+  background-color: #f9f0ff;
+  border-color: #d3adf7;
 }
 
-.employee-report-status-incomplete {
-  background-color: #fff7e6;
+.er-reason-work-life-balance {
+  color: #52c41a;
+  background-color: #f6ffed;
+  border-color: #b7eb8f;
+}
+
+.er-reason-career-change {
   color: #fa8c16;
-  border: 1px solid #ffd591;
+  background-color: #fff7e6;
+  border-color: #ffd591;
 }
 
-/* Progress bar styling */
-.employee-report-progress {
-  margin-bottom: 0;
+.er-reason-other {
+  color: #fa541c;
+  background-color: #fff2e8;
+  border-color: #ffbb96;
+}
+
+/* Offboarding charts */
+.er-offboarding-chart-container {
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.er-offboarding-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+  gap: 8px;
+}
+
+.er-offboarding-legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+}
+
+.er-offboarding-legend-color {
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  border-radius: 2px;
+}
+
+/* Empty state styling */
+.er-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+  color: #8c8c8c;
+}
+
+.er-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: #d9d9d9;
 }
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
-  .employee-report-stat-col {
-    flex: 0 0 50%;
-    max-width: 50%;
+  .er-chart-col {
+    flex: 0 0 100%;
+    max-width: 100%;
   }
 }
 
 @media (max-width: 768px) {
-  .employee-report-wrapper {
+  .er-container {
     padding: 16px;
   }
   
-  .employee-report-stats-row {
-    margin-left: -4px !important;
-    margin-right: -4px !important;
-  }
-  
-  .employee-report-stat-col {
-    padding: 4px !important;
-  }
-  
-  .employee-report-table-filters {
+  .er-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .er-action-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .er-table-filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .er-table-filters .ant-space {
+    width: 100%;
+  }
+  
+  .er-table-filters .ant-select,
+  .er-table-filters .ant-picker {
+    width: 100% !important;
   }
 }
 
 @media (max-width: 576px) {
-  .employee-report-stat-col {
-    flex: 0 0 100%;
-    max-width: 100%;
+  .er-stat-col {
+    padding: 8px !important;
   }
   
-  .employee-report-chart-container {
+  .er-offboarding-chart-container {
     height: 250px;
+  }
+  
+  .er-table-card .ant-table {
+    font-size: 12px;
+  }
+  
+  .er-table-card .ant-table-cell {
+    padding: 8px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .er-container {
+    background-color: white;
+    padding: 0;
+  }
+  
+  .er-action-buttons,
+  .er-table-filters,
+  .ant-pagination,
+  .er-tabs .ant-tabs-nav {
+    display: none !important;
+  }
+  
+  .er-chart-card,
+  .er-table-card,
+  .er-stat-card {
+    box-shadow: none !important;
+    border: 1px solid #f0f0f0;
+  }
+  
+  .er-table-card .ant-table-thead > tr > th {
+    background-color: #f0f0f0 !important;
+    color: black !important;
   }
 }
