@@ -837,54 +837,97 @@ table tr:hover {
   color: #e65100;
 }
 
-/* Responsive Styles */
+/* Add or update these responsive styles in ExitPage.css */
+
+/* Base responsive adjustments */
 @media (max-width: 768px) {
   .home-page {
     padding: 16px;
   }
   
-  .employee-cards {
+  .top-bar {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
   }
   
-  .employee-card {
+  .controls {
     width: 100%;
-  }
-  
-  .details-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .asset-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .tab-button {
-    padding: 12px;
-  }
-  
-  .tab-button span {
-    display: none;
-  }
-  
-  .pipeline-stage-header {
     flex-direction: column;
     align-items: flex-start;
   }
   
-  .stage-icon {
-    margin-bottom: 8px;
+  .search-input {
+    width: 100%;
+    margin-bottom: 10px;
   }
   
-  .employee-cards {
-    margin-left: 0;
+  .create-btn {
+    width: 100%;
+    justify-content: center;
   }
   
-  .pipeline-stage:not(:last-child)::after {
-    display: none;
+  .exit-create-popup {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  /* Dialog improvements for mobile */
+  .MuiDialog-paper {
+    margin: 10px !important;
+    max-height: 90vh !important;
+  }
+  
+  /* Table adjustments */
+  .MuiTableCell-root {
+    padding: 8px !important;
+  }
+  
+  /* Pipeline view adjustments */
+  .MuiStepper-root {
+    padding: 16px 8px !important;
+  }
+  
+  /* Card adjustments in pipeline view */
+  .MuiPaper-root {
+    width: 100% !important;
   }
 }
 
+/* Extreme mobile adjustments */
+@media (max-width: 480px) {
+  .home-page {
+    padding: 10px;
+  }
+  
+  /* Hide less important columns in mobile view */
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  /* Make action buttons stack better */
+  .MuiTableCell-root .MuiStack-root {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  /* Adjust form fields in dialogs */
+  .MuiDialogContent-root .MuiGrid-container {
+    gap: 8px;
+  }
+  
+  /* Make tabs more compact */
+  .MuiTab-root {
+    min-width: auto !important;
+    padding: 6px 10px !important;
+  }
+  
+  /* Adjust asset management section */
+  .MuiGrid-container .MuiGrid-item {
+    padding: 4px !important;
+  }
+}
 /* Animation Styles */
 @keyframes fadeIn {
   from {
