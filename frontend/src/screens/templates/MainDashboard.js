@@ -103,35 +103,75 @@ const MainDashboard = () => {
       setLoadingAnnouncements(false);
     }
   };
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await axios.get(`${apiBaseURL}/api/employees/report?period=${timeRange}`);
+  // const fetchDashboardData = async () => {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const response = await axios.get(`${apiBaseURL}/api/employees/report?period=${timeRange}`);
       
-      // Get the original data
-      const dashData = response.data.data;
+  //     // Get the original data
+  //     const dashData = response.data.data;
       
-      // Fetch all employees to get gender information
-      const employeesResponse = await axios.get(`${apiBaseURL}/api/employees/registered`);
+  //     // Fetch all employees to get gender information
+  //     const employeesResponse = await axios.get(`${apiBaseURL}/api/employees/registered`);
       
-      // Extract gender information
-      const genderData = employeesResponse.data.map(emp => ({
-        gender: emp.personalInfo?.gender || 'Other'
-      }));
+  //     // Extract gender information
+  //     const genderData = employeesResponse.data.map(emp => ({
+  //       gender: emp.personalInfo?.gender || 'Other'
+  //     }));
       
-      // Add gender data to dashboard data
-      setDashboardData({
-        ...dashData,
-        genderData: genderData
-      });
-    } catch (err) {
-      console.error("Error fetching dashboard data:", err);
-      setError("Failed to load dashboard data. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     // Add gender data to dashboard data
+  //     setDashboardData({
+  //       ...dashData,
+  //       genderData: genderData
+  //     });
+  //   } catch (err) {
+  //     console.error("Error fetching dashboard data:", err);
+  //     setError("Failed to load dashboard data. Please try again later.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // In the fetchDashboardData function, add this code to fetch offboarding data
+
+const fetchDashboardData = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await axios.get(`${apiBaseURL}/api/employees/report?period=${timeRange}`);
+    
+    // Get the original data
+    const dashData = response.data.data;
+    
+    // Fetch all employees to get gender information
+    const employeesResponse = await axios.get(`${apiBaseURL}/api/employees/registered`);
+    
+    // Fetch offboarding data to get total offboarded count
+    const offboardingResponse = await axios.get(`http://localhost:5000/api/offboarding`);
+    const totalOffboarded = offboardingResponse.data.length || 0;
+    
+    // Extract gender information
+    const genderData = employeesResponse.data.map(emp => ({
+      gender: emp.personalInfo?.gender || 'Other'
+    }));
+    
+    // Add gender data and updated offboarding count to dashboard data
+    setDashboardData({
+      ...dashData,
+      genderData: genderData,
+      stats: {
+        ...dashData.stats,
+        totalOffboarded: totalOffboarded
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching dashboard data:", err);
+    setError("Failed to load dashboard data. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const fetchRecentJoins = async () => {
     try {
