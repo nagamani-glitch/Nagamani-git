@@ -1,440 +1,250 @@
-/* Main Container */
 .resignation-letters {
-  padding: 24px;
-  background-color: #f9f9f9;
+  padding: 30px;
+  background-color: #f8f9fa;
   min-height: 100vh;
-}
-
-/* Header Styling */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-  padding: 16px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.header-title {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
-}
-
-/* Controls Section */
-.controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.search-input {
-  padding: 10px 16px;
-  font-size: 14px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  width: 240px;
-  transition: border-color 0.3s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #4CAF50;
-}
-
-.view-toggle {
-  padding: 8px;
-  background: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.view-toggle:hover {
-  background: #e0e0e0;
-}
-
-.filter-btn, .create-btn {
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.filter-btn {
-  background-color: #2196F3;
-  color: white;
-  border: none;
-}
-
-.create-btn {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-}
-
-/* Grid View */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
-  padding: 16px;
-}
-
-/* List View */
-.resignation-table {
   width: 100%;
-  border-collapse: collapse;
-  background: white;
+}
+
+/* Quill editor styles */
+.quill-container {
+  margin-bottom: 40px;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.resignation-table th,
-.resignation-table td {
-  padding: 16px;
-  text-align: left;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.resignation-table th {
-  background-color: #f5f5f5;
-  font-weight: 600;
-  color: #333;
-}
-
-/* Card Styling */
-.resignation-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  transition: transform 0.3s;
-}
-
-.resignation-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.card-header {
-  padding: 16px;
-  border-bottom: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.status {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.status.Approved {
-  background-color: #E8F5E9;
-  color: #2E7D32;
-}
-
-.status.Requested {
-  background-color: #FFF3E0;
-  color: #E65100;
-}
-
-.status.Rejected {
-  background-color: #FFEBEE;
-  color: #C62828;
-}
-
-.card-content {
-  padding: 16px;
-}
-
-.card-content h2 {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.card-content p {
-  margin: 0 0 16px 0;
-  color: #666;
-}
-
-.card-footer {
-  padding: 16px;
-  border-top: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* Email Button */
-.email-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.email-btn:hover {
-  background-color: #45a049;
-}
-
-/* Filter Popup */
-.filter-popup {
-  position: absolute;
-  top: 30%; /* Adjust based on your header */
-  right: 24px;
-  background: white;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 100;
-}
-
-.filter-option {
-  display: block;
-  width: 100%;
-  padding: 8px 16px;
-  margin: 4px 0;
-  border: none;
-  background: none;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.filter-option:hover {
-  background-color: #f5f5f5;
-}
-
-.filter-option.active {
-  background-color: #E8F5E9;
-  color: #2E7D32;
-}
-
-/* Action Buttons */
-.icon-button {
-  padding: 6px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.3s;
-}
-
-.icon-button:hover {
-  opacity: 1;
-}
-
-/* Rich Text Editor */
-.ql-editor {
-  min-height: 200px;
-  font-size: 14px;
 }
 
 .ql-container {
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-}
-
-.ql-toolbar {
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-
-/* Popup Container */
-.popup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-
-/* Popup Content Box */
-.popup-content {
-  background: white;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  border-radius: 12px;
-  padding: 32px;
-  position: relative;
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Form Elements */
-.popup-content h3 {
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid #f0f0f0;
-}
-
-.form-row {
-  margin-bottom: 20px;
-}
-
-.form-row label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #555;
-  margin-bottom: 8px;
-}
-
-.popup-content input,
-.popup-content select {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.popup-content input:focus,
-.popup-content select:focus {
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-  outline: none;
-}
-
-/* Rich Text Editor Styling */
-.popup-content .quill {
-  margin-bottom: 24px;
-  border-radius: 8px;
+  min-height: 200px;
+  font-size: 16px;
+  font-family: inherit;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-color: #e2e8f0;
 }
 
 .ql-toolbar {
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
-  border: 1px solid #e0e0e0;
-  background: #f8f9fa;
-}
-
-.ql-container {
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-  border: 1px solid #e0e0e0;
-  border-top: none;
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
 }
 
 .ql-editor {
   min-height: 200px;
-  font-size: 14px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: inherit;
   line-height: 1.6;
 }
 
-/* Button Group */
-.popup-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #f0f0f0;
+.ql-editor p {
+  margin-bottom: 0.5em;
 }
 
-.popup-content button {
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
+/* Resignation content styles */
+.resignation-content {
+  font-family: inherit;
+  line-height: 1.6;
+  color: #334155;
 }
 
-.popup-content button[type="submit"] {
-  background: #4CAF50;
-  color: white;
-  border: none;
+.resignation-content p {
+  margin-bottom: 1em;
 }
 
-.popup-content button[type="submit"]:hover {
-  background: #45a049;
+.resignation-content h1,
+.resignation-content h2,
+.resignation-content h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  color: #1e293b;
 }
 
-.popup-content button[type="button"] {
-  background: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  color: #666;
+.resignation-content ul,
+.resignation-content ol {
+  margin-bottom: 1em;
+  padding-left: 2em;
 }
 
-.popup-content button[type="button"]:hover {
-  background: #e9e9e9;
+.resignation-content blockquote {
+  border-left: 4px solid #e2e8f0;
+  padding-left: 1em;
+  margin-left: 0;
+  color: #64748b;
+  font-style: italic;
 }
 
-/* Animation */
-@keyframes slideIn {
+/* Card hover effects */
+.MuiCard-root {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.MuiCard-root:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Button hover effects */
+.MuiButton-contained {
+  transition: all 0.3s ease !important;
+}
+
+.MuiButton-contained:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(25, 118, 210, 0.25) !important;
+}
+
+.MuiIconButton-root {
+  transition: all 0.2s ease !important;
+}
+
+.MuiIconButton-root:hover {
+  transform: translateY(-2px);
+}
+
+/* Loading and error states */
+.loading,
+.error {
+  text-align: center;
+  padding: 40px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+}
+
+.error {
+  color: #ef4444;
+}
+
+/* Responsive styles for large screens */
+@media (min-width: 1200px) {
+  .resignation-letters {
+    padding: 40px;
+  }
+  
+  .ql-editor {
+    min-height: 250px;
+  }
+}
+
+/* Responsive styles for medium screens (tablets) */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .resignation-letters {
+    padding: 24px;
+  }
+  
+  .ql-editor {
+    min-height: 180px;
+  }
+}
+
+/* Responsive styles for small screens (mobile) */
+@media (max-width: 767px) {
+  .resignation-letters {
+    padding: 16px;
+  }
+  
+  .ql-toolbar {
+    flex-wrap: wrap;
+    padding: 6px;
+  }
+  
+  .ql-editor {
+    min-height: 150px;
+  }
+  
+  .quill-container {
+    margin-bottom: 60px;
+  }
+  
+  .MuiTableCell-root {
+    padding: 8px 12px !important;
+  }
+}
+
+/* Specific adjustments for very small screens */
+@media (max-width: 480px) {
+  .resignation-letters {
+    padding: 12px;
+  }
+  
+  .ql-toolbar {
+    padding: 4px;
+  }
+  
+  .ql-formats {
+    margin-right: 6px !important;
+  }
+  
+  .ql-editor {
+    padding: 10px;
+    font-size: 14px;
+  }
+  
+  .MuiCardHeader-content {
+    max-width: 70%;
+  }
+}
+
+/* Ensure proper spacing in dialogs on all screen sizes */
+.MuiDialog-paper {
+  margin: 16px !important;
+}
+
+/* Improve table responsiveness */
+.MuiTableCell-root {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+@media (max-width: 600px) {
+  .MuiTableCell-root {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Improve card layout on different screen sizes */
+@media (min-width: 600px) and (max-width: 960px) {
+  .MuiGrid-item {
+    flex-basis: 50% !important;
+    max-width: 50% !important;
+  }
+}
+
+/* Fix for filter popover on small screens */
+@media (max-width: 600px) {
+  .MuiPopover-paper {
+    width: 90% !important;
+    max-width: 90% !important;
+  }
+}
+
+/* Animation for cards */
+@keyframes fadeIn {
   from {
-    transform: translateY(-20px);
     opacity: 0;
+    transform: translateY(20px);
   }
   to {
-    transform: translateY(0);
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Scrollbar Styling */
-.popup-content::-webkit-scrollbar {
-  width: 8px;
+.MuiGrid-item {
+  animation: fadeIn 0.5s ease forwards;
 }
 
-.popup-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.popup-content::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-.popup-content::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .controls {
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .search-input {
-    width: 100%;
-  }
-
-  .card-grid {
-    grid-template-columns: 1fr;
-  }
-}
+/* Staggered animation for grid items */
+.MuiGrid-item:nth-child(1) { animation-delay: 0.05s; }
+.MuiGrid-item:nth-child(2) { animation-delay: 0.1s; }
+.MuiGrid-item:nth-child(3) { animation-delay: 0.15s; }
+.MuiGrid-item:nth-child(4) { animation-delay: 0.2s; }
+.MuiGrid-item:nth-child(5) { animation-delay: 0.25s; }
+.MuiGrid-item:nth-child(6) { animation-delay: 0.3s; }
+.MuiGrid-item:nth-child(7) { animation-delay: 0.35s; }
+.MuiGrid-item:nth-child(8) { animation-delay: 0.4s; }
