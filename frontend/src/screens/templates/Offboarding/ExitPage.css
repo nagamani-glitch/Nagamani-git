@@ -837,9 +837,32 @@ table tr:hover {
   color: #e65100;
 }
 
-/* Add or update these responsive styles in ExitPage.css */
+/* Add these responsive styles to handle intermediate screen sizes */
+@media (min-width: 481px) and (max-width: 768px) {
+  .controls {
+    width: 100%;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  .create-btn {
+    width: 100%;
+  }
+  
+  /* Adjust table for medium screens */
+  .MuiTableCell-root {
+    padding: 10px !important;
+  }
+  
+  /* Adjust card layouts */
+  .employee-card {
+    width: 100%;
+  }
+}
 
-/* Base responsive adjustments */
+/* Adjust the existing responsive styles */
 @media (max-width: 768px) {
   .home-page {
     padding: 16px;
@@ -927,8 +950,7 @@ table tr:hover {
   .MuiGrid-container .MuiGrid-item {
     padding: 4px !important;
   }
-}
-/* Animation Styles */
+}/* Animation Styles */
 @keyframes fadeIn {
   from {
     opacity: 0;
