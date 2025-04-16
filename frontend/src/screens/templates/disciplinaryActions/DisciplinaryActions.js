@@ -25,6 +25,11 @@ import {
   DialogActions,
   Autocomplete,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
+  Collapse,
+  Card,
+  CardContent,
 } from "@mui/material";
 
 import {
@@ -36,6 +41,8 @@ import {
   FilterList,
   Sort,
   Download,
+  ExpandMore,
+  ExpandLess,
 } from "@mui/icons-material";
 import GavelIcon from "@mui/icons-material/Gavel";
 import axios from "axios";
@@ -54,6 +61,15 @@ const DisciplinaryActions = () => {
   const [registeredEmployees, setRegisteredEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [expandedAction, setExpandedAction] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [actionToDelete, setActionToDelete] = useState(null);
+
+  // Add responsive hooks
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const actionStatuses = [
     "Warning",
@@ -84,6 +100,7 @@ const DisciplinaryActions = () => {
 
   const fetchActions = async () => {
     try {
+      setLoading(true);
       const response = await fetch(
         `http://localhost:5000/api/disciplinary-actions?searchQuery=${searchQuery}&status=${filterStatus}`
       );
@@ -92,6 +109,8 @@ const DisciplinaryActions = () => {
       setActions(data);
     } catch (error) {
       showSnackbar("Error fetching actions", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -172,6 +191,7 @@ const DisciplinaryActions = () => {
 
   const handleSave = async () => {
     try {
+      setLoading(true);
       const formDataToSend = new FormData();
 
       // Add all form fields to FormData
@@ -206,6 +226,8 @@ const DisciplinaryActions = () => {
       handleClose();
     } catch (error) {
       showSnackbar("Error saving action", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -227,10 +249,23 @@ const DisciplinaryActions = () => {
     setOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (action) => {
+    setActionToDelete(action);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setActionToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!actionToDelete) return;
+
     try {
+      setLoading(true);
       const response = await fetch(
-        `http://localhost:5000/api/disciplinary-actions/${id}`,
+        `http://localhost:5000/api/disciplinary-actions/${actionToDelete._id}`,
         {
           method: "DELETE",
         }
@@ -242,6 +277,9 @@ const DisciplinaryActions = () => {
       fetchActions();
     } catch (error) {
       showSnackbar("Error deleting action", "error");
+    } finally {
+      setLoading(false);
+      handleCloseDeleteDialog();
     }
   };
 
@@ -275,17 +313,43 @@ const DisciplinaryActions = () => {
     };
     return colors[status] || "default";
   };
+
+  const toggleExpandAction = (id) => {
+    setExpandedAction(expandedAction === id ? null : id);
+  };
+
   return (
-    <Box sx={{ padding: 3 }}>
+    <Box sx={{ padding: isMobile ? 2 : 3 }}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
       <Box
         sx={{
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "center",
-          mb: 4,
+          alignItems: isMobile ? "flex-start" : "center",
+          mb: isMobile ? 2 : 4,
+          gap: isMobile ? 2 : 0,
         }}
       >
-        <Typography variant="h3" fontWeight="800" fontSize="1.5rem">
+        <Typography
+          variant={isMobile ? "h4" : "h3"}
+          fontWeight="800"
+          fontSize={isMobile ? "1.25rem" : "1.5rem"}
+        >
           Disciplinary Actions
         </Typography>
         <Button
@@ -293,17 +357,25 @@ const DisciplinaryActions = () => {
           color="primary"
           onClick={handleClickOpen}
           startIcon={<span style={{ fontSize: "1.5rem" }}>+</span>}
+          fullWidth={isMobile}
         >
           Take An Action
         </Button>
       </Box>
 
-      <Box sx={{ mb: 3, display: "flex", gap: 2 }}>
+      <Box
+        sx={{
+          mb: 3,
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          gap: 2,
+        }}
+      >
         <TextField
           placeholder="Search actions..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{ width: "300px" }}
+          sx={{ width: isMobile ? "100%" : "300px" }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -316,7 +388,7 @@ const DisciplinaryActions = () => {
           select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          sx={{ width: "200px" }}
+          sx={{ width: isMobile ? "100%" : "200px" }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -334,133 +406,286 @@ const DisciplinaryActions = () => {
         </TextField>
       </Box>
 
-      <TableContainer component={Paper} elevation={3}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-              <TableCell>Employee</TableCell>
-              <TableCell>Employee ID</TableCell>
-              <TableCell>Department</TableCell>
-              <TableCell>Action Type</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Start Date</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Attachments</TableCell>
-              <TableCell align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {actions.length > 0 ? (
-              actions.map((action) => (
-                <TableRow key={action._id} hover>
-                  <TableCell>{action.employee}</TableCell>
-                  <TableCell>
-                    {action.employeeId ? (
+      {/* Desktop and Tablet View */}
+      {!isMobile && (
+        <TableContainer component={Paper} elevation={3}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                <TableCell>Employee</TableCell>
+                <TableCell>Employee ID</TableCell>
+                <TableCell>Department</TableCell>
+                <TableCell>Action Type</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell>Start Date</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Attachments</TableCell>
+                <TableCell align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    <CircularProgress size={40} sx={{ my: 3 }} />
+                  </TableCell>
+                </TableRow>
+              ) : actions.length > 0 ? (
+                actions.map((action) => (
+                  <TableRow key={action._id} hover>
+                    <TableCell>{action.employee}</TableCell>
+                    <TableCell>
+                      {action.employeeId ? (
+                        <Chip
+                          label={action.employeeId}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell>{action.department || "-"}</TableCell>
+                    <TableCell>{action.action}</TableCell>
+                    <TableCell>{action.description}</TableCell>
+                    <TableCell>
+                      {new Date(action.startDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
                       <Chip
-                        label={action.employeeId}
+                        label={action.status}
+                        color={getStatusColor(action.status)}
                         size="small"
-                        color="primary"
-                        variant="outlined"
                       />
-                    ) : (
-                      "-"
-                    )}
+                    </TableCell>
+                    <TableCell>
+                      {action.attachments && (
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            downloadFile(
+                              action.attachments.filename,
+                              action.attachments.originalName
+                            )
+                          }
+                        >
+                          <Download />
+                        </IconButton>
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        color="primary"
+                        onClick={() => handleEdit(action)}
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDeleteClick(action)}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    <Box sx={{ py: 3, textAlign: "center" }}>
+                      <GavelIcon sx={{ fontSize: 60, color: "#ccc", mb: 2 }} />
+                      <Typography color="textSecondary">
+                        No disciplinary actions found
+                      </Typography>
+                    </Box>
                   </TableCell>
-                  <TableCell>{action.department || "-"}</TableCell>
-                  <TableCell>{action.action}</TableCell>
-                  <TableCell>{action.description}</TableCell>
-                  <TableCell>
-                    {new Date(action.startDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {/* Mobile View */}
+      {isMobile && (
+        <Box sx={{ mt: 2 }}>
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+              <CircularProgress size={40} />
+            </Box>
+          ) : actions.length > 0 ? (
+            actions.map((action) => (
+              <Card
+                key={action._id}
+                sx={{
+                  mb: 2,
+                  borderRadius: "10px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                }}
+              >
+                <CardContent sx={{ p: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1,
+                    }}
+                  >
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      {action.employee}
+                    </Typography>
                     <Chip
                       label={action.status}
                       color={getStatusColor(action.status)}
                       size="small"
                     />
-                  </TableCell>
-                  <TableCell>
-                    {action.attachments && (
+                  </Box>
+
+                  <Box
+                    sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1 }}
+                  >
+                    {action.employeeId && (
+                      <Chip
+                        label={`ID: ${action.employeeId}`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                    {action.department && (
+                      <Chip
+                        label={action.department}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                  </Box>
+
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                  >
+                    <strong>Action:</strong> {action.action}
+                  </Typography>
+
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                  >
+                    <strong>Date:</strong>{" "}
+                    {new Date(action.startDate).toLocaleDateString()}
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mt: 2,
+                    }}
+                  >
+                    <Button
+                      size="small"
+                      startIcon={
+                        expandedAction === action._id ? (
+                          <ExpandLess />
+                        ) : (
+                          <ExpandMore />
+                        )
+                      }
+                      onClick={() => toggleExpandAction(action._id)}
+                    >
+                      {expandedAction === action._id ? "Less" : "More"}
+                    </Button>
+
+                    <Box>
+                      {action.attachments && (
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            downloadFile(
+                              action.attachments.filename,
+                              action.attachments.originalName
+                            )
+                          }
+                        >
+                          <Download />
+                        </IconButton>
+                      )}
                       <IconButton
                         size="small"
-                        onClick={() =>
-                          downloadFile(
-                            action.attachments.filename,
-                            action.attachments.originalName
-                          )
-                        }
+                        color="primary"
+                        onClick={() => handleEdit(action)}
                       >
-                        <Download />
+                        <Edit />
                       </IconButton>
-                    )}
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleEdit(action)}
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(action._id)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={9} align="center">
-                  <Box sx={{ py: 3, textAlign: "center" }}>
-                    <GavelIcon sx={{ fontSize: 60, color: "#ccc", mb: 2 }} />
-                    <Typography color="textSecondary">
-                      No disciplinary actions found
-                    </Typography>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteClick(action)}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Box>
                   </Box>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
 
+                  <Collapse in={expandedAction === action._id}>
+                    <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #eee" }}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 1 }}
+                      >
+                        <strong>Description:</strong>
+                      </Typography>
+                      <Typography variant="body2">
+                        {action.description}
+                      </Typography>
+                    </Box>
+                  </Collapse>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <Box sx={{ py: 3, textAlign: "center" }}>
+              <GavelIcon sx={{ fontSize: 60, color: "#ccc", mb: 2 }} />
+              <Typography color="textSecondary">
+                No disciplinary actions found
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Add/Edit Dialog */}
       <Dialog
         open={open}
         onClose={handleClose}
-        PaperProps={{
-          sx: {
-            width: "600px",
-            borderRadius: "20px",
-            overflow: "hidden",
-          },
-        }}
+        maxWidth="md"
+        fullWidth
+        fullScreen={isMobile}
       >
         <DialogTitle
           sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            padding: "24px 32px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
-          {editingAction ? "Edit Action" : "Take An Action"}
+          {editingAction
+            ? "Edit Disciplinary Action"
+            : "Take Disciplinary Action"}
+          <IconButton onClick={handleClose}>
+            <Close />
+          </IconButton>
         </DialogTitle>
-
-        <DialogContent
-          sx={{
-            padding: "32px",
-            backgroundColor: "#f8fafc",
-            marginTop: "20px",
-          }}
-        >
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            {/* Employee Selection Autocomplete */}
-            <Grid item xs={12}>
+        <DialogContent dividers>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
               <Autocomplete
-                id="employee-select"
                 options={registeredEmployees}
                 getOptionLabel={(option) =>
                   `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
@@ -477,6 +702,7 @@ const DisciplinaryActions = () => {
                     variant="outlined"
                     fullWidth
                     required
+                    margin="normal"
                     InputProps={{
                       ...params.InputProps,
                       endAdornment: (
@@ -488,163 +714,87 @@ const DisciplinaryActions = () => {
                         </>
                       ),
                     }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
                   />
                 )}
               />
             </Grid>
-
             <Grid item xs={12} md={6}>
               <TextField
-                name="employee"
-                label="Employee Name"
-                fullWidth
-                required
-                value={formData.employee}
+                label="Employee ID"
+                name="employeeId"
+                value={formData.employeeId}
                 onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#1976d2",
-                  },
-                }}
+                fullWidth
+                margin="normal"
+                disabled
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
-                name="email"
                 label="Email"
-                fullWidth
+                name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                }}
+                fullWidth
+                margin="normal"
+                disabled
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
-                name="department"
                 label="Department"
-                fullWidth
+                name="department"
                 value={formData.department}
                 onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                }}
+                fullWidth
+                margin="normal"
+                disabled
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
-                name="designation"
                 label="Designation"
-                fullWidth
+                name="designation"
                 value={formData.designation}
                 onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                }}
+                fullWidth
+                margin="normal"
+                disabled
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
-                name="action"
-                label="Action Type"
                 select
-                fullWidth
-                required
+                label="Action Type"
+                name="action"
                 value={formData.action}
                 onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                }}
+                fullWidth
+                required
+                margin="normal"
               >
+                <MenuItem value="">Select Action Type</MenuItem>
                 <MenuItem value="Verbal Warning">Verbal Warning</MenuItem>
                 <MenuItem value="Written Warning">Written Warning</MenuItem>
+                <MenuItem value="Performance Improvement Plan">
+                  Performance Improvement Plan
+                </MenuItem>
                 <MenuItem value="Suspension">Suspension</MenuItem>
                 <MenuItem value="Termination">Termination</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
-                name="startDate"
-                label="Start Date"
-                type="date"
-                fullWidth
-                required
-                value={formData.startDate}
-                onChange={handleInputChange}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="status"
-                label="Status"
                 select
-                fullWidth
-                required
+                label="Status"
+                name="status"
                 value={formData.status}
                 onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                }}
+                fullWidth
+                required
+                margin="normal"
               >
+                <MenuItem value="">Select Status</MenuItem>
                 {actionStatuses.map((status) => (
                   <MenuItem key={status} value={status}>
                     {status}
@@ -652,25 +802,30 @@ const DisciplinaryActions = () => {
                 ))}
               </TextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
-                name="description"
-                label="Description"
-                multiline
-                rows={4}
+                label="Start Date"
+                name="startDate"
+                type="date"
+                value={formData.startDate}
+                onChange={handleInputChange}
                 fullWidth
                 required
+                margin="normal"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Description"
+                name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "white",
-                    borderRadius: "12px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                }}
+                fullWidth
+                required
+                multiline
+                rows={4}
+                margin="normal"
               />
             </Grid>
             <Grid item xs={12}>
@@ -678,11 +833,7 @@ const DisciplinaryActions = () => {
                 variant="outlined"
                 component="label"
                 startIcon={<UploadFile />}
-                sx={{
-                  borderRadius: "12px",
-                  padding: "10px 16px",
-                  textTransform: "none",
-                }}
+                sx={{ mt: 1 }}
               >
                 Upload Attachment
                 <input
@@ -693,18 +844,99 @@ const DisciplinaryActions = () => {
                 />
               </Button>
               {formData.attachments && (
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  File selected: {formData.attachments.name}
+                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                  Selected file: {formData.attachments.name}
+                </Typography>
+              )}
+              {editingAction?.attachments && !formData.attachments && (
+                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                  Current attachment: {editingAction.attachments.originalName}
                 </Typography>
               )}
             </Grid>
           </Grid>
         </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={handleClose} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            color="primary"
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Save"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Delete color="white" />
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Are you sure you want to delete this disciplinary action?
+          </Alert>
+          {actionToDelete && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+              <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                Employee: {actionToDelete.employee}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Action Type: {actionToDelete.action}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Status: {actionToDelete.status}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Date: {new Date(actionToDelete.startDate).toLocaleDateString()}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
         <DialogActions
-          sx={{ padding: "24px 32px", backgroundColor: "#f8fafc" }}
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
         >
           <Button
-            onClick={handleClose}
+            onClick={handleCloseDeleteDialog}
             sx={{
               border: "2px solid #1976d2",
               color: "#1976d2",
@@ -722,39 +954,30 @@ const DisciplinaryActions = () => {
             Cancel
           </Button>
           <Button
-            onClick={handleSave}
+            onClick={handleConfirmDelete}
             variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
             sx={{
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
               fontSize: "0.95rem",
               textTransform: "none",
               padding: "8px 32px",
               borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(52, 152, 219, 0.2)",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
               "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #1976d2)",
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
               },
             }}
           >
-            {editingAction ? "Update" : "Save"}
+            {loading ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };
