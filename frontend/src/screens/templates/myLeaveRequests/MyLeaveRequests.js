@@ -39,6 +39,7 @@ import {
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { Refresh as RefreshIcon } from "@mui/icons-material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -102,9 +103,9 @@ const EMPLOYEE = {
 
 const MyLeaveRequests = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-  
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
   const [tabValue, setTabValue] = useState(0);
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [leaveBalance, setLeaveBalance] = useState(null);
@@ -171,10 +172,10 @@ const MyLeaveRequests = () => {
     try {
       // Call the new endpoint to update earned leave balance
       await axios.post(`${API_URL}/update-earned-leave`);
-      
+
       // Then fetch the updated balance
       await fetchLeaveBalance();
-      
+
       showSnackbar("Earned leave balance updated successfully");
     } catch (error) {
       console.error("Error updating earned leave balance:", error);
@@ -254,7 +255,9 @@ const MyLeaveRequests = () => {
 
       // Check if there's sufficient balance
       const availableBalance = getAvailableBalance(formData.leaveType);
-      console.log(`Requesting ${numberOfDays} days of ${formData.leaveType} leave`);
+      console.log(
+        `Requesting ${numberOfDays} days of ${formData.leaveType} leave`
+      );
       console.log(`Available balance: ${availableBalance} days`);
 
       // Add this check to prevent submission when balance is insufficient
@@ -269,7 +272,7 @@ const MyLeaveRequests = () => {
 
       // Format dates as strings in YYYY-MM-DD format
       const formatDateToString = (date) => {
-        return format(date, 'yyyy-MM-dd');
+        return format(date, "yyyy-MM-dd");
       };
 
       const leaveData = {
@@ -296,14 +299,17 @@ const MyLeaveRequests = () => {
       showSnackbar("Leave request submitted successfully");
     } catch (error) {
       console.error("Error submitting leave request:", error);
-      
+
       // Extract detailed error message from response
       let errorMessage = "Error submitting leave request";
       if (error.response) {
         console.log("Server error details:", error.response.data);
-        errorMessage = error.response.data.message || error.response.data.error || errorMessage;
+        errorMessage =
+          error.response.data.message ||
+          error.response.data.error ||
+          errorMessage;
       }
-      
+
       showSnackbar(errorMessage, "error");
     } finally {
       setLoading(false);
@@ -322,6 +328,37 @@ const MyLeaveRequests = () => {
     } catch (error) {
       console.error("Error deleting leave request:", error);
       showSnackbar("Error deleting leave request", "error");
+      setLoading(false);
+    }
+  };
+  //   // Add this function to refresh the leave balance
+  // const refreshLeaveBalance = async () => {
+  //   try {
+  //     setLoading(true);
+  //     await fetchLeaveBalance();
+  //     await fetchLeaveStatistics();
+  //     showSnackbar("Leave balance refreshed successfully");
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error refreshing leave balance:", error);
+  //     showSnackbar("Error refreshing leave balance", "error");
+  //     setLoading(false);
+  //   }
+  // };
+  // Add this function to refresh the leave balance
+  const refreshLeaveBalance = async () => {
+    try {
+      setLoading(true);
+      // Call the recalculate endpoint
+      await axios.post(`${API_URL}/recalculate-balance/${EMPLOYEE.code}`);
+      // Then fetch the updated balance
+      await fetchLeaveBalance();
+      await fetchLeaveStatistics();
+      showSnackbar("Leave balance recalculated successfully");
+      setLoading(false);
+    } catch (error) {
+      console.error("Error recalculating leave balance:", error);
+      showSnackbar("Error recalculating leave balance", "error");
       setLoading(false);
     }
   };
@@ -370,7 +407,7 @@ const MyLeaveRequests = () => {
     const used = balance.used || 0;
     const pending = balance.pending || 0;
     const available = total - used - pending;
-    
+
     return available;
   };
 
@@ -415,53 +452,73 @@ const MyLeaveRequests = () => {
 
   // Render mobile card view for leave requests
   const renderLeaveRequestCard = (request) => (
-    <Card sx={{ mb: 2, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }} key={request._id}>
+    <Card
+      sx={{ mb: 2, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+      key={request._id}
+    >
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 1,
+          }}
+        >
           <Typography variant="subtitle1" fontWeight={600}>
             {getLeaveTypeName(request.leaveType)}
           </Typography>
           {getStatusChip(request.status)}
         </Box>
-        
+
         <Divider sx={{ my: 1.5 }} />
-        
+
         <Stack spacing={1.5}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
             <CalendarIcon fontSize="small" color="action" sx={{ mt: 0.3 }} />
             <Box>
-              <Typography variant="body2" color="text.secondary">Duration</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Duration
+              </Typography>
               <Typography variant="body2">
-                {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()}
+                {new Date(request.startDate).toLocaleDateString()} -{" "}
+                {new Date(request.endDate).toLocaleDateString()}
                 {request.halfDay && ` (${request.halfDayType} Half Day)`}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {request.numberOfDays} {request.numberOfDays === 1 ? 'day' : 'days'}
+                {request.numberOfDays}{" "}
+                {request.numberOfDays === 1 ? "day" : "days"}
               </Typography>
             </Box>
           </Box>
-          
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
             <DescriptionIcon fontSize="small" color="action" sx={{ mt: 0.3 }} />
             <Box>
-              <Typography variant="body2" color="text.secondary">Reason</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Reason
+              </Typography>
               <Typography variant="body2">{request.reason}</Typography>
             </Box>
           </Box>
-          
+
           {request.status === "rejected" && request.rejectionReason && (
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
               <InfoIcon fontSize="small" color="error" sx={{ mt: 0.3 }} />
               <Box>
-              <Typography variant="body2" color="text.secondary">Rejection Reason</Typography>
-              <Typography variant="body2" color="error.main">{request.rejectionReason}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Rejection Reason
+                </Typography>
+                <Typography variant="body2" color="error.main">
+                  {request.rejectionReason}
+                </Typography>
+              </Box>
             </Box>
-          </Box>
           )}
         </Stack>
-        
+
         {request.status === "pending" && (
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
             <Button
               variant="outlined"
               color="error"
@@ -487,13 +544,23 @@ const MyLeaveRequests = () => {
     const pendingPercentage = (pending / total) * 100;
 
     return (
-      <Card key={type.value} sx={{ mb: 2, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+      <Card
+        key={type.value}
+        sx={{ mb: 2, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+      >
         <CardContent>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             {type.label}
           </Typography>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 1.5,
+            }}
+          >
             <Typography variant="h5" color="primary.main" fontWeight={700}>
               {available}
             </Typography>
@@ -501,7 +568,7 @@ const MyLeaveRequests = () => {
               of {total} days available
             </Typography>
           </Box>
-          
+
           <Box
             sx={{
               position: "relative",
@@ -513,28 +580,30 @@ const MyLeaveRequests = () => {
           >
             <Box
               sx={{
-                position: 'absolute',
+                position: "absolute",
                 left: 0,
                 top: 0,
-                height: '100%',
+                height: "100%",
                 width: `${usedPercentage}%`,
-                bgcolor: '#f44336',
-                borderRadius: '4px 0 0 4px',
+                bgcolor: "#f44336",
+                borderRadius: "4px 0 0 4px",
               }}
             />
             <Box
               sx={{
-                position: 'absolute',
+                position: "absolute",
                 left: `${usedPercentage}%`,
                 top: 0,
-                height: '100%',
+                height: "100%",
                 width: `${pendingPercentage}%`,
-                bgcolor: '#ff9800',
+                bgcolor: "#ff9800",
               }}
             />
           </Box>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
+
+          <Box
+            sx={{ display: "flex", justifyContent: "space-between", mt: 0.5 }}
+          >
             <Typography variant="caption" color="text.secondary">
               Used: {used} days
             </Typography>
@@ -549,7 +618,13 @@ const MyLeaveRequests = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ p: isMobile ? 2 : 3, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+      <Box
+        sx={{
+          p: isMobile ? 2 : 3,
+          backgroundColor: "#f5f5f5",
+          minHeight: "100vh",
+        }}
+      >
         <Box
           sx={{
             display: "flex",
@@ -557,10 +632,17 @@ const MyLeaveRequests = () => {
             alignItems: isMobile ? "flex-start" : "center",
             mb: 3,
             flexDirection: isMobile ? "column" : "row",
-            gap: isMobile ? 2 : 0
+            gap: isMobile ? 2 : 0,
           }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 600, color: "#1a237e", fontSize: isMobile ? "1.5rem" : "2rem" }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 600,
+              color: "#1a237e",
+              fontSize: isMobile ? "1.5rem" : "2rem",
+            }}
+          >
             My Leave Requests
           </Typography>
           <Button
@@ -577,14 +659,14 @@ const MyLeaveRequests = () => {
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
-          sx={{ 
-            mb: 3, 
-            borderBottom: 1, 
+          sx={{
+            mb: 3,
+            borderBottom: 1,
             borderColor: "divider",
             "& .MuiTabs-flexContainer": {
               overflowX: "auto",
-              flexWrap: isMobile ? "nowrap" : "wrap"
-            }
+              flexWrap: isMobile ? "nowrap" : "wrap",
+            },
           }}
           variant={isMobile ? "scrollable" : "standard"}
           scrollButtons={isMobile ? "auto" : false}
@@ -598,7 +680,13 @@ const MyLeaveRequests = () => {
           <Box>
             <Grid container spacing={isMobile ? 2 : 3}>
               <Grid item xs={12} md={8}>
-                <Paper sx={{ p: isMobile ? 2 : 3, mb: isMobile ? 2 : 3, borderRadius: 2 }}>
+                <Paper
+                  sx={{
+                    p: isMobile ? 2 : 3,
+                    mb: isMobile ? 2 : 3,
+                    borderRadius: 2,
+                  }}
+                >
                   <Typography variant="h6" sx={{ mb: 2 }}>
                     Leave Usage by Month
                   </Typography>
@@ -607,11 +695,11 @@ const MyLeaveRequests = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={getMonthlyChartData(statistics)}
-                          margin={{ 
-                            top: 5, 
-                            right: isMobile ? 10 : 30, 
-                            left: isMobile ? 0 : 20, 
-                            bottom: isMobile ? 30 : 5 
+                          margin={{
+                            top: 5,
+                            right: isMobile ? 10 : 30,
+                            left: isMobile ? 0 : 20,
+                            bottom: isMobile ? 30 : 5,
                           }}
                         >
                           <CartesianGrid strokeDasharray="3 3" />
@@ -651,17 +739,46 @@ const MyLeaveRequests = () => {
                     isMobile ? (
                       <Stack spacing={2}>
                         {statistics.upcomingLeaves.map((leave) => (
-                          <Card key={leave._id} sx={{ boxShadow: 'none', border: '1px solid #eee', borderRadius: 1 }}>
+                          <Card
+                            key={leave._id}
+                            sx={{
+                              boxShadow: "none",
+                              border: "1px solid #eee",
+                              borderRadius: 1,
+                            }}
+                          >
                             <CardContent sx={{ p: 1.5 }}>
                               <Typography variant="subtitle2">
                                 {getLeaveTypeName(leave.leaveType)}
                               </Typography>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                  {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  mt: 1,
+                                }}
+                              >
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                >
+                                  {new Date(
+                                    leave.startDate
+                                  ).toLocaleDateString()}{" "}
+                                  -{" "}
+                                  {new Date(leave.endDate).toLocaleDateString()}
                                 </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Typography variant="body2" color="text.secondary">
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
                                     {leave.numberOfDays} days
                                   </Typography>
                                   {getStatusChip(leave.status)}
@@ -690,7 +807,9 @@ const MyLeaveRequests = () => {
                                   {getLeaveTypeName(leave.leaveType)}
                                 </TableCell>
                                 <TableCell>
-                                  {new Date(leave.startDate).toLocaleDateString()}
+                                  {new Date(
+                                    leave.startDate
+                                  ).toLocaleDateString()}
                                 </TableCell>
                                 <TableCell>
                                   {new Date(leave.endDate).toLocaleDateString()}
@@ -718,7 +837,13 @@ const MyLeaveRequests = () => {
               </Grid>
 
               <Grid item xs={12} md={4}>
-                <Paper sx={{ p: isMobile ? 2 : 3, mb: isMobile ? 2 : 3, borderRadius: 2 }}>
+                <Paper
+                  sx={{
+                    p: isMobile ? 2 : 3,
+                    mb: isMobile ? 2 : 3,
+                    borderRadius: 2,
+                  }}
+                >
                   <Typography variant="h6" sx={{ mb: 2 }}>
                     Leave Type Distribution
                   </Typography>
@@ -735,7 +860,11 @@ const MyLeaveRequests = () => {
                             fill="#8884d8"
                             dataKey="value"
                             nameKey="type"
-                            label={isMobile ? undefined : ({ type, value }) => `${type}: ${value}`}
+                            label={
+                              isMobile
+                                ? undefined
+                                : ({ type, value }) => `${type}: ${value}`
+                            }
                           >
                             {getLeaveTypeChartData(statistics).map(
                               (entry, index) => (
@@ -877,8 +1006,10 @@ const MyLeaveRequests = () => {
             ) : leaveRequests.length > 0 ? (
               isMobile ? (
                 <Stack spacing={2}>
-                  {leaveRequests.map(request => renderLeaveRequestCard(request))}
-                  </Stack>
+                  {leaveRequests.map((request) =>
+                    renderLeaveRequestCard(request)
+                  )}
+                </Stack>
               ) : (
                 <TableContainer>
                   <Table>
@@ -973,7 +1104,34 @@ const MyLeaveRequests = () => {
 
         {tabValue === 2 && (
           <Paper sx={{ p: isMobile ? 2 : 3, borderRadius: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 3,
+              }}
+            >
+              <Typography variant="h6">Leave Balance</Typography>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={refreshLeaveBalance}
+                  startIcon={<RefreshIcon />}
+                >
+                  Refresh Balance
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={fetchUpdatedEarnedLeaveBalance}
+                >
+                  Update Earned Leave
+                </Button>
+              </Box>
+            </Box>
+            {/* <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="h6">
                 Leave Balance
               </Typography>
@@ -984,7 +1142,7 @@ const MyLeaveRequests = () => {
               >
                 Update Earned Leave
               </Button>
-            </Box>
+            </Box> */}
             {leaveBalance ? (
               isMobile ? (
                 <Stack spacing={2}>
@@ -1049,7 +1207,7 @@ const MyLeaveRequests = () => {
                 aria-label="close"
                 onClick={handleCloseDialog}
                 sx={{
-                  position: 'absolute',
+                  position: "absolute",
                   right: 8,
                   top: 8,
                   color: (theme) => theme.palette.grey[500],
@@ -1074,17 +1232,20 @@ const MyLeaveRequests = () => {
               >
                 {LEAVE_TYPES.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
-                    {option.label} ({getAvailableBalance(option.value)} days available)
+                    {option.label} ({getAvailableBalance(option.value)} days
+                    available)
                   </MenuItem>
                 ))}
               </TextField>
 
-              <Box sx={{ 
-                display: "flex", 
-                gap: 2, 
-                mt: 2,
-                flexDirection: isMobile ? "column" : "row"
-              }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  mt: 2,
+                  flexDirection: isMobile ? "column" : "row",
+                }}
+              >
                 <DatePicker
                   label="Start Date"
                   value={formData.startDate}
@@ -1187,5 +1348,3 @@ const MyLeaveRequests = () => {
 };
 
 export default MyLeaveRequests;
-
-

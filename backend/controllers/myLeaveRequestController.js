@@ -410,4 +410,45 @@ export const updateEarnedLeaveBalance = async (req, res) => {
   }
 };
 
+// Add this function to recalculate leave balance
+export const recalculateLeaveBalance = async (req, res) => {
+  try {
+    const { employeeCode } = req.params;
     
+    // Get all leave requests for this employee
+    const leaveRequests = await MyLeaveRequest.find({ employeeCode });
+    
+    // Get the leave balance document
+    let leaveBalance = await LeaveBalance.findOne({ employeeCode });
+    
+    if (!leaveBalance) {
+      return res.status(404).json({ message: "Leave balance not found" });
+    }
+    
+    // Reset used and pending counts for all leave types
+    const leaveTypes = ['annual', 'sick', 'personal', 'maternity', 'paternity', 'casual', 'earned'];
+    leaveTypes.forEach(type => {
+      leaveBalance[type].used = 0;
+      leaveBalance[type].pending = 0;
+    });
+    
+    // Recalculate based on actual leave requests
+    leaveRequests.forEach(request => {
+      const { leaveType, numberOfDays, status } = request;
+      
+      if (status === 'approved') {
+        leaveBalance[leaveType].used += numberOfDays;
+      } else if (status === 'pending') {
+        leaveBalance[leaveType].pending += numberOfDays;
+      }
+    });
+    
+    // Save the updated balance
+    await leaveBalance.save();
+    
+    res.status(200).json(leaveBalance);
+  } catch (error) {
+    console.error("Error recalculating leave balance:", error);
+    res.status(500).json({ message: "Error recalculating leave balance" });
+  }
+};

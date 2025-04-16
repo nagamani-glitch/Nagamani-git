@@ -10,6 +10,7 @@ import {
   getLeaveStatistics,
   resetAnnualLeaves,
   updateLeaveComment,
+  recalculateLeaveBalance,
   updateEarnedLeaveBalance
 } from '../controllers/myLeaveRequestController.js';
 
@@ -28,6 +29,9 @@ router.put('/:id/approve', approveLeaveRequest);
 router.put('/:id/reject', rejectLeaveRequest);
 router.post('/reset-annual', resetAnnualLeaves);
 router.post('/update-earned-leave', updateEarnedLeaveBalance);
+// Add this route
+router.post('/recalculate-balance/:employeeCode', recalculateLeaveBalance);
+
 
 // Comment update route
 router.put('/:id', updateLeaveComment);
