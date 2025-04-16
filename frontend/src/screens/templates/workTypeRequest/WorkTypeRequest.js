@@ -32,7 +32,7 @@ import {
   Alert,
 } from "@mui/material";
 
-import { Search, Add, Edit, Delete, FilterList } from "@mui/icons-material";
+import { Search, Add, Edit, Delete } from "@mui/icons-material";
 import {
   fetchWorkTypeRequests,
   createWorkTypeRequest,
@@ -245,7 +245,7 @@ const WorkTypeRequest = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleActionsClick = (event) => setAnchorEl(event.currentTarget);
+  
 
   const handleSelectAll = () => {
     const allIds = shiftRequests.map((req) => req._id);
@@ -395,19 +395,7 @@ const WorkTypeRequest = () => {
                 width: { xs: "100%", sm: "auto" },
               }}
             >
-              <Button
-                variant="outlined"
-                startIcon={<FilterList />}
-                onClick={handleActionsClick}
-                disabled={!selectedAllocations.length}
-                sx={{
-                  height: { xs: "auto", sm: 40 },
-                  padding: { xs: "8px 16px", sm: "6px 16px" },
-                  width: { xs: "100%", sm: "auto" },
-                }}
-              >
-                Actions
-              </Button>
+            
 
               <Button
                 variant="contained"
@@ -990,6 +978,7 @@ const WorkTypeRequest = () => {
         </Table>
       </TableContainer>
 
+{/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleCloseDeleteDialog}
