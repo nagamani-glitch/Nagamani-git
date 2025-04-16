@@ -111,15 +111,24 @@ export const createLeaveRequest = async (req, res) => {
       leaveBalance = await LeaveBalance.findOne({ employeeCode });
     }
     
+    // // Check if employee has enough balance
+    // const availableBalance = leaveBalance[leaveType].total - leaveBalance[leaveType].used - leaveBalance[leaveType].pending;
+    
+    // if (numberOfDays > availableBalance) {
+    //   return res.status(400).json({ 
+    //     message: `Insufficient ${leaveType} leave balance. Available: ${availableBalance} days, Requested: ${numberOfDays} days` 
+    //   });
+    // }
+    
     // Check if employee has enough balance
-    const availableBalance = leaveBalance[leaveType].total - leaveBalance[leaveType].used - leaveBalance[leaveType].pending;
-    
-    if (numberOfDays > availableBalance) {
-      return res.status(400).json({ 
-        message: `Insufficient ${leaveType} leave balance. Available: ${availableBalance} days, Requested: ${numberOfDays} days` 
-      });
-    }
-    
+const availableBalance = leaveBalance[leaveType].total - leaveBalance[leaveType].used - leaveBalance[leaveType].pending;
+
+if (numberOfDays > availableBalance) {
+  return res.status(400).json({ 
+    message: `Insufficient ${leaveType} leave balance. Available: ${availableBalance} days, Requested: ${numberOfDays} days` 
+  });
+}
+
     // Create leave request with calculated days
     const leaveData = {
       ...req.body,
@@ -385,4 +394,20 @@ export const getEmployeeLeaveRequests = async (req, res) => {
         res.status(500).json({ message: error.message });
       }
     };
+
+    // Add this function to your controller
+export const updateEarnedLeaveBalance = async (req, res) => {
+  try {
+    await LeaveBalance.updateMany(
+      {}, 
+      { $set: { "earned.total": 15 } }
+    );
+    
+    res.status(200).json({ message: "Earned leave balance updated for all employees" });
+  } catch (error) {
+    console.error("Error updating earned leave balance:", error);
+    res.status(500).json({ message: "Error updating earned leave balance" });
+  }
+};
+
     

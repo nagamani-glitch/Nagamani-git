@@ -37,7 +37,7 @@ const leaveBalanceSchema = new mongoose.Schema({
     pending: { type: Number, default: 0 }
   },
   earned: {
-    total: { type: Number, default: 0 },
+    total: { type: Number, default: 15 },
     used: { type: Number, default: 0 },
     pending: { type: Number, default: 0 }
   },
