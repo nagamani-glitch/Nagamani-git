@@ -268,35 +268,32 @@ const Interview = () => {
               Add Interview
             </Button> */}
 
-<Button
-  variant="contained"
-  // startIcon={<Add />}
-  onClick={() => handleOpenDialog()}
-  sx={{
-    height: { xs: 40, sm: 40, md: 40 }, // Consistent height across screen sizes
-    background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
-    color: "white",
-    "&:hover": {
-      background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
-    },
-    whiteSpace: "nowrap",
-    width: { xs: "100%", sm: "auto" },
-    fontSize: { xs: "0.8rem", sm: "0.875rem", md: "0.9rem" }, // Adjusted font size
-    padding: { xs: "6px 10px", sm: "8px 16px", md: "8px 20px" }, // Better padding for larger screens
-    borderRadius: "4px", // Consistent border radius
-    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)", // Add subtle shadow
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: { sm: "150px" }, // Ensure minimum width on larger screens
-    transition: "all 0.3s ease", // Smooth transitions
-  }}
->
-  Add Interview
-</Button>
-
-
-
+            <Button
+              variant="contained"
+              // startIcon={<Add />}
+              onClick={() => handleOpenDialog()}
+              sx={{
+                height: { xs: 40, sm: 40, md: 40 }, // Consistent height across screen sizes
+                background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
+                color: "white",
+                "&:hover": {
+                  background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
+                },
+                whiteSpace: "nowrap",
+                width: { xs: "100%", sm: "auto" },
+                fontSize: { xs: "0.8rem", sm: "0.875rem", md: "0.9rem" }, // Adjusted font size
+                padding: { xs: "6px 10px", sm: "8px 16px", md: "8px 20px" }, // Better padding for larger screens
+                borderRadius: "4px", // Consistent border radius
+                boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)", // Add subtle shadow
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: { sm: "150px" }, // Ensure minimum width on larger screens
+                transition: "all 0.3s ease", // Smooth transitions
+              }}
+            >
+              Add Interview
+            </Button>
           </Box>
         </Box>
       </Paper>
@@ -522,8 +519,7 @@ const Interview = () => {
         />
       </Box>
 
-
-{/* Create/Edit Dialog */}
+      {/* Create/Edit Dialog */}
       <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
