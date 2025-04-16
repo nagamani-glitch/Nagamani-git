@@ -1251,3 +1251,98 @@ td button:hover {
   background-color: #bbdefb;
   color: #1565c0;
 }
+
+/* Responsive table container */
+.responsive-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive {
+  min-width: 650px; /* Ensures table doesn't shrink too much */
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  .objectives {
+    padding: 16px;
+  }
+  
+  .stats-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .stat-card {
+    padding: 16px;
+  }
+  
+  .stat-card h3 {
+    font-size: 24px;
+  }
+  
+  .chip, .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  
+  .employee-option {
+    padding: 8px !important;
+  }
+  
+  .employee-option-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+  }
+  
+  .employee-option-name {
+    font-size: 14px;
+  }
+  
+  .employee-option-details {
+    font-size: 12px;
+  }
+  
+  .manager-chips-container,
+  .assignee-chips-container {
+    padding: 12px;
+    max-height: 120px;
+  }
+  
+  .manager-chip,
+  .assignee-chip {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+/* Improve scrolling on mobile */
+@media (max-width: 480px) {
+  .objectives {
+    padding: 12px;
+  }
+  
+  .responsive-table-container {
+    margin: 12px 0;
+    border-radius: 8px;
+  }
+  
+  .key-result-item {
+    padding: 12px;
+  }
+  
+  .key-result-title {
+    font-size: 14px;
+  }
+  
+  .key-result-description {
+    font-size: 12px;
+  }
+  
+  .key-result-chip {
+    height: 20px;
+    font-size: 10px;
+  }
+}
