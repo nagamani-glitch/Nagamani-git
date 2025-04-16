@@ -30,6 +30,8 @@ import {
   Stack,
   useMediaQuery,
   useTheme,
+  Fade,
+  CircularProgress,
 } from "@mui/material";
 import {
   FilterList,
@@ -44,8 +46,12 @@ import {
 
 const TimeOffRequests = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
+  // Add these state variables for delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -54,6 +60,7 @@ const TimeOffRequests = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -186,10 +193,58 @@ const TimeOffRequests = () => {
     setCreateOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  // const handleDelete = async (id) => {
+  //   try {
+  //     const response = await fetch(
+  //       `http://localhost:5000/api/time-off-requests/${id}`,
+  //       {
+  //         method: "DELETE",
+  //       }
+  //     );
+
+  //     if (!response.ok) throw new Error("Failed to delete request");
+
+  //     showSnackbar("Request deleted successfully");
+  //     fetchRequests();
+  //   } catch (error) {
+  //     showSnackbar("Error deleting request", "error");
+  //   }
+  // };
+
+  // Replace the existing handleDelete function with these functions
+  const handleDeleteClick = (request) => {
+    setItemToDelete(request);
+    setDeleteDialogOpen(true);
+  };
+
+  // const handleConfirmDelete = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await fetch(
+  //       `http://localhost:5000/api/time-off-requests/${itemToDelete._id}`,
+  //       {
+  //         method: "DELETE",
+  //       }
+  //     );
+
+  //     if (!response.ok) throw new Error("Failed to delete request");
+
+  //     showSnackbar("Request deleted successfully");
+  //     fetchRequests();
+  //     setDeleteDialogOpen(false);
+  //     setItemToDelete(null);
+  //   } catch (error) {
+  //     showSnackbar("Error deleting request", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const handleConfirmDelete = async () => {
     try {
+      setLoading(true);
       const response = await fetch(
-        `http://localhost:5000/api/time-off-requests/${id}`,
+        `http://localhost:5000/api/time-off-requests/${itemToDelete._id}`,
         {
           method: "DELETE",
         }
@@ -199,9 +254,18 @@ const TimeOffRequests = () => {
 
       showSnackbar("Request deleted successfully");
       fetchRequests();
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     } catch (error) {
       showSnackbar("Error deleting request", "error");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
   };
 
   const handlePreview = async (id) => {
@@ -229,9 +293,19 @@ const TimeOffRequests = () => {
 
   // Render mobile card view for requests
   const renderRequestCard = (request) => (
-    <Card sx={{ mb: 2, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }} key={request._id}>
+    <Card
+      sx={{ mb: 2, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+      key={request._id}
+    >
       <CardContent sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 1,
+          }}
+        >
           <Box>
             <Typography variant="subtitle1" fontWeight={600}>
               {request.name}
@@ -247,26 +321,32 @@ const TimeOffRequests = () => {
             sx={{ fontWeight: 500 }}
           />
         </Box>
-        
+
         <Divider sx={{ my: 1.5 }} />
-        
+
         <Stack spacing={1.5}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="body2" color="text.secondary">Date:</Typography>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary">
+              Date:
+            </Typography>
             <Typography variant="body2" fontWeight={500}>
               {new Date(request.date).toLocaleDateString()} ({request.day})
             </Typography>
           </Box>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="body2" color="text.secondary">Check In/Out:</Typography>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary">
+              Check In/Out:
+            </Typography>
             <Typography variant="body2" fontWeight={500}>
               {request.checkIn} - {request.checkOut}
             </Typography>
           </Box>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="body2" color="text.secondary">Shift:</Typography>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary">
+              Shift:
+            </Typography>
             <Chip
               label={request.shift}
               size="small"
@@ -274,13 +354,15 @@ const TimeOffRequests = () => {
                 backgroundColor: "grey.100",
                 color: "grey.800",
                 fontWeight: 500,
-                height: '22px',
+                height: "22px",
               }}
             />
           </Box>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="body2" color="text.secondary">Work Type:</Typography>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary">
+              Work Type:
+            </Typography>
             <Chip
               label={request.workType}
               size="small"
@@ -288,20 +370,25 @@ const TimeOffRequests = () => {
                 backgroundColor: "grey.50",
                 color: "grey.700",
                 fontWeight: 500,
-                height: '22px',
+                height: "22px",
               }}
             />
           </Box>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="body2" color="text.secondary">Hours:</Typography>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary">
+              Hours:
+            </Typography>
             <Typography variant="body2" fontWeight={500}>
-              Min: {request.minHour}h | At Work: {request.atWork}h | OT: +{request.overtime}h
+              Min: {request.minHour}h | At Work: {request.atWork}h | OT: +
+              {request.overtime}h
             </Typography>
           </Box>
         </Stack>
-        
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+
+        <Box
+          sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}
+        >
           <Tooltip title="View Details" arrow>
             <IconButton
               color="primary"
@@ -328,7 +415,7 @@ const TimeOffRequests = () => {
               <Edit fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Delete" arrow>
+          {/* <Tooltip title="Delete" arrow>
             <IconButton
               color="error"
               onClick={() => handleDelete(request._id)}
@@ -337,6 +424,15 @@ const TimeOffRequests = () => {
                 backgroundColor: "error.lighter",
                 "&:hover": { backgroundColor: "error.light" },
               }}
+            >
+              <Delete fontSize="small" />
+            </IconButton>
+          </Tooltip> */}
+          <Tooltip title="Delete" arrow>
+            <IconButton
+              color="error"
+              onClick={() => handleDeleteClick(request)}
+              size="small"
             >
               <Delete fontSize="small" />
             </IconButton>
@@ -365,12 +461,12 @@ const TimeOffRequests = () => {
             borderBottom: 1,
             borderColor: "divider",
             flexDirection: isMobile ? "column" : "row",
-            gap: isMobile ? 2 : 0
+            gap: isMobile ? 2 : 0,
           }}
         >
-          <Typography 
-            variant={isMobile ? "h5" : "h4"} 
-            fontWeight="bold" 
+          <Typography
+            variant={isMobile ? "h5" : "h4"}
+            fontWeight="bold"
             color="primary"
           >
             Time Off Requests
@@ -386,21 +482,25 @@ const TimeOffRequests = () => {
               borderRadius: 2,
               textTransform: "none",
               fontSize: "1rem",
-              width: isMobile ? "100%" : "auto"
+              width: isMobile ? "100%" : "auto",
             }}
           >
             Create Request
           </Button>
         </Box>
 
-        <Box sx={{ p: isMobile ? 2 : 3, backgroundColor: "background.default" }}>
-          <Box sx={{ 
-            mb: 3, 
-            display: "flex", 
-            gap: 2,
-            flexDirection: isMobile ? "column" : "row",
-            width: "100%"
-          }}>
+        <Box
+          sx={{ p: isMobile ? 2 : 3, backgroundColor: "background.default" }}
+        >
+          <Box
+            sx={{
+              mb: 3,
+              display: "flex",
+              gap: 2,
+              flexDirection: isMobile ? "column" : "row",
+              width: "100%",
+            }}
+          >
             <TextField
               placeholder="Search by name or ID..."
               value={searchTerm}
@@ -440,14 +540,14 @@ const TimeOffRequests = () => {
                 ))}
             </TextField>
           </Box>
-          
+
           {isMobile ? (
             // Mobile view - card layout
             <Stack spacing={2}>
               {requests.length > 0 ? (
-                requests.map(request => renderRequestCard(request))
+                requests.map((request) => renderRequestCard(request))
               ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Box sx={{ textAlign: "center", py: 4 }}>
                   <Typography variant="body1" color="text.secondary">
                     No requests found
                   </Typography>
@@ -600,7 +700,8 @@ const TimeOffRequests = () => {
                         <TableCell>
                           <Box>
                             <Typography variant="body2">
-                              Min: {request.minHour}h | At Work: {request.atWork}h
+                              Min: {request.minHour}h | At Work:{" "}
+                              {request.atWork}h
                             </Typography>
                             <Typography
                               variant="caption"
@@ -637,11 +738,24 @@ const TimeOffRequests = () => {
                                 <Edit fontSize="small" />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Delete" arrow>
+                            {/* <Tooltip title="Delete" arrow>
                               <IconButton
                                 color="error"
                                 onClick={() => handleDelete(request._id)}
                                 size="small"
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Tooltip> */}
+                            <Tooltip title="Delete" arrow>
+                              <IconButton
+                                color="error"
+                                onClick={() => handleDeleteClick(request)}
+                                size="small"
+                                sx={{
+                                  backgroundColor: "error.lighter",
+                                  "&:hover": { backgroundColor: "error.light" },
+                                }}
                               >
                                 <Delete fontSize="small" />
                               </IconButton>
@@ -1068,6 +1182,167 @@ const TimeOffRequests = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
+        TransitionComponent={Fade}
+        TransitionProps={{
+          timeout: 300,
+        }}
+        sx={{
+          "& .MuiDialog-container": {
+            justifyContent: "center",
+            alignItems: "center",
+            "& .MuiPaper-root": {
+              margin: { xs: "16px", sm: "32px" },
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+            },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Delete color="white" />
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Are you sure you want to delete this time off request? This action
+            cannot be undone.
+          </Alert>
+          {itemToDelete && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+              <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                Employee: {itemToDelete.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Employee ID: {itemToDelete.empId}
+              </Typography>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Date: {new Date(itemToDelete.date).toLocaleDateString()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Day: {itemToDelete.day}
+                </Typography>
+              </Box>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Check In: {itemToDelete.checkIn}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Check Out: {itemToDelete.checkOut}
+                </Typography>
+              </Box>
+              <Box sx={{ mt: 1 }}>
+                <Chip
+                  label={itemToDelete.status}
+                  color={getStatusColor(itemToDelete.status)}
+                  size="small"
+                  sx={{ mr: 1 }}
+                />
+                <Chip
+                  label={itemToDelete.shift}
+                  size="small"
+                  sx={{
+                    backgroundColor: "grey.100",
+                    color: "grey.800",
+                    mr: 1,
+                  }}
+                />
+                <Chip
+                  label={itemToDelete.workType}
+                  size="small"
+                  sx={{
+                    backgroundColor: "grey.50",
+                    color: "grey.700",
+                  }}
+                />
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={handleCloseDeleteDialog}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar for notifications */}
       <Snackbar
@@ -1089,5 +1364,3 @@ const TimeOffRequests = () => {
 };
 
 export default TimeOffRequests;
-
-
