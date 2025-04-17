@@ -353,7 +353,7 @@ const Objectives = () => {
     setItemToDelete(objective);
     setDeleteDialogOpen(true);
   };
-  
+
   // const handleConfirmDelete = async () => {
   //   try {
   //     setLoading(true);
@@ -377,7 +377,7 @@ const Objectives = () => {
   //     setLoading(false);
   //   }
   // };
-  
+
   const handleConfirmDelete = async () => {
     try {
       setLoading(true);
@@ -401,7 +401,7 @@ const Objectives = () => {
       setLoading(false);
     }
   };
-  
+
   const handleCloseDeleteDialog = () => {
     setDeleteDialogOpen(false);
     setItemToDelete(null);
@@ -1229,7 +1229,7 @@ const Objectives = () => {
                 fontSize: "14px",
               }}
             >
-              <thead>
+              {/* <thead>
                 <tr
                   style={{
                     backgroundColor: "#f8fafc",
@@ -1340,7 +1340,124 @@ const Objectives = () => {
                     Actions
                   </th>
                 </tr>
+              </thead> */}
+              <thead>
+                <tr>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "white",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      backgroundColor: "#1976d2",
+                    }}
+                    onClick={() => handleSort("title")}
+                  >
+                    Title{" "}
+                    {sortConfig.key === "title" &&
+                      (sortConfig.direction === "asc" ? "↑" : "↓")}
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "white",
+                      fontWeight: 600,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Managers
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "white",
+                      fontWeight: 600,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Key Results
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "white",
+                      fontWeight: 600,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Assignees
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "white",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      backgroundColor: "#1976d2",
+                    }}
+                    onClick={() => handleSort("duration")}
+                  >
+                    Duration{" "}
+                    {sortConfig.key === "duration" &&
+                      (sortConfig.direction === "asc" ? "↑" : "↓")}
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "white",
+                      fontWeight: 600,
+                      width: "150px",
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Progress
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "white",
+                      fontWeight: 600,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Type
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "white",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      backgroundColor: "#1976d2",
+                    }}
+                    onClick={() => handleSort("createdAt")}
+                  >
+                    Created{" "}
+                    {sortConfig.key === "createdAt" &&
+                      (sortConfig.direction === "asc" ? "↑" : "↓")}
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "white",
+                      fontWeight: 600,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Actions
+                  </th>
+                </tr>
               </thead>
+
               <tbody>
                 {filteredObjectives
                   .filter((obj) =>
@@ -3480,158 +3597,158 @@ const Objectives = () => {
         </Popover>
       )}
       {/* Delete Confirmation Dialog */}
-{/* Delete Confirmation Dialog */}
-<Dialog
-  open={deleteDialogOpen}
-  onClose={handleCloseDeleteDialog}
-  PaperProps={{
-    sx: {
-      width: { xs: "95%", sm: "500px" },
-      maxWidth: "500px",
-      borderRadius: "20px",
-      overflow: "hidden",
-      margin: { xs: "8px", sm: "32px" },
-    },
-  }}
-  TransitionComponent={Fade}
-  TransitionProps={{
-    timeout: 300,
-  }}
-  sx={{
-    "& .MuiDialog-container": {
-      justifyContent: "center",
-      alignItems: "center",
-      "& .MuiPaper-root": {
-        margin: { xs: "16px", sm: "32px" },
-        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
-      },
-    },
-  }}
->
-  <DialogTitle
-    sx={{
-      background: "linear-gradient(45deg, #f44336, #ff7961)",
-      fontSize: { xs: "1.25rem", sm: "1.5rem" },
-      fontWeight: 600,
-      padding: { xs: "16px 24px", sm: "24px 32px" },
-      color: "white",
-      display: "flex",
-      alignItems: "center",
-      gap: 1,
-    }}
-  >
-    <Delete color="white" />
-    Confirm Deletion
-  </DialogTitle>
-  <DialogContent
-    sx={{
-      padding: { xs: "24px", sm: "32px" },
-      backgroundColor: "#f8fafc",
-      paddingTop: { xs: "24px", sm: "32px" },
-    }}
-  >
-    <Alert severity="warning" sx={{ mb: 2 }}>
-      Are you sure you want to delete this objective? All key results in
-      this objective will also be deleted.
-    </Alert>
-    {itemToDelete && (
-      <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
-        <Typography variant="body1" fontWeight={600} color="#2c3e50">
-          Objective: {itemToDelete.title}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          This objective contains {itemToDelete.keyResults || 0} key
-          results.
-        </Typography>
-        {itemToDelete.description && (
-          <Typography
-            variant="body2"
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
+        TransitionComponent={Fade}
+        TransitionProps={{
+          timeout: 300,
+        }}
+        sx={{
+          "& .MuiDialog-container": {
+            justifyContent: "center",
+            alignItems: "center",
+            "& .MuiPaper-root": {
+              margin: { xs: "16px", sm: "32px" },
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+            },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Delete color="white" />
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Are you sure you want to delete this objective? All key results in
+            this objective will also be deleted.
+          </Alert>
+          {itemToDelete && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+              <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                Objective: {itemToDelete.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                This objective contains {itemToDelete.keyResults || 0} key
+                results.
+              </Typography>
+              {itemToDelete.description && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 1,
+                    p: 1,
+                    bgcolor: "#fff",
+                    borderRadius: 1,
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  {itemToDelete.description.substring(0, 100)}
+                  {itemToDelete.description.length > 100 ? "..." : ""}
+                </Typography>
+              )}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
+                {itemToDelete.objectiveType && (
+                  <Chip
+                    label={
+                      itemToDelete.objectiveType === "self"
+                        ? "Self Objective"
+                        : "Team Objective"
+                    }
+                    size="small"
+                    color={
+                      itemToDelete.objectiveType === "self"
+                        ? "primary"
+                        : "secondary"
+                    }
+                  />
+                )}
+                {itemToDelete.archived && (
+                  <Chip label="Archived" size="small" color="warning" />
+                )}
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={handleCloseDeleteDialog}
             sx={{
-              mt: 1,
-              p: 1,
-              bgcolor: "#fff",
-              borderRadius: 1,
-              border: "1px solid #e2e8f0",
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
             }}
           >
-            {itemToDelete.description.substring(0, 100)}
-            {itemToDelete.description.length > 100 ? "..." : ""}
-          </Typography>
-        )}
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
-          {itemToDelete.objectiveType && (
-            <Chip
-              label={
-                itemToDelete.objectiveType === "self"
-                  ? "Self Objective"
-                  : "Team Objective"
-              }
-              size="small"
-              color={
-                itemToDelete.objectiveType === "self"
-                  ? "primary"
-                  : "secondary"
-              }
-            />
-          )}
-          {itemToDelete.archived && (
-            <Chip label="Archived" size="small" color="warning" />
-          )}
-        </Box>
-      </Box>
-    )}
-  </DialogContent>
-  <DialogActions
-    sx={{
-      padding: { xs: "16px 24px", sm: "24px 32px" },
-      backgroundColor: "#f8fafc",
-      borderTop: "1px solid #e0e0e0",
-      gap: 2,
-    }}
-  >
-    <Button
-      onClick={handleCloseDeleteDialog}
-      sx={{
-        border: "2px solid #1976d2",
-        color: "#1976d2",
-        "&:hover": {
-          border: "2px solid #64b5f6",
-          backgroundColor: "#e3f2fd",
-          color: "#1976d2",
-        },
-        textTransform: "none",
-        borderRadius: "8px",
-        px: 3,
-        fontWeight: 600,
-      }}
-    >
-      Cancel
-    </Button>
-    <Button
-      onClick={handleConfirmDelete}
-      variant="contained"
-      color="error"
-      disabled={loading}
-      startIcon={
-        loading ? <CircularProgress size={20} color="inherit" /> : null
-      }
-      sx={{
-        background: "linear-gradient(45deg, #f44336, #ff7961)",
-        fontSize: "0.95rem",
-        textTransform: "none",
-        padding: "8px 32px",
-        borderRadius: "10px",
-        boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
-        color: "white",
-        "&:hover": {
-          background: "linear-gradient(45deg, #d32f2f, #f44336)",
-        },
-      }}
-    >
-      {loading ? "Deleting..." : "Delete"}
-    </Button>
-  </DialogActions>
-</Dialog>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Notification Snackbar */}
       <Snackbar
