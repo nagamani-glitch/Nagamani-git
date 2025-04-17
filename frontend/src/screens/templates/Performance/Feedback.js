@@ -1916,7 +1916,7 @@ const Feedback = () => {
           // Table View for Tablet and Desktop
           <Box sx={{ overflowX: "auto" }}>
             <Table sx={{ minWidth: 650 }}>
-              <TableHead>
+              {/* <TableHead>
                 <TableRow sx={{ backgroundColor: "#f8fafc" }}>
                   <TableCell padding="checkbox">
                     <Checkbox
@@ -1950,7 +1950,95 @@ const Feedback = () => {
                     Actions
                   </TableCell>
                 </TableRow>
+              </TableHead> */}
+              <TableHead>
+                <TableRow>
+                  <TableCell
+                    padding="checkbox"
+                    sx={{
+                      backgroundColor: "#1976d2",
+                      color: "white",
+                    }}
+                  >
+                    <Checkbox
+                      indeterminate={
+                        selectedItems.length > 0 &&
+                        selectedItems.length < filteredFeedbackData.length
+                      }
+                      checked={
+                        filteredFeedbackData.length > 0 &&
+                        selectedItems.length === filteredFeedbackData.length
+                      }
+                      onChange={handleSelectAll}
+                      sx={{
+                        color: "white",
+                        "&.Mui-checked": { color: "white" },
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      fontWeight: 600,
+                      color: "white",
+                      py: 2,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Employee
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      fontWeight: 600,
+                      color: "white",
+                      py: 2,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Title
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      fontWeight: 600,
+                      color: "white",
+                      py: 2,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Status
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      fontWeight: 600,
+                      color: "white",
+                      py: 2,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Start Date
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      fontWeight: 600,
+                      color: "white",
+                      py: 2,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Due Date
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      fontWeight: 600,
+                      color: "white",
+                      py: 2,
+                      backgroundColor: "#1976d2",
+                    }}
+                  >
+                    Actions
+                  </TableCell>
+                </TableRow>
               </TableHead>
+
               <TableBody>
                 {filteredFeedbackData.length > 0 ? (
                   filteredFeedbackData.map((item) => (
