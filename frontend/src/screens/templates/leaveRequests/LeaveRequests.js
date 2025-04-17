@@ -43,20 +43,20 @@ import { Stack } from "@mui/material";
 const API_URL = "http://localhost:5000/api/leave-requests";
 
 const LEAVE_TYPES = [
-  { value: 'annual', label: 'Annual Leave' },
-  { value: 'sick', label: 'Sick Leave' },
-  { value: 'personal', label: 'Personal Leave' },
-  { value: 'maternity', label: 'Maternity Leave' },
-  { value: 'paternity', label: 'Paternity Leave' },
-  { value: 'casual', label: 'Casual Leave' },
-  { value: 'earned', label: 'Earned Leave' }
+  { value: "annual", label: "Annual Leave" },
+  { value: "sick", label: "Sick Leave" },
+  { value: "personal", label: "Personal Leave" },
+  { value: "maternity", label: "Maternity Leave" },
+  { value: "paternity", label: "Paternity Leave" },
+  { value: "casual", label: "Casual Leave" },
+  { value: "earned", label: "Earned Leave" },
 ];
 
 const LeaveRequests = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-  
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [leaveData, setLeaveData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -316,57 +316,78 @@ const LeaveRequests = () => {
           <Typography variant="h6" className="mobile-card-title">
             {leave.employeeName}
           </Typography>
-          <Chip 
-            label={leave.status} 
+          <Chip
+            label={leave.status}
             className={getStatusBadgeClass(leave.status)}
             size="small"
           />
         </Box>
-        
+
         <Typography variant="body2" className="employee-code">
           {leave.employeeCode}
         </Typography>
-        
+
         <Divider sx={{ my: 1.5 }} />
-        
+
         <Box className="mobile-card-row">
           <Typography variant="body2" className="mobile-card-label">
-            <Person fontSize="small" sx={{ mr: 0.5, verticalAlign: 'middle' }} />
+            <Person
+              fontSize="small"
+              sx={{ mr: 0.5, verticalAlign: "middle" }}
+            />
             Leave Type:
           </Typography>
           <Typography variant="body2" className="mobile-card-value">
             {getLeaveTypeName(leave.leaveType)}
           </Typography>
         </Box>
-        
+
         <Box className="mobile-card-row">
           <Typography variant="body2" className="mobile-card-label">
-            <CalendarToday fontSize="small" sx={{ mr: 0.5, verticalAlign: 'middle' }} />
+            <CalendarToday
+              fontSize="small"
+              sx={{ mr: 0.5, verticalAlign: "middle" }}
+            />
             Duration:
           </Typography>
           <Typography variant="body2" className="mobile-card-value">
-            {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+            {new Date(leave.startDate).toLocaleDateString()} -{" "}
+            {new Date(leave.endDate).toLocaleDateString()}
             <span className="leave-days">
-              {leave.halfDay ? "Half Day" : `${leave.numberOfDays || calculateDays(leave.startDate, leave.endDate, leave.halfDay)} days`}
+              {leave.halfDay
+                ? "Half Day"
+                : `${
+                    leave.numberOfDays ||
+                    calculateDays(leave.startDate, leave.endDate, leave.halfDay)
+                  } days`}
               {leave.halfDay && ` (${leave.halfDayType})`}
             </span>
           </Typography>
         </Box>
-        
+
         <Box className="mobile-card-row">
           <Typography variant="body2" className="mobile-card-label">
-            <Description fontSize="small" sx={{ mr: 0.5, verticalAlign: 'middle' }} />
+            <Description
+              fontSize="small"
+              sx={{ mr: 0.5, verticalAlign: "middle" }}
+            />
             Reason:
           </Typography>
-          <Typography variant="body2" className="mobile-card-value leave-reason">
+          <Typography
+            variant="body2"
+            className="mobile-card-value leave-reason"
+          >
             {leave.reason}
           </Typography>
         </Box>
-        
+
         {leave.status === "rejected" && leave.rejectionReason && (
           <Box className="mobile-card-row">
             <Typography variant="body2" className="mobile-card-label">
-              <Info fontSize="small" sx={{ mr: 0.5, verticalAlign: 'middle' }} />
+              <Info
+                fontSize="small"
+                sx={{ mr: 0.5, verticalAlign: "middle" }}
+              />
               Rejection Reason:
             </Typography>
             <Typography variant="body2" className="mobile-card-value">
@@ -374,9 +395,9 @@ const LeaveRequests = () => {
             </Typography>
           </Box>
         )}
-        
+
         <Divider sx={{ my: 1.5 }} />
-        
+
         <Box className="mobile-card-actions">
           {leave.status === "pending" && (
             <>
@@ -432,7 +453,7 @@ const LeaveRequests = () => {
       <div className="leave-requests-header">
         <Typography variant="h5" className="leave-requests-title">
           Leave Requests Management
-          </Typography>
+        </Typography>
         <div className="leave-requests-controls">
           <TextField
             className="leave-requests-search"
@@ -463,26 +484,42 @@ const LeaveRequests = () => {
           </Box>
         ) : !filteredLeaveData.length ? (
           <Box sx={{ p: 4, textAlign: "center" }} className="empty-state">
-            <Typography variant="body1" color="textSecondary" className="empty-state-text">
+            <Typography
+              variant="body1"
+              color="textSecondary"
+              className="empty-state-text"
+            >
               No leave requests found
             </Typography>
           </Box>
         ) : isMobile ? (
           // Mobile view - card layout
           <div className="mobile-cards-container">
-            {filteredLeaveData.map(leave => renderMobileCard(leave))}
+            {filteredLeaveData.map((leave) => renderMobileCard(leave))}
           </div>
         ) : (
           // Desktop/Tablet view - table layout
           <table className="leave-requests-table">
             <thead>
               <tr>
-                <th>Employee</th>
-                <th>Leave Type</th>
-                <th>Duration</th>
-                <th>Reason</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
+                  Employee
+                </th>
+                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
+                  Leave Type
+                </th>
+                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
+                  Duration
+                </th>
+                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
+                  Reason
+                </th>
+                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
+                  Status
+                </th>
+                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -497,9 +534,19 @@ const LeaveRequests = () => {
                   <td>{getLeaveTypeName(leave.leaveType)}</td>
                   <td>
                     <div>
-                      {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+                      {new Date(leave.startDate).toLocaleDateString()} -{" "}
+                      {new Date(leave.endDate).toLocaleDateString()}
                       <div className="leave-days">
-                        {leave.halfDay ? "Half Day" : `${leave.numberOfDays || calculateDays(leave.startDate, leave.endDate, leave.halfDay)} days`}
+                        {leave.halfDay
+                          ? "Half Day"
+                          : `${
+                              leave.numberOfDays ||
+                              calculateDays(
+                                leave.startDate,
+                                leave.endDate,
+                                leave.halfDay
+                              )
+                            } days`}
                         {leave.halfDay && ` (${leave.halfDayType})`}
                       </div>
                     </div>
@@ -595,13 +642,15 @@ const LeaveRequests = () => {
             onChange={(e) => setRejectionReason(e.target.value)}
             required
             error={!rejectionReason.trim()}
-            helperText={!rejectionReason.trim() ? "Rejection reason is required" : ""}
+            helperText={
+              !rejectionReason.trim() ? "Rejection reason is required" : ""
+            }
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setIsRejectDialogOpen(false)}>Cancel</Button>
-          <Button 
-            onClick={handleRejectRequest} 
+          <Button
+            onClick={handleRejectRequest}
             color="error"
             disabled={!rejectionReason.trim() || loading}
           >
@@ -632,8 +681,8 @@ const LeaveRequests = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseCommentDialog}>Cancel</Button>
-          <Button 
-            onClick={handleSaveComment} 
+          <Button
+            onClick={handleSaveComment}
             color="primary"
             disabled={loading}
           >
@@ -657,13 +706,16 @@ const LeaveRequests = () => {
             Are you sure you want to cancel this leave request?
           </Typography>
           <Typography variant="body2" color="error">
-            Warning: Cancelling a leave request will mark it as cancelled in the system. This should only be done for administrative purposes.
+            Warning: Cancelling a leave request will mark it as cancelled in the
+            system. This should only be done for administrative purposes.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsDeleteDialogOpen(false)}>No, Keep It</Button>
-          <Button 
-            onClick={handleConfirmDelete} 
+          <Button onClick={() => setIsDeleteDialogOpen(false)}>
+            No, Keep It
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
             color="error"
             disabled={loading}
           >
@@ -698,9 +750,7 @@ const LeaveRequests = () => {
               fullWidth
               size="small"
               value={filters.type}
-              onChange={(e) =>
-                setFilters({ ...filters, type: e.target.value })
-              }
+              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
             >
               <MenuItem value="">All Types</MenuItem>
               {LEAVE_TYPES.map((type) => (
@@ -757,7 +807,9 @@ const LeaveRequests = () => {
               }
             />
 
-            <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}
+            >
               <Button
                 variant="outlined"
                 onClick={() =>
@@ -801,4 +853,3 @@ const LeaveRequests = () => {
 };
 
 export default LeaveRequests;
-
