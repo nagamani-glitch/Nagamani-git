@@ -573,8 +573,8 @@ const TimeOffRequests = () => {
                     <TableCell
                       sx={{
                         fontWeight: 600,
-                        backgroundColor: "primary.light",
-                        color: "primary.contrastText",
+                        backgroundColor: "#1976d2",
+                        color: "white",
                       }}
                     >
                       Employee
@@ -582,8 +582,8 @@ const TimeOffRequests = () => {
                     <TableCell
                       sx={{
                         fontWeight: 600,
-                        backgroundColor: "primary.light",
-                        color: "primary.contrastText",
+                        backgroundColor: "#1976d2",
+                        color: "white",
                       }}
                     >
                       Date
@@ -591,8 +591,8 @@ const TimeOffRequests = () => {
                     <TableCell
                       sx={{
                         fontWeight: 600,
-                        backgroundColor: "primary.light",
-                        color: "primary.contrastText",
+                        backgroundColor: "#1976d2",
+                        color: "white",
                       }}
                     >
                       Check In/Out
@@ -600,8 +600,8 @@ const TimeOffRequests = () => {
                     <TableCell
                       sx={{
                         fontWeight: 600,
-                        backgroundColor: "primary.light",
-                        color: "primary.contrastText",
+                        backgroundColor: "#1976d2",
+                        color: "white",
                       }}
                     >
                       Shift
@@ -609,8 +609,8 @@ const TimeOffRequests = () => {
                     <TableCell
                       sx={{
                         fontWeight: 600,
-                        backgroundColor: "primary.light",
-                        color: "primary.contrastText",
+                        backgroundColor: "#1976d2",
+                        color: "white",
                       }}
                     >
                       Work Type
@@ -618,8 +618,8 @@ const TimeOffRequests = () => {
                     <TableCell
                       sx={{
                         fontWeight: 600,
-                        backgroundColor: "primary.light",
-                        color: "primary.contrastText",
+                        backgroundColor: "#1976d2",
+                        color: "white",
                       }}
                     >
                       Hours
@@ -627,8 +627,8 @@ const TimeOffRequests = () => {
                     <TableCell
                       sx={{
                         fontWeight: 600,
-                        backgroundColor: "primary.light",
-                        color: "primary.contrastText",
+                        backgroundColor: "#1976d2",
+                        color: "white",
                       }}
                     >
                       Status
@@ -636,14 +636,15 @@ const TimeOffRequests = () => {
                     <TableCell
                       sx={{
                         fontWeight: 600,
-                        backgroundColor: "primary.light",
-                        color: "primary.contrastText",
+                        backgroundColor: "#1976d2",
+                        color: "white",
                       }}
                     >
                       Actions
                     </TableCell>
                   </TableRow>
                 </TableHead>
+
                 <TableBody>
                   {requests.length > 0 ? (
                     requests.map((request) => (
