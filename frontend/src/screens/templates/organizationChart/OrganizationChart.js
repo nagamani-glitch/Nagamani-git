@@ -66,15 +66,16 @@ const OrganizationChart = () => {
   const [nodeDetails, setNodeDetails] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
-  
+
   // Add delete confirmation dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [positionToDelete, setPositionToDelete] = useState(null);
+  const [editingNodeId, setEditingNodeId] = useState(null);
 
   // Add responsive hooks
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const API_URL = "http://localhost:5000/api";
 
@@ -226,7 +227,7 @@ const OrganizationChart = () => {
   // Confirm delete action
   const handleConfirmDelete = async () => {
     if (!positionToDelete) return;
-    
+
     try {
       setIsLoading(true);
       await axios.delete(`${API_URL}/positions/${positionToDelete._id}`);
@@ -249,45 +250,32 @@ const OrganizationChart = () => {
     }
   };
 
+  // const resetForm = () => {
+  //   setNewPosition({
+  //     name: "",
+  //     designation: "",
+  //     parentId: "",
+  //     department: "",
+  //     employeeId: "",
+  //     email: "",
+  //     status: "active",
+  //   });
+  //   setSelectedEmployee(null);
+  //   setEditingPosition(null);
+  // };
+
   const resetForm = () => {
     setNewPosition({
       name: "",
       designation: "",
-      parentId: "",
-      department: "",
-      employeeId: "",
       email: "",
+      employeeId: "",
+      department: "",
+      parentId: "",
       status: "active",
     });
     setSelectedEmployee(null);
-    setEditingPosition(null);
-  };
-
-  const openEditDialog = (node) => {
-    setEditingPosition(node);
-
-    // Find the employee if there's an employeeId
-    const employee = node.employeeId
-      ? registeredEmployees.find((emp) => emp.Emp_ID === node.employeeId)
-      : null;
-
-    setSelectedEmployee(employee);
-
-    // If we have an employee, use their department, otherwise use the node's department
-    const department =
-      employee?.joiningDetails?.department || node.department || "";
-
-    setNewPosition({
-      name: node.name,
-      designation: node.title, // Use title as designation
-      parentId: node.parentId,
-      department: department, // Make sure department is set correctly
-      employeeId: node.employeeId || "",
-      email: node.email || "",
-      status: node.status || "active",
-    });
-
-    setIsEditDialogOpen(true);
+    setEditingNodeId(null); // Add this line
   };
 
   const showNodeDetails = (node) => {
@@ -387,13 +375,13 @@ const OrganizationChart = () => {
           }}
           onClick={() => showNodeDetails(node)}
         >
-          <Typography 
-            variant={isMobile ? "subtitle1" : "h6"} 
-            sx={{ 
-              fontWeight: 600, 
+          <Typography
+            variant={isMobile ? "subtitle1" : "h6"}
+            sx={{
+              fontWeight: 600,
               mb: 1,
               fontSize: isMobile ? "0.9rem" : isTablet ? "1rem" : "1.25rem",
-              wordBreak: "break-word"
+              wordBreak: "break-word",
             }}
           >
             {node.name}
@@ -411,12 +399,12 @@ const OrganizationChart = () => {
               />
             )}
           </Typography>
-          <Typography 
-            variant="body2" 
-            sx={{ 
+          <Typography
+            variant="body2"
+            sx={{
               opacity: 0.9,
               fontSize: isMobile ? "0.75rem" : "0.875rem",
-              wordBreak: "break-word"
+              wordBreak: "break-word",
             }}
           >
             {node.title} {/* This is the designation */}
@@ -424,11 +412,11 @@ const OrganizationChart = () => {
           {node.department && (
             <Typography
               variant="caption"
-              sx={{ 
-                display: "block", 
-                mt: 1, 
+              sx={{
+                display: "block",
+                mt: 1,
                 opacity: 0.8,
-                fontSize: isMobile ? "0.65rem" : "0.75rem"
+                fontSize: isMobile ? "0.65rem" : "0.75rem",
               }}
             >
               {node.department}
@@ -544,6 +532,31 @@ const OrganizationChart = () => {
     );
   };
 
+  const openEditDialog = (node) => {
+    setEditingNodeId(node._id); // Add this line
+    setNewPosition({
+      name: node.name,
+      designation: node.title,
+      email: node.email || "",
+      employeeId: node.employeeId || "",
+      department: node.department || "",
+      parentId: node.parentId || "",
+      status: node.status || "active",
+    });
+
+    // If the node has employee data, find and set the corresponding employee
+    if (node.employeeId) {
+      const employee = registeredEmployees.find(
+        (emp) => emp.Emp_ID === node.employeeId
+      );
+      setSelectedEmployee(employee || null);
+    } else {
+      setSelectedEmployee(null);
+    }
+
+    setIsEditDialogOpen(true);
+  };
+
   return (
     <Box sx={{ p: isMobile ? 2 : 3, position: "relative" }}>
       <Snackbar
@@ -570,29 +583,29 @@ const OrganizationChart = () => {
           gap: isMobile ? 2 : 0,
         }}
       >
-        <Typography 
-          variant={isMobile ? "h5" : "h4"} 
-          component="h1" 
+        <Typography
+          variant={isMobile ? "h5" : "h4"}
+          component="h1"
           fontWeight="bold"
-          sx={{ 
-            display: "flex", 
-            alignItems: "center", 
+          sx={{
+            display: "flex",
+            alignItems: "center",
             gap: 1,
             fontSize: isMobile ? "1.5rem" : "2rem",
           }}
         >
-          <AccountTreeIcon 
-            sx={{ 
+          <AccountTreeIcon
+            sx={{
               color: "#1976d2",
-              fontSize: isMobile ? "1.5rem" : "2rem"
-            }} 
+              fontSize: isMobile ? "1.5rem" : "2rem",
+            }}
           />
           Organization Chart
         </Typography>
 
-        <Box 
-          sx={{ 
-            display: "flex", 
+        <Box
+          sx={{
+            display: "flex",
             gap: 2,
             flexDirection: isMobile ? "column" : "row",
             width: isMobile ? "100%" : "auto",
@@ -612,10 +625,10 @@ const OrganizationChart = () => {
           >
             Add Position
           </Button>
-          
-          <Box 
-            sx={{ 
-              display: "flex", 
+
+          <Box
+            sx={{
+              display: "flex",
               gap: 1,
               justifyContent: isMobile ? "center" : "flex-start",
               mt: isMobile ? 1 : 0,
@@ -669,7 +682,8 @@ const OrganizationChart = () => {
           backgroundColor: "#f8fafc",
           overflowX: "auto",
           minHeight: "70vh",
-          backgroundImage: "linear-gradient(#e3f2fd 1px, transparent 1px), linear-gradient(90deg, #e3f2fd 1px, transparent 1px)",
+          backgroundImage:
+            "linear-gradient(#e3f2fd 1px, transparent 1px), linear-gradient(90deg, #e3f2fd 1px, transparent 1px)",
           backgroundSize: "20px 20px",
           backgroundPosition: "center center",
           position: "relative",
@@ -754,7 +768,7 @@ const OrganizationChart = () => {
           <DeleteIcon />
           Confirm Deletion
         </DialogTitle>
-        <DialogContent 
+        <DialogContent
           sx={{
             padding: { xs: "24px", sm: "32px" },
             backgroundColor: "#f8fafc",
@@ -762,7 +776,8 @@ const OrganizationChart = () => {
           }}
         >
           <Alert severity="warning" sx={{ mb: 2 }}>
-            Are you sure you want to delete this position? This action cannot be undone.
+            Are you sure you want to delete this position? This action cannot be
+            undone.
           </Alert>
           {positionToDelete && (
             <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
@@ -782,15 +797,22 @@ const OrganizationChart = () => {
                   Employee ID: {positionToDelete.employeeId}
                 </Typography>
               )}
-              {positionToDelete.children && positionToDelete.children.length > 0 && (
-                <Typography variant="body2" color="error" sx={{ mt: 1, fontWeight: 500 }}>
-                  Warning: This position has {positionToDelete.children.length} subordinate position(s) that will be affected.
-                </Typography>
-              )}
+              {positionToDelete.children &&
+                positionToDelete.children.length > 0 && (
+                  <Typography
+                    variant="body2"
+                    color="error"
+                    sx={{ mt: 1, fontWeight: 500 }}
+                  >
+                    Warning: This position has{" "}
+                    {positionToDelete.children.length} subordinate position(s)
+                    that will be affected.
+                  </Typography>
+                )}
             </Box>
           )}
         </DialogContent>
-        <DialogActions 
+        <DialogActions
           sx={{
             padding: { xs: "16px 24px", sm: "24px 32px" },
             backgroundColor: "#f8fafc",
@@ -843,8 +865,9 @@ const OrganizationChart = () => {
       </Dialog>
 
       {/* Add Position Dialog */}
-      <Dialog 
-        open={isDialogOpen} 
+
+      <Dialog
+        open={isDialogOpen}
         onClose={() => {
           setIsDialogOpen(false);
           resetForm();
@@ -854,22 +877,32 @@ const OrganizationChart = () => {
         fullScreen={isMobile}
         PaperProps={{
           sx: {
-            borderRadius: isMobile ? 0 : "16px",
-            margin: isMobile ? 0 : undefined,
-          }
+            borderRadius: isMobile ? 0 : "20px",
+            overflow: "hidden",
+            margin: isMobile ? 0 : isTablet ? 1 : 2,
+            width: isMobile ? "100%" : isTablet ? "90%" : "80%",
+            maxWidth: isMobile ? "100%" : isTablet ? "700px" : "900px",
+          },
         }}
       >
         <DialogTitle
           sx={{
-            backgroundColor: "#1976d2",
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
             color: "white",
-            fontSize: isMobile ? "1.25rem" : "1.5rem",
+            fontSize: "1.5rem",
             fontWeight: 600,
+            padding: "24px 32px",
           }}
         >
           Add New Position
         </DialogTitle>
-        <DialogContent sx={{ pt: 3, pb: 1 }}>
+        <DialogContent
+          sx={{
+            padding: "32px",
+            backgroundColor: "#f8fafc",
+            marginTop: "20px",
+          }}
+        >
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <Autocomplete
@@ -888,7 +921,6 @@ const OrganizationChart = () => {
                     label="Select Employee (Optional)"
                     variant="outlined"
                     fullWidth
-                    margin="normal"
                     InputProps={{
                       ...params.InputProps,
                       endAdornment: (
@@ -899,6 +931,13 @@ const OrganizationChart = () => {
                           {params.InputProps.endAdornment}
                         </>
                       ),
+                      sx: {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
                     }}
                   />
                 )}
@@ -913,8 +952,19 @@ const OrganizationChart = () => {
                   setNewPosition({ ...newPosition, name: e.target.value })
                 }
                 fullWidth
-                margin="normal"
                 required
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1976d2",
+                  },
+                }}
               />
             </Grid>
 
@@ -929,8 +979,16 @@ const OrganizationChart = () => {
                   })
                 }
                 fullWidth
-                margin="normal"
                 required
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
               />
             </Grid>
 
@@ -942,7 +1000,15 @@ const OrganizationChart = () => {
                   setNewPosition({ ...newPosition, email: e.target.value })
                 }
                 fullWidth
-                margin="normal"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
               />
             </Grid>
 
@@ -957,12 +1023,31 @@ const OrganizationChart = () => {
                   })
                 }
                 fullWidth
-                margin="normal"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
               />
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth margin="normal">
+              <FormControl
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
                 <InputLabel>Department</InputLabel>
                 <Select
                   value={newPosition.department}
@@ -986,7 +1071,18 @@ const OrganizationChart = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth margin="normal">
+              <FormControl
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
                 <InputLabel>Reports To</InputLabel>
                 <Select
                   value={newPosition.parentId}
@@ -1011,7 +1107,18 @@ const OrganizationChart = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth margin="normal">
+              <FormControl
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
                 <InputLabel>Status</InputLabel>
                 <Select
                   value={newPosition.status}
@@ -1031,17 +1138,35 @@ const OrganizationChart = () => {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "20px 28px", md: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: { xs: 1, sm: 2 },
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: { xs: "stretch", sm: "flex-end" },
+          }}
+        >
           <Button
             onClick={() => {
               setIsDialogOpen(false);
               resetForm();
             }}
-            color="inherit"
-            sx={{ 
-              borderRadius: "8px",
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
               textTransform: "none",
+              borderRadius: "8px",
+              px: { xs: 2, sm: 3 },
               fontWeight: 600,
+              width: { xs: "100%", sm: "auto" },
+              minWidth: { sm: "120px" },
             }}
           >
             Cancel
@@ -1049,11 +1174,18 @@ const OrganizationChart = () => {
           <Button
             onClick={handleAddPosition}
             variant="contained"
-            color="primary"
-            sx={{ 
-              borderRadius: "8px",
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: { xs: "0.9rem", sm: "0.95rem" },
               textTransform: "none",
-              fontWeight: 600,
+              padding: { xs: "8px 24px", sm: "8px 32px" },
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+              width: { xs: "100%", sm: "auto" },
+              minWidth: { sm: "160px" },
             }}
           >
             Add Position
@@ -1062,7 +1194,7 @@ const OrganizationChart = () => {
       </Dialog>
 
       {/* Edit Position Dialog */}
-      <Dialog 
+      {/* <Dialog 
         open={isEditDialogOpen} 
         onClose={() => {
           setIsEditDialogOpen(false);
@@ -1073,9 +1205,12 @@ const OrganizationChart = () => {
         fullScreen={isMobile}
         PaperProps={{
           sx: {
-            borderRadius: isMobile ? 0 : "16px",
-            margin: isMobile ? 0 : undefined,
-          }
+            borderRadius: isMobile ? 0 : "20px",
+            overflow: "hidden",
+            margin: isMobile ? 0 : isTablet ? 1 : 2,
+            width: isMobile ? "100%" : isTablet ? "90%" : "80%",
+            maxWidth: isMobile ? "100%" : isTablet ? "700px" : "900px",
+          },
         }}
       >
         <DialogTitle
@@ -1280,11 +1415,360 @@ const OrganizationChart = () => {
             Update Position
           </Button>
         </DialogActions>
+      </Dialog> */}
+
+      <Dialog
+        open={isEditDialogOpen}
+        onClose={() => {
+          setIsEditDialogOpen(false);
+          resetForm();
+        }}
+        fullWidth
+        maxWidth="md"
+        fullScreen={isMobile}
+        PaperProps={{
+          sx: {
+            borderRadius: isMobile ? 0 : "20px",
+            overflow: "hidden",
+            margin: isMobile ? 0 : isTablet ? 1 : 2,
+            width: isMobile ? "100%" : isTablet ? "90%" : "80%",
+            maxWidth: isMobile ? "100%" : isTablet ? "700px" : "900px",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
+          }}
+        >
+          Edit Position
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            padding: "32px",
+            backgroundColor: "#f8fafc",
+            marginTop: "20px",
+          }}
+        >
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Autocomplete
+                options={registeredEmployees}
+                getOptionLabel={(option) =>
+                  `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
+                    option.personalInfo?.lastName || ""
+                  }`
+                }
+                value={selectedEmployee}
+                onChange={handleEmployeeSelect}
+                loading={loadingEmployees}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Employee (Optional)"
+                    variant="outlined"
+                    fullWidth
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingEmployees ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                      sx: {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Name"
+                value={newPosition.name}
+                onChange={(e) =>
+                  setNewPosition({ ...newPosition, name: e.target.value })
+                }
+                fullWidth
+                required
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1976d2",
+                  },
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Designation/Title"
+                value={newPosition.designation}
+                onChange={(e) =>
+                  setNewPosition({
+                    ...newPosition,
+                    designation: e.target.value,
+                  })
+                }
+                fullWidth
+                required
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Email"
+                value={newPosition.email}
+                onChange={(e) =>
+                  setNewPosition({ ...newPosition, email: e.target.value })
+                }
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Employee ID"
+                value={newPosition.employeeId}
+                onChange={(e) =>
+                  setNewPosition({
+                    ...newPosition,
+                    employeeId: e.target.value,
+                  })
+                }
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
+                <InputLabel>Department</InputLabel>
+                <Select
+                  value={newPosition.department}
+                  onChange={(e) =>
+                    setNewPosition({
+                      ...newPosition,
+                      department: e.target.value,
+                    })
+                  }
+                  label="Department"
+                >
+                  <MenuItem value="">None</MenuItem>
+                  <MenuItem value="HR">HR</MenuItem>
+                  <MenuItem value="IT">IT</MenuItem>
+                  <MenuItem value="Finance">Finance</MenuItem>
+                  <MenuItem value="Marketing">Marketing</MenuItem>
+                  <MenuItem value="Operations">Operations</MenuItem>
+                  <MenuItem value="Sales">Sales</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
+                <InputLabel>Reports To</InputLabel>
+                <Select
+                  value={newPosition.parentId}
+                  onChange={(e) =>
+                    setNewPosition({
+                      ...newPosition,
+                      parentId: e.target.value,
+                    })
+                  }
+                  label="Reports To"
+                >
+                  <MenuItem value="">None (Top Level)</MenuItem>
+                  {treeData &&
+                    getAllNodes(treeData)
+                      .filter((node) => node._id !== editingNodeId)
+                      .map((node) => (
+                        <MenuItem key={node._id} value={node._id}>
+                          {node.name} - {node.title}
+                          {node.department && ` (${node.department})`}
+                        </MenuItem>
+                      ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={newPosition.status}
+                  onChange={(e) =>
+                    setNewPosition({
+                      ...newPosition,
+                      status: e.target.value,
+                    })
+                  }
+                  label="Status"
+                >
+                  <MenuItem value="active">Active</MenuItem>
+                  <MenuItem value="inactive">Inactive</MenuItem>
+                  <MenuItem value="vacant">Vacant</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "20px 28px", md: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: { xs: 1, sm: 2 },
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: { xs: "stretch", sm: "flex-end" },
+          }}
+        >
+          <Button
+            onClick={() => {
+              setIsEditDialogOpen(false);
+              resetForm();
+            }}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: { xs: 2, sm: 3 },
+              fontWeight: 600,
+              width: { xs: "100%", sm: "auto" },
+              minWidth: { sm: "120px" },
+            }}
+          >
+            Cancel
+          </Button>
+          {/* <Button
+        onClick={handleUpdatePosition}
+        variant="contained"
+        sx={{
+          background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+          fontSize: { xs: "0.9rem", sm: "0.95rem" },
+          textTransform: "none",
+          padding: { xs: "8px 24px", sm: "8px 32px" },
+          borderRadius: "10px",
+          boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+          "&:hover": {
+            background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+          },
+          width: { xs: "100%", sm: "auto" },
+          minWidth: { sm: "160px" },
+        }}
+      >
+        Update Position
+      </Button> * */}
+          <Button
+            onClick={handleUpdatePosition} // Make sure this is correct
+            variant="contained"
+            disabled={false} // Make sure it's not disabled
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: { xs: "0.9rem", sm: "0.95rem" },
+              textTransform: "none",
+              padding: { xs: "8px 24px", sm: "8px 32px" },
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+              width: { xs: "100%", sm: "auto" },
+              minWidth: { sm: "160px" },
+            }}
+          >
+            Update Position
+          </Button>
+        </DialogActions>
       </Dialog>
 
       {/* Node Details Dialog */}
-      <Dialog 
-        open={isDetailsOpen} 
+      <Dialog
+        open={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         fullWidth
         maxWidth="sm"
@@ -1293,7 +1777,7 @@ const OrganizationChart = () => {
           sx: {
             borderRadius: isMobile ? 0 : "16px",
             margin: isMobile ? 0 : undefined,
-          }
+          },
         }}
       >
         {nodeDetails && (
@@ -1367,7 +1851,11 @@ const OrganizationChart = () => {
                       Employee ID:
                     </Typography>
                   </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ ml: 4 }}
+                  >
                     {nodeDetails.employeeId || "Not assigned"}
                   </Typography>
                 </Grid>
@@ -1381,7 +1869,11 @@ const OrganizationChart = () => {
                       Status:
                     </Typography>
                   </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ ml: 4 }}
+                  >
                     {nodeDetails.status || "Active"}
                   </Typography>
                 </Grid>
@@ -1395,7 +1887,11 @@ const OrganizationChart = () => {
                       Email:
                     </Typography>
                   </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ ml: 4 }}
+                  >
                     {nodeDetails.email || "Not available"}
                   </Typography>
                 </Grid>
@@ -1404,17 +1900,26 @@ const OrganizationChart = () => {
                   <Grid item xs={12}>
                     <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                       <InfoIcon
-                        sx={{ color: "primary.main", mr: 1, fontSize: "1.2rem" }}
+                        sx={{
+                          color: "primary.main",
+                          mr: 1,
+                          fontSize: "1.2rem",
+                        }}
                       />
                       <Typography variant="body2" fontWeight="medium">
                         Reports To:
                       </Typography>
                     </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-                      {treeData &&
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ ml: 4 }}
+                    >
+                      {(treeData &&
                         getAllNodes(treeData).find(
                           (node) => node._id === nodeDetails.parentId
-                        )?.name || "Unknown"}
+                        )?.name) ||
+                        "Unknown"}
                     </Typography>
                   </Grid>
                 )}
@@ -1424,7 +1929,13 @@ const OrganizationChart = () => {
                 </Grid>
 
                 <Grid item xs={12}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mt: 2,
+                    }}
+                  >
                     <Button
                       onClick={() => {
                         setIsDetailsOpen(false);
@@ -1433,7 +1944,7 @@ const OrganizationChart = () => {
                       variant="outlined"
                       color="primary"
                       startIcon={<EditIcon />}
-                      sx={{ 
+                      sx={{
                         borderRadius: "8px",
                         textTransform: "none",
                         fontWeight: 600,
@@ -1450,7 +1961,7 @@ const OrganizationChart = () => {
                         variant="outlined"
                         color="error"
                         startIcon={<DeleteIcon />}
-                        sx={{ 
+                        sx={{
                           borderRadius: "8px",
                           textTransform: "none",
                           fontWeight: 600,
@@ -1468,7 +1979,7 @@ const OrganizationChart = () => {
                 onClick={() => setIsDetailsOpen(false)}
                 color="primary"
                 variant="contained"
-                sx={{ 
+                sx={{
                   borderRadius: "8px",
                   textTransform: "none",
                   fontWeight: 600,
@@ -1485,6 +1996,3 @@ const OrganizationChart = () => {
 };
 
 export default OrganizationChart;
-
-
-

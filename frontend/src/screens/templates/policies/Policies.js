@@ -17,14 +17,36 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
+  Paper,
+  InputAdornment,
 } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
-//import AddCircleIcon from '@mui/icons-material/AddCircle';
 import axios from "axios";
+
+// Add these styled components for consistent styling with DisciplinaryActions.js
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
+
+const SearchTextField = styled(TextField)(({ theme }) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: theme.spacing(2),
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+}));
 
 const Policies = () => {
   const [policies, setPolicies] = useState([]);
@@ -171,7 +193,11 @@ const Policies = () => {
   };
 
   return (
-    <Box sx={{ padding: isMobile ? "16px" : "24px" }}>
+    <Box sx={{ 
+      p: { xs: 2, sm: 3, md: 4 }, 
+      backgroundColor: "#f5f5f5", 
+      minHeight: "100vh" 
+    }}>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -187,56 +213,69 @@ const Policies = () => {
         </Alert>
       </Snackbar>
 
-      <Box
-        display="flex"
-        alignItems={isMobile ? "flex-start" : "center"}
-        justifyContent="space-between"
-        mb={2}
-        flexDirection={isMobile ? "column" : "row"}
-        gap={isMobile ? 2 : 0}
+      <Typography
+        variant="h4"
+        sx={{
+          mb: { xs: 2, sm: 3, md: 4 },
+          color: theme.palette.primary.main,
+          fontWeight: 600,
+          letterSpacing: 0.5,
+          fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+        }}
       >
-        <Typography 
-          variant="h3" 
-          fontWeight="800" 
-          fontSize={isMobile ? "1.25rem" : "1.5rem"}
+        Company Policies
+      </Typography>
+
+      <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box
+          display="flex"
+          flexDirection={{ xs: "column", sm: "row" }}
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          gap={2}
+          sx={{
+            width: "100%",
+            justifyContent: "space-between",
+          }}
         >
-          Policies
-        </Typography>
-        <Box 
-          display="flex" 
-          alignItems={isMobile ? "stretch" : "center"}
-          flexDirection={isMobile ? "column" : "row"}
-          width={isMobile ? "100%" : "auto"}
-          gap={isMobile ? 1 : 0}
-        >
-          <TextField
-            variant="outlined"
-            size="small"
-            placeholder="Search"
+          <SearchTextField
+            placeholder="Search policies..."
             value={search}
             onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: <SearchIcon />,
+            size="small"
+            sx={{
+              width: { xs: "100%", sm: "300px" },
+              marginRight: { xs: 0, sm: "auto" },
             }}
-            sx={{ 
-              marginRight: isMobile ? 0 : "16px",
-              width: isMobile ? "100%" : "auto",
-              mb: isMobile ? 1 : 0
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="primary" />
+                </InputAdornment>
+              ),
             }}
           />
-          
+
           <Button
             variant="contained"
-            color="error"
             onClick={handleCreate}
             startIcon={<AddIcon />}
-            fullWidth={isMobile}
+            sx={{
+              height: { xs: "auto", sm: 40 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+              color: "white",
+              "&:hover": {
+                background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+              },
+            }}
           >
-            Create
+            Create Policy
           </Button>
         </Box>
-      </Box>
+      </StyledPaper>
 
+      {/* Rest of the component remains the same */}
       {loading && !isDialogOpen && !deleteDialogOpen ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress size={40} />
@@ -289,7 +328,7 @@ const Policies = () => {
                 </CardContent>
                 <Button
                   variant="text"
-                  color="error"
+                  color="primary"
                   onClick={() => handleView(policy)}
                   sx={{ mt: 1 }}
                 >
@@ -301,6 +340,7 @@ const Policies = () => {
         </Grid>
       )}
 
+      {/* Dialogs remain the same */}
       <Dialog
         open={isDialogOpen}
         onClose={handleDialogClose}
@@ -419,11 +459,12 @@ const Policies = () => {
                 backgroundColor: "#e3f2fd",
                 color: "#1976d2",
               },
+              
               textTransform: "none",
               borderRadius: "8px",
               px: 3,
               fontWeight: 600,
-              order: isMobile ? 1 : 0,
+              order: isMobile ? 2 : 1
             }}
           >
             Cancel
@@ -433,8 +474,8 @@ const Policies = () => {
             <Button
               onClick={handleSave}
               variant="contained"
-              disabled={loading}
               fullWidth={isMobile}
+              disabled={loading}
               sx={{
                 background: "linear-gradient(45deg, #1976d2, #64b5f6)",
                 fontSize: "0.95rem",
@@ -445,7 +486,7 @@ const Policies = () => {
                 "&:hover": {
                   background: "linear-gradient(45deg, #1565c0, #42a5f5)",
                 },
-                order: isMobile ? 0 : 1,
+                order: isMobile ? 1 : 2
               }}
             >
               {loading ? (
@@ -484,10 +525,10 @@ const Policies = () => {
             gap: 1,
           }}
         >
-          <DeleteIcon color="white" />
+          <DeleteIcon />
           Confirm Deletion
         </DialogTitle>
-        <DialogContent 
+        <DialogContent
           sx={{
             padding: { xs: "24px", sm: "32px" },
             backgroundColor: "#f8fafc",
@@ -495,22 +536,34 @@ const Policies = () => {
           }}
         >
           <Alert severity="warning" sx={{ mb: 2 }}>
-            Are you sure you want to delete this policy?
+            Are you sure you want to delete this policy? This action cannot be undone.
           </Alert>
           {policyToDelete && (
             <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
               <Typography variant="body1" fontWeight={600} color="#2c3e50">
                 Policy: {policyToDelete.title}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                {policyToDelete.content.length > 100 
-                  ? `${policyToDelete.content.substring(0, 100)}...` 
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ 
+                  mt: 1,
+                  maxHeight: "100px",
+                  overflow: "auto",
+                  p: 1,
+                  bgcolor: "#fff",
+                  borderRadius: 1,
+                  border: "1px solid #e2e8f0",
+                }}
+              >
+                {policyToDelete.content.length > 200 
+                  ? `${policyToDelete.content.substring(0, 200)}...` 
                   : policyToDelete.content}
               </Typography>
             </Box>
           )}
         </DialogContent>
-        <DialogActions 
+        <DialogActions
           sx={{
             padding: { xs: "16px 24px", sm: "24px 32px" },
             backgroundColor: "#f8fafc",
@@ -534,7 +587,7 @@ const Policies = () => {
               borderRadius: "8px",
               px: 3,
               fontWeight: 600,
-              order: isMobile ? 1 : 0,
+              order: isMobile ? 2 : 1
             }}
           >
             Cancel
@@ -543,8 +596,8 @@ const Policies = () => {
             onClick={handleConfirmDelete}
             variant="contained"
             color="error"
-            disabled={loading}
             fullWidth={isMobile}
+            disabled={loading}
             startIcon={
               loading ? <CircularProgress size={20} color="inherit" /> : null
             }
@@ -559,7 +612,7 @@ const Policies = () => {
               "&:hover": {
                 background: "linear-gradient(45deg, #d32f2f, #f44336)",
               },
-              order: isMobile ? 0 : 1,
+              order: isMobile ? 1 : 2
             }}
           >
             {loading ? "Deleting..." : "Delete"}
@@ -571,4 +624,3 @@ const Policies = () => {
 };
 
 export default Policies;
-
