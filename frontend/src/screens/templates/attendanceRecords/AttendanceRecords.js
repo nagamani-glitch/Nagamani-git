@@ -34,6 +34,7 @@ import {
   Divider,
   Chip,
   useMediaQuery,
+  CircularProgress,
 } from "@mui/material";
 import {
   FilterList,
@@ -83,6 +84,10 @@ const AttendanceRecords = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
+  // Add these state variables for delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -92,6 +97,9 @@ const AttendanceRecords = () => {
     message: "",
     severity: "success",
   });
+  // Add loading state
+  const [loading, setLoading] = useState(false);
+
   const [editRecord, setEditRecord] = useState(null);
   const [newRecord, setNewRecord] = useState({
     name: "",
@@ -257,14 +265,40 @@ const AttendanceRecords = () => {
     }
   };
 
-  const handleDeleteRecord = async (id) => {
+  // const handleDeleteRecord = async (id) => {
+  //   try {
+  //     await axios.delete(`${API_URL}/${id}`);
+  //     fetchAttendanceRecords();
+  //     showSnackbar("Record deleted successfully");
+  //   } catch (error) {
+  //     showSnackbar("Error deleting record", "error");
+  //   }
+  // };
+
+  // Replace the existing handleDeleteRecord function with these functions
+  const handleDeleteClick = (record) => {
+    setItemToDelete(record);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`${API_URL}/${id}`);
+      setLoading(true);
+      await axios.delete(`${API_URL}/${itemToDelete._id}`);
       fetchAttendanceRecords();
       showSnackbar("Record deleted successfully");
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     } catch (error) {
       showSnackbar("Error deleting record", "error");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
   };
 
   const handlePreview = (row) => {
@@ -396,9 +430,21 @@ const AttendanceRecords = () => {
           >
             <Edit />
           </IconButton>
-          <IconButton
+          {/* <IconButton
             size="small"
             onClick={() => handleDeleteRecord(row._id)}
+            sx={{
+              color: theme.palette.error.main,
+              "&:hover": {
+                backgroundColor: alpha(theme.palette.error.main, 0.1),
+              },
+            }}
+          >
+            <Cancel />
+          </IconButton> */}
+          <IconButton
+            size="small"
+            onClick={() => handleDeleteClick(row)}
             sx={{
               color: theme.palette.error.main,
               "&:hover": {
@@ -623,9 +669,24 @@ const AttendanceRecords = () => {
                         >
                           <Edit />
                         </IconButton>
-                        <IconButton
+                        {/* <IconButton
                           size="small"
                           onClick={() => handleDeleteRecord(row._id)}
+                          sx={{
+                            color: theme.palette.error.main,
+                            "&:hover": {
+                              backgroundColor: alpha(
+                                theme.palette.error.main,
+                                0.1
+                              ),
+                            },
+                          }}
+                        >
+                          <Cancel />
+                        </IconButton> */}
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteClick(row)}
                           sx={{
                             color: theme.palette.error.main,
                             "&:hover": {
@@ -1279,6 +1340,179 @@ const AttendanceRecords = () => {
           <Add />
         </Fab>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Cancel />
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Are you sure you want to delete this attendance record? This action
+            cannot be undone.
+          </Alert>
+          {itemToDelete && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: theme.palette.primary.main,
+                    width: 40,
+                    height: 40,
+                  }}
+                >
+                  {itemToDelete.name ? itemToDelete.name[0] : "?"}
+                </Avatar>
+                <Box>
+                  <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                    {itemToDelete.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {itemToDelete.empId}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Divider sx={{ mb: 2 }} />
+
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Date:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.date
+                      ? new Date(itemToDelete.date).toLocaleDateString()
+                      : "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Day:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.day || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Check In:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.checkIn || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Check Out:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.checkOut || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Shift:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.shift || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Work Type:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.workType || "Regular"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={handleCloseDeleteDialog}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar for notifications */}
       <Snackbar

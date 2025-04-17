@@ -33,7 +33,13 @@ const MainScreen = () => {
         </div>
         <div className="hrms-icon-container">
           {items.map((item, index) => (
-            <Nav.Link key={index} as={Link} to={`/${item.title}`}>
+            <Nav.Link 
+              key={index} 
+              as={Link} 
+              to={`/${item.title}`} 
+              className="dashboard-link"
+              tabIndex={0}
+            >
               <div
                 className="hrms-icon-wrapper"
                 style={{ animationDelay: item.delay }}

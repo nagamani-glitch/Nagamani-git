@@ -1346,3 +1346,78 @@ td button:hover {
     font-size: 10px;
   }
 }
+
+/* Mobile view styles for objectives */
+.mobile-objectives-cards {
+  padding: 10px;
+}
+
+.mobile-objective-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.mobile-card-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1976d2;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
+.mobile-card-content {
+  margin-bottom: 16px;
+}
+
+.mobile-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mobile-card-label {
+  color: #666;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.mobile-card-value {
+  text-align: right;
+  font-size: 12px;
+}
+
+.mobile-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Ensure the table container doesn't overflow */
+.responsive-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide elements based on screen size */
+@media (max-width: 600px) {
+  .d-none {
+    display: none !important;
+  }
+}

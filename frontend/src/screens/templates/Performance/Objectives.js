@@ -7,6 +7,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
   TextField,
   Box,
   FormControl,
@@ -36,6 +37,8 @@ import {
   Autocomplete,
   useMediaQuery,
   useTheme,
+  Zoom,
+  Fade,
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -89,6 +92,9 @@ const Objectives = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  // Add these state variables for delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   // New state variables for enhanced functionality
   const [loading, setLoading] = useState(false);
@@ -282,32 +288,123 @@ const Objectives = () => {
   };
 
   // Handle delete
-  const handleDelete = async (id) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this objective? This action cannot be undone."
-      )
-    ) {
-      try {
-        setLoading(true);
-        await axios.delete(`${API_URL}/${id}`);
-        setObjectives(objectives.filter((obj) => obj._id !== id));
-        setNotification({
-          open: true,
-          message: "Objective deleted successfully",
-          severity: "success",
-        });
-        setLoading(false);
-      } catch (error) {
-        console.error("Error deleting objective:", error);
-        setNotification({
-          open: true,
-          message: "Failed to delete objective",
-          severity: "error",
-        });
-        setLoading(false);
-      }
+  // const handleDeleteClick = async (id) => {
+  //   if (
+  //     window.confirm(
+  //       "Are you sure you want to delete this objective? This action cannot be undone."
+  //     )
+  //   ) {
+  //     try {
+  //       setLoading(true);
+  //       await axios.delete(`${API_URL}/${id}`);
+  //       setObjectives(objectives.filter((obj) => obj._id !== id));
+  //       setNotification({
+  //         open: true,
+  //         message: "Objective deleted successfully",
+  //         severity: "success",
+  //       });
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error("Error deleting objective:", error);
+  //       setNotification({
+  //         open: true,
+  //         message: "Failed to delete objective",
+  //         severity: "error",
+  //       });
+  //       setLoading(false);
+  //     }
+  //   }
+  // };
+
+  //   // Replace the existing handleDeleteClick function with these two functions
+  // const handleDeleteClickClick = (objective) => {
+  //   setItemToDelete(objective);
+  //   setDeleteDialogOpen(true);
+  // };
+  // Add this function definition
+  // const handleDelete = async (id) => {
+  //   if (
+  //     window.confirm(
+  //       "Are you sure you want to delete this objective? This action cannot be undone."
+  //     )
+  //   ) {
+  //     try {
+  //       setLoading(true);
+  //       await axios.delete(`${API_URL}/${id}`);
+  //       setObjectives(objectives.filter((obj) => obj._id !== id));
+  //       setNotification({
+  //         open: true,
+  //         message: "Objective deleted successfully",
+  //         severity: "success",
+  //       });
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error("Error deleting objective:", error);
+  //       setNotification({
+  //         open: true,
+  //         message: "Failed to delete objective",
+  //         severity: "error",
+  //       });
+  //       setLoading(false);
+  //     }
+  //   }
+  // };
+  const handleDeleteClick = (objective) => {
+    setItemToDelete(objective);
+    setDeleteDialogOpen(true);
+  };
+  
+  // const handleConfirmDelete = async () => {
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(`${API_URL}/${itemToDelete._id}`);
+  //     setObjectives(objectives.filter((obj) => obj._id !== itemToDelete._id));
+  //     setNotification({
+  //       open: true,
+  //       message: "Objective deleted successfully",
+  //       severity: "success",
+  //     });
+  //     setDeleteDialogOpen(false);
+  //     setItemToDelete(null);
+  //   } catch (error) {
+  //     console.error("Error deleting objective:", error);
+  //     setNotification({
+  //       open: true,
+  //       message: "Failed to delete objective",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true);
+      await axios.delete(`${API_URL}/${itemToDelete._id}`);
+      setObjectives(objectives.filter((obj) => obj._id !== itemToDelete._id));
+      setNotification({
+        open: true,
+        message: "Objective deleted successfully",
+        severity: "success",
+      });
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    } catch (error) {
+      console.error("Error deleting objective:", error);
+      setNotification({
+        open: true,
+        message: "Failed to delete objective",
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
     }
+  };
+  
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
   };
 
   // Handle archive
@@ -900,13 +997,7 @@ const Objectives = () => {
               </Typography>
             </Paper>
           </Grid>
-          <Grid
-            item
-            xs={6}
-            sm={6}
-            md={2.4}
-            sx={{ display: { xs: "none", sm: "block" } }}
-          >
+          <Grid item xs={6} sm={6} md={2.4}>
             <Paper
               elevation={0}
               sx={{
@@ -1112,42 +1203,53 @@ const Objectives = () => {
           backgroundColor: "white",
           borderRadius: "12px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-          overflow: "auto",
+          overflow: "hidden",
           margin: "24px 0",
         }}
         className="responsive-table-container"
       >
-        <div className="table-responsive">
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: isMobile ? "12px" : "14px",
-            }}
-          >
-            <thead>
-              <tr
-                style={{
-                  backgroundColor: "#f8fafc",
-                  borderBottom: "2px solid #e2e8f0",
-                }}
-              >
-                <th
+        <Box
+          sx={{
+            overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
+            "&::-webkit-scrollbar": {
+              height: "8px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "#e0e0e0",
+              borderRadius: "4px",
+            },
+          }}
+        >
+          <div className="table-responsive" style={{ minWidth: "1000px" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: "14px",
+              }}
+            >
+              <thead>
+                <tr
                   style={{
-                    padding: isMobile ? "12px 8px" : "16px",
-                    textAlign: "left",
-                    color: "#475569",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    minWidth: isMobile ? "120px" : "auto",
+                    backgroundColor: "#f8fafc",
+                    borderBottom: "2px solid #e2e8f0",
                   }}
-                  onClick={() => handleSort("title")}
                 >
-                  Title{" "}
-                  {sortConfig.key === "title" &&
-                    (sortConfig.direction === "asc" ? "↑" : "↓")}
-                </th>
-                {!isMobile && (
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "#475569",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                    onClick={() => handleSort("title")}
+                  >
+                    Title{" "}
+                    {sortConfig.key === "title" &&
+                      (sortConfig.direction === "asc" ? "↑" : "↓")}
+                  </th>
                   <th
                     style={{
                       padding: "16px",
@@ -1158,8 +1260,6 @@ const Objectives = () => {
                   >
                     Managers
                   </th>
-                )}
-                {!isMobile && (
                   <th
                     style={{
                       padding: "16px",
@@ -1170,8 +1270,6 @@ const Objectives = () => {
                   >
                     Key Results
                   </th>
-                )}
-                {!isMobile && (
                   <th
                     style={{
                       padding: "16px",
@@ -1182,34 +1280,31 @@ const Objectives = () => {
                   >
                     Assignees
                   </th>
-                )}
-                <th
-                  style={{
-                    padding: isMobile ? "12px 8px" : "16px",
-                    textAlign: "left",
-                    color: "#475569",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    minWidth: isMobile ? "100px" : "auto",
-                  }}
-                  onClick={() => handleSort("duration")}
-                >
-                  Duration{" "}
-                  {sortConfig.key === "duration" &&
-                    (sortConfig.direction === "asc" ? "↑" : "↓")}
-                </th>
-                <th
-                  style={{
-                    padding: isMobile ? "12px 8px" : "16px",
-                    textAlign: "left",
-                    color: "#475569",
-                    fontWeight: 600,
-                    minWidth: isMobile ? "80px" : "150px",
-                  }}
-                >
-                  Progress
-                </th>
-                {!isMobile && (
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "#475569",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                    onClick={() => handleSort("duration")}
+                  >
+                    Duration{" "}
+                    {sortConfig.key === "duration" &&
+                      (sortConfig.direction === "asc" ? "↑" : "↓")}
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "#475569",
+                      fontWeight: 600,
+                      width: "150px",
+                    }}
+                  >
+                    Progress
+                  </th>
                   <th
                     style={{
                       padding: "16px",
@@ -1220,8 +1315,6 @@ const Objectives = () => {
                   >
                     Type
                   </th>
-                )}
-                {!isMobile && (
                   <th
                     style={{
                       padding: "16px",
@@ -1236,52 +1329,50 @@ const Objectives = () => {
                     {sortConfig.key === "createdAt" &&
                       (sortConfig.direction === "asc" ? "↑" : "↓")}
                   </th>
-                )}
-                <th
-                  style={{
-                    padding: isMobile ? "12px 8px" : "16px",
-                    textAlign: "left",
-                    color: "#475569",
-                    fontWeight: 600,
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredObjectives
-                .filter((obj) =>
-                  tabValue !== 2 ? !obj.archived : obj.archived
-                )
-                .map((obj) => {
-                  const progress = calculateProgress(obj);
-                  return (
-                    <tr
-                      key={obj._id}
-                      style={{
-                        borderBottom: "1px solid #e2e8f0",
-                        "&:hover": {
-                          backgroundColor: "#f8fafc",
-                        },
-                      }}
-                    >
-                      <td
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "left",
+                      color: "#475569",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredObjectives
+                  .filter((obj) =>
+                    tabValue !== 2 ? !obj.archived : obj.archived
+                  )
+                  .map((obj) => {
+                    const progress = calculateProgress(obj);
+                    return (
+                      <tr
+                        key={obj._id}
                         style={{
-                          padding: isMobile ? "12px 8px" : "16px",
-                          cursor: "pointer",
-                          color: "#1976d2",
-                          fontWeight: 500,
-                          maxWidth: isMobile ? "150px" : "auto",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
+                          borderBottom: "1px solid #e2e8f0",
+                          "&:hover": {
+                            backgroundColor: "#f8fafc",
+                          },
                         }}
-                        onClick={() => handleViewDetails(obj)}
                       >
-                        {obj.title}
-                      </td>
-                      {!isMobile && (
+                        <td
+                          style={{
+                            padding: "16px",
+                            cursor: "pointer",
+                            color: "#1976d2",
+                            fontWeight: 500,
+                            maxWidth: "200px",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                          onClick={() => handleViewDetails(obj)}
+                        >
+                          {obj.title}
+                        </td>
                         <td style={{ padding: "16px" }}>
                           {Array.isArray(obj.managers) ? (
                             <Box>
@@ -1326,8 +1417,6 @@ const Objectives = () => {
                             />
                           )}
                         </td>
-                      )}
-                      {!isMobile && (
                         <td style={{ padding: "16px" }}>
                           <Chip
                             label={`${obj.keyResults} Key Results`}
@@ -1361,8 +1450,6 @@ const Objectives = () => {
                               </Box>
                             )}
                         </td>
-                      )}
-                      {!isMobile && (
                         <td style={{ padding: "16px" }}>
                           {Array.isArray(obj.assignees) ? (
                             <Box>
@@ -1407,62 +1494,52 @@ const Objectives = () => {
                             />
                           )}
                         </td>
-                      )}
-                      <td style={{ padding: isMobile ? "12px 8px" : "16px" }}>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <AccessTime fontSize="small" color="action" />
-                          <Typography
-                            variant={isMobile ? "caption" : "body2"}
+                        <td style={{ padding: "16px" }}>
+                          <Box
                             sx={{
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              maxWidth: isMobile ? "60px" : "auto",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
                             }}
                           >
-                            {obj.duration}
-                          </Typography>
-                        </Box>
-                      </td>
-                      <td
-                        style={{
-                          padding: isMobile ? "12px 8px" : "16px",
-                          width: isMobile ? "80px" : "150px",
-                        }}
-                      >
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <LinearProgress
-                            variant="determinate"
-                            value={progress}
+                            <AccessTime fontSize="small" color="action" />
+                            <Typography variant="body2">
+                              {obj.duration}
+                            </Typography>
+                          </Box>
+                        </td>
+                        <td style={{ padding: "16px", width: "150px" }}>
+                          <Box
                             sx={{
-                              width: "100%",
-                              height: 8,
-                              borderRadius: 5,
-                              bgcolor: "#f5f5f5",
-                              "& .MuiLinearProgress-bar": {
-                                bgcolor:
-                                  progress < 30
-                                    ? "#f44336"
-                                    : progress < 70
-                                    ? "#ff9800"
-                                    : "#4caf50",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <LinearProgress
+                              variant="determinate"
+                              value={progress}
+                              sx={{
+                                width: "100%",
+                                height: 8,
                                 borderRadius: 5,
-                              },
-                            }}
-                          />
-                          <Typography
-                            variant={isMobile ? "caption" : "body2"}
-                            color="text.secondary"
-                          >
-                            {progress}%
-                          </Typography>
-                        </Box>
-                      </td>
-                      {!isMobile && (
+                                bgcolor: "#f5f5f5",
+                                "& .MuiLinearProgress-bar": {
+                                  bgcolor:
+                                    progress < 30
+                                      ? "#f44336"
+                                      : progress < 70
+                                      ? "#ff9800"
+                                      : "#4caf50",
+                                  borderRadius: 5,
+                                },
+                              }}
+                            />
+                            <Typography variant="body2" color="text.secondary">
+                              {progress}%
+                            </Typography>
+                          </Box>
+                        </td>
                         <td style={{ padding: "16px" }}>
                           <Chip
                             label={
@@ -1477,86 +1554,95 @@ const Objectives = () => {
                             sx={{ fontWeight: 500 }}
                           />
                         </td>
-                      )}
-                      {!isMobile && (
                         <td style={{ padding: "16px" }}>
                           {obj.createdAt ? formatDate(obj.createdAt) : "N/A"}
                         </td>
-                      )}
-                      <td style={{ padding: isMobile ? "12px 8px" : "16px" }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "8px",
-                            flexWrap: isMobile ? "wrap" : "nowrap",
-                          }}
-                        >
-                          <Tooltip title="View Details">
-                            <IconButton
-                              color="info"
-                              onClick={() => handleViewDetails(obj)}
-                              size="small"
-                              sx={{
-                                backgroundColor: "info.lighter",
-                                "&:hover": { backgroundColor: "info.light" },
-                              }}
+                        <td style={{ padding: "16px" }}>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <Tooltip title="View Details">
+                              <IconButton
+                                color="info"
+                                onClick={() => handleViewDetails(obj)}
+                                size="small"
+                                sx={{
+                                  backgroundColor: "info.lighter",
+                                  "&:hover": { backgroundColor: "info.light" },
+                                }}
+                              >
+                                <Search fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Edit">
+                              <IconButton
+                                color="primary"
+                                onClick={() => handleEdit(obj)}
+                                size="small"
+                                sx={{
+                                  backgroundColor: "primary.lighter",
+                                  "&:hover": {
+                                    backgroundColor: "primary.light",
+                                  },
+                                }}
+                              >
+                                <Edit fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip
+                              title={obj.archived ? "Unarchive" : "Archive"}
                             >
-                              <Search fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Edit">
-                            <IconButton
-                              color="primary"
-                              onClick={() => handleEdit(obj)}
-                              size="small"
-                              sx={{
-                                backgroundColor: "primary.lighter",
-                                "&:hover": { backgroundColor: "primary.light" },
-                              }}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip
-                            title={obj.archived ? "Unarchive" : "Archive"}
-                          >
-                            <IconButton
-                              color="warning"
-                              onClick={() => handleArchive(obj._id)}
-                              size="small"
-                              sx={{
-                                backgroundColor: "warning.lighter",
-                                "&:hover": { backgroundColor: "warning.light" },
-                              }}
-                            >
-                              {obj.archived ? (
-                                <Unarchive fontSize="small" />
-                              ) : (
-                                <Archive fontSize="small" />
-                              )}
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete">
-                            <IconButton
-                              color="error"
-                              onClick={() => handleDelete(obj._id)}
-                              size="small"
-                              sx={{
-                                backgroundColor: "error.lighter",
-                                "&:hover": { backgroundColor: "error.light" },
-                              }}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
+                              <IconButton
+                                color="warning"
+                                onClick={() => handleArchive(obj._id)}
+                                size="small"
+                                sx={{
+                                  backgroundColor: "warning.lighter",
+                                  "&:hover": {
+                                    backgroundColor: "warning.light",
+                                  },
+                                }}
+                              >
+                                {obj.archived ? (
+                                  <Unarchive fontSize="small" />
+                                ) : (
+                                  <Archive fontSize="small" />
+                                )}
+                              </IconButton>
+                            </Tooltip>
+                            {/* <Tooltip title="Delete">
+                              <IconButton
+                                color="error"
+                                onClick={() => handleDeleteClick(obj._id)}
+                                size="small"
+                                sx={{
+                                  backgroundColor: "error.lighter",
+                                  "&:hover": { backgroundColor: "error.light" },
+                                }}
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Tooltip> */}
+                            <Tooltip title="Delete">
+                              <IconButton
+                                color="error"
+                                onClick={() => handleDeleteClick(obj)}
+                                size="small"
+                                sx={{
+                                  backgroundColor: "error.lighter",
+                                  "&:hover": { backgroundColor: "error.light" },
+                                }}
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </Box>
 
         {/* Empty state */}
         {filteredObjectives.filter((obj) =>
@@ -3393,6 +3479,159 @@ const Objectives = () => {
           </Box>
         </Popover>
       )}
+      {/* Delete Confirmation Dialog */}
+{/* Delete Confirmation Dialog */}
+<Dialog
+  open={deleteDialogOpen}
+  onClose={handleCloseDeleteDialog}
+  PaperProps={{
+    sx: {
+      width: { xs: "95%", sm: "500px" },
+      maxWidth: "500px",
+      borderRadius: "20px",
+      overflow: "hidden",
+      margin: { xs: "8px", sm: "32px" },
+    },
+  }}
+  TransitionComponent={Fade}
+  TransitionProps={{
+    timeout: 300,
+  }}
+  sx={{
+    "& .MuiDialog-container": {
+      justifyContent: "center",
+      alignItems: "center",
+      "& .MuiPaper-root": {
+        margin: { xs: "16px", sm: "32px" },
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+      },
+    },
+  }}
+>
+  <DialogTitle
+    sx={{
+      background: "linear-gradient(45deg, #f44336, #ff7961)",
+      fontSize: { xs: "1.25rem", sm: "1.5rem" },
+      fontWeight: 600,
+      padding: { xs: "16px 24px", sm: "24px 32px" },
+      color: "white",
+      display: "flex",
+      alignItems: "center",
+      gap: 1,
+    }}
+  >
+    <Delete color="white" />
+    Confirm Deletion
+  </DialogTitle>
+  <DialogContent
+    sx={{
+      padding: { xs: "24px", sm: "32px" },
+      backgroundColor: "#f8fafc",
+      paddingTop: { xs: "24px", sm: "32px" },
+    }}
+  >
+    <Alert severity="warning" sx={{ mb: 2 }}>
+      Are you sure you want to delete this objective? All key results in
+      this objective will also be deleted.
+    </Alert>
+    {itemToDelete && (
+      <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+        <Typography variant="body1" fontWeight={600} color="#2c3e50">
+          Objective: {itemToDelete.title}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          This objective contains {itemToDelete.keyResults || 0} key
+          results.
+        </Typography>
+        {itemToDelete.description && (
+          <Typography
+            variant="body2"
+            sx={{
+              mt: 1,
+              p: 1,
+              bgcolor: "#fff",
+              borderRadius: 1,
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            {itemToDelete.description.substring(0, 100)}
+            {itemToDelete.description.length > 100 ? "..." : ""}
+          </Typography>
+        )}
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
+          {itemToDelete.objectiveType && (
+            <Chip
+              label={
+                itemToDelete.objectiveType === "self"
+                  ? "Self Objective"
+                  : "Team Objective"
+              }
+              size="small"
+              color={
+                itemToDelete.objectiveType === "self"
+                  ? "primary"
+                  : "secondary"
+              }
+            />
+          )}
+          {itemToDelete.archived && (
+            <Chip label="Archived" size="small" color="warning" />
+          )}
+        </Box>
+      </Box>
+    )}
+  </DialogContent>
+  <DialogActions
+    sx={{
+      padding: { xs: "16px 24px", sm: "24px 32px" },
+      backgroundColor: "#f8fafc",
+      borderTop: "1px solid #e0e0e0",
+      gap: 2,
+    }}
+  >
+    <Button
+      onClick={handleCloseDeleteDialog}
+      sx={{
+        border: "2px solid #1976d2",
+        color: "#1976d2",
+        "&:hover": {
+          border: "2px solid #64b5f6",
+          backgroundColor: "#e3f2fd",
+          color: "#1976d2",
+        },
+        textTransform: "none",
+        borderRadius: "8px",
+        px: 3,
+        fontWeight: 600,
+      }}
+    >
+      Cancel
+    </Button>
+    <Button
+      onClick={handleConfirmDelete}
+      variant="contained"
+      color="error"
+      disabled={loading}
+      startIcon={
+        loading ? <CircularProgress size={20} color="inherit" /> : null
+      }
+      sx={{
+        background: "linear-gradient(45deg, #f44336, #ff7961)",
+        fontSize: "0.95rem",
+        textTransform: "none",
+        padding: "8px 32px",
+        borderRadius: "10px",
+        boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+        color: "white",
+        "&:hover": {
+          background: "linear-gradient(45deg, #d32f2f, #f44336)",
+        },
+      }}
+    >
+      {loading ? "Deleting..." : "Delete"}
+    </Button>
+  </DialogActions>
+</Dialog>
 
       {/* Notification Snackbar */}
       <Snackbar

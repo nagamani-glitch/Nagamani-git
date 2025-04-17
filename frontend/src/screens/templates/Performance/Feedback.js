@@ -22,6 +22,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
+  Fade,
   Checkbox,
   Menu,
   ListItemIcon,
@@ -119,6 +121,9 @@ const Feedback = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [actionMenuAnchorEl, setActionMenuAnchorEl] = useState(null);
   const [currentFeedbackId, setCurrentFeedbackId] = useState(null);
+  // Add these state variables for delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   // Status options based on feedback type
   const [statusOptions] = useState({
@@ -257,14 +262,66 @@ const Feedback = () => {
     setIsCreateModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  // // Add these functions to your component
+  // const handleDeleteClick = (feedback) => {
+  //   console.log("Feedback object:", feedback); // Debug log
+  //   setItemToDelete(feedback);
+  //   setDeleteDialogOpen(true);
+  // };
+
+  // const handleConfirmDelete = async () => {
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(`http://localhost:5000/api/feedback/${itemToDelete._id || itemToDelete.id}`);
+  //     await fetchFeedbacks();
+  //     setDeleteDialogOpen(false);
+  //     setItemToDelete(null);
+  //   } catch (error) {
+  //     console.error("Error deleting feedback:", error);
+  //     setError("Failed to delete feedback");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const handleCloseDeleteDialog = () => {
+  //   setDeleteDialogOpen(false);
+  //   setItemToDelete(null);
+  // };
+  // Add these functions to your component
+  const handleDeleteClick = (feedback) => {
+    console.log("Feedback object:", feedback); // Debug log
+    setItemToDelete(feedback);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/feedback/${id}`);
+      setLoading(true);
+      await axios.delete(
+        `http://localhost:5000/api/feedback/${
+          itemToDelete._id || itemToDelete.id
+        }`
+      );
       await fetchFeedbacks();
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     } catch (error) {
       console.error("Error deleting feedback:", error);
       setError("Failed to delete feedback");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+  };
+
+  // Helper function to check if a date is valid
+  const isValidDate = (date) => {
+    return date instanceof Date && !isNaN(date);
   };
 
   const handleSearchChange = (e) => {
@@ -893,9 +950,27 @@ const Feedback = () => {
           </ListItemIcon>
           <ListItemText>View History</ListItemText>
         </MenuItem>
+        {/* <MenuItem
+          onClick={() => {
+            handleDeleteClick(currentFeedbackId);
+            handleActionMenuClose();
+          }}
+        >
+          <ListItemIcon>
+            <Delete fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText>Delete</ListItemText>
+        </MenuItem> */}
         <MenuItem
           onClick={() => {
-            handleDelete(currentFeedbackId);
+            handleDeleteClick(
+              Object.values(feedbackData)
+                .flat()
+                .find(
+                  (f) =>
+                    f._id === currentFeedbackId || f.id === currentFeedbackId
+                )
+            );
             handleActionMenuClose();
           }}
         >
@@ -1953,8 +2028,18 @@ const Feedback = () => {
                           >
                             <HistoryIcon fontSize="small" />
                           </IconButton>
+                          {/* <IconButton
+                            onClick={() => handleDeleteClick(item._id || item.id)}
+                            size="small"
+                            sx={{
+                              color: "#ef4444",
+                              "&:hover": { backgroundColor: "#fee2e2" },
+                            }}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton> */}
                           <IconButton
-                            onClick={() => handleDelete(item._id || item.id)}
+                            onClick={() => handleDeleteClick(item)}
                             size="small"
                             sx={{
                               color: "#ef4444",
@@ -2052,6 +2137,180 @@ const Feedback = () => {
       )}
 
       <div className="pagination">Page 1 of 1</div>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
+        TransitionComponent={Fade}
+        TransitionProps={{
+          timeout: 300,
+        }}
+        sx={{
+          "& .MuiDialog-container": {
+            justifyContent: "center",
+            alignItems: "center",
+            "& .MuiPaper-root": {
+              margin: { xs: "16px", sm: "32px" },
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+            },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Delete color="white" />
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Are you sure you want to delete this feedback? This action cannot be
+            undone.
+          </Alert>
+          {itemToDelete && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+              {/* Adjust these fields based on your actual data structure */}
+              <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                {itemToDelete.feedbackTitle ||
+                  itemToDelete.title ||
+                  "Untitled Feedback"}
+              </Typography>
+
+              {/* Employee information */}
+              {(itemToDelete.employeeName || itemToDelete.employee) && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
+                  <strong>For:</strong>{" "}
+                  {itemToDelete.employeeName ||
+                    (typeof itemToDelete.employee === "object"
+                      ? itemToDelete.employee.name
+                      : itemToDelete.employee)}
+                </Typography>
+              )}
+
+              {/* Feedback type */}
+              {itemToDelete.feedbackType && (
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Type:</strong> {itemToDelete.feedbackType}
+                </Typography>
+              )}
+
+              {/* Status */}
+              {(itemToDelete.feedbackStatus || itemToDelete.status) && (
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Status:</strong>{" "}
+                  {itemToDelete.feedbackStatus || itemToDelete.status}
+                </Typography>
+              )}
+
+              {/* Dates */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 0.5,
+                  mt: 1,
+                }}
+              >
+                {itemToDelete.startDate && (
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Start Date:</strong>{" "}
+                    {isValidDate(new Date(itemToDelete.startDate))
+                      ? new Date(itemToDelete.startDate).toLocaleDateString()
+                      : "Invalid Date"}
+                  </Typography>
+                )}
+
+                {itemToDelete.dueDate && (
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Due Date:</strong>{" "}
+                    {isValidDate(new Date(itemToDelete.dueDate))
+                      ? new Date(itemToDelete.dueDate).toLocaleDateString()
+                      : "Invalid Date"}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={handleCloseDeleteDialog}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
