@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { styled } from "@mui/material";
 import {
   Box,
   Button,
@@ -46,6 +47,18 @@ import {
 } from "@mui/icons-material";
 import GavelIcon from "@mui/icons-material/Gavel";
 import axios from "axios";
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
+
+
 
 const DisciplinaryActions = () => {
   const [open, setOpen] = useState(false);
@@ -319,7 +332,11 @@ const DisciplinaryActions = () => {
   };
 
   return (
-    <Box sx={{ padding: isMobile ? 2 : 3 }}>
+    <Box sx={{
+      p: { xs: 2, sm: 3, md: 4 },
+      backgroundColor: "#f5f5f5",
+      minHeight: "100vh",
+    }}>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -345,14 +362,28 @@ const DisciplinaryActions = () => {
           gap: isMobile ? 2 : 0,
         }}
       >
-        <Typography
+        {/* <Typography
           variant={isMobile ? "h4" : "h3"}
           fontWeight="800"
           fontSize={isMobile ? "1.25rem" : "1.5rem"}
         >
           Disciplinary Actions
-        </Typography>
-        <Button
+        </Typography> */}
+
+<Typography
+      variant="h4"
+      sx={{
+        mb: { xs: 2, sm: 3, md: 4 },
+        color: theme.palette.primary.main,
+        fontWeight: 600,
+        letterSpacing: 0.5,
+        fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+      }}
+    >
+      Disciplinary Actions
+    </Typography>
+
+        {/* <Button
           variant="contained"
           color="primary"
           onClick={handleClickOpen}
@@ -360,10 +391,10 @@ const DisciplinaryActions = () => {
           fullWidth={isMobile}
         >
           Take An Action
-        </Button>
+        </Button> */}
       </Box>
 
-      <Box
+      {/* <Box
         sx={{
           mb: 3,
           display: "flex",
@@ -404,7 +435,64 @@ const DisciplinaryActions = () => {
             </MenuItem>
           ))}
         </TextField>
+      </Box> */}
+
+<StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+      <Box
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row" }}
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        gap={2}
+        sx={{
+          width: "100%",
+          justifyContent: "space-between",
+        }}
+      >
+        <TextField
+          placeholder="Search actions..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          size="small"
+          sx={{
+            width: { xs: "100%", sm: "300px" },
+            marginRight: { xs: 0, sm: "auto" },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search color="primary" />
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: 1, sm: 1 },
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
+          <Button
+            variant="contained"
+            onClick={handleClickOpen}
+            sx={{
+              height: { xs: "auto", sm: 50 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+              color: "white",
+              "&:hover": {
+                background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+              },
+            }}
+          >
+            Take An Action
+          </Button>
+        </Box>
       </Box>
+    </StyledPaper>
 
       {/* Desktop and Tablet View */}
       {!isMobile && (
@@ -661,7 +749,7 @@ const DisciplinaryActions = () => {
       )}
 
       {/* Add/Edit Dialog */}
-      <Dialog
+      {/* <Dialog
         open={open}
         onClose={handleClose}
         maxWidth="md"
@@ -869,7 +957,323 @@ const DisciplinaryActions = () => {
             {loading ? <CircularProgress size={24} color="inherit" /> : "Save"}
           </Button>
         </DialogActions>
+      </Dialog> */}
+
+<Dialog
+        open={open}
+        onClose={handleClose}
+        PaperProps={{
+          sx: {
+            width: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
+          }}
+        >
+          {editingAction ? "Edit Action" : "Take An Action"}
+        </DialogTitle>
+ 
+        <DialogContent
+          sx={{
+            padding: "32px",
+            backgroundColor: "#f8fafc",
+            marginTop: "20px",
+          }}
+        >
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            {/* Employee Selection Autocomplete */}
+            <Grid item xs={12}>
+              <Autocomplete
+                id="employee-select"
+                options={registeredEmployees}
+                getOptionLabel={(option) =>
+                  `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
+                    option.personalInfo?.lastName || ""
+                  }`
+                }
+                value={selectedEmployee}
+                onChange={handleEmployeeSelect}
+                loading={loadingEmployees}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Employee"
+                    variant="outlined"
+                    fullWidth
+                    required
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingEmployees ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+ 
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="employee"
+                label="Employee Name"
+                fullWidth
+                required
+                value={formData.employee}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1976d2",
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="email"
+                label="Email"
+                fullWidth
+                value={formData.email}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="department"
+                label="Department"
+                fullWidth
+                value={formData.department}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="designation"
+                label="Designation"
+                fullWidth
+                value={formData.designation}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="action"
+                label="Action Type"
+                select
+                fullWidth
+                required
+                value={formData.action}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="Verbal Warning">Verbal Warning</MenuItem>
+                <MenuItem value="Written Warning">Written Warning</MenuItem>
+                <MenuItem value="Suspension">Suspension</MenuItem>
+                <MenuItem value="Termination">Termination</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="startDate"
+                label="Start Date"
+                type="date"
+                fullWidth
+                required
+                value={formData.startDate}
+                onChange={handleInputChange}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="status"
+                label="Status"
+                select
+                fullWidth
+                required
+                value={formData.status}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              >
+                {actionStatuses.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="description"
+                label="Description"
+                multiline
+                rows={4}
+                fullWidth
+                required
+                value={formData.description}
+                onChange={handleInputChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                variant="outlined"
+                component="label"
+                startIcon={<UploadFile />}
+                sx={{
+                  borderRadius: "12px",
+                  padding: "10px 16px",
+                  textTransform: "none",
+                }}
+              >
+                Upload Attachment
+                <input
+                  type="file"
+                  hidden
+                  onChange={handleFileUpload}
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                />
+              </Button>
+              {formData.attachments && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  File selected: {formData.attachments.name}
+                </Typography>
+              )}
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions
+          sx={{ padding: "24px 32px", backgroundColor: "#f8fafc" }}
+        >
+          <Button
+            onClick={handleClose}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(52, 152, 219, 0.2)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #1976d2)",
+              },
+            }}
+          >
+            {editingAction ? "Update" : "Save"}
+          </Button>
+        </DialogActions>
       </Dialog>
+ 
 
       {/* Delete Confirmation Dialog */}
       <Dialog

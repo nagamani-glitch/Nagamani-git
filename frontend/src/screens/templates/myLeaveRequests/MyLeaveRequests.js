@@ -793,11 +793,51 @@ const MyLeaveRequests = () => {
                         <Table size="small">
                           <TableHead>
                             <TableRow>
-                              <TableCell>Type</TableCell>
-                              <TableCell>From</TableCell>
-                              <TableCell>To</TableCell>
-                              <TableCell>Days</TableCell>
-                              <TableCell>Status</TableCell>
+                              <TableCell
+                                sx={{
+                                  backgroundColor: "#1976d2",
+                                  color: "white",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Type
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  backgroundColor: "#1976d2",
+                                  color: "white",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                From
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  backgroundColor: "#1976d2",
+                                  color: "white",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                To
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  backgroundColor: "#1976d2",
+                                  color: "white",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Days
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  backgroundColor: "#1976d2",
+                                  color: "white",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Status
+                              </TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
@@ -1015,13 +1055,69 @@ const MyLeaveRequests = () => {
                   <Table>
                     <TableHead>
                       <TableRow>
-                        <TableCell>Leave Type</TableCell>
-                        <TableCell>From</TableCell>
-                        <TableCell>To</TableCell>
-                        <TableCell>Days</TableCell>
-                        <TableCell>Reason</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell>Actions</TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Leave Type
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          From
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          To
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Days
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Reason
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Status
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Actions
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -1157,11 +1253,51 @@ const MyLeaveRequests = () => {
                   <Table>
                     <TableHead>
                       <TableRow>
-                        <TableCell>Leave Type</TableCell>
-                        <TableCell>Total</TableCell>
-                        <TableCell>Used</TableCell>
-                        <TableCell>Pending</TableCell>
-                        <TableCell>Available</TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Leave Type
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Total
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Used
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Pending
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            backgroundColor: "#1976d2",
+                            color: "white",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Available
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>

@@ -869,14 +869,15 @@ const ResignationPage = () => {
         >
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: "#f8fafc" }}>
+              <TableRow>
                 <TableCell
                   sx={{
                     fontWeight: 600,
-                    color: "#475569",
+                    color: "white",
                     width: isMobile || isTablet ? "40%" : "25%",
-                    borderBottom: "2px solid #e2e8f0",
+                    borderBottom: "2px solid #1565c0",
                     py: 2,
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Employee
@@ -885,9 +886,10 @@ const ResignationPage = () => {
                   <TableCell
                     sx={{
                       fontWeight: 600,
-                      color: "#475569",
-                      borderBottom: "2px solid #e2e8f0",
+                      color: "white",
+                      borderBottom: "2px solid #1565c0",
                       py: 2,
+                      backgroundColor: "#1976d2",
                     }}
                   >
                     Position
@@ -897,9 +899,10 @@ const ResignationPage = () => {
                   <TableCell
                     sx={{
                       fontWeight: 600,
-                      color: "#475569",
-                      borderBottom: "2px solid #e2e8f0",
+                      color: "white",
+                      borderBottom: "2px solid #1565c0",
                       py: 2,
+                      backgroundColor: "#1976d2",
                     }}
                   >
                     Email
@@ -908,10 +911,11 @@ const ResignationPage = () => {
                 <TableCell
                   sx={{
                     fontWeight: 600,
-                    color: "#475569",
+                    color: "white",
                     width: isMobile ? "30%" : "15%",
-                    borderBottom: "2px solid #e2e8f0",
+                    borderBottom: "2px solid #1565c0",
                     py: 2,
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Status
@@ -919,16 +923,18 @@ const ResignationPage = () => {
                 <TableCell
                   sx={{
                     fontWeight: 600,
-                    color: "#475569",
+                    color: "white",
                     width: isMobile ? "30%" : "20%",
-                    borderBottom: "2px solid #e2e8f0",
+                    borderBottom: "2px solid #1565c0",
                     py: 2,
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Actions
                 </TableCell>
               </TableRow>
             </TableHead>
+
             <TableBody>
               {filteredData.map((item) => (
                 <TableRow
