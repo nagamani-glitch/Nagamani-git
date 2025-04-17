@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { styled } from "@mui/material/styles";
 import {
   Box,
   Button,
@@ -25,6 +26,7 @@ import {
   DialogActions,
   Autocomplete,
   CircularProgress,
+  useTheme, alpha, useMediaQuery
 } from "@mui/material";
 
 import {
@@ -36,11 +38,70 @@ import {
   FilterList,
   Sort,
   Download,
+  Add,
+  // GavelOutlined as GavelIcon,
 } from "@mui/icons-material";
 import GavelIcon from "@mui/icons-material/Gavel";
 import axios from "axios";
 
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
+
+const SearchTextField = styled(TextField)(({ theme }) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: theme.spacing(2),
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.common.white,
+  fontSize: 14,
+  fontWeight: "bold",
+  padding: theme.spacing(2),
+  whiteSpace: "nowrap",
+  "&.MuiTableCell-body": {
+    color: theme.palette.text.primary,
+    fontSize: 14,
+    borderBottom: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+  },
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(1.5),
+    fontSize: 13,
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.05),
+  },
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.1),
+    transition: "background-color 0.2s ease",
+  },
+  // Hide last border
+  "&:last-child td, &:last-child th": {
+    borderBottom: 0,
+  },
+}));
+
+
 const DisciplinaryActions = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+
   const [open, setOpen] = useState(false);
   const [actions, setActions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -275,65 +336,208 @@ const DisciplinaryActions = () => {
     };
     return colors[status] || "default";
   };
+
+
   return (
-    <Box sx={{ padding: 3 }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 4,
-        }}
-      >
-        <Typography variant="h3" fontWeight="800" fontSize="1.5rem">
+    <Box sx={{
+      p: { xs: 2, sm: 3, md: 4 }, 
+      backgroundColor: "#f5f5f5", 
+      minHeight: "100vh" 
+    }}>
+      <Box>
+
+       
+
+      <Typography
+          variant="h4"
+          sx={{
+            mb: { xs: 2, sm: 3, md: 4 },
+            color: theme.palette.primary.main,
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+          }}
+        >
           Disciplinary Actions
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleClickOpen}
-          startIcon={<span style={{ fontSize: "1.5rem" }}>+</span>}
-        >
-          Take An Action
-        </Button>
+        
+
+        
       </Box>
 
-      <Box sx={{ mb: 3, display: "flex", gap: 2 }}>
-        <TextField
-          placeholder="Search actions..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{ width: "300px" }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <TextField
-          select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          sx={{ width: "200px" }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <FilterList />
-              </InputAdornment>
-            ),
-          }}
-        >
-          <MenuItem value="all">All Statuses</MenuItem>
-          {actionStatuses.map((status) => (
-            <MenuItem key={status} value={status}>
-              {status}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Box>
+      
 
+{/* <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            gap={2}
+            sx={{
+              width: "100%",
+              justifyContent: "space-between",
+            }}
+          >
+            <SearchTextField
+              placeholder="Search actions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              size="small"
+              sx={{
+                width: { xs: "100%", sm: "300px" },
+                marginRight: { xs: 0, sm: "auto" },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 1, sm: 2 },
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
+              <TextField
+                select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                size="small"
+                sx={{
+                  width: { xs: "100%", sm: "200px" },
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: theme.spacing(2),
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <FilterList color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+              >
+                <MenuItem value="all">All Statuses</MenuItem>
+                {actionStatuses.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={handleClickOpen}
+                sx={{
+                  height: { xs: "auto", sm: 40 },
+                  padding: { xs: "8px 16px", sm: "6px 16px" },
+                  width: { xs: "100%", sm: "auto" },
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                  color: "white",
+                  "&:hover": {
+                    background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                  },
+                }}
+              >
+                Take An Action
+              </Button>
+            </Box>
+          </Box>
+        </StyledPaper> */}
+
+<StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            gap={2}
+            sx={{
+              width: "100%",
+              justifyContent: "space-between",
+            }}
+          >
+            <SearchTextField
+              placeholder="Search actions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              size="small"
+              sx={{
+                width: { xs: "100%", sm: "300px" },
+                marginRight: { xs: 0, sm: "auto" },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 1, sm: 2 },
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
+              <TextField
+                select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                size="small"
+                sx={{
+                  width: { xs: "100%", sm: "200px" },
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: theme.spacing(2),
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <FilterList color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+              >
+                <MenuItem value="all">All Statuses</MenuItem>
+                {actionStatuses.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={handleClickOpen}
+                sx={{
+                  height: { xs: "auto", sm: 40 },
+                  padding: { xs: "8px 16px", sm: "6px 16px" },
+                  width: { xs: "100%", sm: "auto" },
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                  color: "white",
+                  "&:hover": {
+                    background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                  },
+                }}
+              >
+                Take An Action
+              </Button>
+            </Box>
+          </Box>
+        </StyledPaper>
+        
+ 
       <TableContainer component={Paper} elevation={3}>
         <Table>
           <TableHead>
@@ -426,7 +630,10 @@ const DisciplinaryActions = () => {
         </Table>
       </TableContainer>
 
-      <Dialog
+
+
+
+      {/* <Dialog
         open={open}
         onClose={handleClose}
         PaperProps={{
@@ -457,7 +664,7 @@ const DisciplinaryActions = () => {
           }}
         >
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            {/* Employee Selection Autocomplete */}
+            {/* Employee Selection Autocomplete *
             <Grid item xs={12}>
               <Autocomplete
                 id="employee-select"
@@ -754,7 +961,365 @@ const DisciplinaryActions = () => {
         >
           {snackbar.message}
         </Alert>
-      </Snackbar>
+      </Snackbar> */}
+
+
+
+       {/* Create/Edit Dialog */}
+       <Dialog
+          open={open}
+          onClose={handleClose}
+          maxWidth="md"
+          fullWidth
+          fullScreen={isMobile}
+          PaperProps={{
+            sx: {
+              borderRadius: isMobile ? 0 : "20px",
+              overflow: "hidden",
+              margin: isMobile ? 0 : 2,
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              color: "white",
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              fontWeight: 600,
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            {editingAction ? "Edit Disciplinary Action" : "Take Disciplinary Action"}
+            <IconButton
+              edge="end"
+              color="inherit"
+              onClick={handleClose}
+              aria-label="close"
+            >
+              <Close />
+            </IconButton>
+          </DialogTitle>
+
+          <DialogContent 
+            sx={{ 
+              padding: { xs: "16px", sm: "24px", md: "32px" }, 
+              backgroundColor: "#f8fafc",
+              paddingTop: { xs: "24px", sm: "32px" }
+            }}
+          >
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+                  Employee Information
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Autocomplete
+                  id="employee-select"
+                  options={registeredEmployees}
+                  getOptionLabel={(option) =>
+                    `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
+                      option.personalInfo?.lastName || ""
+                    }`
+                  }
+                  value={selectedEmployee}
+                  onChange={handleEmployeeSelect}
+                  loading={loadingEmployees}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Select Employee"
+                      variant="outlined"
+                      fullWidth
+                      required
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {loadingEmployees ? (
+                              <CircularProgress color="inherit" size={20} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: "white",
+                          borderRadius: "12px",
+                          "&:hover fieldset": {
+                            borderColor: "#1976d2",
+                          },
+                        },
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Employee ID"
+                  value={formData.employeeId}
+                  fullWidth
+                  disabled
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#f5f5f5",
+                      borderRadius: "12px",
+                    },
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Email"
+                  value={formData.email}
+                  fullWidth
+                  disabled
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#f5f5f5",
+                      borderRadius: "12px",
+                    },
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Department"
+                  value={formData.department}
+                  fullWidth
+                  disabled
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#f5f5f5",
+                      borderRadius: "12px",
+                    },
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Designation"
+                  value={formData.designation}
+                  fullWidth
+                  disabled
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#f5f5f5",
+                      borderRadius: "12px",
+                    },
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2, mt: 2 }}>
+                  Action Details
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Action Type"
+                  name="action"
+                  value={formData.action}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="Warning">Warning</MenuItem>
+                  <MenuItem value="Suspension">Suspension</MenuItem>
+                  <MenuItem value="Termination">Termination</MenuItem>
+                  <MenuItem value="Written Notice">Written Notice</MenuItem>
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                >
+                  {actionStatuses.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Start Date"
+                  name="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<UploadFile />}
+                  sx={{
+                    height: "56px",
+                    width: "100%",
+                    borderRadius: "12px",
+                    borderColor: "#1976d2",
+                    color: "#1976d2",
+                    "&:hover": {
+                      borderColor: "#1565c0",
+                      backgroundColor: "rgba(25, 118, 210, 0.04)",
+                    },
+                  }}
+                >
+                  {formData.attachments
+                    ? formData.attachments.name
+                    : "Upload Attachment"}
+                  <input
+                    type="file"
+                    hidden
+                    onChange={handleFileUpload}
+                  />
+                </Button>
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  fullWidth
+                  multiline
+                  rows={4}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+
+          <DialogActions
+            sx={{
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              backgroundColor: "#f8fafc",
+              borderTop: "1px solid #e0e0e0",
+              gap: 2,
+              flexDirection: isMobile ? "column" : "row",
+              justifyContent: isMobile ? "stretch" : "flex-end",
+            }}
+          >
+            <Button
+              onClick={handleClose}
+              sx={{
+                border: "2px solid #1976d2",
+                color: "#1976d2",
+                "&:hover": {
+                  border: "2px solid #64b5f6",
+                  backgroundColor: "#e3f2fd",
+                  color: "#1976d2",
+                },
+                textTransform: "none",
+                borderRadius: "8px",
+                px: 3,
+                fontWeight: 600,
+                width: isMobile ? "100%" : "auto",
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              onClick={handleSave}
+              variant="contained"
+              sx={{
+                background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                fontSize: "0.95rem",
+                textTransform: "none",
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                },
+                width: isMobile ? "100%" : "auto",
+              }}
+            >
+              {editingAction ? "Update Action" : "Save Action"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          >
+            <Alert
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              severity={snackbar.severity}
+              variant="filled"
+              sx={{ width: "100%" }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
     </Box>
   );
 };
