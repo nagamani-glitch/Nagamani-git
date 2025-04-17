@@ -645,18 +645,14 @@ function OnboardingView() {
             }}
           >
             <thead>
-              <tr
-                style={{
-                  backgroundColor: "#f8fafc",
-                  borderBottom: "2px solid #e2e8f0",
-                }}
-              >
+              <tr>
                 <th
                   style={{
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Name
@@ -666,7 +662,8 @@ function OnboardingView() {
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Email
@@ -676,7 +673,8 @@ function OnboardingView() {
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Job Position
@@ -686,7 +684,8 @@ function OnboardingView() {
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Mobile
@@ -696,7 +695,8 @@ function OnboardingView() {
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Joining Date
@@ -706,45 +706,26 @@ function OnboardingView() {
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Stage
                 </th>
-
-                {/* <th
-                  style={{
-                    padding: "16px",
-                    textAlign: "left",
-                    fontWeight: 600,
-                    color: "#334155",
-                  }}
-                >
-                  Portal Status
-                </th>
-                <th
-                  style={{
-                    padding: "16px",
-                    textAlign: "left",
-                    fontWeight: 600,
-                    color: "#334155",
-                  }}
-                >
-                  Task Status
-                </th> */}
-
                 <th
                   style={{
                     padding: "16px",
                     textAlign: "center",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Actions
                 </th>
               </tr>
             </thead>
+
             <tbody>
               {filteredCandidates.length === 0 ? (
                 <tr>

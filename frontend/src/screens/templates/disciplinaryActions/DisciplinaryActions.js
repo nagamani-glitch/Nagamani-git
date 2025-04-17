@@ -28,9 +28,7 @@ import {
   CircularProgress,
   useMediaQuery,
   useTheme,
-  Collapse,
-  Card,
-  CardContent,
+  alpha,
 } from "@mui/material";
 
 import {
@@ -42,8 +40,6 @@ import {
   FilterList,
   Sort,
   Download,
-  ExpandMore,
-  ExpandLess,
 } from "@mui/icons-material";
 import GavelIcon from "@mui/icons-material/Gavel";
 import axios from "axios";
@@ -58,9 +54,43 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   },
 }));
 
+const SearchTextField = styled(TextField)(({ theme }) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: theme.spacing(2),
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+}));
 
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.common.white,
+  fontSize: 14,
+  fontWeight: "bold",
+  padding: theme.spacing(2),
+  "&.MuiTableCell-body": {
+    color: theme.palette.text.primary,
+    fontSize: 14,
+  },
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(1.5),
+    fontSize: 13,
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.05),
+  },
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.1),
+    transition: "background-color 0.2s ease",
+  },
+}));
 
 const DisciplinaryActions = () => {
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [actions, setActions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,13 +106,13 @@ const DisciplinaryActions = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [loading, setLoading] = useState(false);
   const [expandedAction, setExpandedAction] = useState(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [actionToDelete, setActionToDelete] = useState(null);
 
   // Add responsive hooks
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  // First, ensure we have proper breakpoint detection for all device sizes
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // 0-600px
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md")); // 600-900px
+  const isSmallDesktop = useMediaQuery(theme.breakpoints.between("md", "lg")); // 900-1200px
+  const isLargeDesktop = useMediaQuery(theme.breakpoints.up("lg")); // 1200px+
 
   const actionStatuses = [
     "Warning",
@@ -105,6 +135,44 @@ const DisciplinaryActions = () => {
   };
 
   const [formData, setFormData] = useState(initialFormState);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [actionToDelete, setActionToDelete] = useState(null);
+
+  // Replace the current handleDelete function with these two functions
+  const handleDeleteClick = (action) => {
+    setActionToDelete(action);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!actionToDelete) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `http://localhost:5000/api/disciplinary-actions/${actionToDelete._id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to delete action");
+
+      showSnackbar("Action deleted successfully");
+      fetchActions();
+    } catch (error) {
+      showSnackbar("Error deleting action", "error");
+    } finally {
+      setLoading(false);
+      handleCloseDeleteDialog();
+    }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setActionToDelete(null);
+  };
 
   useEffect(() => {
     fetchActions();
@@ -262,40 +330,6 @@ const DisciplinaryActions = () => {
     setOpen(true);
   };
 
-  const handleDeleteClick = (action) => {
-    setActionToDelete(action);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-    setActionToDelete(null);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!actionToDelete) return;
-
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `http://localhost:5000/api/disciplinary-actions/${actionToDelete._id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to delete action");
-
-      showSnackbar("Action deleted successfully");
-      fetchActions();
-    } catch (error) {
-      showSnackbar("Error deleting action", "error");
-    } finally {
-      setLoading(false);
-      handleCloseDeleteDialog();
-    }
-  };
-
   const downloadFile = async (filename, originalName) => {
     try {
       const response = await fetch(
@@ -332,11 +366,13 @@ const DisciplinaryActions = () => {
   };
 
   return (
-    <Box sx={{
-      p: { xs: 2, sm: 3, md: 4 },
-      backgroundColor: "#f5f5f5",
-      minHeight: "100vh",
-    }}>
+    <Box
+      sx={{
+        p: { xs: 2, sm: 3, md: 4 },
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+      }}
+    >
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -352,201 +388,206 @@ const DisciplinaryActions = () => {
         </Alert>
       </Snackbar>
 
-      <Box
+      <Typography
+        variant="h4"
         sx={{
-          display: "flex",
-          flexDirection: isMobile ? "column" : "row",
-          justifyContent: "space-between",
-          alignItems: isMobile ? "flex-start" : "center",
-          mb: isMobile ? 2 : 4,
-          gap: isMobile ? 2 : 0,
+          mb: { xs: 2, sm: 3, md: 4 },
+          color: theme.palette.primary.main,
+          fontWeight: 600,
+          letterSpacing: 0.5,
+          fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
         }}
       >
-        {/* <Typography
-          variant={isMobile ? "h4" : "h3"}
-          fontWeight="800"
-          fontSize={isMobile ? "1.25rem" : "1.5rem"}
-        >
-          Disciplinary Actions
-        </Typography> */}
+        Disciplinary Actions
+      </Typography>
 
-<Typography
-      variant="h4"
-      sx={{
-        mb: { xs: 2, sm: 3, md: 4 },
-        color: theme.palette.primary.main,
-        fontWeight: 600,
-        letterSpacing: 0.5,
-        fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
-      }}
-    >
-      Disciplinary Actions
-    </Typography>
-
-        {/* <Button
-          variant="contained"
-          color="primary"
-          onClick={handleClickOpen}
-          startIcon={<span style={{ fontSize: "1.5rem" }}>+</span>}
-          fullWidth={isMobile}
-        >
-          Take An Action
-        </Button> */}
-      </Box>
-
-      {/* <Box
-        sx={{
-          mb: 3,
-          display: "flex",
-          flexDirection: isMobile ? "column" : "row",
-          gap: 2,
-        }}
-      >
-        <TextField
-          placeholder="Search actions..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{ width: isMobile ? "100%" : "300px" }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <TextField
-          select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          sx={{ width: isMobile ? "100%" : "200px" }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <FilterList />
-              </InputAdornment>
-            ),
-          }}
-        >
-          <MenuItem value="all">All Statuses</MenuItem>
-          {actionStatuses.map((status) => (
-            <MenuItem key={status} value={status}>
-              {status}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Box> */}
-
-<StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
-      <Box
-        display="flex"
-        flexDirection={{ xs: "column", sm: "row" }}
-        alignItems={{ xs: "flex-start", sm: "center" }}
-        gap={2}
-        sx={{
-          width: "100%",
-          justifyContent: "space-between",
-        }}
-      >
-        <TextField
-          placeholder="Search actions..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          size="small"
-          sx={{
-            width: { xs: "100%", sm: "300px" },
-            marginRight: { xs: 0, sm: "auto" },
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search color="primary" />
-              </InputAdornment>
-            ),
-          }}
-        />
-
+      <StyledPaper sx={{ p: { xs: 2, sm: 2, md: 3 } }}>
         <Box
+          display="flex"
+          flexDirection={{ xs: "column", sm: "column", md: "row" }}
+          alignItems={{ xs: "flex-start", sm: "flex-start", md: "center" }}
+          gap={2}
           sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: { xs: 1, sm: 1 },
-            width: { xs: "100%", sm: "auto" },
+            width: "100%",
+            justifyContent: "space-between",
           }}
         >
-          <Button
-            variant="contained"
-            onClick={handleClickOpen}
+          <SearchTextField
+            placeholder="Search actions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            size="small"
             sx={{
-              height: { xs: "auto", sm: 50 },
-              padding: { xs: "8px 16px", sm: "6px 16px" },
-              width: { xs: "100%", sm: "auto" },
-              background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
-              color: "white",
-              "&:hover": {
-                background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+              width: { xs: "100%", sm: "100%", md: "300px", lg: "350px" },
+              marginRight: { xs: 0, md: "auto" },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: { xs: 1, sm: 2 },
+              width: { xs: "100%", sm: "100%", md: "auto" },
+              justifyContent: {
+                xs: "flex-start",
+                sm: "space-between",
+                md: "flex-end",
               },
             }}
           >
-            Take An Action
-          </Button>
-        </Box>
-      </Box>
-    </StyledPaper>
+            <TextField
+              select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              size="small"
+              sx={{
+                width: { xs: "100%", sm: "48%", md: "200px" },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: theme.spacing(2),
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FilterList color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+            >
+              <MenuItem value="all">All Statuses</MenuItem>
+              {actionStatuses.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {status}
+                </MenuItem>
+              ))}
+            </TextField>
 
-      {/* Desktop and Tablet View */}
-      {!isMobile && (
-        <TableContainer component={Paper} elevation={3}>
-          <Table>
+            <Button
+              variant="contained"
+              onClick={handleClickOpen}
+              sx={{
+                height: { xs: "auto", sm: "40px" },
+                padding: { xs: "8px 16px", sm: "6px 16px" },
+                width: { xs: "100%", sm: "48%", md: "auto" },
+                background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                color: "white",
+                "&:hover": {
+                  background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                },
+                whiteSpace: "nowrap",
+              }}
+            >
+              Take An Action
+            </Button>
+          </Box>
+        </Box>
+      </StyledPaper>
+
+      {/* Responsive Table */}
+      <Box sx={{ overflowX: "auto" }}>
+        <TableContainer
+          component={Paper}
+          elevation={3}
+          sx={{
+            borderRadius: 2,
+            mb: 4,
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+          }}
+        >
+          <Table
+            stickyHeader
+            sx={{ minWidth: isMobile ? 800 : isTablet ? 900 : 1000 }}
+          >
             <TableHead>
-              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableCell>Employee</TableCell>
-                <TableCell>Employee ID</TableCell>
-                <TableCell>Department</TableCell>
-                <TableCell>Action Type</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Start Date</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Attachments</TableCell>
-                <TableCell align="center">Actions</TableCell>
+              <TableRow>
+                <StyledTableCell>Employee</StyledTableCell>
+                {!isMobile && <StyledTableCell>Employee ID</StyledTableCell>}
+                {!isMobile && <StyledTableCell>Department</StyledTableCell>}
+                <StyledTableCell>Action Type</StyledTableCell>
+                <StyledTableCell>Description</StyledTableCell>
+                {!isMobile && <StyledTableCell>Start Date</StyledTableCell>}
+                <StyledTableCell>Status</StyledTableCell>
+                <StyledTableCell>Attachments</StyledTableCell>
+                <StyledTableCell align="center">Actions</StyledTableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center">
-                    <CircularProgress size={40} sx={{ my: 3 }} />
+                  <TableCell
+                    colSpan={isMobile ? 6 : 9}
+                    align="center"
+                    sx={{ py: 4 }}
+                  >
+                    <CircularProgress size={40} />
+                    <Typography sx={{ mt: 2 }}>Loading actions...</Typography>
                   </TableCell>
                 </TableRow>
               ) : actions.length > 0 ? (
                 actions.map((action) => (
-                  <TableRow key={action._id} hover>
-                    <TableCell>{action.employee}</TableCell>
+                  <StyledTableRow key={action._id}>
                     <TableCell>
-                      {action.employeeId ? (
-                        <Chip
-                          label={action.employeeId}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      ) : (
-                        "-"
-                      )}
+                      <Box sx={{ display: "flex", flexDirection: "column" }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {action.employee}
+                        </Typography>
+                        {isMobile && (
+                          <>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {action.employeeId} • {action.department}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {new Date(action.startDate).toLocaleDateString()}
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
                     </TableCell>
-                    <TableCell>{action.department || "-"}</TableCell>
+                    {!isMobile && <TableCell>{action.employeeId}</TableCell>}
+                    {!isMobile && <TableCell>{action.department}</TableCell>}
                     <TableCell>{action.action}</TableCell>
-                    <TableCell>{action.description}</TableCell>
                     <TableCell>
-                      {new Date(action.startDate).toLocaleDateString()}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          maxWidth: { xs: 120, sm: 150, md: 200 },
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {action.description}
+                      </Typography>
                     </TableCell>
+                    {!isMobile && (
+                      <TableCell>
+                        {new Date(action.startDate).toLocaleDateString()}
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Chip
                         label={action.status}
                         color={getStatusColor(action.status)}
                         size="small"
+                        sx={{ fontWeight: 500 }}
                       />
                     </TableCell>
+
                     <TableCell>
                       {action.attachments && (
                         <IconButton
@@ -562,29 +603,86 @@ const DisciplinaryActions = () => {
                         </IconButton>
                       )}
                     </TableCell>
+
                     <TableCell align="center">
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleEdit(action)}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: 1,
+                        }}
                       >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDeleteClick(action)}
-                      >
-                        <Delete />
-                      </IconButton>
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => handleEdit(action)}
+                          sx={{
+                            backgroundColor: alpha(
+                              theme.palette.primary.main,
+                              0.1
+                            ),
+                            "&:hover": {
+                              backgroundColor: alpha(
+                                theme.palette.primary.main,
+                                0.2
+                              ),
+                            },
+                          }}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeleteClick(action)}
+                          sx={{
+                            backgroundColor: alpha(
+                              theme.palette.error.main,
+                              0.1
+                            ),
+                            "&:hover": {
+                              backgroundColor: alpha(
+                                theme.palette.error.main,
+                                0.2
+                              ),
+                            },
+                          }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </TableCell>
-                  </TableRow>
+                  </StyledTableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={9} align="center">
-                    <Box sx={{ py: 3, textAlign: "center" }}>
-                      <GavelIcon sx={{ fontSize: 60, color: "#ccc", mb: 2 }} />
-                      <Typography color="textSecondary">
+                  <TableCell
+                    colSpan={isMobile ? 6 : 9}
+                    align="center"
+                    sx={{ py: 4 }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <GavelIcon
+                        sx={{
+                          fontSize: 40,
+                          color: "text.secondary",
+                          opacity: 0.5,
+                        }}
+                      />
+                      <Typography variant="h6" color="text.secondary">
                         No disciplinary actions found
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {searchQuery || filterStatus !== "all"
+                          ? "Try adjusting your search or filters"
+                          : "Click 'Take An Action' to create a new disciplinary action"}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -593,380 +691,23 @@ const DisciplinaryActions = () => {
             </TableBody>
           </Table>
         </TableContainer>
-      )}
+      </Box>
 
-      {/* Mobile View */}
-      {isMobile && (
-        <Box sx={{ mt: 2 }}>
-          {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-              <CircularProgress size={40} />
-            </Box>
-          ) : actions.length > 0 ? (
-            actions.map((action) => (
-              <Card
-                key={action._id}
-                sx={{
-                  mb: 2,
-                  borderRadius: "10px",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                }}
-              >
-                <CardContent sx={{ p: 2 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {action.employee}
-                    </Typography>
-                    <Chip
-                      label={action.status}
-                      color={getStatusColor(action.status)}
-                      size="small"
-                    />
-                  </Box>
+      {/* Create/Edit Dialog */}
 
-                  <Box
-                    sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1 }}
-                  >
-                    {action.employeeId && (
-                      <Chip
-                        label={`ID: ${action.employeeId}`}
-                        size="small"
-                        variant="outlined"
-                      />
-                    )}
-                    {action.department && (
-                      <Chip
-                        label={action.department}
-                        size="small"
-                        variant="outlined"
-                      />
-                    )}
-                  </Box>
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    <strong>Action:</strong> {action.action}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    <strong>Date:</strong>{" "}
-                    {new Date(action.startDate).toLocaleDateString()}
-                  </Typography>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mt: 2,
-                    }}
-                  >
-                    <Button
-                      size="small"
-                      startIcon={
-                        expandedAction === action._id ? (
-                          <ExpandLess />
-                        ) : (
-                          <ExpandMore />
-                        )
-                      }
-                      onClick={() => toggleExpandAction(action._id)}
-                    >
-                      {expandedAction === action._id ? "Less" : "More"}
-                    </Button>
-
-                    <Box>
-                      {action.attachments && (
-                        <IconButton
-                          size="small"
-                          onClick={() =>
-                            downloadFile(
-                              action.attachments.filename,
-                              action.attachments.originalName
-                            )
-                          }
-                        >
-                          <Download />
-                        </IconButton>
-                      )}
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => handleEdit(action)}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDeleteClick(action)}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Box>
-                  </Box>
-
-                  <Collapse in={expandedAction === action._id}>
-                    <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #eee" }}>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 1 }}
-                      >
-                        <strong>Description:</strong>
-                      </Typography>
-                      <Typography variant="body2">
-                        {action.description}
-                      </Typography>
-                    </Box>
-                  </Collapse>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Box sx={{ py: 3, textAlign: "center" }}>
-              <GavelIcon sx={{ fontSize: 60, color: "#ccc", mb: 2 }} />
-              <Typography color="textSecondary">
-                No disciplinary actions found
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      )}
-
-      {/* Add/Edit Dialog */}
-      {/* <Dialog
+      <Dialog
         open={open}
         onClose={handleClose}
         maxWidth="md"
         fullWidth
         fullScreen={isMobile}
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          {editingAction
-            ? "Edit Disciplinary Action"
-            : "Take Disciplinary Action"}
-          <IconButton onClick={handleClose}>
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Autocomplete
-                options={registeredEmployees}
-                getOptionLabel={(option) =>
-                  `${option.Emp_ID} - ${option.personalInfo?.firstName || ""} ${
-                    option.personalInfo?.lastName || ""
-                  }`
-                }
-                value={selectedEmployee}
-                onChange={handleEmployeeSelect}
-                loading={loadingEmployees}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select Employee"
-                    variant="outlined"
-                    fullWidth
-                    required
-                    margin="normal"
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingEmployees ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Employee ID"
-                name="employeeId"
-                value={formData.employeeId}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                disabled
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                disabled
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Department"
-                name="department"
-                value={formData.department}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                disabled
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Designation"
-                name="designation"
-                value={formData.designation}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                disabled
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                select
-                label="Action Type"
-                name="action"
-                value={formData.action}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                margin="normal"
-              >
-                <MenuItem value="">Select Action Type</MenuItem>
-                <MenuItem value="Verbal Warning">Verbal Warning</MenuItem>
-                <MenuItem value="Written Warning">Written Warning</MenuItem>
-                <MenuItem value="Performance Improvement Plan">
-                  Performance Improvement Plan
-                </MenuItem>
-                <MenuItem value="Suspension">Suspension</MenuItem>
-                <MenuItem value="Termination">Termination</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                select
-                label="Status"
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                margin="normal"
-              >
-                <MenuItem value="">Select Status</MenuItem>
-                {actionStatuses.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Start Date"
-                name="startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                margin="normal"
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                multiline
-                rows={4}
-                margin="normal"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Button
-                variant="outlined"
-                component="label"
-                startIcon={<UploadFile />}
-                sx={{ mt: 1 }}
-              >
-                Upload Attachment
-                <input
-                  type="file"
-                  hidden
-                  onChange={handleFileUpload}
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                />
-              </Button>
-              {formData.attachments && (
-                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                  Selected file: {formData.attachments.name}
-                </Typography>
-              )}
-              {editingAction?.attachments && !formData.attachments && (
-                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                  Current attachment: {editingAction.attachments.originalName}
-                </Typography>
-              )}
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={handleClose} color="inherit">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            variant="contained"
-            color="primary"
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} color="inherit" /> : "Save"}
-          </Button>
-        </DialogActions>
-      </Dialog> */}
-
-<Dialog
-        open={open}
-        onClose={handleClose}
         PaperProps={{
           sx: {
-            width: "600px",
-            borderRadius: "20px",
+            borderRadius: isMobile ? 0 : "20px",
             overflow: "hidden",
+            margin: isMobile ? 0 : isTablet ? 1 : 2,
+            width: isMobile ? "100%" : isTablet ? "90%" : "80%",
+            maxWidth: isMobile ? "100%" : isTablet ? "700px" : "900px",
           },
         }}
       >
@@ -981,7 +722,7 @@ const DisciplinaryActions = () => {
         >
           {editingAction ? "Edit Action" : "Take An Action"}
         </DialogTitle>
- 
+
         <DialogContent
           sx={{
             padding: "32px",
@@ -1034,7 +775,7 @@ const DisciplinaryActions = () => {
                 )}
               />
             </Grid>
- 
+
             <Grid item xs={12} md={6}>
               <TextField
                 name="employee"
@@ -1234,7 +975,14 @@ const DisciplinaryActions = () => {
           </Grid>
         </DialogContent>
         <DialogActions
-          sx={{ padding: "24px 32px", backgroundColor: "#f8fafc" }}
+          sx={{
+            padding: { xs: "16px 24px", sm: "20px 28px", md: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: { xs: 1, sm: 2 },
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: { xs: "stretch", sm: "flex-end" },
+          }}
         >
           <Button
             onClick={handleClose}
@@ -1248,32 +996,43 @@ const DisciplinaryActions = () => {
               },
               textTransform: "none",
               borderRadius: "8px",
-              px: 3,
+              px: { xs: 2, sm: 3 },
               fontWeight: 600,
+              width: { xs: "100%", sm: "auto" },
+              minWidth: { sm: "120px" },
             }}
           >
             Cancel
           </Button>
+
           <Button
             onClick={handleSave}
             variant="contained"
+            disabled={loading}
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              fontSize: "0.95rem",
+              fontSize: { xs: "0.9rem", sm: "0.95rem" },
               textTransform: "none",
-              padding: "8px 32px",
+              padding: { xs: "8px 24px", sm: "8px 32px" },
               borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(52, 152, 219, 0.2)",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
               "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #1976d2)",
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
               },
+              width: { xs: "100%", sm: "auto" },
+              minWidth: { sm: "160px" },
             }}
           >
-            {editingAction ? "Update" : "Save"}
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : editingAction ? (
+              "Update Action"
+            ) : (
+              "Save Action"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
- 
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -1281,11 +1040,11 @@ const DisciplinaryActions = () => {
         onClose={handleCloseDeleteDialog}
         PaperProps={{
           sx: {
-            width: { xs: "95%", sm: "500px" },
+            width: { xs: "95%", sm: "80%", md: "500px" },
             maxWidth: "500px",
-            borderRadius: "20px",
+            borderRadius: { xs: "12px", sm: "20px" },
             overflow: "hidden",
-            margin: { xs: "8px", sm: "32px" },
+            margin: { xs: "8px", sm: "16px", md: "32px" },
           },
         }}
       >
