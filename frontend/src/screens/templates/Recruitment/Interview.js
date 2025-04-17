@@ -313,63 +313,69 @@ const Interview = () => {
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
               <TableCell
                 sx={{
-                  color: "#000000",
+                  color: "white",
                   fontWeight: "bold",
                   fontSize: { xs: "14px", sm: "16px" },
                   padding: { xs: "12px 8px", sm: "16px" },
+                  backgroundColor: "#1976d2",
                 }}
               >
                 Candidate
               </TableCell>
               <TableCell
                 sx={{
-                  color: "#000000",
+                  color: "white",
                   fontWeight: "bold",
                   fontSize: { xs: "14px", sm: "16px" },
                   padding: { xs: "12px 8px", sm: "16px" },
                   display: { xs: "none", sm: "table-cell" }, // Hide on mobile
+                  backgroundColor: "#1976d2",
                 }}
               >
                 Interviewer
               </TableCell>
               <TableCell
                 sx={{
-                  color: "#000000",
+                  color: "white",
                   fontWeight: "bold",
                   fontSize: { xs: "14px", sm: "16px" },
                   padding: { xs: "12px 8px", sm: "16px" },
+                  backgroundColor: "#1976d2",
                 }}
               >
                 Date
               </TableCell>
               <TableCell
                 sx={{
-                  color: "#000000",
+                  color: "white",
                   fontWeight: "bold",
                   fontSize: { xs: "14px", sm: "16px" },
                   padding: { xs: "12px 8px", sm: "16px" },
                   display: { xs: "none", sm: "table-cell" }, // Hide on mobile
+                  backgroundColor: "#1976d2",
                 }}
               >
                 Time
               </TableCell>
               <TableCell
                 sx={{
-                  color: "#000000",
+                  color: "white",
                   fontWeight: "bold",
                   fontSize: { xs: "14px", sm: "16px" },
                   padding: { xs: "12px 8px", sm: "16px" },
                   display: { xs: "none", sm: "table-cell" }, // Hide on mobile
+                  backgroundColor: "#1976d2",
                 }}
               >
                 Description
               </TableCell>
               <TableCell
                 sx={{
-                  color: "#000000",
+                  color: "white",
                   fontWeight: "bold",
                   fontSize: { xs: "14px", sm: "16px" },
                   padding: { xs: "12px 8px", sm: "16px" },
+                  backgroundColor: "#1976d2",
                 }}
               >
                 Status
@@ -377,10 +383,11 @@ const Interview = () => {
               <TableCell
                 align="center"
                 sx={{
-                  color: "#000000",
+                  color: "white",
                   fontWeight: "bold",
                   fontSize: { xs: "14px", sm: "16px" },
                   padding: { xs: "12px 8px", sm: "16px" },
+                  backgroundColor: "#1976d2",
                 }}
               >
                 Actions
