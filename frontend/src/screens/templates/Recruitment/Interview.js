@@ -303,12 +303,10 @@ const Interview = () => {
           backgroundColor: "white",
           borderRadius: 2,
           boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
-          overflow: "auto", // Changed from "hidden" to "auto" for mobile scrolling
+          overflow: "auto", // Enables horizontal scrolling when needed
         }}
       >
         <Table sx={{ minWidth: 650 }}>
-          {" "}
-          {/* Added minWidth for better mobile handling */}
           <TableHead>
             <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
               <TableCell
@@ -328,7 +326,6 @@ const Interview = () => {
                   fontWeight: "bold",
                   fontSize: { xs: "14px", sm: "16px" },
                   padding: { xs: "12px 8px", sm: "16px" },
-                  display: { xs: "none", sm: "table-cell" }, // Hide on mobile
                   backgroundColor: "#1976d2",
                 }}
               >
@@ -351,7 +348,6 @@ const Interview = () => {
                   fontWeight: "bold",
                   fontSize: { xs: "14px", sm: "16px" },
                   padding: { xs: "12px 8px", sm: "16px" },
-                  display: { xs: "none", sm: "table-cell" }, // Hide on mobile
                   backgroundColor: "#1976d2",
                 }}
               >
@@ -363,7 +359,6 @@ const Interview = () => {
                   fontWeight: "bold",
                   fontSize: { xs: "14px", sm: "16px" },
                   padding: { xs: "12px 8px", sm: "16px" },
-                  display: { xs: "none", sm: "table-cell" }, // Hide on mobile
                   backgroundColor: "#1976d2",
                 }}
               >
@@ -410,16 +405,7 @@ const Interview = () => {
                       fontSize: { xs: "13px", sm: "14px" },
                     }}
                   >
-                    {row.candidate}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      padding: { xs: "12px 8px", sm: "16px" },
-                      fontSize: { xs: "13px", sm: "14px" },
-                      display: { xs: "none", sm: "table-cell" }, // Hide on mobile
-                    }}
-                  >
-                    {row.interviewer}
+                    {row.candidate || "N/A"}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -427,25 +413,35 @@ const Interview = () => {
                       fontSize: { xs: "13px", sm: "14px" },
                     }}
                   >
-                    {row.date}
+                    {row.interviewer || "N/A"}
                   </TableCell>
                   <TableCell
                     sx={{
                       padding: { xs: "12px 8px", sm: "16px" },
                       fontSize: { xs: "13px", sm: "14px" },
-                      display: { xs: "none", sm: "table-cell" }, // Hide on mobile
                     }}
                   >
-                    {row.time}
+                    {row.date || "N/A"}
                   </TableCell>
                   <TableCell
                     sx={{
                       padding: { xs: "12px 8px", sm: "16px" },
                       fontSize: { xs: "13px", sm: "14px" },
-                      display: { xs: "none", sm: "table-cell" }, // Hide on mobile
                     }}
                   >
-                    {row.description}
+                    {row.time || "N/A"}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      padding: { xs: "12px 8px", sm: "16px" },
+                      fontSize: { xs: "13px", sm: "14px" },
+                      maxWidth: { xs: "100px", sm: "200px" }, // Limit width on mobile
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {row.description || "N/A"}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -474,7 +470,7 @@ const Interview = () => {
                         fontSize: { xs: "11px", sm: "13px" },
                       }}
                     >
-                      {row.status}
+                      {row.status || "N/A"}
                     </Box>
                   </TableCell>
                   <TableCell
