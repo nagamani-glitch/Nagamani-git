@@ -28,6 +28,13 @@ import {
   Menu,
   Grid,
   Avatar,
+  Card,
+  CardContent,
+  Stack,
+  Divider,
+  Chip,
+  useMediaQuery,
+  CircularProgress,
 } from "@mui/material";
 import {
   FilterList,
@@ -71,16 +78,16 @@ const FilterMenu = styled(Menu)(({ theme }) => ({
     },
   },
 }));
-//   "& .MuiPaper-root": {
-//     borderRadius: 8,
-//     marginTop: 8,
-//     minWidth: 240,
-//     boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-//   },
-// }));
 
 const AttendanceRecords = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
+  // Add these state variables for delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -90,6 +97,9 @@ const AttendanceRecords = () => {
     message: "",
     severity: "success",
   });
+  // Add loading state
+  const [loading, setLoading] = useState(false);
+
   const [editRecord, setEditRecord] = useState(null);
   const [newRecord, setNewRecord] = useState({
     name: "",
@@ -255,22 +265,208 @@ const AttendanceRecords = () => {
     }
   };
 
-  const handleDeleteRecord = async (id) => {
+  // const handleDeleteRecord = async (id) => {
+  //   try {
+  //     await axios.delete(`${API_URL}/${id}`);
+  //     fetchAttendanceRecords();
+  //     showSnackbar("Record deleted successfully");
+  //   } catch (error) {
+  //     showSnackbar("Error deleting record", "error");
+  //   }
+  // };
+
+  // Replace the existing handleDeleteRecord function with these functions
+  const handleDeleteClick = (record) => {
+    setItemToDelete(record);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`${API_URL}/${id}`);
+      setLoading(true);
+      await axios.delete(`${API_URL}/${itemToDelete._id}`);
       fetchAttendanceRecords();
       showSnackbar("Record deleted successfully");
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     } catch (error) {
       showSnackbar("Error deleting record", "error");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
   };
 
   const handlePreview = (row) => {
     setPreviewData(row);
     setPreviewOpen(true);
   };
+
+  // Render mobile card view for attendance records
+  const renderAttendanceCard = (row) => (
+    <Card
+      key={row._id}
+      sx={{ mb: 2, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+    >
+      <CardContent sx={{ p: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 1,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Avatar
+              sx={{
+                bgcolor: theme.palette.primary.main,
+                width: 40,
+                height: 40,
+              }}
+            >
+              {row.name[0]}
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={500}>
+                {row.name}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {row.empId}
+              </Typography>
+            </Box>
+          </Box>
+          <Chip
+            label={row.workType || "Regular"}
+            size="small"
+            sx={{
+              backgroundColor: alpha(theme.palette.primary.light, 0.1),
+              color: theme.palette.primary.main,
+              fontWeight: 500,
+            }}
+          />
+        </Box>
+
+        <Divider sx={{ my: 1.5 }} />
+
+        <Stack spacing={1.5}>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary">
+              Date:
+            </Typography>
+            <Typography variant="body2" fontWeight={500}>
+              {new Date(row.date).toLocaleDateString()} ({row.day})
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary">
+              Check In/Out:
+            </Typography>
+            <Typography variant="body2" fontWeight={500}>
+              {row.checkIn} - {row.checkOut || "-"}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary">
+              Shift:
+            </Typography>
+            <Typography variant="body2" fontWeight={500}>
+              {row.shift || "-"}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary">
+              Hours:
+            </Typography>
+            <Typography variant="body2" fontWeight={500}>
+              Min: {row.minHour || "-"} | At Work: {row.atWork || "-"} | OT:{" "}
+              {row.overtime || "-"}
+            </Typography>
+          </Box>
+
+          {row.comment && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                Comment:
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5, fontStyle: "italic" }}>
+                {row.comment}
+              </Typography>
+            </Box>
+          )}
+        </Stack>
+
+        <Box
+          sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}
+        >
+          <IconButton
+            size="small"
+            onClick={() => handlePreview(row)}
+            sx={{
+              color: theme.palette.info.main,
+              "&:hover": {
+                backgroundColor: alpha(theme.palette.info.main, 0.1),
+              },
+            }}
+          >
+            <Visibility />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={() => handleEdit(row)}
+            sx={{
+              color: theme.palette.primary.main,
+              "&:hover": {
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              },
+            }}
+          >
+            <Edit />
+          </IconButton>
+          {/* <IconButton
+            size="small"
+            onClick={() => handleDeleteRecord(row._id)}
+            sx={{
+              color: theme.palette.error.main,
+              "&:hover": {
+                backgroundColor: alpha(theme.palette.error.main, 0.1),
+              },
+            }}
+          >
+            <Cancel />
+          </IconButton> */}
+          <IconButton
+            size="small"
+            onClick={() => handleDeleteClick(row)}
+            sx={{
+              color: theme.palette.error.main,
+              "&:hover": {
+                backgroundColor: alpha(theme.palette.error.main, 0.1),
+              },
+            }}
+          >
+            <Cancel />
+          </IconButton>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+
   return (
-    <Box sx={{ p: 4, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+    <Box
+      sx={{
+        p: isMobile ? 2 : 4,
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+      }}
+    >
       <Typography
         variant="h4"
         sx={{
@@ -278,12 +474,13 @@ const AttendanceRecords = () => {
           color: theme.palette.primary.main,
           fontWeight: 600,
           letterSpacing: 0.5,
+          fontSize: isMobile ? "1.75rem" : "2.125rem",
         }}
       >
         Attendance Records
       </Typography>
 
-      <StyledPaper>
+      <StyledPaper sx={{ p: isMobile ? 2 : 3 }}>
         <Box
           display="flex"
           alignItems="center"
@@ -292,6 +489,7 @@ const AttendanceRecords = () => {
             width: "100%",
             justifyContent: "space-between",
             flexWrap: "wrap",
+            flexDirection: isMobile ? "column" : "row",
           }}
         >
           <SearchTextField
@@ -300,8 +498,9 @@ const AttendanceRecords = () => {
             onChange={handleSearch}
             size="small"
             sx={{
-              width: { xs: "100%", sm: "300px" },
-              marginRight: "auto",
+              width: isMobile ? "100%" : { xs: "100%", sm: "300px" },
+              marginRight: isMobile ? 0 : "auto",
+              mb: isMobile ? 2 : 0,
             }}
             InputProps={{
               startAdornment: (
@@ -309,10 +508,12 @@ const AttendanceRecords = () => {
                   <Search color="primary" />
                 </InputAdornment>
               ),
-            }} 
+            }}
           />
 
-          <Box sx={{ display: "flex", gap: 1 }}>
+          <Box
+            sx={{ display: "flex", gap: 1, width: isMobile ? "100%" : "auto" }}
+          >
             <Button
               variant="outlined"
               startIcon={<FilterList />}
@@ -320,6 +521,7 @@ const AttendanceRecords = () => {
               sx={{
                 height: 40,
                 whiteSpace: "nowrap",
+                flex: isMobile ? 1 : "none",
               }}
             >
               Filters
@@ -336,1061 +538,997 @@ const AttendanceRecords = () => {
                 "&:hover": {
                   background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
                 },
+                flex: isMobile ? 1 : "none",
               }}
             >
-              Create Record
+              New Record
             </Button>
           </Box>
         </Box>
       </StyledPaper>
 
-      <TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2 }}>
-        <Table stickyHeader>
-          <TableHead>
-            <TableRow>
-              <StyledTableCell>Employee</StyledTableCell>
-              <StyledTableCell>Date</StyledTableCell>
-              <StyledTableCell>Day</StyledTableCell>
-              <StyledTableCell>Check-In</StyledTableCell>
-              <StyledTableCell>Check-Out</StyledTableCell>
-              <StyledTableCell>Shift</StyledTableCell>
-              <StyledTableCell>Work Type</StyledTableCell>
-              <StyledTableCell>Min Hour</StyledTableCell>
-              <StyledTableCell>At Work</StyledTableCell>
-              <StyledTableCell>Overtime</StyledTableCell>
-              <StyledTableCell>Comment</StyledTableCell>
-              <StyledTableCell align="center">Actions</StyledTableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row) => (
-              <StyledTableRow key={row._id}>
-                <TableCell sx={{ fontWeight: 500 }}>
-                  {row.name} ({row.empId})
-                </TableCell>
-                <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
-                <TableCell>{row.day}</TableCell>
-                <TableCell>{row.checkIn}</TableCell>
-                <TableCell>{row.checkOut || "-"}</TableCell>
-                <TableCell>{row.shift || "-"}</TableCell>
-                <TableCell>{row.workType || "-"}</TableCell>
-                <TableCell>{row.minHour || "-"}</TableCell>
-                <TableCell>{row.atWork || "-"}</TableCell>
-                <TableCell>{row.overtime || "-"}</TableCell>
-                <TableCell>{row.comment || "-"}</TableCell>
-                <TableCell align="center" sx={{ minWidth: 120 }}>
-                  <Box
-                    sx={{ display: "flex", justifyContent: "center", gap: 1 }}
-                  >
-                    <IconButton
-                      size="small"
-                      onClick={() => handlePreview(row)}
-                      sx={{
-                        color: theme.palette.info.main,
-                        "&:hover": {
-                          backgroundColor: alpha(theme.palette.info.main, 0.1),
-                        },
-                      }}
-                    >
-                      <Visibility />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEdit(row)}
-                      sx={{
-                        color: theme.palette.primary.main,
-                        "&:hover": {
+      {isMobile ? (
+        // Mobile view - card layout
+        <Box>
+          {rows.length > 0 ? (
+            rows.map((row) => renderAttendanceCard(row))
+          ) : (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography variant="body1" color="text.secondary">
+                No attendance records found
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      ) : (
+        // Desktop/Tablet view - table layout
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 2,
+            boxShadow: "0 4px 12px rgba(0, 0, 0, .08)",
+            overflow: "hidden",
+          }}
+        >
+          <Table sx={{ minWidth: 650 }} aria-label="attendance records table">
+            <TableHead>
+              <TableRow>
+                <StyledTableCell>Employee</StyledTableCell>
+                <StyledTableCell>Date</StyledTableCell>
+                <StyledTableCell>Check In/Out</StyledTableCell>
+                <StyledTableCell>Shift</StyledTableCell>
+                <StyledTableCell>Work Type</StyledTableCell>
+                <StyledTableCell>Hours</StyledTableCell>
+                <StyledTableCell>Actions</StyledTableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.length > 0 ? (
+                rows.map((row) => (
+                  <StyledTableRow key={row._id}>
+                    <TableCell>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Avatar
+                          sx={{
+                            bgcolor: theme.palette.primary.main,
+                            width: 32,
+                            height: 32,
+                          }}
+                        >
+                          {row.name[0]}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" fontWeight={500}>
+                            {row.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {row.empId}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(row.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {row.checkIn} - {row.checkOut || "-"}
+                    </TableCell>
+                    <TableCell>{row.shift || "-"}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={row.workType || "Regular"}
+                        size="small"
+                        sx={{
                           backgroundColor: alpha(
-                            theme.palette.primary.main,
+                            theme.palette.primary.light,
                             0.1
                           ),
-                        },
-                      }}
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteRecord(row._id)}
-                      sx={{
-                        color: theme.palette.error.main,
-                        "&:hover": {
-                          backgroundColor: alpha(theme.palette.error.main, 0.1),
-                        },
-                      }}
-                    >
-                      <Cancel />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-              </StyledTableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                          color: theme.palette.primary.main,
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        Min: {row.minHour || "-"} | At Work: {row.atWork || "-"}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Overtime: {row.overtime || "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handlePreview(row)}
+                          sx={{
+                            color: theme.palette.info.main,
+                            "&:hover": {
+                              backgroundColor: alpha(
+                                theme.palette.info.main,
+                                0.1
+                              ),
+                            },
+                          }}
+                        >
+                          <Visibility />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEdit(row)}
+                          sx={{
+                            color: theme.palette.primary.main,
+                            "&:hover": {
+                              backgroundColor: alpha(
+                                theme.palette.primary.main,
+                                0.1
+                              ),
+                            },
+                          }}
+                        >
+                          <Edit />
+                        </IconButton>
+                        {/* <IconButton
+                          size="small"
+                          onClick={() => handleDeleteRecord(row._id)}
+                          sx={{
+                            color: theme.palette.error.main,
+                            "&:hover": {
+                              backgroundColor: alpha(
+                                theme.palette.error.main,
+                                0.1
+                              ),
+                            },
+                          }}
+                        >
+                          <Cancel />
+                        </IconButton> */}
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteClick(row)}
+                          sx={{
+                            color: theme.palette.error.main,
+                            "&:hover": {
+                              backgroundColor: alpha(
+                                theme.palette.error.main,
+                                0.1
+                              ),
+                            },
+                          }}
+                        >
+                          <Cancel />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </StyledTableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                    <Typography variant="body1" color="text.secondary">
+                      No attendance records found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
-      {/* For creating the Attendance record */}
-
-      <Dialog
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            width: "600px",
-            borderRadius: "20px",
-            overflow: "hidden",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            padding: "24px 32px",
-          }}
-        >
-          Create Attendance Record
-        </DialogTitle>
-
-        <DialogContent
-          sx={{
-            padding: "32px",
-            backgroundColor: "#f8fafc",
-            marginTop: "20px",
-          }}
-        >
-          <Box display="flex" flexDirection="column" gap={3}>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Name"
-                  fullWidth
-                  value={newRecord.name}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, name: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#1976d2",
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Employee ID"
-                  fullWidth
-                  value={newRecord.empId}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, empId: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Date"
-                  type="date"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  value={newRecord.date}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, date: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Check-In Time"
-                  type="time"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  value={newRecord.checkIn}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, checkIn: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Check-Out Time"
-                  type="time"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  value={newRecord.checkOut}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, checkOut: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Shift"
-                  fullWidth
-                  value={newRecord.shift}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, shift: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="Morning">Morning</MenuItem>
-                  <MenuItem value="Evening">Evening</MenuItem>
-                  <MenuItem value="Night">Night</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Work Type"
-                  fullWidth
-                  value={newRecord.workType}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, workType: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="Regular">Regular</MenuItem>
-                  <MenuItem value="Remote">Remote</MenuItem>
-                  <MenuItem value="Hybrid">Hybrid</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Minimum Hours"
-                  type="number"
-                  fullWidth
-                  value={newRecord.minHour}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, minHour: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="At Work (Hours)"
-                  fullWidth
-                  value={newRecord.atWork}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, atWork: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Overtime (Hours)"
-                  fullWidth
-                  value={newRecord.overtime}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, overtime: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Comment"
-                  fullWidth
-                  multiline
-                  rows={2}
-                  value={newRecord.comment}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, comment: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        </DialogContent>
-
-        <DialogActions
-          sx={{
-            padding: "24px 32px",
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
-        >
-          <Button
-            onClick={() => setCreateOpen(false)}
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            onClick={handleCreateRecord}
-            variant="contained"
-            sx={{
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              fontSize: "0.95rem",
-              textTransform: "none",
-              padding: "8px 32px",
-              borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-              color: "white",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-              },
-            }}
-          >
-            Create
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* For edit the attendance record */}
-
-      <Dialog
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            width: "600px",
-            borderRadius: "20px",
-            overflow: "hidden",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            padding: "24px 32px",
-          }}
-        >
-          Edit Attendance Record
-        </DialogTitle>
-
-        <DialogContent
-          sx={{
-            padding: "32px",
-            backgroundColor: "#f8fafc",
-            marginTop: "20px",
-          }}
-        >
-          <Box display="flex" flexDirection="column" gap={3}>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Name"
-                  fullWidth
-                  value={editRecord?.name || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, name: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#1976d2",
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Employee ID"
-                  fullWidth
-                  value={editRecord?.empId || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, empId: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Date"
-                  type="date"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  value={editRecord?.date || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, date: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Check-In Time"
-                  type="time"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  value={editRecord?.checkIn || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, checkIn: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Check-Out Time"
-                  type="time"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  value={editRecord?.checkOut || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, checkOut: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Shift"
-                  fullWidth
-                  value={editRecord?.shift || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, shift: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="Morning">Morning</MenuItem>
-                  <MenuItem value="Evening">Evening</MenuItem>
-                  <MenuItem value="Night">Night</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Work Type"
-                  fullWidth
-                  value={editRecord?.workType || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, workType: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="Regular">Regular</MenuItem>
-                  <MenuItem value="Remote">Remote</MenuItem>
-                  <MenuItem value="Hybrid">Hybrid</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Minimum Hours"
-                  type="number"
-                  fullWidth
-                  value={editRecord?.minHour || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, minHour: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="At Work"
-                  fullWidth
-                  value={editRecord?.atWork || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, atWork: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Overtime"
-                  fullWidth
-                  value={editRecord?.overtime || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, overtime: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Comment"
-                  fullWidth
-                  multiline
-                  rows={2}
-                  value={editRecord?.comment || ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, comment: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        </DialogContent>
-
-        <DialogActions
-          sx={{
-            padding: "24px 32px",
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
-        >
-          <Button
-            onClick={() => setEditOpen(false)}
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            onClick={handleUpdateRecord}
-            variant="contained"
-            sx={{
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              fontSize: "0.95rem",
-              textTransform: "none",
-              padding: "8px 32px",
-              borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-              color: "white",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-              },
-            }}
-          >
-            Update
-          </Button>
-        </DialogActions>
-      </Dialog>
-
+      {/* Filter Menu */}
       <FilterMenu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleFilterClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
       >
-        <Box
-          sx={{
-            p: 3,
-            display: "flex",
-            flexDirection: "column",
-            gap: 2.5,
-            "& .MuiTextField-root": {
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                backgroundColor: "#fff",
-                transition: "all 0.2s ease-in-out",
-                "&:hover": {
-                  backgroundColor: alpha(theme.palette.primary.light, 0.05),
-                },
-                "&.Mui-focused": {
-                  boxShadow: `0 0 0 2px ${alpha(
-                    theme.palette.primary.main,
-                    0.2
-                  )}`,
-                },
-              },
-            },
-          }}
-        >
+        <Box sx={{ p: 2 }}>
           <Typography
-            variant="h6"
+            variant="subtitle1"
             sx={{
+              mb: 2,
+              fontWeight: 600,
               color: theme.palette.primary.main,
-              fontWeight: 600,
-              borderBottom: `2px solid ${theme.palette.primary.light}`,
-              paddingBottom: 1,
             }}
           >
-            Filter Options
+            Filter Records
           </Typography>
-
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Employee"
-            value={filterValues.employee}
-            onChange={(e) => handleFilterChange("employee", e.target.value)}
-            sx={{
-              "& .MuiSelect-select": {
-                padding: "12px 14px",
-              },
-            }}
-          >
-            <MenuItem value="">All Employees</MenuItem>
-            {[
-              ...new Set(
-                rows.map((record) => `${record.name} (${record.empId})`)
-              ),
-            ].map((emp) => (
-              <MenuItem key={emp} value={emp}>
-                {emp}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Work Type"
-            value={filterValues.workType}
-            onChange={(e) => handleFilterChange("workType", e.target.value)}
-            sx={{
-              "& .MuiSelect-select": {
-                padding: "12px 14px",
-              },
-            }}
-          >
-            <MenuItem value="">All Types</MenuItem>
-            <MenuItem value="Regular">Regular</MenuItem>
-            <MenuItem value="Remote">Remote</MenuItem>
-            <MenuItem value="Hybrid">Hybrid</MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Shift"
-            value={filterValues.shift}
-            onChange={(e) => handleFilterChange("shift", e.target.value)}
-            sx={{
-              "& .MuiSelect-select": {
-                padding: "12px 14px",
-              },
-            }}
-          >
-            <MenuItem value="">All Shifts</MenuItem>
-            <MenuItem value="Morning">Morning</MenuItem>
-            <MenuItem value="Evening">Evening</MenuItem>
-            <MenuItem value="Night">Night</MenuItem>
-          </TextField>
-
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={() => {
-              setFilterValues({
-                employee: "",
-                workType: "",
-                shift: "",
-              });
-              fetchAttendanceRecords();
-              handleFilterClose();
-            }}
-            sx={{
-              mt: 2,
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              textTransform: "none",
-              borderRadius: 2,
-              padding: "10px 0",
-              fontWeight: 600,
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-              },
-            }}
-          >
-            Reset Filters
-          </Button>
+          <Stack spacing={2}>
+            <TextField
+              label="Employee Name"
+              value={filterValues.employee}
+              onChange={(e) => handleFilterChange("employee", e.target.value)}
+              size="small"
+              fullWidth
+            />
+            <TextField
+              label="Work Type"
+              value={filterValues.workType}
+              onChange={(e) => handleFilterChange("workType", e.target.value)}
+              size="small"
+              fullWidth
+              select
+            >
+              <MenuItem value="">All</MenuItem>
+              <MenuItem value="Regular">Regular</MenuItem>
+              <MenuItem value="Remote">Remote</MenuItem>
+              <MenuItem value="Hybrid">Hybrid</MenuItem>
+            </TextField>
+            <TextField
+              label="Shift"
+              value={filterValues.shift}
+              onChange={(e) => handleFilterChange("shift", e.target.value)}
+              size="small"
+              fullWidth
+              select
+            >
+              <MenuItem value="">All</MenuItem>
+              <MenuItem value="Morning">Morning</MenuItem>
+              <MenuItem value="Evening">Evening</MenuItem>
+              <MenuItem value="Night">Night</MenuItem>
+            </TextField>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setFilterValues({
+                  employee: "",
+                  workType: "",
+                  shift: "",
+                });
+                fetchAttendanceRecords();
+                handleFilterClose();
+              }}
+              fullWidth
+            >
+              Clear Filters
+            </Button>
+          </Stack>
         </Box>
       </FilterMenu>
 
+      {/* Create Record Dialog */}
+      <Dialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        fullWidth
+        maxWidth="md"
+        fullScreen={isMobile}
+      >
+        <DialogTitle
+          sx={{
+            backgroundColor: theme.palette.primary.main,
+            color: "white",
+            fontWeight: 600,
+          }}
+        >
+          Create New Attendance Record
+        </DialogTitle>
+        <DialogContent sx={{ p: isMobile ? 2 : 3, pt: isMobile ? 2 : 3 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Employee Name"
+                value={newRecord.name}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, name: e.target.value })
+                }
+                fullWidth
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Employee ID"
+                value={newRecord.empId}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, empId: e.target.value })
+                }
+                fullWidth
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Date"
+                type="date"
+                value={newRecord.date}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, date: e.target.value })
+                }
+                fullWidth
+                required
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Day"
+                value={newRecord.day}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, day: e.target.value })
+                }
+                fullWidth
+                required
+                placeholder="e.g. Monday"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Check In"
+                value={newRecord.checkIn}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, checkIn: e.target.value })
+                }
+                fullWidth
+                required
+                placeholder="e.g. 09:00 AM"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Check Out"
+                value={newRecord.checkOut}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, checkOut: e.target.value })
+                }
+                fullWidth
+                placeholder="e.g. 05:00 PM"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Shift"
+                value={newRecord.shift}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, shift: e.target.value })
+                }
+                fullWidth
+                select
+              >
+                <MenuItem value="Morning">Morning</MenuItem>
+                <MenuItem value="Evening">Evening</MenuItem>
+                <MenuItem value="Night">Night</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Work Type"
+                value={newRecord.workType}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, workType: e.target.value })
+                }
+                fullWidth
+                select
+              >
+                <MenuItem value="Regular">Regular</MenuItem>
+                <MenuItem value="Remote">Remote</MenuItem>
+                <MenuItem value="Hybrid">Hybrid</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                label="Minimum Hours"
+                type="number"
+                value={newRecord.minHour}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, minHour: e.target.value })
+                }
+                fullWidth
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">hours</InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                label="At Work"
+                type="number"
+                value={newRecord.atWork}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, atWork: e.target.value })
+                }
+                fullWidth
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">hours</InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                label="Overtime"
+                type="number"
+                value={newRecord.overtime}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, overtime: e.target.value })
+                }
+                fullWidth
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">hours</InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Comment"
+                value={newRecord.comment}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, comment: e.target.value })
+                }
+                fullWidth
+                multiline
+                rows={3}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setCreateOpen(false)} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreateRecord}
+            variant="contained"
+            color="primary"
+          >
+            Create Record
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Record Dialog */}
+      <Dialog
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        fullWidth
+        maxWidth="md"
+        fullScreen={isMobile}
+      >
+        <DialogTitle
+          sx={{
+            backgroundColor: theme.palette.primary.main,
+            color: "white",
+            fontWeight: 600,
+          }}
+        >
+          Edit Attendance Record
+        </DialogTitle>
+        <DialogContent sx={{ p: isMobile ? 2 : 3, pt: isMobile ? 2 : 3 }}>
+          {editRecord && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Employee Name"
+                  value={editRecord.name}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, name: e.target.value })
+                  }
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Employee ID"
+                  value={editRecord.empId}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, empId: e.target.value })
+                  }
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Date"
+                  type="date"
+                  value={editRecord.date}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, date: e.target.value })
+                  }
+                  fullWidth
+                  required
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Day"
+                  value={editRecord.day}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, day: e.target.value })
+                  }
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Check In"
+                  value={editRecord.checkIn}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, checkIn: e.target.value })
+                  }
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Check Out"
+                  value={editRecord.checkOut}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, checkOut: e.target.value })
+                  }
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Shift"
+                  value={editRecord.shift}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, shift: e.target.value })
+                  }
+                  fullWidth
+                  select
+                >
+                  <MenuItem value="Morning">Morning</MenuItem>
+                  <MenuItem value="Evening">Evening</MenuItem>
+                  <MenuItem value="Night">Night</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Work Type"
+                  value={editRecord.workType}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, workType: e.target.value })
+                  }
+                  fullWidth
+                  select
+                >
+                  <MenuItem value="Regular">Regular</MenuItem>
+                  <MenuItem value="Remote">Remote</MenuItem>
+                  <MenuItem value="Hybrid">Hybrid</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Minimum Hours"
+                  type="number"
+                  value={editRecord.minHour}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, minHour: e.target.value })
+                  }
+                  fullWidth
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">hours</InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="At Work"
+                  type="number"
+                  value={editRecord.atWork}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, atWork: e.target.value })
+                  }
+                  fullWidth
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">hours</InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Overtime"
+                  type="number"
+                  value={editRecord.overtime}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, overtime: e.target.value })
+                  }
+                  fullWidth
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">hours</InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Comment"
+                  value={editRecord.comment}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, comment: e.target.value })
+                  }
+                  fullWidth
+                  multiline
+                  rows={3}
+                />
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setEditOpen(false)} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUpdateRecord}
+            variant="contained"
+            color="primary"
+          >
+            Update Record
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Preview Dialog */}
       <Dialog
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        maxWidth="md"
         fullWidth
+        maxWidth="sm"
+        fullScreen={isMobile}
+      >
+        <DialogTitle
+          sx={{
+            backgroundColor: theme.palette.info.main,
+            color: "white",
+            fontWeight: 600,
+          }}
+        >
+          Attendance Record Details
+        </DialogTitle>
+        <DialogContent sx={{ p: isMobile ? 2 : 3, pt: isMobile ? 2 : 3 }}>
+          {previewData && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Employee Name
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {previewData.name}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Employee ID
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {previewData.empId}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Date
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {new Date(previewData.date).toLocaleDateString()}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Day
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {previewData.day}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Check In
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {previewData.checkIn}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Check Out
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {previewData.checkOut || "-"}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Shift
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {previewData.shift || "-"}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Work Type
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {previewData.workType || "-"}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Minimum Hours
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {previewData.minHour || "-"} hours
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  At Work
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {previewData.atWork || "-"} hours
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Overtime
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  {previewData.overtime || "-"} hours
+                </Typography>
+              </Grid>
+              {previewData.comment && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Comment
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    {previewData.comment}
+                  </Typography>
+                </Grid>
+              )}
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setPreviewOpen(false)} color="inherit">
+            Close
+          </Button>
+          {previewData && (
+            <Button
+              onClick={() => {
+                setPreviewOpen(false);
+                handleEdit(previewData);
+              }}
+              variant="contained"
+              color="primary"
+            >
+              Edit
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Floating Action Button for mobile */}
+      {isMobile && (
+        <Fab
+          color="primary"
+          aria-label="add"
+          sx={{
+            position: "fixed",
+            bottom: 16,
+            right: 16,
+            boxShadow: "0 4px 12px rgba(0, 0, 0, .2)",
+          }}
+          onClick={() => setCreateOpen(true)}
+        >
+          <Add />
+        </Fab>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
         PaperProps={{
           sx: {
-            borderRadius: 2,
-            bgcolor: "background.paper",
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
           },
         }}
       >
         <DialogTitle
           sx={{
-            bgcolor: theme.palette.primary.main,
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
             color: "white",
             display: "flex",
-            justifyContent: "space-between",
             alignItems: "center",
+            gap: 1,
           }}
         >
-          Attendance Details
-          <IconButton
-            onClick={() => setPreviewOpen(false)}
-            sx={{ color: "#1976d2" }}
-          >
-            <Cancel />
-          </IconButton>
+          <Cancel />
+          Confirm Deletion
         </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          {previewData && (
-            <Box
-              sx={{
-                display: "grid",
-                gap: 2,
-                gridTemplateColumns: "repeat(2, 1fr)",
-              }}
-            >
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Are you sure you want to delete this attendance record? This action
+            cannot be undone.
+          </Alert>
+          {itemToDelete && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
               <Box
-                sx={{
-                  p: 2,
-                  bgcolor: alpha(theme.palette.primary.light, 0.1),
-                  borderRadius: 1,
-                  gridColumn: "1 / -1",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                }}
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
               >
                 <Avatar
                   sx={{
                     bgcolor: theme.palette.primary.main,
-                    width: 56,
-                    height: 56,
-                    fontSize: 24,
+                    width: 40,
+                    height: 40,
                   }}
                 >
-                  {previewData.name[0]}
+                  {itemToDelete.name ? itemToDelete.name[0] : "?"}
                 </Avatar>
                 <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 500 }}>
-                    {previewData.name}
+                  <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                    {itemToDelete.name}
                   </Typography>
-                  <Typography variant="subtitle1" color="text.secondary">
-                    Employee ID: {previewData.empId}
+                  <Typography variant="body2" color="text.secondary">
+                    {itemToDelete.empId}
                   </Typography>
                 </Box>
               </Box>
 
-              <Box
-                sx={{
-                  p: 2,
-                  bgcolor: alpha(theme.palette.primary.light, 0.1),
-                  borderRadius: 1,
-                }}
-              >
-                <Typography variant="subtitle2" color="text.secondary">
-                  Date & Time
-                </Typography>
-                <Typography variant="body1">
-                  Date: {new Date(previewData.date).toLocaleDateString()}
-                </Typography>
-                <Typography variant="body1">Day: {previewData.day}</Typography>
-              </Box>
+              <Divider sx={{ mb: 2 }} />
 
-              <Box
-                sx={{
-                  p: 2,
-                  bgcolor: alpha(theme.palette.primary.light, 0.1),
-                  borderRadius: 1,
-                }}
-              >
-                <Typography variant="subtitle2" color="text.secondary">
-                  Check In/Out
-                </Typography>
-                <Typography variant="body1">
-                  Check In: {previewData.checkIn}
-                </Typography>
-                <Typography variant="body1">
-                  Check Out: {previewData.checkOut || "-"}
-                </Typography>
-              </Box>
-
-              <Box
-                sx={{
-                  p: 2,
-                  bgcolor: alpha(theme.palette.primary.light, 0.1),
-                  borderRadius: 1,
-                }}
-              >
-                <Typography variant="subtitle2" color="text.secondary">
-                  Work Details
-                </Typography>
-                <Typography variant="body1">
-                  Shift: {previewData.shift || "-"}
-                </Typography>
-                <Typography variant="body1">
-                  Work Type: {previewData.workType || "-"}
-                </Typography>
-              </Box>
-
-              <Box
-                sx={{
-                  p: 2,
-                  bgcolor: alpha(theme.palette.primary.light, 0.1),
-                  borderRadius: 1,
-                }}
-              >
-                <Typography variant="subtitle2" color="text.secondary">
-                  Hours
-                </Typography>
-                <Typography variant="body1">
-                  Min Hours: {previewData.minHour || "-"}
-                </Typography>
-                <Typography variant="body1">
-                  At Work: {previewData.atWork || "-"}
-                </Typography>
-                <Typography variant="body1">
-                  Overtime: {previewData.overtime || "-"}
-                </Typography>
-              </Box>
-
-              <Box
-                sx={{
-                  p: 2,
-                  bgcolor: alpha(theme.palette.primary.light, 0.1),
-                  borderRadius: 1,
-                }}
-              >
-                <Typography variant="subtitle2" color="text.secondary">
-                  Additional Info
-                </Typography>
-                <Typography variant="body1">
-                  Comment: {previewData.comment || "-"}
-                </Typography>
-              </Box>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Date:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.date
+                      ? new Date(itemToDelete.date).toLocaleDateString()
+                      : "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Day:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.day || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Check In:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.checkIn || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Check Out:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.checkOut || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Shift:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.shift || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Work Type:
+                  </Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {itemToDelete.workType || "Regular"}
+                  </Typography>
+                </Grid>
+              </Grid>
             </Box>
           )}
         </DialogContent>
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={handleCloseDeleteDialog}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
       </Dialog>
 
+      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
-          severity={snackbar.severity}
-          variant="filled"
           onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
         >
           {snackbar.message}
         </Alert>
       </Snackbar>
-
-      <Fab
-        color="primary"
-        sx={{
-          position: "fixed",
-          bottom: 24,
-          right: 24,
-          boxShadow: 3,
-        }}
-        onClick={() => setCreateOpen(true)}
-      >
-        <Add />
-      </Fab>
     </Box>
   );
 };

@@ -20,8 +20,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormHelperText,
   Grid,
+  DialogContentText,
 } from "@mui/material";
 import { Search, Add, Email, Delete } from "@mui/icons-material";
 
@@ -87,6 +87,63 @@ function OnboardingView() {
   });
 
   const uniqueStages = ["All", "Test", "Interview", "Offer"];
+
+  // Add these state variables to your component
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [mailConfirmOpen, setMailConfirmOpen] = useState(false);
+  const [selectedCandidateId, setSelectedCandidateId] = useState(null);
+  const [selectedCandidateForMail, setSelectedCandidateForMail] =
+    useState(null);
+
+  // Add these handler functions to your component
+  const openDeleteConfirm = (candidateId) => {
+    setSelectedCandidateId(candidateId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const closeDeleteConfirm = () => {
+    setDeleteConfirmOpen(false);
+    setSelectedCandidateId(null);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await handleDeleteCandidate(selectedCandidateId);
+      closeDeleteConfirm();
+    } catch (error) {
+      console.error("Error deleting candidate:", error);
+    }
+  };
+
+  const openMailConfirm = (candidate) => {
+    setSelectedCandidateForMail(candidate);
+    setMailConfirmOpen(true);
+  };
+
+  const closeMailConfirm = () => {
+    setMailConfirmOpen(false);
+    setSelectedCandidateForMail(null);
+  };
+
+  const confirmSendMail = async () => {
+    try {
+      await sendMailToCandidate(selectedCandidateForMail);
+      closeMailConfirm();
+    } catch (error) {
+      console.error("Error sending mail:", error);
+    }
+  };
+
+  // Update the handleDeleteCandidate function to not require confirmation
+  // since we'll handle that separately
+  const handleDeleteCandidate = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/onboarding/${id}`);
+      setCandidates(candidates.filter((candidate) => candidate._id !== id));
+    } catch (error) {
+      console.error("Error deleting candidate:", error);
+    }
+  };
 
   useEffect(() => {
     fetchCandidates();
@@ -194,15 +251,6 @@ function OnboardingView() {
     }
   };
 
-  const handleDeleteCandidate = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/onboarding/${id}`);
-      setCandidates(candidates.filter((candidate) => candidate._id !== id));
-    } catch (error) {
-      console.error("Error deleting candidate:", error);
-    }
-  };
-
   const sendMailToCandidate = async (candidate) => {
     try {
       await axios.post("http://localhost:5000/api/onboarding/send-email", {
@@ -305,17 +353,26 @@ function OnboardingView() {
 
               <Button
                 variant="contained"
-                // startIcon={<Add />}
+                startIcon={<Add />}
                 onClick={() => setShowCreateForm(true)}
                 sx={{
                   height: { xs: "auto", sm: 40 },
-                  padding: { xs: "10px 0", sm: "auto" },
+                  padding: { xs: "10px 16px", sm: "8px 16px" },
                   width: { xs: "100%", sm: "auto" },
+                  minWidth: { sm: "180px" },
                   background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
                   color: "white",
                   "&:hover": {
                     background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
                   },
+                  borderRadius: "8px",
+                  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.9rem",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 Add New Candidate
@@ -325,6 +382,7 @@ function OnboardingView() {
         </StyledPaper>
 
         {/* Material UI Dialog for Add New Candidate */}
+
         <Dialog
           open={showCreateForm}
           onClose={() => setShowCreateForm(false)}
@@ -334,6 +392,7 @@ function OnboardingView() {
             sx: {
               borderRadius: isMobile ? 0 : 3,
               width: isMobile ? "100%" : "650px",
+              maxWidth: "650px", // Set a fixed maximum width for desktop
               margin: isMobile ? 0 : 2,
               overflow: "hidden",
             },
@@ -498,7 +557,6 @@ function OnboardingView() {
                     onChange={(e) => handleInputChange(e, "stage")}
                     label="Stage"
                     notched
-                    displayEmpty
                   >
                     <MenuItem value="Test">Test</MenuItem>
                     <MenuItem value="Interview">Interview</MenuItem>
@@ -515,6 +573,7 @@ function OnboardingView() {
               padding: { xs: "16px", sm: "24px 32px" },
               flexDirection: { xs: "column", sm: "row" },
               gap: { xs: 1, sm: 2 },
+              justifyContent: "flex-end",
             }}
           >
             <Button
@@ -533,6 +592,8 @@ function OnboardingView() {
                   borderColor: "#1565c0",
                   backgroundColor: "rgba(25, 118, 210, 0.04)",
                 },
+                width: isMobile ? "100%" : "auto",
+                minWidth: "120px",
               }}
             >
               Cancel
@@ -553,6 +614,8 @@ function OnboardingView() {
                 "&:hover": {
                   background: "linear-gradient(135deg, #1565c0, #1976d2)",
                 },
+                width: isMobile ? "100%" : "auto",
+                minWidth: "180px",
               }}
             >
               Create Candidate
@@ -582,18 +645,14 @@ function OnboardingView() {
             }}
           >
             <thead>
-              <tr
-                style={{
-                  backgroundColor: "#f8fafc",
-                  borderBottom: "2px solid #e2e8f0",
-                }}
-              >
+              <tr>
                 <th
                   style={{
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Name
@@ -603,7 +662,8 @@ function OnboardingView() {
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Email
@@ -613,7 +673,8 @@ function OnboardingView() {
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Job Position
@@ -623,7 +684,8 @@ function OnboardingView() {
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Mobile
@@ -633,7 +695,8 @@ function OnboardingView() {
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Joining Date
@@ -643,7 +706,8 @@ function OnboardingView() {
                     padding: "16px",
                     textAlign: "left",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Stage
@@ -651,35 +715,17 @@ function OnboardingView() {
                 <th
                   style={{
                     padding: "16px",
-                    textAlign: "left",
-                    fontWeight: 600,
-                    color: "#334155",
-                  }}
-                >
-                  Portal Status
-                </th>
-                <th
-                  style={{
-                    padding: "16px",
-                    textAlign: "left",
-                    fontWeight: 600,
-                    color: "#334155",
-                  }}
-                >
-                  Task Status
-                </th>
-                <th
-                  style={{
-                    padding: "16px",
                     textAlign: "center",
                     fontWeight: 600,
-                    color: "#334155",
+                    color: "white",
+                    backgroundColor: "#1976d2",
                   }}
                 >
                   Actions
                 </th>
               </tr>
             </thead>
+
             <tbody>
               {filteredCandidates.length === 0 ? (
                 <tr>
@@ -748,7 +794,7 @@ function OnboardingView() {
                         {candidate.stage}
                       </span>
                     </td>
-                    <td style={{ padding: "14px 16px" }}>
+                    {/* <td style={{ padding: "14px 16px" }}>
                       <span
                         style={{
                           display: "inline-block",
@@ -793,7 +839,7 @@ function OnboardingView() {
                       >
                         {candidate.taskStatus}
                       </span>
-                    </td>
+                    </td> */}
                     <td style={{ padding: "14px 16px", textAlign: "center" }}>
                       <div
                         style={{
@@ -803,14 +849,14 @@ function OnboardingView() {
                         }}
                       >
                         <button
-                          onClick={() => sendMailToCandidate(candidate)}
+                          onClick={() => openMailConfirm(candidate)}
                           style={{
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             width: "36px",
                             height: "36px",
-                            // backgroundColor: '#e3f2fd',
+                            backgroundColor: "#e3f2fd",
                             color: "#1976d2",
                             border: "none",
                             borderRadius: "50%",
@@ -834,15 +880,16 @@ function OnboardingView() {
                         >
                           <Email fontSize="small" />
                         </button>
+
                         <button
-                          onClick={() => handleDeleteCandidate(candidate._id)}
+                          onClick={() => openDeleteConfirm(candidate._id)}
                           style={{
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             width: "36px",
                             height: "36px",
-                            //backgroundColor: 'transparent',
+                            backgroundColor: "#ffebee",
                             color: "#c62828",
                             border: "none",
                             borderRadius: "50%",
@@ -873,6 +920,193 @@ function OnboardingView() {
               )}
             </tbody>
           </table>
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog
+            open={deleteConfirmOpen}
+            onClose={closeDeleteConfirm}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+            PaperProps={{
+              sx: {
+                borderRadius: 2,
+                boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                width: { xs: "95%", sm: "500px" },
+                maxWidth: "500px",
+                borderRadius: "20px",
+                overflow: "hidden",
+                margin: { xs: "8px", sm: "32px" },
+              },
+            }}
+          >
+            <DialogTitle
+              id="alert-dialog-title"
+              sx={{
+                background: "linear-gradient(45deg, #f44336, #ff7961)",
+                color: "white",
+                fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                fontWeight: 600,
+                padding: { xs: "16px 24px", sm: "24px 32px" },
+              }}
+            >
+              Confirm Deletion
+            </DialogTitle>
+
+            <DialogContent
+              sx={{
+                padding: { xs: "24px", sm: "32px" },
+                backgroundColor: "#f8fafc",
+                paddingTop: { xs: "24px", sm: "32px" },
+              }}
+            >
+              <DialogContentText
+                id="alert-dialog-description"
+                sx={{ color: "#333" }}
+              >
+                Are you sure you want to delete this candidate? This action
+                cannot be undone.
+              </DialogContentText>
+            </DialogContent>
+
+            <DialogActions
+              sx={{
+                padding: { xs: "16px 24px", sm: "24px 32px" },
+                backgroundColor: "#f8fafc",
+                borderTop: "1px solid #e0e0e0",
+                gap: 2,
+              }}
+            >
+              <Button
+                onClick={closeDeleteConfirm}
+                sx={{
+                  border: "2px solid #1976d2",
+                  color: "#1976d2",
+                  "&:hover": {
+                    border: "2px solid #64b5f6",
+                    backgroundColor: "#e3f2fd",
+                    color: "#1976d2",
+                  },
+                  textTransform: "none",
+                  borderRadius: "8px",
+                  px: 3,
+                  fontWeight: 600,
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                variant="contained"
+                sx={{
+                  background: "linear-gradient(45deg, #f44336, #ff7961)",
+                  fontSize: "0.95rem",
+                  textTransform: "none",
+                  padding: "8px 32px",
+                  borderRadius: "10px",
+                  boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+                  color: "white",
+                  "&:hover": {
+                    background: "linear-gradient(45deg, #d32f2f, #f44336)",
+                  },
+                }}
+                autoFocus
+              >
+                Delete
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Send Mail Confirmation Dialog */}
+          <Dialog
+            open={mailConfirmOpen}
+            onClose={closeMailConfirm}
+            aria-labelledby="mail-dialog-title"
+            aria-describedby="mail-dialog-description"
+            PaperProps={{
+              sx: {
+                width: { xs: "95%", sm: "500px" },
+                maxWidth: "500px",
+                borderRadius: "20px",
+                overflow: "hidden",
+                margin: { xs: "8px", sm: "32px" },
+              },
+            }}
+          >
+            <DialogTitle
+              id="mail-dialog-title"
+              sx={{
+                background: "linear-gradient(45deg, #0047AB, #1CA9C9)",
+                color: "white",
+                fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                fontWeight: 600,
+                padding: { xs: "16px 24px", sm: "24px 32px" },
+              }}
+            >
+              Confirm Email
+            </DialogTitle>
+            <DialogContent
+              sx={{
+                padding: { xs: "24px", sm: "32px" },
+                backgroundColor: "#f8fafc",
+                paddingTop: { xs: "24px", sm: "32px" },
+              }}
+            >
+              <DialogContentText
+                id="mail-dialog-description"
+                sx={{ color: "#333" }}
+              >
+                Are you sure you want to send an onboarding email to{" "}
+                {selectedCandidateForMail?.name}?
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions
+              sx={{
+                padding: { xs: "16px 24px", sm: "24px 32px" },
+                backgroundColor: "#f8fafc",
+                borderTop: "1px solid #e0e0e0",
+                gap: 2,
+              }}
+            >
+              <Button
+                onClick={closeMailConfirm}
+                sx={{
+                  border: "2px solid #1976d2",
+                  color: "#1976d2",
+                  "&:hover": {
+                    border: "2px solid #64b5f6",
+                    backgroundColor: "#e3f2fd",
+                    color: "#1976d2",
+                  },
+                  textTransform: "none",
+                  borderRadius: "8px",
+                  px: 3,
+                  fontWeight: 600,
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmSendMail}
+                variant="contained"
+                sx={{
+                  background: "linear-gradient(45deg, #0047AB, #1CA9C9)",
+                  fontSize: "0.95rem",
+                  textTransform: "none",
+                  padding: "8px 32px",
+                  borderRadius: "10px",
+                  boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+                  color: "white",
+                  "&:hover": {
+                    background:
+                      "linear-gradient(45deg,rgb(12, 105, 236),rgb(9, 195, 237))",
+                  },
+                }}
+                autoFocus
+              >
+                Send Email
+              </Button>
+            </DialogActions>
+          </Dialog>
         </div>
       </Box>
     </div>

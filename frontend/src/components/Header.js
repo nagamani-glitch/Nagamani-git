@@ -7,7 +7,7 @@ import {
   Button,
   Badge,
   Toast,
-  Spinner
+  Spinner,
 } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -26,7 +26,7 @@ import { timesheetService } from "../services/timesheetService";
 import "./Header.css";
 import { useSidebar } from "../Context";
 import NotificationSidebar from "./NotificationSidebar";
-import { useNotifications } from '../context/NotificationContext';
+import { useNotifications } from "../context/NotificationContext";
 
 const Header = () => {
   const { unreadCount } = useNotifications();
@@ -95,7 +95,7 @@ const Header = () => {
 
   const handleTimerClick = async () => {
     if (isLoading) return;
-    
+
     setIsLoading(true);
     try {
       if (isTimerRunning) {
@@ -137,7 +137,7 @@ const Header = () => {
   };
 
   const handleProfileToggle = () => setShowProfileMenu((prev) => !prev);
- // const handleNotificationsToggle = () => setShowNotifications((prev) => !prev);
+  // const handleNotificationsToggle = () => setShowNotifications((prev) => !prev);
   const handleCompaniesToggle = () => setShowCompanies((prev) => !prev);
   const handleClickOutside = (e) => {
     if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
@@ -187,44 +187,32 @@ const Header = () => {
         onClose={() => setShowNotificationSidebar(false)}
       />
       <header className="mb-5">
-        <Navbar className="custom-navbar" expand="lg" variant="dark" fixed="top">
+        <Navbar
+          className="custom-navbar"
+          expand="lg"
+          variant="dark"
+          fixed="top"
+        >
           <Container fluid>
             <Button variant="link" className="me-3" onClick={toggleSidebar}>
               <FaBars size={28} color="white" />
             </Button>
 
-            {/* <LinkContainer to="/">
+            <LinkContainer to="/">
               <Navbar.Brand className="brand">
                 <img
                   src="https://res.cloudinary.com/dfl9rotoy/image/upload/v1741065300/logo2-removebg-preview_p6juhh.png"
                   alt="Logo"
                   style={{
                     width: "auto",
-                    height: "120px",
-                    marginLeft: "10px",
-                    marginTop: "-5px",
+                    maxHeight: "80px",
+                    marginLeft: "0",
                     verticalAlign: "middle",
                   }}
+                  className="responsive-logo"
                 />
               </Navbar.Brand>
-            </LinkContainer> */}
-
-<LinkContainer to="/">
-  <Navbar.Brand className="brand">
-    <img
-      src="https://res.cloudinary.com/dfl9rotoy/image/upload/v1741065300/logo2-removebg-preview_p6juhh.png"
-      alt="Logo"
-      style={{
-        width: "auto",
-        maxHeight: "80px",
-        marginLeft: "0",
-        verticalAlign: "middle",
-      }}
-      className="responsive-logo"
-    />
-  </Navbar.Brand>
-</LinkContainer>
-
+            </LinkContainer>
 
             <div className="path-indicator">{getPathIndicator()}</div>
 
@@ -235,7 +223,9 @@ const Header = () => {
                   <Button
                     className={`timer-button ${isTimerRunning ? "active" : ""}`}
                     onClick={handleTimerClick}
-                    title={isTimerRunning ? "Click to log-out" : "Click to log-in"}
+                    title={
+                      isTimerRunning ? "Click to log-out" : "Click to log-in"
+                    }
                     aria-label={isTimerRunning ? "Log out" : "Log in"}
                     disabled={isLoading}
                   >
@@ -255,11 +245,17 @@ const Header = () => {
                   </Button>
                 </div>
 
-                <Nav.Link className="icon-link ms-3" onClick={() => navigate("/")}>
+                <Nav.Link
+                  className="icon-link ms-3"
+                  onClick={() => navigate("/")}
+                >
                   <FaHome size={32} title="Home" />
                 </Nav.Link>
 
-                <Nav.Link className="icon-link ms-3" onClick={() => navigate("/settings")}>
+                <Nav.Link
+                  className="icon-link ms-3"
+                  onClick={() => navigate("/settings")}
+                >
                   <FaCog size={28} title="Settings" />
                 </Nav.Link>
 
@@ -280,7 +276,10 @@ const Header = () => {
                   </Badge>
                 </Nav.Link>
 
-                <Nav.Link className="icon-link ms-3" onClick={handleCompaniesToggle}>
+                <Nav.Link
+                  className="icon-link ms-3"
+                  onClick={handleCompaniesToggle}
+                >
                   <FaBuilding size={28} title="Companies" />
                 </Nav.Link>
 
@@ -299,16 +298,24 @@ const Header = () => {
                   <NavDropdown.Item onClick={() => navigate("/profile")}>
                     My Profile
                   </NavDropdown.Item>
-                  <NavDropdown.Item onClick={() => navigate("/change-password")}>
+                  <NavDropdown.Item
+                    onClick={() => navigate("/change-password")}
+                  >
                     Change Password
                   </NavDropdown.Item>
                   <NavDropdown.Divider />
                   {token ? (
-                    <NavDropdown.Item onClick={handleLogout} className="logout-item">
+                    <NavDropdown.Item
+                      onClick={handleLogout}
+                      className="logout-item"
+                    >
                       <FaSignOutAlt className="me-2" /> Logout
                     </NavDropdown.Item>
                   ) : (
-                    <NavDropdown.Item onClick={() => navigate("/login")} className="login-item">
+                    <NavDropdown.Item
+                      onClick={() => navigate("/login")}
+                      className="login-item"
+                    >
                       <FaSignInAlt className="me-2" /> Login
                     </NavDropdown.Item>
                   )}
@@ -338,4 +345,3 @@ const Header = () => {
 };
 
 export default Header;
-

@@ -23,6 +23,12 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
+  useMediaQuery,
+  useTheme,
+  Alert,
+  CircularProgress,
+  Snackbar,
 } from "@mui/material";
 import {
   Add,
@@ -65,6 +71,18 @@ export default function Holidays() {
   const [showModal, setShowModal] = useState(false);
   const [editingHoliday, setEditingHoliday] = useState(null);
   const holidaysRef = useRef(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  
+  // Add delete confirmation dialog states
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [holidayToDelete, setHolidayToDelete] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   useEffect(() => {
     loadHolidays();
@@ -102,8 +120,10 @@ export default function Holidays() {
     try {
       if (editingHoliday) {
         await updateHoliday(editingHoliday._id, formattedValues);
+        showSnackbar("Holiday updated successfully");
       } else {
         await createHoliday(formattedValues);
+        showSnackbar("Holiday created successfully");
       }
       await loadHolidays(); // Refresh the list
       setShowModal(false);
@@ -112,6 +132,7 @@ export default function Holidays() {
     } catch (err) {
       console.error("Error:", err);
       setError("Failed to save holiday");
+      showSnackbar("Failed to save holiday", "error");
     }
   };
 
@@ -120,55 +141,112 @@ export default function Holidays() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
+  // Replace direct delete with confirmation dialog
+  const handleDeleteClick = (holiday) => {
+    setHolidayToDelete(holiday);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setHolidayToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!holidayToDelete) return;
+    
     try {
-      await deleteHoliday(id);
-      loadHolidays();
+      setLoading(true);
+      await deleteHoliday(holidayToDelete._id);
+      await loadHolidays();
+      showSnackbar("Holiday deleted successfully");
     } catch (err) {
       setError("Failed to delete holiday");
+      showSnackbar("Failed to delete holiday", "error");
+    } finally {
+      setLoading(false);
+      handleCloseDeleteDialog();
     }
   };
 
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({
+      ...snackbar,
+      open: false,
+    });
+  };
+
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4, px: isMobile ? 1 : 3 }}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+      
       <Paper
         elevation={3}
-        sx={{ p: 3, borderRadius: 2, backgroundColor: "#ffffff" }}
+        sx={{ p: isMobile ? 2 : 3, borderRadius: 2, backgroundColor: "#ffffff" }}
       >
         <Box
           sx={{
             backgroundColor: "white",
             borderRadius: "12px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-            padding: "24px 32px",
+            padding: isMobile ? "16px" : isTablet ? "20px 24px" : "24px 32px",
             marginBottom: "24px",
           }}
         >
           <Stack
-            direction="row"
+            direction={isMobile ? "column" : "row"}
             justifyContent="space-between"
-            alignItems="center"
+            alignItems={isMobile ? "flex-start" : "center"}
+            spacing={isMobile ? 2 : 0}
           >
             <Typography
-              variant="h4"
+              variant={isMobile ? "h5" : "h4"}
               sx={{
                 fontWeight: 600,
                 background: "#1976d2",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
+                mb: isMobile ? 1 : 0,
               }}
             >
               Holidays Management
             </Typography>
 
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack 
+              direction={isMobile ? "column" : "row"} 
+              spacing={isMobile ? 1 : 2} 
+              alignItems={isMobile ? "stretch" : "center"}
+              width={isMobile ? "100%" : "auto"}
+            >
               <TextField
                 placeholder="Search holidays..."
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
                 size="small"
+                fullWidth={isMobile}
                 sx={{
-                  width: "300px",
+                  width: isMobile ? "100%" : isTablet ? "200px" : "300px",
                   "& .MuiOutlinedInput-root": {
                     backgroundColor: "#f8fafc",
                     borderRadius: "8px",
@@ -190,6 +268,7 @@ export default function Holidays() {
                   setShowModal(true);
                 }}
                 startIcon={<Add />}
+                fullWidth={isMobile}
                 sx={{
                   background: "linear-gradient(45deg, #1976d2, #64b5f6)",
                   color: "white",
@@ -218,7 +297,7 @@ export default function Holidays() {
           </Typography>
         )}
 
-        <Grid container spacing={3} ref={holidaysRef}>
+        <Grid container spacing={isMobile ? 2 : 3} ref={holidaysRef}>
           {holidays
             .filter((holiday) =>
               holiday.name.toLowerCase().includes(filterQuery.toLowerCase())
@@ -242,7 +321,15 @@ export default function Holidays() {
                         sx={{ display: "flex", alignItems: "center", mb: 2 }}
                       >
                         <EventIcon sx={{ mr: 1, color: "#3b82f6" }} />
-                        <Typography variant="h6">{holiday.name}</Typography>
+                        <Typography 
+                          variant={isMobile ? "subtitle1" : "h6"}
+                          sx={{ 
+                            wordBreak: "break-word",
+                            overflowWrap: "break-word"
+                          }}
+                        >
+                          {holiday.name}
+                        </Typography>
                       </Box>
 
                       <Typography
@@ -283,7 +370,7 @@ export default function Holidays() {
                           <EditIcon fontSize="small" />
                         </IconButton>
                         <IconButton
-                          onClick={() => handleDelete(holiday._id)}
+                          onClick={() => handleDeleteClick(holiday)}
                           sx={{
                             backgroundColor: "#ef4444",
                             color: "white",
@@ -300,16 +387,20 @@ export default function Holidays() {
             ))}
         </Grid>
 
+        {/* Add Holiday Dialog */}
         <Dialog
           open={showModal}
           maxWidth="md"
           fullWidth
+          fullScreen={isMobile}
           PaperProps={{
             sx: {
-              width: "700px",
+              width: isMobile ? "100%" : isTablet ? "600px" : "700px",
               maxWidth: "90vw",
-              borderRadius: "20px",
+              borderRadius: isMobile ? "0" : "20px",
               overflow: "hidden",
+              margin: isMobile ? 0 : undefined,
+              height: isMobile ? "100%" : undefined,
             },
           }}
         >
@@ -317,9 +408,9 @@ export default function Holidays() {
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
               color: "white",
-              fontSize: "1.5rem",
+              fontSize: isMobile ? "1.25rem" : "1.5rem",
               fontWeight: 600,
-              padding: "24px 32px",
+              padding: isMobile ? "16px 20px" : "24px 32px",
               position: "relative",
             }}
           >
@@ -338,7 +429,7 @@ export default function Holidays() {
             </IconButton>
           </DialogTitle>
 
-          <DialogContent sx={{ padding: "32px" }}>
+          <DialogContent sx={{ padding: isMobile ? "20px" : "32px" }}>
             <Formik
               initialValues={
                 editingHoliday || {
@@ -416,13 +507,14 @@ export default function Holidays() {
                     </Field>
 
                     <Stack
-                      direction="row"
+                      direction={isMobile ? "column" : "row"}
                       spacing={2}
-                      justifyContent="flex-end"
+                      justifyContent={isMobile ? "stretch" : "flex-end"}
                       sx={{ mt: 4 }}
                     >
                       <Button
                         onClick={() => setShowModal(false)}
+                        fullWidth={isMobile}
                         sx={{
                           border: "2px solid #1976d2",
                           color: "#1976d2",
@@ -434,6 +526,8 @@ export default function Holidays() {
                           px: 4,
                           py: 1,
                           fontWeight: 600,
+                          order: isMobile ? 1 : 0,
+                          mt: isMobile ? 1 : 0,
                         }}
                       >
                         Cancel
@@ -442,6 +536,7 @@ export default function Holidays() {
                       <Button
                         type="submit"
                         disabled={isSubmitting}
+                        fullWidth={isMobile}
                         sx={{
                           background:
                             "linear-gradient(45deg, #1976d2, #64b5f6)",
@@ -454,6 +549,7 @@ export default function Holidays() {
                           px: 4,
                           py: 1,
                           fontWeight: 600,
+                          order: isMobile ? 0 : 1,
                         }}
                       >
                         {editingHoliday ? "Update" : "Create"}
@@ -465,7 +561,116 @@ export default function Holidays() {
             </Formik>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleCloseDeleteDialog}
+          PaperProps={{
+            sx: {
+              width: { xs: "95%", sm: "500px" },
+              maxWidth: "500px",
+              borderRadius: "20px",
+              overflow: "hidden",
+              margin: { xs: "8px", sm: "32px" },
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              fontWeight: 600,
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <DeleteIcon />
+            Confirm Deletion
+          </DialogTitle>
+          <DialogContent 
+            sx={{
+              padding: { xs: "24px", sm: "32px" },
+              backgroundColor: "#f8fafc",
+              paddingTop: { xs: "24px", sm: "32px" },
+            }}
+          >
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Are you sure you want to delete this holiday?
+            </Alert>
+            {holidayToDelete && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+                <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                  Holiday: {holidayToDelete.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Start Date: {new Date(holidayToDelete.startDate).toLocaleDateString()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  End Date: {new Date(holidayToDelete.endDate).toLocaleDateString()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Recurring: {holidayToDelete.recurring ? "Yes" : "No"}
+                </Typography>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions 
+            sx={{
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              backgroundColor: "#f8fafc",
+              borderTop: "1px solid #e0e0e0",
+              gap: 2,
+            }}
+          >
+            <Button
+              onClick={handleCloseDeleteDialog}
+              sx={{
+                border: "2px solid #1976d2",
+                color: "#1976d2",
+                "&:hover": {
+                  border: "2px solid #64b5f6",
+                  backgroundColor: "#e3f2fd",
+                  color: "#1976d2",
+                },
+                textTransform: "none",
+                borderRadius: "8px",
+                px: 3,
+                fontWeight: 600,
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              variant="contained"
+              color="error"
+              disabled={loading}
+              startIcon={
+                loading ? <CircularProgress size={20} color="inherit" /> : null
+              }
+              sx={{
+                background: "linear-gradient(45deg, #f44336, #ff7961)",
+                fontSize: "0.95rem",
+                textTransform: "none",
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+                color: "white",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #d32f2f, #f44336)",
+                },
+              }}
+            >
+              {loading ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Paper>
     </Container>
   );
 }
+

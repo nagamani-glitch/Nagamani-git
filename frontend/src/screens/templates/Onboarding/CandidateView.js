@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./CandidateView.css";
 import axios from "axios";
+import { styled } from "@mui/material/styles";
 import {
   Dialog,
   DialogTitle,
@@ -20,17 +21,72 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Paper,
+  InputAdornment,
+  useTheme,
+  useMediaQuery,
+  alpha,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  DialogContentText,
 } from "@mui/material";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
   Search as SearchIcon,
+  FilterList as FilterListIcon,
 } from "@mui/icons-material";
 
 const API_URL = "http://localhost:5000/api/hired-employees";
 
+// Add these styled components for consistent styling with AttendanceRecords.js
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+}));
+
+const SearchTextField = styled(TextField)(({ theme }) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: theme.spacing(2),
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.common.white,
+  fontSize: 14,
+  fontWeight: "bold",
+  padding: theme.spacing(2),
+  "&.MuiTableCell-body": {
+    color: theme.palette.text.primary,
+    fontSize: 14,
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.05),
+  },
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.1),
+    transition: "background-color 0.2s ease",
+  },
+}));
+
 const CandidatesView = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,7 +117,48 @@ const CandidatesView = () => {
   const [formData, setFormData] = useState(initialFormState);
 
   const departments = ["Engineering", "Product", "Marketing", "Sales", "HR"];
-  const statuses = ["Pending", "Offer Letter Accepted", "Offer Letter Rejected"]
+  const statuses = [
+    "Pending",
+    "Offer Letter Accepted",
+    "Offer Letter Rejected",
+  ];
+
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({
+    open: false,
+    candidateId: null,
+    candidateName: "",
+  });
+
+  // Modify the handleDelete function to show confirmation first
+  const handleDelete = (id, name) => {
+    setDeleteConfirmDialog({
+      open: true,
+      candidateId: id,
+      candidateName: name,
+    });
+  };
+
+  // Add a new function to handle the actual deletion after confirmation
+  const confirmDelete = async () => {
+    try {
+      setLoading(true);
+      await axios.delete(`${API_URL}/${deleteConfirmDialog.candidateId}`);
+      setCandidates((prev) =>
+        prev.filter((c) => c._id !== deleteConfirmDialog.candidateId)
+      );
+      showSnackbar("Candidate deleted successfully", "warning");
+    } catch (error) {
+      showSnackbar("Error deleting candidate", "error");
+    } finally {
+      // Close the confirmation dialog
+      setDeleteConfirmDialog({
+        open: false,
+        candidateId: null,
+        candidateName: "",
+      });
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchCandidates();
@@ -112,6 +209,7 @@ const CandidatesView = () => {
       showSnackbar("Error applying search", "error");
     }
   };
+
   const handleFormChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({
@@ -169,16 +267,6 @@ const CandidatesView = () => {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/${id}`);
-      setCandidates((prev) => prev.filter((c) => c._id !== id));
-      showSnackbar("Candidate deleted successfully", "warning");
-    } catch (error) {
-      showSnackbar("Error deleting candidate", "error");
-    }
-  };
-
   const handleDialogClose = () => {
     setDialogOpen(false);
     setEditMode(false);
@@ -196,129 +284,354 @@ const CandidatesView = () => {
 
   const getStatusChipColor = (status) => {
     const colors = {
-      "Pending": "warning",
+      Pending: "warning",
       "Offer Letter Accepted": "success",
-      "Offer Letter Rejected": "error"
+      "Offer Letter Rejected": "error",
     };
     return colors[status] || "default";
   };
-  
-  
 
   return (
-    <div className="candidate-view">
-      <Box className="header-section">
-        <Typography variant="h4">Hired Candidates</Typography>
-        <Button
-          startIcon={<AddIcon />}
-          variant="contained"
-          onClick={() => setDialogOpen(true)}
-        >
-          Add Candidate
-        </Button>
-      </Box>
+    <Box
+      sx={{
+        p: { xs: 2, sm: 3, md: 4 },
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+      }}
+    >
+      <Typography
+        variant="h4"
+        sx={{
+          mb: { xs: 2, sm: 3, md: 4 },
+          color: theme.palette.primary.main,
+          fontWeight: 600,
+          letterSpacing: 0.5,
+          fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+        }}
+      >
+        Hired Candidates
+      </Typography>
 
-      <Box className="filters-section">
-        <TextField
-          className="search-field"
-          placeholder="Search candidates..."
-          variant="outlined"
-          size="small"
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-          InputProps={{
-            startAdornment: <SearchIcon color="action" />,
+      <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box
+          display="flex"
+          flexDirection={{ xs: "column", sm: "row" }}
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          gap={{ xs: 2, sm: 2 }}
+          sx={{
+            width: "100%",
+            justifyContent: "space-between",
           }}
-        />
-        <FormControl size="small" variant="outlined" className="filter-select">
-          <InputLabel>Status</InputLabel>
-          <Select
-            value={filters.status}
-            onChange={(e) => handleFilterChange("status", e.target.value)}
-            label="Status"
+        >
+          <SearchTextField
+            placeholder="Search candidates..."
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            size="small"
+            sx={{
+              width: { xs: "100%", sm: "300px" },
+              marginRight: { xs: 0, sm: "auto" },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: { xs: 2, sm: 1 },
+              width: { xs: "100%", sm: "auto" },
+            }}
           >
-            <MenuItem value="All">All Status</MenuItem>
-            {statuses.map((status) => (
-              <MenuItem key={status} value={status}>
-                {status}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl size="small" variant="outlined" className="filter-select">
-          <InputLabel>Department</InputLabel>
-          <Select
-            value={filters.department}
-            onChange={(e) => handleFilterChange("department", e.target.value)}
-            label="Department"
-          >
-            <MenuItem value="All">All Departments</MenuItem>
-            {departments.map((dept) => (
-              <MenuItem key={dept} value={dept}>
-                {dept}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 2, sm: 1 },
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
+              <FormControl
+                size="small"
+                sx={{
+                  minWidth: 120,
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={filters.status}
+                  onChange={(e) => handleFilterChange("status", e.target.value)}
+                  label="Status"
+                >
+                  <MenuItem value="All">All Status</MenuItem>
+                  {statuses.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl
+                size="small"
+                sx={{
+                  minWidth: 120,
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                <InputLabel>Department</InputLabel>
+                <Select
+                  value={filters.department}
+                  onChange={(e) =>
+                    handleFilterChange("department", e.target.value)
+                  }
+                  label="Department"
+                >
+                  <MenuItem value="All">All Departments</MenuItem>
+                  {departments.map((dept) => (
+                    <MenuItem key={dept} value={dept}>
+                      {dept}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setDialogOpen(true)}
+              sx={{
+                height: { xs: "auto", sm: 40 },
+                padding: { xs: "10px 16px", sm: "8px 16px" },
+                width: { xs: "100%", sm: "auto" },
+                background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                color: "white",
+                "&:hover": {
+                  background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                },
+              }}
+            >
+              Add Candidate
+            </Button>
+          </Box>
+        </Box>
+      </StyledPaper>
 
       {loading ? (
-        <Box className="loading-container">
+        <Box sx={{ display: "flex", justifyContent: "center", p: 5 }}>
           <CircularProgress />
         </Box>
       ) : (
-        <table className="candidate-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Department</th>
-              <th>Joining Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {candidates.map((candidate) => (
-              <tr key={candidate._id}>
-                <td>{candidate.name}</td>
-                <td>{candidate.email}</td>
-                <td>{candidate.department}</td>
-                <td>{new Date(candidate.joiningDate).toLocaleDateString()}</td>
-                <td>
-                  <Chip
-                    label={candidate.status}
-                    color={getStatusChipColor(candidate.status)}
-                    size="small"
-                  />
-                </td>
-                <td className="actions-cell">
-                  <Tooltip title="Edit">
-                    <IconButton
+        <TableContainer
+          component={Paper}
+          sx={{ boxShadow: 3, borderRadius: 2 }}
+        >
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <StyledTableCell>Name</StyledTableCell>
+                <StyledTableCell>Email</StyledTableCell>
+                <StyledTableCell>Department</StyledTableCell>
+                <StyledTableCell>Joining Date</StyledTableCell>
+                <StyledTableCell>Status</StyledTableCell>
+                <StyledTableCell align="center">Actions</StyledTableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {candidates.map((candidate) => (
+                <StyledTableRow key={candidate._id}>
+                  <TableCell sx={{ fontWeight: 500 }}>
+                    {candidate.name}
+                  </TableCell>
+                  <TableCell>{candidate.email}</TableCell>
+                  <TableCell>{candidate.department}</TableCell>
+                  <TableCell>
+                    {new Date(candidate.joiningDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={candidate.status}
+                      color={getStatusChipColor(candidate.status)}
                       size="small"
-                      onClick={() => handleEdit(candidate)}
+                    />
+                  </TableCell>
+                  <TableCell align="center" sx={{ minWidth: 120 }}>
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", gap: 1 }}
                     >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDelete(candidate._id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEdit(candidate)}
+                        sx={{
+                          color: theme.palette.primary.main,
+                          "&:hover": {
+                            backgroundColor: alpha(
+                              theme.palette.primary.main,
+                              0.1
+                            ),
+                          },
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          handleDelete(candidate._id, candidate.name)
+                        }
+                        sx={{
+                          color: theme.palette.error.main,
+                          "&:hover": {
+                            backgroundColor: alpha(
+                              theme.palette.error.main,
+                              0.1
+                            ),
+                          },
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </StyledTableRow>
+              ))}
+              {candidates.length === 0 && (
+                <StyledTableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                    <Typography variant="body1" color="textSecondary">
+                      No candidates found. Add a new candidate or adjust your
+                      filters.
+                    </Typography>
+                  </TableCell>
+                </StyledTableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
 
+      {/* Delete Confirmation Dialog */}
+
+      <Dialog
+        open={deleteConfirmDialog.open}
+        onClose={() =>
+          setDeleteConfirmDialog({ ...deleteConfirmDialog, open: false })
+        }
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <DeleteIcon color="white" />
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Are you sure you want to delete this candidate? This action cannot
+            be undone.
+          </Alert>
+          <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+            <Typography variant="body1" fontWeight={600} color="#2c3e50">
+              Candidate: {deleteConfirmDialog.candidateName}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Deleting this candidate will permanently remove all their
+              information from the system.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() =>
+              setDeleteConfirmDialog({ ...deleteConfirmDialog, open: false })
+            }
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDelete}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog and Snackbar */}
       <Dialog
         open={dialogOpen}
         onClose={handleDialogClose}
+        maxWidth="sm"
+        fullWidth
         PaperProps={{
           sx: {
             width: "600px",
@@ -525,14 +838,19 @@ const CandidatesView = () => {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={3000}
+        autoHideDuration={4000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <Alert severity={snackbar.severity} variant="filled">
+        <Alert
+          severity={snackbar.severity}
+          variant="filled"
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 

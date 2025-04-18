@@ -25,6 +25,7 @@ import DisciplinaryActions from "./disciplinaryActions/DisciplinaryActions";
 import Policies from "./policies/Policies";
 import OrganizationChart from "./organizationChart/OrganizationChart";
 import RotatingWorktypeAssign from "./rotatingWorktypeAssign/RotatingWorktypeAssign";
+import AttendanceDashboard from '../dashboards/AttendanceDashboard';
 import AttendanceRecords from "./attendanceRecords/AttendanceRecords";
 import TimeOffRequests from "./timeOffRequests/TimeOffRequests";
 import ProfilePage from "./profilePage/ProfilePage";
@@ -103,6 +104,7 @@ function Dashboard() {
           <Route path="/policies" element={<Policies />} />
           <Route path="/organization-chart" element={<OrganizationChart />} />
           <Route path="/rotating-worktype-assign" element={<RotatingWorktypeAssign />} />
+          <Route path="/attendance-dashboard" element={<AttendanceDashboard />} />
           <Route path="/attendance-records" element={<AttendanceRecords />} />
           <Route path="/time-off-requests" element={<TimeOffRequests />} />
           <Route path="/leave-requests" element={<LeaveRequests />} />

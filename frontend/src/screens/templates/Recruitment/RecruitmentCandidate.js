@@ -756,22 +756,52 @@ const RecruitmentCandidate = () => {
             },
           }}
         >
-          <DialogTitle sx={{ fontWeight: 600, pb: 1 }}>
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              color: "white",
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              fontWeight: 600,
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+            }}
+          >
             Delete Candidate
           </DialogTitle>
-          <DialogContent>
+          <DialogContent
+            sx={{
+              padding: { xs: "24px", sm: "32px" },
+              backgroundColor: "#f8fafc",
+              paddingTop: { xs: "24px", sm: "32px" },
+            }}
+          >
             <Typography>
               Are you sure you want to delete{" "}
               <strong>{selectedCandidate?.name}</strong>? This action cannot be
               undone.
             </Typography>
           </DialogContent>
-          <DialogActions sx={{ padding: "16px 24px" }}>
+          <DialogActions
+            sx={{
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              backgroundColor: "#f8fafc",
+              borderTop: "1px solid #e0e0e0",
+              gap: 2,
+            }}
+          >
             <Button
               onClick={() => setDeleteDialogOpen(false)}
               sx={{
-                color: "#64748b",
-                "&:hover": { backgroundColor: "#f1f5f9" },
+                border: "2px solid #1976d2",
+                color: "#1976d2",
+                "&:hover": {
+                  border: "2px solid #64b5f6",
+                  backgroundColor: "#e3f2fd",
+                  color: "#1976d2",
+                },
+                textTransform: "none",
+                borderRadius: "8px",
+                px: 3,
+                fontWeight: 600,
               }}
             >
               Cancel
@@ -781,9 +811,16 @@ const RecruitmentCandidate = () => {
               variant="contained"
               color="error"
               sx={{
+                background: "linear-gradient(45deg, #f44336, #ff7961)",
+                fontSize: "0.95rem",
                 textTransform: "none",
-                borderRadius: "8px",
-                fontWeight: 600,
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+                color: "white",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #d32f2f, #f44336)",
+                },
               }}
             >
               Delete
@@ -918,16 +955,16 @@ const RecruitmentCandidate = () => {
               }}
               sx={{
                 border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
                 color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
+                "&:hover": {
+                  border: "2px solid #64b5f6",
+                  backgroundColor: "#e3f2fd",
+                  color: "#1976d2",
+                },
+                textTransform: "none",
+                borderRadius: "8px",
+                px: 3,
+                fontWeight: 600,
               }}
             >
               Cancel
@@ -973,7 +1010,5 @@ const RecruitmentCandidate = () => {
     </Box>
   );
 };
-
-
 
 export default RecruitmentCandidate;

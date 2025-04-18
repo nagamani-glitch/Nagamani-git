@@ -19,6 +19,11 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  useMediaQuery,
+  useTheme,
+  DialogActions,
+  CircularProgress,
+  Snackbar,
 } from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
@@ -57,6 +62,19 @@ export default function FaqCategory() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [showActions, setShowActions] = useState(null);
   const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  // Add responsive hooks
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   useEffect(() => {
     fetchCategories();
@@ -64,6 +82,7 @@ export default function FaqCategory() {
 
   const fetchCategories = async () => {
     try {
+      setLoading(true);
       const { data } = await axios.get(`${apiBaseURL}/api/faqCategories`);
       setCategories(data);
     } catch (err) {
@@ -71,6 +90,9 @@ export default function FaqCategory() {
         "Error fetching FAQ categories:",
         err.response?.data || err.message
       );
+      showSnackbar("Error fetching FAQ categories", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,6 +109,7 @@ export default function FaqCategory() {
     const formattedValue = toSentenceCase(value);
     setFormData({ ...formData, [name]: formattedValue });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
@@ -95,14 +118,17 @@ export default function FaqCategory() {
     }
 
     try {
+      setLoading(true);
       if (editingCategoryId) {
         await axios.put(
           `${apiBaseURL}/api/faqCategories/${editingCategoryId}`,
           formData
         );
+        showSnackbar("Category updated successfully");
         setEditingCategoryId(null);
       } else {
         await axios.post(`${apiBaseURL}/api/faqCategories`, formData);
+        showSnackbar("Category created successfully");
       }
       fetchCategories();
       setIsAddModalOpen(false);
@@ -110,16 +136,39 @@ export default function FaqCategory() {
       setErrorMessage(null);
     } catch (err) {
       setErrorMessage(err.response?.data?.error || "Failed to save category.");
+      showSnackbar("Failed to save category", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (category) => {
+    setCategoryToDelete(category);
+    setDeleteDialogOpen(true);
+    setShowActions(null);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setCategoryToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!categoryToDelete) return;
+
     try {
-      await axios.delete(`${apiBaseURL}/api/faqCategories/${id}`);
+      setLoading(true);
+      await axios.delete(
+        `${apiBaseURL}/api/faqCategories/${categoryToDelete._id}`
+      );
       fetchCategories();
-      setShowActions(null);
+      showSnackbar("Category deleted successfully");
     } catch (err) {
       console.error("Error deleting category:", err);
+      showSnackbar("Error deleting category", "error");
+    } finally {
+      setLoading(false);
+      handleCloseDeleteDialog();
     }
   };
 
@@ -130,47 +179,88 @@ export default function FaqCategory() {
     setShowActions(null);
   };
 
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({
+      ...snackbar,
+      open: false,
+    });
+  };
+
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4, px: isMobile ? 1 : 3 }}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
       <Paper
         elevation={3}
-        sx={{ p: 3, borderRadius: 2, backgroundColor: "#ffffff" }}
+        sx={{
+          p: isMobile ? 2 : 3,
+          borderRadius: 2,
+          backgroundColor: "#ffffff",
+        }}
       >
         <Box
           sx={{
             backgroundColor: "white",
             borderRadius: "12px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-            padding: "24px 32px",
+            padding: isMobile ? "16px" : isTablet ? "20px 24px" : "24px 32px",
             marginBottom: "24px",
           }}
         >
           <Stack
-            direction="row"
+            direction={isMobile ? "column" : "row"}
             justifyContent="space-between"
-            alignItems="center"
+            alignItems={isMobile ? "flex-start" : "center"}
+            spacing={isMobile ? 2 : 0}
           >
             <Typography
-              variant="h4"
+              variant={isMobile ? "h5" : "h4"}
               sx={{
                 fontWeight: 600,
-                // background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
                 background: "#1976d2",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
+                mb: isMobile ? 1 : 0,
               }}
             >
               FAQ Categories
             </Typography>
 
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack
+              direction={isMobile ? "column" : "row"}
+              spacing={isMobile ? 1 : 2}
+              alignItems={isMobile ? "stretch" : "center"}
+              width={isMobile ? "100%" : "auto"}
+            >
               <TextField
                 placeholder="Search categories..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 size="small"
+                fullWidth={isMobile}
                 sx={{
-                  width: "300px",
+                  width: isMobile ? "100%" : isTablet ? "200px" : "300px",
                   "& .MuiOutlinedInput-root": {
                     backgroundColor: "#f8fafc",
                     borderRadius: "8px",
@@ -190,8 +280,11 @@ export default function FaqCategory() {
                 onClick={() => {
                   setEditingCategoryId(null);
                   setIsAddModalOpen(true);
+                  setFormData({ title: "", description: "" });
+                  setErrorMessage(null);
                 }}
                 startIcon={<Add />}
+                fullWidth={isMobile}
                 sx={{
                   background: "linear-gradient(45deg, #1976d2, #64b5f6)",
                   color: "white",
@@ -211,7 +304,7 @@ export default function FaqCategory() {
           </Stack>
         </Box>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={isMobile ? 2 : 3}>
           {categories
             .filter((category) =>
               category?.title?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -264,7 +357,7 @@ export default function FaqCategory() {
                                   <EditIcon fontSize="small" />
                                 </IconButton>
                                 <IconButton
-                                  onClick={() => handleDelete(category._id)}
+                                  onClick={() => handleDeleteClick(category)}
                                   sx={{
                                     backgroundColor: "#ef4444",
                                     color: "white",
@@ -279,12 +372,23 @@ export default function FaqCategory() {
                         </AnimatePresence>
                       </Box>
 
-                      <Typography variant="h6" sx={{ mb: 2 }}>
+                      <Typography
+                        variant={isMobile ? "subtitle1" : "h6"}
+                        sx={{
+                          mb: 2,
+                          pr: 5, // Add padding to prevent text from going under the more icon
+                          wordBreak: "break-word",
+                        }}
+                      >
                         {category.title}
                       </Typography>
                       <Typography
                         variant="body2"
-                        sx={{ mb: 2, color: "text.secondary" }}
+                        sx={{
+                          mb: 2,
+                          color: "text.secondary",
+                          wordBreak: "break-word",
+                        }}
                       >
                         {category.description}
                       </Typography>
@@ -297,6 +401,7 @@ export default function FaqCategory() {
                           mt: "auto",
                           backgroundColor: "#3b82f6",
                           "&:hover": { backgroundColor: "#2563eb" },
+                          width: isMobile ? "100%" : "auto",
                         }}
                       >
                         View FAQs
@@ -307,18 +412,21 @@ export default function FaqCategory() {
               </Grid>
             ))}
         </Grid>
-        {/* Add New Category Modal */}
 
+        {/* Add New Category Modal */}
         <Dialog
           open={isAddModalOpen}
           maxWidth="md"
           fullWidth
+          fullScreen={isMobile}
           PaperProps={{
             sx: {
-              width: "700px",
+              width: isMobile ? "100%" : isTablet ? "600px" : "700px",
               maxWidth: "90vw",
-              borderRadius: "20px",
+              borderRadius: isMobile ? "0" : "20px",
               overflow: "hidden",
+              margin: isMobile ? 0 : undefined,
+              height: isMobile ? "100%" : undefined,
             },
           }}
         >
@@ -326,9 +434,9 @@ export default function FaqCategory() {
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
               color: "white",
-              fontSize: "1.5rem",
+              fontSize: isMobile ? "1.25rem" : "1.5rem",
               fontWeight: 600,
-              padding: "24px 32px",
+              padding: isMobile ? "16px 20px" : "24px 32px",
               position: "relative",
             }}
           >
@@ -347,7 +455,7 @@ export default function FaqCategory() {
             </IconButton>
           </DialogTitle>
 
-          <DialogContent sx={{ padding: "32px" }}>
+          <DialogContent sx={{ padding: isMobile ? "20px" : "32px" }}>
             <form onSubmit={handleSubmit}>
               <Stack spacing={3} sx={{ mt: 2 }}>
                 {errorMessage && (
@@ -357,12 +465,12 @@ export default function FaqCategory() {
                 )}
 
                 <TextField
+                  fullWidth
                   label="Category Title"
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
                   required
-                  fullWidth
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       borderRadius: "8px",
@@ -371,14 +479,13 @@ export default function FaqCategory() {
                 />
 
                 <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
                   label="Description"
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  required
-                  multiline
-                  rows={4}
-                  fullWidth
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       borderRadius: "8px",
@@ -387,13 +494,14 @@ export default function FaqCategory() {
                 />
 
                 <Stack
-                  direction="row"
+                  direction={isMobile ? "column" : "row"}
                   spacing={2}
-                  justifyContent="flex-end"
+                  justifyContent={isMobile ? "stretch" : "flex-end"}
                   sx={{ mt: 4 }}
                 >
                   <Button
                     onClick={() => setIsAddModalOpen(false)}
+                    fullWidth={isMobile}
                     sx={{
                       border: "2px solid #1976d2",
                       color: "#1976d2",
@@ -405,13 +513,16 @@ export default function FaqCategory() {
                       px: 4,
                       py: 1,
                       fontWeight: 600,
+                      order: isMobile ? 1 : 0,
+                      mt: isMobile ? 1 : 0,
                     }}
                   >
                     Cancel
                   </Button>
-
                   <Button
                     type="submit"
+                    disabled={loading}
+                    fullWidth={isMobile}
                     sx={{
                       background: "linear-gradient(45deg, #1976d2, #64b5f6)",
                       color: "white",
@@ -422,9 +533,16 @@ export default function FaqCategory() {
                       px: 4,
                       py: 1,
                       fontWeight: 600,
+                      order: isMobile ? 0 : 1,
                     }}
                   >
-                    {editingCategoryId ? "Update" : "Create"}
+                    {loading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : editingCategoryId ? (
+                      "Update"
+                    ) : (
+                      "Create"
+                    )}
                   </Button>
                 </Stack>
               </Stack>
@@ -432,7 +550,118 @@ export default function FaqCategory() {
           </DialogContent>
         </Dialog>
 
-       
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleCloseDeleteDialog}
+          PaperProps={{
+            sx: {
+              width: { xs: "95%", sm: "500px" },
+              maxWidth: "500px",
+              borderRadius: "20px",
+              overflow: "hidden",
+              margin: { xs: "8px", sm: "32px" },
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              fontWeight: 600,
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <DeleteIcon color="white" />
+            Confirm Deletion
+          </DialogTitle>
+          <DialogContent
+            sx={{
+              padding: { xs: "24px", sm: "32px" },
+              backgroundColor: "#f8fafc",
+              paddingTop: { xs: "24px", sm: "32px" },
+            }}
+          >
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Are you sure you want to delete this FAQ category?
+            </Alert>
+            {categoryToDelete && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+                <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                  Category: {categoryToDelete.title}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
+                  Description: {categoryToDelete.description}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="error"
+                  sx={{ mt: 2, fontWeight: 500 }}
+                >
+                  Note: All FAQs in this category will also be deleted.
+                </Typography>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions
+            sx={{
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              backgroundColor: "#f8fafc",
+              borderTop: "1px solid #e0e0e0",
+              gap: 2,
+            }}
+          >
+            <Button
+              onClick={handleCloseDeleteDialog}
+              sx={{
+                border: "2px solid #1976d2",
+                color: "#1976d2",
+                "&:hover": {
+                  border: "2px solid #64b5f6",
+                  backgroundColor: "#e3f2fd",
+                  color: "#1976d2",
+                },
+                textTransform: "none",
+                borderRadius: "8px",
+                px: 3,
+                fontWeight: 600,
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              variant="contained"
+              color="error"
+              disabled={loading}
+              startIcon={
+                loading ? <CircularProgress size={20} color="inherit" /> : null
+              }
+              sx={{
+                background: "linear-gradient(45deg, #f44336, #ff7961)",
+                fontSize: "0.95rem",
+                textTransform: "none",
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+                color: "white",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #d32f2f, #f44336)",
+                },
+              }}
+            >
+              {loading ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Paper>
     </Container>
   );

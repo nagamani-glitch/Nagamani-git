@@ -728,15 +728,32 @@ const RecruitmentPipeline = () => {
         onClose={handleCloseDeleteDialog}
         PaperProps={{
           sx: {
-            borderRadius: "16px",
-            padding: "8px",
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
           },
         }}
       >
-        <DialogTitle sx={{ fontSize: "1.25rem", fontWeight: 600 }}>
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            color: "white",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+          }}
+        >
           Confirm Deletion
         </DialogTitle>
-        <DialogContent>
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
           <Alert severity="warning" sx={{ mb: 2 }}>
             Are you sure you want to delete this candidate?
           </Alert>
@@ -754,12 +771,28 @@ const RecruitmentPipeline = () => {
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
           <Button
             onClick={handleCloseDeleteDialog}
             sx={{
-              color: "#64748b",
-              "&:hover": { backgroundColor: "#f1f5f9" },
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
             }}
           >
             Cancel
@@ -769,8 +802,16 @@ const RecruitmentPipeline = () => {
             variant="contained"
             color="error"
             sx={{
-              boxShadow: "none",
-              "&:hover": { boxShadow: "none", backgroundColor: "#dc2626" },
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
             }}
           >
             Delete

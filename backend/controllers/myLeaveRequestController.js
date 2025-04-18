@@ -111,15 +111,24 @@ export const createLeaveRequest = async (req, res) => {
       leaveBalance = await LeaveBalance.findOne({ employeeCode });
     }
     
+    // // Check if employee has enough balance
+    // const availableBalance = leaveBalance[leaveType].total - leaveBalance[leaveType].used - leaveBalance[leaveType].pending;
+    
+    // if (numberOfDays > availableBalance) {
+    //   return res.status(400).json({ 
+    //     message: `Insufficient ${leaveType} leave balance. Available: ${availableBalance} days, Requested: ${numberOfDays} days` 
+    //   });
+    // }
+    
     // Check if employee has enough balance
-    const availableBalance = leaveBalance[leaveType].total - leaveBalance[leaveType].used - leaveBalance[leaveType].pending;
-    
-    if (numberOfDays > availableBalance) {
-      return res.status(400).json({ 
-        message: `Insufficient ${leaveType} leave balance. Available: ${availableBalance} days, Requested: ${numberOfDays} days` 
-      });
-    }
-    
+const availableBalance = leaveBalance[leaveType].total - leaveBalance[leaveType].used - leaveBalance[leaveType].pending;
+
+if (numberOfDays > availableBalance) {
+  return res.status(400).json({ 
+    message: `Insufficient ${leaveType} leave balance. Available: ${availableBalance} days, Requested: ${numberOfDays} days` 
+  });
+}
+
     // Create leave request with calculated days
     const leaveData = {
       ...req.body,
@@ -385,4 +394,61 @@ export const getEmployeeLeaveRequests = async (req, res) => {
         res.status(500).json({ message: error.message });
       }
     };
+
+    // Add this function to your controller
+export const updateEarnedLeaveBalance = async (req, res) => {
+  try {
+    await LeaveBalance.updateMany(
+      {}, 
+      { $set: { "earned.total": 15 } }
+    );
     
+    res.status(200).json({ message: "Earned leave balance updated for all employees" });
+  } catch (error) {
+    console.error("Error updating earned leave balance:", error);
+    res.status(500).json({ message: "Error updating earned leave balance" });
+  }
+};
+
+// Add this function to recalculate leave balance
+export const recalculateLeaveBalance = async (req, res) => {
+  try {
+    const { employeeCode } = req.params;
+    
+    // Get all leave requests for this employee
+    const leaveRequests = await MyLeaveRequest.find({ employeeCode });
+    
+    // Get the leave balance document
+    let leaveBalance = await LeaveBalance.findOne({ employeeCode });
+    
+    if (!leaveBalance) {
+      return res.status(404).json({ message: "Leave balance not found" });
+    }
+    
+    // Reset used and pending counts for all leave types
+    const leaveTypes = ['annual', 'sick', 'personal', 'maternity', 'paternity', 'casual', 'earned'];
+    leaveTypes.forEach(type => {
+      leaveBalance[type].used = 0;
+      leaveBalance[type].pending = 0;
+    });
+    
+    // Recalculate based on actual leave requests
+    leaveRequests.forEach(request => {
+      const { leaveType, numberOfDays, status } = request;
+      
+      if (status === 'approved') {
+        leaveBalance[leaveType].used += numberOfDays;
+      } else if (status === 'pending') {
+        leaveBalance[leaveType].pending += numberOfDays;
+      }
+    });
+    
+    // Save the updated balance
+    await leaveBalance.save();
+    
+    res.status(200).json(leaveBalance);
+  } catch (error) {
+    console.error("Error recalculating leave balance:", error);
+    res.status(500).json({ message: "Error recalculating leave balance" });
+  }
+};
