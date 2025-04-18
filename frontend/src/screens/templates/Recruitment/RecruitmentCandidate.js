@@ -29,6 +29,8 @@ import {
   CircularProgress,
   InputAdornment,
   alpha,
+  Container,
+  Tooltip,
 } from "@mui/material";
 import {
   Search,
@@ -38,123 +40,423 @@ import {
   MoreVert,
   Delete,
   GroupWork,
+  Add,
 } from "@mui/icons-material";
 import axios from "axios";
 
+// Standardized theme-based styling
 const styles = {
-  root: {
-    padding: {
-      xs: "12px",
-      sm: "16px",
-      md: "24px",
-    },
+  container: {
+    padding: { xs: 2, sm: 3, md: 4 },
     backgroundColor: "#f8fafc",
     minHeight: "100vh",
   },
-  header: {
-    display: "flex",
-    flexDirection: {
-      xs: "column",
-      md: "row",
-    },
-    alignItems: {
-      xs: "flex-start",
-      md: "center",
-    },
-    gap: {
-      xs: 2,
-      md: 0,
-    },
-    justifyContent: "space-between",
-    marginBottom: "32px",
-    padding: {
-      xs: "16px",
-      sm: "20px",
-      md: "24px",
-    },
-    backgroundColor: "white",
-    borderRadius: "12px",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-  },
-  actionButtons: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "16px",
-    alignItems: "center",
-    width: {
+  contentContainer: {
+    maxWidth: {
       xs: "100%",
-      md: "auto",
+      sm: "100%",
+      md: "1200px",
+      lg: "1400px",
+      xl: "1600px",
     },
+    margin: "0 auto",
+    width: "100%",
+    padding: { xs: 1, sm: 2, md: 2 }, // Add consistent padding
   },
-  searchBar: {
-    marginRight: 2,
-    width: {
-      xs: "100%",
-      sm: "280px",
-    },
-    backgroundColor: "#fff",
-    borderRadius: "8px",
+
+  pageTitle: {
+    mb: 3,
+    color: "#1976d2",
+    fontWeight: 600,
+    letterSpacing: 0.5,
+    fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+  },
+  // headerPaper: {
+  //   padding: { xs: 2, sm: 3 },
+  //   marginBottom: 3,
+  //   borderRadius: 2,
+  //   boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
+  // },
+  // Update the header paper style:
+  headerPaper: {
+    padding: { xs: 1.5, sm: 3 }, // Reduce padding on mobile
+    marginBottom: 3,
+    borderRadius: 2,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
+  },
+
+  // searchField: {
+  //   width: { xs: "100%", sm: "280px" },
+  //   "& .MuiOutlinedInput-root": {
+  //     borderRadius: 2,
+  //     "&:hover fieldset": {
+  //       borderColor: "#1976d2",
+  //     },
+  //   },
+  // },
+  // Update the search field style:
+  searchField: {
+    width: { xs: "100%", sm: "280px" },
     "& .MuiOutlinedInput-root": {
+      borderRadius: 2,
       "&:hover fieldset": {
-        borderColor: "#2196f3",
-      },
-      "&.Mui-focused fieldset": {
         borderColor: "#1976d2",
       },
     },
-  },
-  card: {
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    borderRadius: "12px",
-    "&:hover": {
-      transform: "translateY(-4px)",
-      boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
+    "& .MuiInputBase-input": {
+      padding: { xs: "8px 10px", sm: "8px 14px" }, // Smaller padding on mobile
     },
   },
-  cardContent: {
-    padding: "24px !important",
+
+  actionButtonsContainer: {
+    display: "flex",
+    gap: 2,
+    flexWrap: { xs: "wrap", md: "nowrap" },
+    justifyContent: { xs: "space-between", sm: "flex-end" },
+    marginLeft: { sm: "auto" },
   },
-  avatar: {
-    width: 56,
-    height: 56,
-    fontWeight: "bold",
-    fontSize: "1.5rem",
-    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-  },
-  statusChip: {
-    marginTop: 1,
-    fontWeight: 600,
-    borderRadius: "8px",
-    padding: "4px 12px",
-    height: "28px",
-  },
-  dialog: {
-    "& .MuiDialog-paper": {
-      width: "560px",
-      padding: "24px",
-      borderRadius: "16px",
+  toggleButtonGroup: {
+    height: 40,
+    backgroundColor: "white",
+    "& .MuiToggleButton-root": {
+      border: "1px solid rgba(0, 0, 0, 0.12)",
     },
   },
   toggleButton: {
     "&.Mui-selected": {
-      backgroundColor: "#1976d2",
-      color: "white",
-      "&:hover": {
-        backgroundColor: "#1565c0",
-      },
+      backgroundColor: alpha("#1976d2", 0.1),
+      color: "#1976d2",
     },
   },
+  // actionButton: {
+  //   height: 40,
+  //   whiteSpace: "nowrap",
+  //   borderColor: "#1976d2",
+  //   color: "#1976d2",
+  //   fontSize: { xs: "0.8rem", sm: "0.875rem" },
+  //   padding: { xs: "6px 12px", sm: "6px 16px" },
+  // },
+  // addButton: {
+  //   height: 40,
+  //   background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
+  //   color: "white",
+  //   "&:hover": {
+  //     background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
+  //   },
+  //   whiteSpace: "nowrap",
+  //   fontSize: { xs: "0.8rem", sm: "0.875rem" },
+  //   padding: { xs: "6px 12px", sm: "6px 16px" },
+  // },
+
+  // Update these button styles in the styles object:
+
   actionButton: {
+    height: 40,
+    whiteSpace: "nowrap", // Prevent text wrapping
+    borderColor: "#1976d2",
+    color: "#1976d2",
+    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+    padding: { xs: "6px 8px", sm: "6px 16px" }, // Adjust padding for different screen sizes
+    minWidth: { xs: "auto", sm: "120px" }, // Ensure minimum width on larger screens
+    "& .MuiButton-startIcon": {
+      marginRight: { xs: 4, sm: 8 }, // Adjust icon spacing
+    },
+    textTransform: "none", // Prevent uppercase transformation
+  },
+
+  addButton: {
+    height: 40,
+    background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
+    color: "white",
+    "&:hover": {
+      background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
+    },
+    whiteSpace: "nowrap", // Prevent text wrapping
+    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+    padding: { xs: "6px 8px", sm: "6px 16px" }, // Adjust padding for different screen sizes
+    minWidth: { xs: "auto", sm: "140px" }, // Ensure minimum width on larger screens
+    "& .MuiButton-startIcon": {
+      marginRight: { xs: 4, sm: 8 }, // Adjust icon spacing
+    },
+    textTransform: "none", // Prevent uppercase transformation
+  },
+
+  sectionTitle: {
+    fontWeight: 600,
+    color: "#1a2027",
+    mb: 2,
+    pl: 1,
+    fontSize: { xs: "1.25rem", sm: "1.5rem" },
+  },
+
+  // Update card and content styles
+  card: {
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    borderRadius: 2,
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+    backgroundColor: "white",
+    "&:hover": {
+      transform: "translateY(-4px)",
+      boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+    },
+  },
+  cardContent: {
+    padding: { xs: "16px", sm: "20px", md: "20px", lg: "24px" },
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+    "&:last-child": {
+      paddingBottom: { xs: "16px", sm: "20px", md: "20px", lg: "24px" },
+    },
+  },
+  // cardHeader: {
+  //   display: "flex",
+  //   flexDirection: "row",
+  //   alignItems: "flex-start",
+  //   gap: { xs: 1.5, sm: 2, md: 2, lg: 2.5 },
+  //   width: "100%",
+  //   mb: { xs: 1.5, sm: 2, md: 2, lg: 2.5 },
+  // },
+  cardHeader: {
+    display: "flex",
+    flexDirection: { xs: "column", sm: "row" }, // Stack vertically on mobile
+    alignItems: { xs: "flex-start", sm: "flex-start" },
+    gap: { xs: 2, sm: 3 },
+    width: "100%",
+    mb: 2,
+    position: "relative", // Add position relative
+  },
+
+  avatar: {
+    bgcolor: "#9e9e9e",
+    color: "white",
+    width: { xs: 50, sm: 56, md: 60 },
+    height: { xs: 50, sm: 56, md: 60 },
+    fontSize: { xs: "1.1rem", sm: "1.2rem", md: "1.3rem" },
+    fontWeight: "bold",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    flexShrink: 0, // Prevent avatar from shrinking
+  },
+  cardBody: {
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+    flexGrow: 1,
+  },
+  // nameContainer: {
+  //   display: "flex",
+  //   justifyContent: "space-between",
+  //   alignItems: "flex-start",
+  //   width: "100%",
+  //   mb: { xs: 1.5, md: 2 },
+  //   position: "relative", // Add position relative for absolute positioning
+  // },
+
+  // nameContainer: {
+  //   display: "flex",
+  //   justifyContent: "space-between",
+  //   alignItems: "flex-start",
+  //   width: "100%",
+  //   mb: { xs: 1.5, md: 2 },
+  //   position: "relative", // Add position relative for absolute positioning
+  //   minHeight: "32px", // Ensure minimum height for the container
+  // },
+  nameContainer: {
+    display: "flex",
+    width: "100%",
+    mb: { xs: 1.5, md: 2 },
+    position: "relative", // Keep position relative
+  },
+  // candidateName: {
+  //   fontWeight: 600,
+  //   color: "#1a2027",
+  //   fontSize: { xs: "0.95rem", sm: "1rem", md: "1.1rem", lg: "1.2rem" },
+  //   lineHeight: 1.3,
+  //   paddingRight: "36px", // Increased padding to make room for the action button
+  //   overflow: "hidden",
+  //   textOverflow: "ellipsis",
+  //   width: "100%", // Take full width
+  //   display: "-webkit-box",
+  //   WebkitLineClamp: 2, // Show max 2 lines
+  //   WebkitBoxOrient: "vertical",
+  //   whiteSpace: "normal", // Allow wrapping to 2 lines
+  // },
+
+  // candidateName: {
+  //   fontWeight: 600,
+  //   color: "#1a2027",
+  //   fontSize: { xs: "0.95rem", sm: "1rem", md: "1.1rem", lg: "1.2rem" },
+  //   lineHeight: 1.3,
+  //   paddingRight: "36px", // Increased padding to make room for the action button
+  //   overflow: "hidden",
+  //   textOverflow: "ellipsis",
+  //   width: "100%", // Take full width
+  //   display: "-webkit-box",
+  //   WebkitLineClamp: 2, // Show max 2 lines
+  //   WebkitBoxOrient: "vertical",
+  //   whiteSpace: "normal", // Allow wrapping to 2 lines
+  // },
+  candidateName: {
+    fontWeight: 600,
+    color: "#1a2027",
+    fontSize: { xs: "0.95rem", sm: "1rem", md: "1.1rem", lg: "1.2rem" },
+    lineHeight: 1.3,
+    paddingRight: "40px", // Increased padding even more
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    width: "100%",
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+    whiteSpace: "normal",
+  },
+  employeeIdContainer: {
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    mt: 0.5,
+  },
+  employeeId: {
+    color: "#1976d2",
+    backgroundColor: "#e3f2fd",
+    padding: "3px 8px",
+    borderRadius: "4px",
+    fontSize: { xs: "0.7rem", md: "0.75rem" },
+    display: "inline-block",
+    marginTop: 0.5,
+  },
+  candidateEmail: {
+    color: "text.secondary",
+    mb: { xs: 1, sm: 1.5, md: 1.5, lg: 2 },
+    fontSize: { xs: "0.85rem", sm: "0.875rem", md: "0.875rem", lg: "0.9rem" },
+    lineHeight: 1.4,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap", // Force single line with ellipsis
+  },
+  candidatePosition: {
+    color: "#64748b",
+    fontWeight: 500,
+    mb: { xs: 1.5, sm: 2, md: 2, lg: 2.5 },
+    fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.8rem", lg: "0.85rem" },
+    lineHeight: 1.4,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap", // Force single line with ellipsis
+  },
+  statusChipContainer: {
+    marginTop: "auto", // Push to bottom
+    paddingTop: 1,
+  },
+  statusChip: {
+    fontWeight: 600,
     borderRadius: "8px",
+    padding: "6px 12px",
+    height: "auto",
+    minHeight: "28px",
+    fontSize: { xs: "0.75rem", md: "0.8rem" },
+    display: "inline-flex",
+  },
+
+  // menuButton: {
+  //   color: "#64748b",
+  //   padding: 0.5,
+  //   position: "absolute", // Position absolutely
+  //   right: -8, // Align to right
+  //   top: -8, // Align to top
+  //   "&:hover": {
+  //     backgroundColor: "rgba(0,0,0,0.04)",
+  //   },
+  //   zIndex: 2, // Ensure it's above other content
+  // },
+  // menuButton: {
+  //   color: "#64748b",
+  //   padding: { xs: 1, sm: 0.5 }, // Larger touch target on mobile
+  //   position: "absolute", // Position absolutely
+  //   right: { xs: -12, sm: -8 }, // More space on mobile
+  //   top: { xs: -12, sm: -8 }, // More space on mobile
+  //   "&:hover": {
+  //     backgroundColor: "rgba(0,0,0,0.04)",
+  //   },
+  //   zIndex: 2, // Ensure it's above other content
+  //   width: { xs: "40px", sm: "32px" }, // Larger clickable area on mobile
+  //   height: { xs: "40px", sm: "32px" }, // Larger clickable area on mobile
+  // },
+  menuButton: {
+    color: "#64748b",
+    padding: 0,
+    position: "absolute", // Keep position absolute
+    right: 0, // Align to right edge of container
+    top: 0, // Align to top of container
+    zIndex: 10, // Higher z-index to ensure visibility
+    minWidth: "36px", // Ensure minimum width
+    minHeight: "36px", // Ensure minimum height
+  },
+  menuButtonIcon: {
+    fontSize: { xs: "1.3rem", sm: "1.1rem" }, // Larger icon on mobile
+    color: "#475569", // Darker color for better visibility
+  },
+
+  dialogTitle: {
+    fontWeight: 600,
+    background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+    color: "white",
+    padding: "20px 24px",
+  },
+  dialogContent: {
+    padding: "24px",
+  },
+  dialogActions: {
+    padding: "16px 24px",
+    borderTop: "1px solid #e0e0e0",
+    gap: 2,
+  },
+  formField: {
+    marginBottom: 2,
+  },
+  cancelButton: {
+    border: "2px solid #1976d2",
+    color: "#1976d2",
+    "&:hover": {
+      border: "2px solid #64b5f6",
+      backgroundColor: "#e3f2fd",
+      color: "#1976d2",
+    },
     textTransform: "none",
-    padding: "8px 16px",
+    borderRadius: "8px",
+    padding: "6px 16px",
     fontWeight: 600,
   },
-  menuItem: {
-    gap: "8px",
-    padding: "12px 24px",
+  submitButton: {
+    background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+    fontSize: "0.95rem",
+    textTransform: "none",
+    padding: "8px 24px",
+    borderRadius: "10px",
+    boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+    color: "white",
     "&:hover": {
-      backgroundColor: "#f5f5f5",
+      background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+    },
+  },
+  deleteButton: {
+    background: "linear-gradient(45deg, #f44336, #ff7961)",
+    fontSize: "0.95rem",
+    textTransform: "none",
+    padding: "8px 24px",
+    borderRadius: "10px",
+    boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+    color: "white",
+    "&:hover": {
+      background: "linear-gradient(45deg, #d32f2f, #f44336)",
+    },
+  },
+  snackbar: {
+    "& .MuiAlert-root": {
+      borderRadius: "8px",
     },
   },
 };
@@ -310,7 +612,7 @@ const RecruitmentCandidate = () => {
 
   const groupedCandidates = groupBy
     ? filteredCandidates.reduce((groups, candidate) => {
-        const position = candidate.position;
+        const position = candidate.position || "Unspecified Position";
         if (!groups[position]) groups[position] = [];
         groups[position].push(candidate);
         return groups;
@@ -323,45 +625,22 @@ const RecruitmentCandidate = () => {
   };
 
   return (
-    <Box
-      sx={{
-        p: { xs: 2, sm: 3, md: 4 },
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-      }}
-    >
-      <Box maxWidth="1800px" margin="0 auto">
-        <Typography
-          variant="h4"
-          sx={{
-            mb: { xs: 2, sm: 3, md: 4 },
-            color: "#1976d2",
-            fontWeight: 600,
-            letterSpacing: 0.5,
-            fontSize: { xs: "1.75rem", sm: "2rem", md: "2.125rem" },
-          }}
-        >
+    <Box sx={styles.container}>
+      <Container disableGutters sx={styles.contentContainer}>
+        <Typography variant="h4" sx={styles.pageTitle}>
           Recruitment Candidates
         </Typography>
 
-        <Paper
-          elevation={0}
-          sx={{
-            padding: { xs: 2, sm: 3 },
-            marginBottom: 3,
-            borderRadius: 2,
-            boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
-          }}
-        >
+        {/* Header with search and actions */}
+        <Paper elevation={0} sx={styles.headerPaper}>
           <Box
             display="flex"
             flexDirection={{ xs: "column", sm: "row" }}
             alignItems={{ xs: "stretch", sm: "center" }}
             gap={2}
-            sx={{
-              width: "100%",
-            }}
+            width="100%"
           >
+            {/* Search field */}
             <TextField
               variant="outlined"
               placeholder="Search candidates..."
@@ -375,63 +654,28 @@ const RecruitmentCandidate = () => {
               }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{
-                width: { xs: "100%", sm: "300px", md: "350px" },
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-              }}
+              sx={styles.searchField}
             />
 
-            <Box
-              sx={{
-                display: "flex",
-                gap: 1.5,
-                ml: { sm: "auto" },
-                flexWrap: { xs: "wrap", md: "nowrap" },
-                justifyContent: { xs: "space-between", sm: "flex-end" },
-              }}
-            >
+            {/* Action buttons for larger screens */}
+            <Box sx={styles.actionButtonsContainer}>
+              {/* View toggle */}
               <ToggleButtonGroup
                 value={view}
                 exclusive
                 onChange={(e, nextView) => nextView && setView(nextView)}
                 size="small"
-                sx={{
-                  height: 40,
-                  backgroundColor: "white",
-                  "& .MuiToggleButton-root": {
-                    border: "1px solid rgba(0, 0, 0, 0.12)",
-                  },
-                }}
+                sx={styles.toggleButtonGroup}
               >
-                <ToggleButton
-                  value="list"
-                  sx={{
-                    "&.Mui-selected": {
-                      backgroundColor: alpha("#1976d2", 0.1),
-                      color: "#1976d2",
-                    },
-                  }}
-                >
+                <ToggleButton value="list" sx={styles.toggleButton}>
                   <List />
                 </ToggleButton>
-                <ToggleButton
-                  value="grid"
-                  sx={{
-                    "&.Mui-selected": {
-                      backgroundColor: alpha("#1976d2", 0.1),
-                      color: "#1976d2",
-                    },
-                  }}
-                >
+                <ToggleButton value="grid" sx={styles.toggleButton}>
                   <GridView />
                 </ToggleButton>
               </ToggleButtonGroup>
 
+              {/* Filter button */}
               <Button
                 variant="outlined"
                 startIcon={<FilterList />}
@@ -444,60 +688,42 @@ const RecruitmentCandidate = () => {
                       : ""
                   )
                 }
-                sx={{
-                  height: 40,
-                  whiteSpace: "nowrap",
-                  borderColor: "#1976d2",
-                  color: "#1976d2",
-                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                  padding: { xs: "6px 8px", sm: "6px 16px" },
-                }}
+                sx={styles.actionButton}
               >
                 {filter || "All Status"}
               </Button>
 
+              {/* Group button - hidden on xs screens */}
               <Button
                 variant="outlined"
                 startIcon={<GroupWork />}
                 onClick={() => setGroupBy(!groupBy)}
                 sx={{
-                  height: 40,
-                  whiteSpace: "nowrap",
-                  borderColor: "#1976d2",
-                  color: "#1976d2",
-                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                  padding: { xs: "6px 8px", sm: "6px 16px" },
+                  ...styles.actionButton,
                   display: { xs: "none", sm: "flex" },
                 }}
               >
                 {groupBy ? "Ungroup" : "Group by Position"}
               </Button>
 
+              {/* Add button - hidden on xs screens */}
               <Button
                 variant="contained"
-                // startIcon={<Add />}
+                startIcon={<Add />}
                 onClick={() => setCreateDialogOpen(true)}
                 sx={{
-                  height: 40,
-                  background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
-                  color: "white",
-                  "&:hover": {
-                    background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
-                  },
+                  ...styles.addButton,
                   display: { xs: "none", sm: "flex" },
-                  whiteSpace: "nowrap",
                 }}
               >
                 Add Candidate
               </Button>
             </Box>
-
-            {/* Add a second row of buttons for mobile */}
             <Box
               sx={{
                 display: { xs: "flex", sm: "none" },
                 width: "100%",
-                gap: 1,
+                gap: 1, // Reduce gap between buttons
                 mt: 1,
               }}
             >
@@ -506,11 +732,18 @@ const RecruitmentCandidate = () => {
                 startIcon={<GroupWork />}
                 onClick={() => setGroupBy(!groupBy)}
                 sx={{
-                  height: 40,
-                  whiteSpace: "nowrap",
-                  borderColor: "#1976d2",
-                  color: "#1976d2",
+                  ...styles.actionButton,
                   flex: 1,
+                  minWidth: "unset",
+                  justifyContent: "center",
+                  padding: "6px 4px", // Reduce padding
+                  fontSize: "0.7rem", // Smaller font size
+                  "& .MuiButton-startIcon": {
+                    marginRight: 4, // Reduce icon spacing
+                    "& svg": {
+                      fontSize: "1rem", // Smaller icon
+                    },
+                  },
                 }}
               >
                 {groupBy ? "Ungroup" : "Group"}
@@ -518,193 +751,143 @@ const RecruitmentCandidate = () => {
 
               <Button
                 variant="contained"
-                // startIcon={<Add />}
+                startIcon={<Add />}
                 onClick={() => setCreateDialogOpen(true)}
                 sx={{
-                  height: 50,
-                  background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
-                  color: "white",
-                  "&:hover": {
-                    background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
-                  },
+                  ...styles.addButton,
                   flex: 1,
+                  minWidth: "unset",
+                  justifyContent: "center",
+                  padding: "6px 4px", // Reduce padding
+                  fontSize: "0.7rem", // Smaller font size
+                  "& .MuiButton-startIcon": {
+                    marginRight: 4, // Reduce icon spacing
+                    "& svg": {
+                      fontSize: "1rem", // Smaller icon
+                    },
+                  },
                 }}
               >
-                Add Candidate
+                Add
               </Button>
             </Box>
           </Box>
         </Paper>
 
+        {/* Candidates grid/list */}
         {Object.entries(groupedCandidates).map(([position, candidates]) => (
           <Fade in={true} timeout={500} key={position}>
             <Box mb={4}>
+              {/* Position heading (only when grouped) */}
               {groupBy && (
-                <Typography
-                  variant="h5"
-                  fontWeight="600"
-                  color="#1a2027"
-                  sx={{
-                    mb: 3,
-                    pl: 1,
-                    fontSize: { xs: "1.25rem", sm: "1.5rem" },
-                  }}
-                >
-                  {position || "Unspecified Position"}
+                <Typography variant="h5" sx={styles.sectionTitle}>
+                  {position}
                 </Typography>
               )}
 
-              <Grid container spacing={{ xs: 2, sm: 3 }}>
+              {/* Candidates grid */}
+              <Grid container spacing={{ xs: 2, sm: 2, md: 2.5, lg: 3 }}>
                 {candidates.map((candidate) => (
                   <Grid
                     item
                     xs={12}
                     sm={view === "grid" ? 6 : 12}
-                    md={view === "grid" ? 4 : 12}
+                    md={view === "grid" ? 6 : 12} // Change from 4 to 6 columns at md breakpoint
+                    lg={view === "grid" ? 4 : 12} // Use 4 columns only at lg and above
+                    xl={view === "grid" ? 3 : 12}
                     key={candidate._id}
                   >
                     <Card
                       sx={{
                         ...styles.card,
-                        borderLeft: `4px solid ${candidate.color}`,
-                        backgroundColor: "white",
+                        borderLeft: `4px solid ${candidate.color || "#9e9e9e"}`,
                       }}
                     >
-                      <CardContent
-                        sx={{
-                          ...styles.cardContent,
-                          padding: { xs: "16px", sm: "24px" },
-                        }}
-                      >
-                        <Box
-                          display="flex"
-                          alignItems={{ xs: "flex-start", sm: "center" }}
-                          flexDirection={{ xs: "column", sm: "row" }}
-                          gap={2}
-                        >
-                          <Avatar
-                            sx={{
-                              ...styles.avatar,
-                              bgcolor: "#9e9e9e",
-                              color: "white",
-                              width: { xs: 40, sm: 56 },
-                              height: { xs: 40, sm: 56 },
-                              fontSize: { xs: "1rem", sm: "1.2rem" },
-                            }}
-                          >
-                            {(candidate?.name?.[0] || "U").toUpperCase()}
-                          </Avatar>
-                          <Box flexGrow={1} width={{ xs: "100%", sm: "auto" }}>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: { xs: "flex-start", sm: "center" },
-                                flexDirection: { xs: "column", sm: "row" },
-                                mb: 1,
-                              }}
-                            >
-                              <Typography
-                                variant="h6"
-                                fontWeight="600"
-                                color="#1a2027"
-                                sx={{
-                                  fontSize: { xs: "1rem", sm: "1.125rem" },
-                                  mb: { xs: 0.5, sm: 0 },
-                                }}
-                              >
-                                {candidate.name}
-                                {candidate.employeeId && (
-                                  <Typography
-                                    component="span"
-                                    variant="caption"
-                                    sx={{
-                                      ml: 1,
-                                      color: "#1976d2",
-                                      backgroundColor: "#e3f2fd",
-                                      padding: "2px 6px",
-                                      borderRadius: "4px",
-                                      fontSize: "0.7rem",
-                                    }}
-                                  >
-                                    {candidate.employeeId}
-                                  </Typography>
-                                )}
-                              </Typography>
-
-                              <Box
-                                sx={{
-                                  display: { xs: "flex", sm: "none" },
-                                  gap: 1,
-                                  alignSelf: "flex-end",
-                                  mt: { xs: 1, sm: 0 },
-                                }}
-                              >
-                                <IconButton
-                                  size="small"
-                                  onClick={(e) => {
-                                    setAnchorEl(e.currentTarget);
-                                    setSelectedCandidate(candidate);
-                                  }}
-                                  sx={{
-                                    color: "#64748b",
-                                    "&:hover": {
-                                      backgroundColor: "#f1f5f9",
-                                    },
-                                  }}
-                                >
-                                  <MoreVert />
-                                </IconButton>
-                              </Box>
-                            </Box>
-
-                            <Typography
-                              color="text.secondary"
-                              sx={{
-                                mb: 1,
-                                fontSize: { xs: "0.875rem", sm: "1rem" },
-                              }}
-                            >
-                              {candidate.email}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: "#64748b",
-                                fontWeight: 500,
-                                mb: 1,
-                                fontSize: { xs: "0.8rem", sm: "0.875rem" },
-                              }}
-                            >
-                              {candidate.position}
-                            </Typography>
-                            <Chip
-                              label={candidate.status}
-                              sx={{
-                                bgcolor: candidate.color,
-                                color: "white",
-                                ...styles.statusChip,
-                                fontSize: { xs: "0.7rem", sm: "0.75rem" },
-                                height: { xs: "24px", sm: "28px" },
-                              }}
-                            />
-                          </Box>
+                      <CardContent sx={styles.cardContent}>
+                        {/* Card header with absolute positioned menu button */}
+                        <Box sx={styles.cardHeader}>
+                          {/* Menu button - positioned absolutely in the top-right corner */}
                           <IconButton
+                            size="small"
                             onClick={(e) => {
                               setAnchorEl(e.currentTarget);
                               setSelectedCandidate(candidate);
                             }}
-                            sx={{
-                              color: "#64748b",
-                              "&:hover": {
-                                backgroundColor: "#f1f5f9",
-                              },
-                              display: { xs: "none", sm: "flex" },
-                              ml: "auto",
-                            }}
+                            sx={styles.menuButton}
+                            aria-label="More options"
                           >
-                            <MoreVert />
+                            <MoreVert sx={styles.menuButtonIcon} />
                           </IconButton>
+
+                          {/* Avatar */}
+                          <Avatar sx={styles.avatar}>
+                            {(candidate?.name?.[0] || "U").toUpperCase()}
+                          </Avatar>
+
+                          {/* Card content */}
+                          <Box sx={styles.cardBody}>
+                            {/* Name */}
+                            <Box sx={styles.nameContainer}>
+                              <Tooltip
+                                title={candidate.name || "Unnamed Candidate"}
+                                placement="top"
+                              >
+                                <Typography
+                                  variant="h6"
+                                  sx={styles.candidateName}
+                                >
+                                  {candidate.name || "Unnamed Candidate"}
+                                </Typography>
+                              </Tooltip>
+                            </Box>
+
+                            {/* Employee ID if available */}
+                            {candidate.employeeId && (
+                              <Box sx={{ mb: 1.5 }}>
+                                <Typography
+                                  component="span"
+                                  variant="caption"
+                                  sx={styles.employeeId}
+                                >
+                                  {candidate.employeeId}
+                                </Typography>
+                              </Box>
+                            )}
+
+                            {/* Email */}
+                            <Tooltip
+                              title={candidate.email || "No email provided"}
+                              placement="top"
+                            >
+                              <Typography sx={styles.candidateEmail}>
+                                {candidate.email || "No email provided"}
+                              </Typography>
+                            </Tooltip>
+
+                            {/* Position */}
+                            <Tooltip
+                              title={
+                                candidate.position || "No position specified"
+                              }
+                              placement="top"
+                            >
+                              <Typography sx={styles.candidatePosition}>
+                                {candidate.position || "No position specified"}
+                              </Typography>
+                            </Tooltip>
+
+                            {/* Status chip */}
+                            <Box sx={styles.statusChipContainer}>
+                              <Chip
+                                label={candidate.status || "Unknown"}
+                                sx={{
+                                  ...styles.statusChip,
+                                  bgcolor: candidate.color || "#9e9e9e",
+                                  color: "white",
+                                }}
+                              />
+                            </Box>
+                          </Box>
                         </Box>
                       </CardContent>
                     </Card>
@@ -721,13 +904,7 @@ const RecruitmentCandidate = () => {
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
           TransitionComponent={Fade}
-          PaperProps={{
-            sx: {
-              borderRadius: "12px",
-              boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-              padding: "8px 0",
-            },
-          }}
+          PaperProps={{ sx: styles.menuPaper }}
         >
           <MenuItem
             onClick={() => {
@@ -742,67 +919,30 @@ const RecruitmentCandidate = () => {
         </Menu>
 
         {/* Delete confirmation dialog */}
-
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
-          sx={{
-            "& .MuiDialog-paper": {
-              width: { xs: "95%", sm: "600px" },
-              maxWidth: "600px",
-              borderRadius: "20px",
-              overflow: "hidden",
-              margin: { xs: "16px", sm: "32px" },
-            },
-          }}
+          sx={styles.dialog}
         >
           <DialogTitle
             sx={{
+              ...styles.dialogTitle,
               background: "linear-gradient(45deg, #f44336, #ff7961)",
-              color: "white",
-              fontSize: { xs: "1.25rem", sm: "1.5rem" },
-              fontWeight: 600,
-              padding: { xs: "16px 24px", sm: "24px 32px" },
             }}
           >
             Delete Candidate
           </DialogTitle>
-          <DialogContent
-            sx={{
-              padding: { xs: "24px", sm: "32px" },
-              backgroundColor: "#f8fafc",
-              paddingTop: { xs: "24px", sm: "32px" },
-            }}
-          >
+          <DialogContent sx={styles.dialogContent}>
             <Typography>
               Are you sure you want to delete{" "}
               <strong>{selectedCandidate?.name}</strong>? This action cannot be
               undone.
             </Typography>
           </DialogContent>
-          <DialogActions
-            sx={{
-              padding: { xs: "16px 24px", sm: "24px 32px" },
-              backgroundColor: "#f8fafc",
-              borderTop: "1px solid #e0e0e0",
-              gap: 2,
-            }}
-          >
+          <DialogActions sx={styles.dialogActions}>
             <Button
               onClick={() => setDeleteDialogOpen(false)}
-              sx={{
-                border: "2px solid #1976d2",
-                color: "#1976d2",
-                "&:hover": {
-                  border: "2px solid #64b5f6",
-                  backgroundColor: "#e3f2fd",
-                  color: "#1976d2",
-                },
-                textTransform: "none",
-                borderRadius: "8px",
-                px: 3,
-                fontWeight: 600,
-              }}
+              sx={styles.cancelButton}
             >
               Cancel
             </Button>
@@ -810,18 +950,7 @@ const RecruitmentCandidate = () => {
               onClick={() => handleDeleteCandidate(selectedCandidate?._id)}
               variant="contained"
               color="error"
-              sx={{
-                background: "linear-gradient(45deg, #f44336, #ff7961)",
-                fontSize: "0.95rem",
-                textTransform: "none",
-                padding: "8px 32px",
-                borderRadius: "10px",
-                boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
-                color: "white",
-                "&:hover": {
-                  background: "linear-gradient(45deg, #d32f2f, #f44336)",
-                },
-              }}
+              sx={styles.deleteButton}
             >
               Delete
             </Button>
@@ -829,38 +958,18 @@ const RecruitmentCandidate = () => {
         </Dialog>
 
         {/* Create candidate dialog */}
-
         <Dialog
           open={createDialogOpen}
           onClose={() => {
             setCreateDialogOpen(false);
             resetNewCandidate();
           }}
-          sx={{
-            "& .MuiDialog-paper": {
-              width: { xs: "95%", sm: "600px" },
-              maxWidth: "600px",
-              borderRadius: "20px",
-              overflow: "hidden",
-              margin: { xs: "16px", sm: "32px" },
-            },
-          }}
+          sx={styles.dialog}
         >
-          <DialogTitle
-            sx={{
-              fontWeight: 600,
-              pb: 1,
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              color: "white",
-              borderRadius: "12px 12px 0 0",
-              padding: "16px 24px",
-            }}
-          >
-            Add New Candidate
-          </DialogTitle>
-          <DialogContent>
+          <DialogTitle sx={styles.dialogTitle}>Add New Candidate</DialogTitle>
+          <DialogContent sx={styles.dialogContent}>
             <Box
-              sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}
+              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
             >
               <TextField
                 label="Name"
@@ -869,6 +978,7 @@ const RecruitmentCandidate = () => {
                 onChange={(e) =>
                   setNewCandidate({ ...newCandidate, name: e.target.value })
                 }
+                sx={styles.formField}
               />
               <TextField
                 label="Email"
@@ -877,6 +987,7 @@ const RecruitmentCandidate = () => {
                 onChange={(e) =>
                   setNewCandidate({ ...newCandidate, email: e.target.value })
                 }
+                sx={styles.formField}
               />
               <TextField
                 label="Position"
@@ -885,8 +996,9 @@ const RecruitmentCandidate = () => {
                 onChange={(e) =>
                   setNewCandidate({ ...newCandidate, position: e.target.value })
                 }
+                sx={styles.formField}
               />
-              <FormControl fullWidth>
+              <FormControl fullWidth sx={styles.formField}>
                 <InputLabel>Status</InputLabel>
                 <Select
                   value={newCandidate.status}
@@ -947,43 +1059,20 @@ const RecruitmentCandidate = () => {
               />
             </Box>
           </DialogContent>
-          <DialogActions sx={{ padding: "16px 24px" }}>
+          <DialogActions sx={styles.dialogActions}>
             <Button
               onClick={() => {
                 setCreateDialogOpen(false);
                 resetNewCandidate();
               }}
-              sx={{
-                border: "2px solid #1976d2",
-                color: "#1976d2",
-                "&:hover": {
-                  border: "2px solid #64b5f6",
-                  backgroundColor: "#e3f2fd",
-                  color: "#1976d2",
-                },
-                textTransform: "none",
-                borderRadius: "8px",
-                px: 3,
-                fontWeight: 600,
-              }}
+              sx={styles.cancelButton}
             >
               Cancel
             </Button>
             <Button
               onClick={handleCreateSubmit}
               variant="contained"
-              sx={{
-                background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-                fontSize: "0.95rem",
-                textTransform: "none",
-                padding: "8px 32px",
-                borderRadius: "10px",
-                boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-                color: "white",
-                "&:hover": {
-                  background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-                },
-              }}
+              sx={styles.submitButton}
               disabled={!newCandidate.name || !newCandidate.email}
             >
               Create
@@ -997,6 +1086,7 @@ const RecruitmentCandidate = () => {
           autoHideDuration={6000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          sx={styles.snackbar}
         >
           <Alert
             onClose={() => setSnackbar({ ...snackbar, open: false })}
@@ -1006,7 +1096,7 @@ const RecruitmentCandidate = () => {
             {snackbar.message}
           </Alert>
         </Snackbar>
-      </Box>
+      </Container>
     </Box>
   );
 };
