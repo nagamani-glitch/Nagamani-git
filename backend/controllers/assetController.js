@@ -1,74 +1,45 @@
-// import Asset from '../models/Asset.js';
+import Asset from '../models/Asset.js';
+import AssetBatch from '../models/AssetBatch.js';
 
-// export const AssetController = {
-//   // Get all assets
-//   getAssets: async (req, res) => {
-//     try {
-//       const assets = await Asset.find();
-//       res.json(assets);
-//     } catch (error) {
-//       res.status(500).json({ error: 'Error fetching assets' });
-//     }
-//   },
-
-//   // Create a new asset
-//   createAsset: async (req, res) => {
-//     try {
-//       const newAsset = new Asset(req.body);
-//       const savedAsset = await newAsset.save();
-//       res.status(201).json(savedAsset);
-//     } catch (error) {
-//       res.status(400).json({ error: 'Error creating asset' });
-//     }
-//   },
-
-//   // Update an existing asset
-//   updateAsset: async (req, res) => {
-//     try {
-//       const updatedAsset = await Asset.findByIdAndUpdate(
-//         req.params.id,
-//         req.body,
-//         { new: true }
-//       );
-//       res.json(updatedAsset);
-//     } catch (error) {
-//       res.status(400).json({ error: 'Error updating asset' });
-//     }
-//   },
-
-//   // Delete an asset
-//   deleteAsset: async (req, res) => {
-//     try {
-//       await Asset.findByIdAndDelete(req.params.id);
-//       res.json({ message: 'Asset deleted successfully' });
-//     } catch (error) {
-//       res.status(500).json({ error: 'Error deleting asset' });
-//     }
-//   },
-
-//   // Search for assets by name or category
-//   searchAssets: async (req, res) => {
-//     try {
-//       const { q } = req.query;
-//       const assets = await Asset.find({
-//         $or: [
-//           { name: { $regex: q, $options: 'i' } },
-//           { category: { $regex: q, $options: 'i' } }
-//         ]
-//       });
-//       res.json(assets);
-//     } catch (error) {
-//       res.status(500).json({ error: 'Error searching assets' });
-//     }
-//   },
-
-//   // Get asset history
-//   getAssetHistory: async (req, res) => {
-//     try {
-//       const assets = await Asset.find().select('name category status history');
-//       res.json(assets);
-//     } catch (error) {
-//       res.status(500).json({ error: 'Error fetching asset history' });
-//     }
-//   }
-// };
+// Add this function to create assets from a batch
+// Make sure createAssetsFromBatch is properly implemented
+export const createAssetsFromBatch = async (req, res) => {
+  try {
+    const { batchId, assetNames, category } = req.body;
+    
+    // Validate batch exists
+    const batch = await AssetBatch.findById(batchId);
+    if (!batch) {
+      return res.status(404).json({ message: 'Asset batch not found' });
+    }
+    
+    console.log(`Creating ${assetNames.length} assets from batch ${batch.batchNumber}`);
+    
+    // Create assets
+    const assets = [];
+    for (const name of assetNames) {
+      const asset = new Asset({
+        name,
+        category: category || 'Hardware',
+        status: 'Available',
+        batchId
+      });
+      await asset.save();
+      assets.push(asset);
+    }
+    
+    console.log(`Successfully created ${assets.length} assets`);
+    
+    res.status(201).json({
+      success: true,
+      data: assets,
+      message: `${assets.length} assets created successfully from batch ${batch.batchNumber}`
+    });
+  } catch (error) {
+    console.error('Error in createAssetsFromBatch:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

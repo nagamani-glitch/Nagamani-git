@@ -21,6 +21,19 @@ const AssetSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
+  batchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'AssetBatch',
+    default: null,
+  },
+  allottedDate: {
+    type: Date,
+    default: null,
+  },
+  returnDate: {
+    type: Date,
+    default: null,
+  }
 }, { timestamps: true });
 
 export default mongoose.model('Asset', AssetSchema);

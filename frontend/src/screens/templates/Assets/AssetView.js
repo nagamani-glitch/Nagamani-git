@@ -24,9 +24,8 @@ import {
   MenuItem,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import { Search, Add, Edit, Delete, Close } from "@mui/icons-material";
+import { Search, Add, Edit, Delete, Close, Visibility } from "@mui/icons-material";
 import AddAsset from "./AddAsset";
-
 
 
 const AssetView = () => {
@@ -36,26 +35,82 @@ const AssetView = () => {
   const [editAsset, setEditAsset] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-    const [assetData, setAssetData] = useState({
+  const [assetData, setAssetData] = useState({
     name: "",
     category: "",
     status: "",
     currentEmployee: "",
     previousEmployees: [],
+    batchId: ""
   });
- 
+
+
+
+  const [batches, setBatches] = useState([]);
+
   useEffect(() => {
     fetchAssets();
+    fetchBatches();
+
+    const handleAssetsUpdated = (event) => {
+      console.log('Assets updated event received, refreshing assets list');
+      fetchAssets();
+    };
+
+    const handleBatchesUpdated = (event) => {
+      console.log('Batches updated event received, refreshing batches list');
+      fetchBatches();
+    };
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'assetsUpdated') {
+        console.log('Assets updated via storage event, refreshing assets list');
+        fetchAssets();
+      }
+      if (e.key === 'batchesUpdated') {
+        console.log('Batches updated via storage event, refreshing batches list');
+        fetchBatches();
+      }
+    };
+
+    window.addEventListener('assetsUpdated', handleAssetsUpdated);
+    window.addEventListener('batchesUpdated', handleBatchesUpdated);
+    window.addEventListener('storage', handleStorageChange);
+
+    const lastAssetUpdate = localStorage.getItem('assetsUpdated');
+    const lastBatchUpdate = localStorage.getItem('batchesUpdated');
+
+    if (lastAssetUpdate) {
+      const currentTimestamp = Date.now();
+      const lastUpdateTimestamp = parseInt(lastAssetUpdate, 10);
+      if (currentTimestamp - lastUpdateTimestamp < 5000) {
+        fetchAssets();
+      }
+    }
+
+    if (lastBatchUpdate) {
+      const currentTimestamp = Date.now();
+      const lastUpdateTimestamp = parseInt(lastBatchUpdate, 10);
+      if (currentTimestamp - lastUpdateTimestamp < 5000) {
+        fetchBatches();
+      }
+    }
+
+    return () => {
+      window.removeEventListener('assetsUpdated', handleAssetsUpdated);
+      window.removeEventListener('batchesUpdated', handleBatchesUpdated);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
- 
+
   const API_URL = process.env.REACT_APP_API_URL;
- 
+
   const fetchAssets = () => {
     setLoading(true);
     axios
       .get(`${API_URL}/api/assets`)
       .then((response) => {
+        console.log('Assets fetched:', response.data);
         setAssets(response.data);
         setLoading(false);
       })
@@ -65,21 +120,51 @@ const AssetView = () => {
         setLoading(false);
       });
   };
- 
+
+  const fetchBatches = () => {
+    axios
+      .get(`${API_URL}/api/asset-batches`)
+      .then((response) => {
+        console.log('Batches fetched:', response.data);
+        setBatches(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching batches:', error);
+      });
+  };
+
   const handleAddAssetClick = () => {
     setEditAsset(null);
+    // Reset the assetData state when adding a new asset
+    setAssetData({
+      name: "",
+      category: "",
+      status: "Available", // Set a default status
+      currentEmployee: "",
+      previousEmployees: [],
+      batchId: ""
+    });
     setModalOpen(true);
   };
- 
+
   const handleEditClick = (asset) => {
     setEditAsset(asset);
+    // Populate the form with the asset's data
+    setAssetData({
+      name: asset.name || "",
+      category: asset.category || "",
+      status: asset.status || "",
+      currentEmployee: asset.currentEmployee || "",
+      previousEmployees: asset.previousEmployees || [],
+      batchId: asset.batchId || ""
+    });
     setModalOpen(true);
   };
   const handleCloseModal = () => {
     setModalOpen(false);
     setSearchTerm('');
   };
- 
+
   const filteredAssets = assets.filter((asset) => {
     const searchTermLower = searchTerm.toLowerCase();
     return (
@@ -89,7 +174,7 @@ const AssetView = () => {
       (asset.currentEmployee && asset.currentEmployee.toLowerCase().includes(searchTermLower))
     );
   });
- 
+
   const handleDelete = (assetId) => {
     if (window.confirm('Are you sure you want to delete this asset?')) {
       setLoading(true);
@@ -97,6 +182,12 @@ const AssetView = () => {
         .delete(`${API_URL}/api/assets/${assetId}`)
         .then(() => {
           fetchAssets();
+          
+          const timestamp = Date.now().toString();
+          localStorage.setItem('assetsUpdated', timestamp);
+          
+          const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
+          window.dispatchEvent(event);
         })
         .catch((error) => {
           console.error('Error deleting asset:', error);
@@ -105,7 +196,7 @@ const AssetView = () => {
         });
     }
   };
- 
+
   const toSentenceCase = (str) => {
     if (!str) return '';
     return str
@@ -114,9 +205,6 @@ const AssetView = () => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
- 
- 
-
 
   const onClose = () => {
     setModalOpen(false);
@@ -126,6 +214,7 @@ const AssetView = () => {
       status: "",
       currentEmployee: "",
       previousEmployees: [],
+      batchId: ""
     });
   };
 
@@ -135,6 +224,10 @@ const AssetView = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleViewDetails = (asset) => {
+    console.log("View details for asset:", asset);
   };
 
   const handlePreviousEmployeesChange = (e) => {
@@ -147,20 +240,35 @@ const AssetView = () => {
 
   const handleSubmit = async () => {
     try {
+      // Validate required fields
+      if (!assetData.name || !assetData.category || !assetData.status) {
+        alert("Please fill in all required fields");
+        return;
+      }
+    
+      setLoading(true);
+    
       if (editAsset) {
         await axios.put(`${API_URL}/api/assets/${editAsset._id}`, assetData);
       } else {
         await axios.post(`${API_URL}/api/assets`, assetData);
       }
+    
       fetchAssets();
-      onClose();
+      setModalOpen(false);
+      setLoading(false);
+    
+      const timestamp = Date.now().toString();
+      localStorage.setItem('assetsUpdated', timestamp);
+    
+      const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
+      window.dispatchEvent(event);
     } catch (error) {
       console.error("Error saving asset:", error);
+      setLoading(false);
+      setError("Failed to save asset: " + error.message);
     }
   };
-
-
-
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Paper
@@ -185,7 +293,6 @@ const AssetView = () => {
               variant="h4"
               sx={{
                 fontWeight: 600,
-                // background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
                 background: "#1976d2",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
@@ -303,6 +410,11 @@ const AssetView = () => {
                         Previous Employees
                       </TableCell>
                       <TableCell
+                        sx={{ fontWeight: 600, color: "#475569", py: 2 }}
+                      >
+                        Batch
+                      </TableCell>
+                      <TableCell
                         align="center"
                         sx={{ fontWeight: 600, color: "#475569", py: 2 }}
                       >
@@ -325,19 +437,6 @@ const AssetView = () => {
                         <TableCell sx={{ color: "#64748b" }}>
                           {toSentenceCase(asset.status)}
                         </TableCell>
-                        {/* <TableCell>
-                        <Chip 
-                            label={asset.status}
-                            variant="outlined"
-                            size="small"
-                            sx={{ 
-                                fontWeight: 500,
-                               // borderColor: '#e2e8f0',
-                                color: '#64748b',
-                                backgroundColor: '#f8fafc'
-                            }}
-                        />
-                    </TableCell> */}
                         <TableCell sx={{ color: "#2563eb" }}>
                           {toSentenceCase(asset.currentEmployee) || "None"}
                         </TableCell>
@@ -345,6 +444,9 @@ const AssetView = () => {
                           {asset.previousEmployees
                             .map((emp) => toSentenceCase(emp))
                             .join(", ") || "None"}
+                        </TableCell>
+                        <TableCell sx={{ color: "#64748b" }}>
+                          {asset.batchId ? batches.find(b => b._id === asset.batchId)?.batchNumber || "Unknown" : "None"}
                         </TableCell>
                         <TableCell>
                           <Stack
@@ -386,8 +488,7 @@ const AssetView = () => {
                     ))}
                   </TableBody>
                 </Table>
-              </Box>
-            </motion.div>
+              </Box>            </motion.div>
           </Box>
         </Paper>
 
@@ -447,7 +548,7 @@ const AssetView = () => {
                 }}
               />
 
-              <FormControl fullWidth>
+              <FormControl fullWidth sx={{ mt: 2 }}>
                 <InputLabel>Category</InputLabel>
                 <Select
                   name="category"
@@ -455,10 +556,29 @@ const AssetView = () => {
                   onChange={handleChange}
                   label="Category"
                   sx={{ borderRadius: "8px" }}
+                  required
                 >
                   <MenuItem value="Hardware">Hardware</MenuItem>
                   <MenuItem value="Software">Software</MenuItem>
                   <MenuItem value="Furniture">Furniture</MenuItem>
+                  <MenuItem value="Office Equipment">Office Equipment</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Batch</InputLabel>
+                <Select
+                  name="batchId"
+                  value={assetData.batchId || ""}
+                  onChange={handleChange}
+                  label="Batch"
+                  sx={{ borderRadius: "8px" }}
+                >
+                  <MenuItem value="">No Batch</MenuItem>
+                  {batches.map(batch => (
+                    <MenuItem key={batch._id} value={batch._id}>
+                      {batch.batchNumber}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
 
@@ -558,3 +678,4 @@ const AssetView = () => {
 };
 
 export default AssetView;
+ 
