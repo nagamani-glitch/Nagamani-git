@@ -262,3 +262,18 @@ body {
   }
 }
 
+/* Add this to remove the blue outline on logo click */
+.brand:focus,
+.brand:active,
+.brand img:focus,
+.brand img:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* For better accessibility, we can add a custom focus style that's less intrusive */
+.brand:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.3) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px !important;
+}
