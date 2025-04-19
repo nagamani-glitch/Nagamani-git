@@ -93,6 +93,16 @@ const PayrollSystem = () => {
   });
 
   // Add these state variables near your other state declarations
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+
+  // Add these state variables near your other state declarations
+  const [deleteAllowanceDialogOpen, setDeleteAllowanceDialogOpen] =
+    useState(false);
+  const [employeeToDeleteAllowances, setEmployeeToDeleteAllowances] =
+    useState(null);
+
+  // Add these state variables near your other state declarations
   const [selectedAllowances, setSelectedAllowances] = useState([]);
   const [bulkEmployeeId, setBulkEmployeeId] = useState("");
   const [allowancePercentages, setAllowancePercentages] = useState({});
@@ -304,6 +314,43 @@ const PayrollSystem = () => {
       showAlert(
         error.response?.data?.message ||
           "Error saving allowances and deductions",
+        "error"
+      );
+    }
+  };
+
+  const confirmDeleteAllowancesAndDeductions = async () => {
+    try {
+      if (!employeeToDeleteAllowances) return;
+
+      // First delete all allowances for this employee
+      const employeeAllowances = allowanceData.filter(
+        (a) => a.empId === employeeToDeleteAllowances.empId
+      );
+
+      for (const allowance of employeeAllowances) {
+        const id = `${allowance.empId}_${allowance.name}`;
+        await axios.delete(`${API_URL}/allowances/${id}`);
+      }
+
+      // Then delete all deductions for this employee
+      const employeeDeductions = deductions.filter(
+        (d) => d.empId === employeeToDeleteAllowances.empId
+      );
+
+      for (const deduction of employeeDeductions) {
+        const id = `${deduction.empId}_${deduction.name}`;
+        await axios.delete(`${API_URL}/deductions/${id}`);
+      }
+
+      showAlert("Allowances and deductions deleted successfully");
+      await Promise.all([fetchAllowances(), fetchDeductions()]);
+      setDeleteAllowanceDialogOpen(false);
+      setEmployeeToDeleteAllowances(null);
+    } catch (error) {
+      showAlert(
+        error.response?.data?.message ||
+          "Error deleting allowances and deductions",
         "error"
       );
     }
@@ -653,6 +700,27 @@ const PayrollSystem = () => {
     }
   };
 
+  const confirmDeleteEmployee = async () => {
+    try {
+      if (!employeeToDelete) return;
+
+      await axios.delete(`${API_URL}/employees/${employeeToDelete.empId}`);
+      showAlert("Employee deleted successfully");
+      await Promise.all([
+        fetchEmployees(),
+        fetchAllowances(),
+        fetchDeductions(),
+      ]);
+      setDeleteDialogOpen(false);
+      setEmployeeToDelete(null);
+    } catch (error) {
+      showAlert(
+        error.response?.data?.message || "Error deleting employee",
+        "error"
+      );
+    }
+  };
+
   const handleDeleteEmployee = async (empId) => {
     try {
       await axios.delete(`${API_URL}/employees/${empId}`);
@@ -938,282 +1006,281 @@ const PayrollSystem = () => {
         </Alert>
       </Snackbar>
 
-        <Paper className="main-paper" elevation={0}>
-  <AppBar position="static" className="payroll-appbar" elevation={0}>
-    <Tabs
-      value={tabIndex}
-      onChange={(e, newIndex) => setTabIndex(newIndex)}
-      variant="fullWidth"
-      className="payroll-tabs"
-      TabIndicatorProps={{
-        style: {
-          backgroundColor: "white",
-          height: "3px",
-        },
-      }}
-      centered
-    >
-      <Tab
-        label={<span className="tab-label">Employees</span>}
-        icon={<AddCircleIcon className="tab-icon" />}
-        className="tab-item"
-        aria-label="Employees Tab"
-      />
+      <Paper className="main-paper" elevation={0}>
+        <AppBar position="static" className="payroll-appbar" elevation={0}>
+          <Tabs
+            value={tabIndex}
+            onChange={(e, newIndex) => setTabIndex(newIndex)}
+            variant="fullWidth"
+            className="payroll-tabs"
+            TabIndicatorProps={{
+              style: {
+                backgroundColor: "white",
+                height: "3px",
+              },
+            }}
+            centered
+          >
+            <Tab
+              label={<span className="tab-label">Employees</span>}
+              icon={<AddCircleIcon className="tab-icon" />}
+              className="tab-item"
+              aria-label="Employees Tab"
+            />
 
-      <Tab
-  label={
-    <span className="tab-label">
-      <span className="full-label">Allowances-Deductions</span>
-      <span className="short-label">Allowances</span>
-    </span>
-  }
-  icon={<AttachMoneyIcon className="tab-icon" />}
-  className="tab-item"
-  aria-label="Allowances and Deductions Tab"
-/>
-      <Tab
-        label={<span className="tab-label">Payslips</span>}
-        icon={<DescriptionIcon className="tab-icon" />}
-        className="tab-item"
-        aria-label="Payslips Tab"
-      />
-    </Tabs>
-  </AppBar>
+            <Tab
+              label={
+                <span className="tab-label">
+                  <span className="full-label">Allowances-Deductions</span>
+                  <span className="short-label">Allowances</span>
+                </span>
+              }
+              icon={<AttachMoneyIcon className="tab-icon" />}
+              className="tab-item"
+              aria-label="Allowances and Deductions Tab"
+            />
+            <Tab
+              label={<span className="tab-label">Payslips</span>}
+              icon={<DescriptionIcon className="tab-icon" />}
+              className="tab-item"
+              aria-label="Payslips Tab"
+            />
+          </Tabs>
+        </AppBar>
 
         {/* Employees Tab */}
-<TabPanel value={tabIndex} index={0}>
-  <Box className="header-container">
-    <Typography variant="h5" className="section-title">
-      Employee Management
-      <span className="title-badge">{employeeData.length} Total</span>
-    </Typography>
-    <Box className="header-actions">
-      <input
-        type="file"
-        accept=".xlsx,.xls"
-        style={{ display: "none" }}
-        id="excel-upload"
-        onChange={importFromExcel}
-      />
-      <label htmlFor="excel-upload">
-        <Button
-          variant="contained"
-          component="span"
-          startIcon={<CloudUploadIcon />}
-          className="import-button"
-        >
-          <span className="button-text">Import Excel</span>
-        </Button>
-      </label>
-      <Button
-        variant="contained"
-        onClick={exportToExcel}
-        startIcon={<CloudDownloadIcon />}
-        className="export-button"
-      >
-        <span className="button-text">Export Excel</span>
-      </Button>
-      <Button
-        variant="contained"
-        onClick={() => {
-          setEditMode(false);
-          setNewEmployee({
-            empId: "",
-            empName: "",
-            basicPay: "",
-            bankName: "",
-            bankAccountNo: "",
-            pfNo: "",
-            uanNo: "",
-            panNo: "",
-            payableDays: 30,
-            lop: 0,
-            department: "",
-            designation: "",
-            email: "",
-            status: "Active",
-          });
-          setOpenEmployeeDialog(true);
-        }}
-        startIcon={<AddCircleIcon />}
-        className="create-button"
-      >
-        <span className="button-text">Add Employee</span>
-      </Button>
-    </Box>
-  </Box>
-
-  <TableContainer
-    component={Paper}
-    className="table-container"
-    sx={{ overflowX: "auto" }}
-  >
-    <Table className="responsive-table">
-      <TableHead>
-        <TableRow className="table-header">
-          <TableCell className="table-cell" data-priority="1">
-            Emp ID
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            Name
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            Department
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            Designation
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            Basic Pay
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            Bank Details
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            PF/UAN
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            Payable Days
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            LOP Days
-          </TableCell>
-          <TableCell className="table-cell action-column" data-priority="1">
-            Actions
-          </TableCell>
-        </TableRow>
-      </TableHead>
-
-      <TableBody>
-        {employeeData.map((item) => (
-          <TableRow key={item.empId} className="table-row">
-            <TableCell className="table-cell" data-label="Emp ID">
-              {item.empId}
-            </TableCell>
-            <TableCell className="table-cell" data-label="Name">
-              {item.empName}
-            </TableCell>
-            <TableCell className="table-cell" data-label="Department">
-              {item.department}
-            </TableCell>
-            <TableCell className="table-cell" data-label="Designation">
-              {item.designation}
-            </TableCell>
-            <TableCell className="table-cell amount-cell" data-label="Basic Pay">
-              Rs. {item.basicPay}
-            </TableCell>
-            <TableCell className="table-cell" data-label="Bank Details">
-              <Typography variant="body2">{item.bankName}</Typography>
-              <Typography variant="caption">
-                {item.bankAccountNo}
+        <TabPanel value={tabIndex} index={0}>
+          <Box className="header-container employee-header">
+            <Box className="title-wrapper">
+              <Typography variant="h5" className="section-title">
+                Employee Management
+                <span className="title-badge">{employeeData.length} Total</span>
               </Typography>
-            </TableCell>
-            <TableCell className="table-cell" data-label="PF/UAN">
-              <Typography variant="body2">PF: {item.pfNo}</Typography>
-              <Typography variant="caption">
-                UAN: {item.uanNo}
-              </Typography>
-            </TableCell>
-            <TableCell className="table-cell" data-label="Payable Days">
-              {item.payableDays}
-            </TableCell>
-            <TableCell className="table-cell" data-label="LOP Days">
-              {item.lop}
-            </TableCell>
-            <TableCell className="table-cell action-cell" data-label="Actions">
-              <Tooltip title="Preview">
-                <IconButton
-                  className="preview-button"
-                  onClick={() => handleOpenEmployeePreview(item.empId)}
+            </Box>
+            <Box className="header-actions">
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                style={{ display: "none" }}
+                id="excel-upload"
+                onChange={importFromExcel}
+              />
+              <label htmlFor="excel-upload">
+                <Button
+                  variant="contained"
+                  component="span"
+                  startIcon={<CloudUploadIcon />}
+                  className="import-button blue-button"
+                  size="medium"
                 >
-                  <PreviewIcon className="action-icon preview-icon" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Edit">
-                <IconButton
-                  className="edit-button"
-                  onClick={() => {
-                    setEditMode(true);
-                    setSelectedItem(item);
-                    setNewEmployee({ ...item });
-                    setOpenEmployeeDialog(true);
-                  }}
-                >
-                  <EditIcon className="action-icon edit-icon" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Delete">
-                <IconButton
-                  className="delete-button"
-                  onClick={() => handleDeleteEmployee(item.empId)}
-                >
-                  <DeleteIcon className="action-icon delete-icon" />
-                </IconButton>
-              </Tooltip>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </TableContainer>
-</TabPanel>
+                  <span className="button-text">Import</span>
+                </Button>
+              </label>
+              <Button
+                variant="contained"
+                onClick={exportToExcel}
+                startIcon={<CloudDownloadIcon />}
+                className="export-button blue-button"
+                size="medium"
+              >
+                <span className="button-text">Export</span>
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setEditMode(false);
+                  setNewEmployee({
+                    empId: "",
+                    empName: "",
+                    basicPay: "",
+                    bankName: "",
+                    bankAccountNo: "",
+                    pfNo: "",
+                    uanNo: "",
+                    panNo: "",
+                    payableDays: 30,
+                    lop: 0,
+                    department: "",
+                    designation: "",
+                    email: "",
+                    status: "Active",
+                  });
+                  setOpenEmployeeDialog(true);
+                }}
+                startIcon={<AddCircleIcon />}
+                className="create-button blue-button"
+                size="medium"
+              >
+                <span className="button-text">Add</span>
+              </Button>
+            </Box>
+          </Box>
+
+          <TableContainer
+            component={Paper}
+            className="table-container employee-table-container mobile-scroll-table"
+            sx={{ overflowX: "auto" }}
+          >
+            <Table
+              className="responsive-table employee-table non-responsive-mobile"
+              sx={{ minWidth: 650 }}
+            >
+              <TableHead>
+                <TableRow className="table-header">
+                  <TableCell className="table-cell">Emp ID</TableCell>
+                  <TableCell className="table-cell">Name</TableCell>
+                  <TableCell className="table-cell">Department</TableCell>
+                  <TableCell className="table-cell">Designation</TableCell>
+                  <TableCell className="table-cell">Basic Pay</TableCell>
+                  <TableCell className="table-cell">Bank Details</TableCell>
+                  <TableCell className="table-cell">PF/UAN</TableCell>
+                  <TableCell className="table-cell">Payable Days</TableCell>
+                  <TableCell className="table-cell">LOP Days</TableCell>
+                  <TableCell className="table-cell action-column">
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {employeeData.map((item) => (
+                  <TableRow key={item.empId} className="table-row employee-row">
+                    <TableCell className="table-cell">{item.empId}</TableCell>
+                    <TableCell className="table-cell">{item.empName}</TableCell>
+                    <TableCell className="table-cell">
+                      {item.department}
+                    </TableCell>
+                    <TableCell className="table-cell">
+                      {item.designation}
+                    </TableCell>
+                    <TableCell className="table-cell amount-cell">
+                      Rs. {parseFloat(item.basicPay).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="table-cell">
+                      <Typography variant="body2">{item.bankName}</Typography>
+                      <Typography variant="caption">
+                        {item.bankAccountNo}
+                      </Typography>
+                    </TableCell>
+                    <TableCell className="table-cell">
+                      <Typography variant="body2">PF: {item.pfNo}</Typography>
+                      <Typography variant="caption">
+                        UAN: {item.uanNo}
+                      </Typography>
+                    </TableCell>
+                    <TableCell className="table-cell">
+                      {item.payableDays}
+                    </TableCell>
+                    <TableCell className="table-cell">{item.lop}</TableCell>
+                    <TableCell className="table-cell action-cell">
+                      <Tooltip title="Preview">
+                        <IconButton
+                          className="preview-button"
+                          onClick={() => handleOpenEmployeePreview(item.empId)}
+                        >
+                          <PreviewIcon className="action-icon preview-icon" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Edit">
+                        <IconButton
+                          className="edit-button"
+                          onClick={() => {
+                            setEditMode(true);
+                            setSelectedItem(item);
+                            setNewEmployee({ ...item });
+                            setOpenEmployeeDialog(true);
+                          }}
+                        >
+                          <EditIcon className="action-icon edit-icon" />
+                        </IconButton>
+                      </Tooltip>
+                      {/* <Tooltip title="Delete">
+              <IconButton
+                className="delete-button"
+                onClick={() => handleDeleteEmployee(item.empId)}
+              >
+                <DeleteIcon className="action-icon delete-icon" />
+              </IconButton>
+            </Tooltip> */}
+                      <Tooltip title="Delete">
+                        <IconButton
+                          className="delete-button"
+                          onClick={() => {
+                            setEmployeeToDelete(item);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <DeleteIcon className="action-icon delete-icon" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </TabPanel>
 
         {/* Allowances & Deductions Tab */}
         <TabPanel value={tabIndex} index={1}>
-  <Box className="header-container">
-    <Box className="title-container">
-      <Typography variant="h5" className="section-title">
-        Allowances & Deductions
-      </Typography>
-      <span className="title-badge">Management</span>
-    </Box>
-    <Box className="header-actions">
-      <Button
-        variant="contained"
-        onClick={() => {
-          setEditMode(false);
-          setNewAllowance({
-            empId: "",
-            name: "",
-            percentage: 0,
-            category: "Regular",
-            status: "Active",
-          });
-          setOpenDialog(true);
-        }}
-        startIcon={<AddCircleIcon />}
-        className="create-button allowance-create-button"
-      >
-        <span className="button-text">Create</span>
-      </Button>
-    </Box>
-  </Box>
+          <Box className="header-container">
+            <Box className="title-container">
+              <Typography variant="h5" className="section-title">
+                Allowances & Deductions
+              </Typography>
+              <span className="title-badge">Management</span>
+            </Box>
+            <Box className="header-actions">
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setEditMode(false);
+                  setNewAllowance({
+                    empId: "",
+                    name: "",
+                    percentage: 0,
+                    category: "Regular",
+                    status: "Active",
+                  });
+                  setOpenDialog(true);
+                }}
+                startIcon={<AddCircleIcon />}
+                className="create-button allowance-create-button"
+              >
+                <span className="button-text">Create</span>
+              </Button>
+            </Box>
+          </Box>
 
           {/* Combined Employee-based Table */}
 
           <TableContainer component={Paper} className="table-container">
-    <Table className="responsive-table">
-      <TableHead>
-        <TableRow className="table-header">
-          <TableCell className="table-cell" data-priority="1">
-            Employee
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            Department
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            Basic Pay
-          </TableCell>
-          <TableCell className="table-cell" data-priority="1">
-            Net Impact
-          </TableCell>
-          <TableCell className="table-cell action-column" data-priority="1" align="center">
-            Actions
-          </TableCell>
-        </TableRow>
-      </TableHead>
+            <Table className="responsive-table">
+              <TableHead>
+                <TableRow className="table-header">
+                  <TableCell className="table-cell" data-priority="1">
+                    Employee
+                  </TableCell>
+                  <TableCell className="table-cell" data-priority="1">
+                    Department
+                  </TableCell>
+                  <TableCell className="table-cell" data-priority="1">
+                    Basic Pay
+                  </TableCell>
+                  <TableCell className="table-cell" data-priority="1">
+                    Net Impact
+                  </TableCell>
+                  <TableCell
+                    className="table-cell action-column"
+                    data-priority="1"
+                    align="center"
+                  >
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHead>
 
-      <TableBody>
+              <TableBody>
                 {employeeData.map((employee) => {
                   // Get all allowances for this employee
                   const employeeAllowances = allowanceData.filter(
@@ -1383,10 +1450,30 @@ const PayrollSystem = () => {
                           </IconButton>
                         </Tooltip>
 
-                        <Tooltip title="Delete">
+                        {/* <Tooltip title="Delete">
                           <IconButton
                             className="delete-button"
                             onClick={() => handleDeleteEmployee(employee.empId)}
+                          >
+                            <DeleteIcon
+                              sx={{
+                                color: "#d32f2f",
+                                transition: "all 0.3s ease",
+                                "&:hover": {
+                                  color: "#ff1744",
+                                  transform: "scale(1.1)",
+                                },
+                              }}
+                            />
+                          </IconButton>
+                        </Tooltip> */}
+                        <Tooltip title="Delete">
+                          <IconButton
+                            className="delete-button"
+                            onClick={() => {
+                              setEmployeeToDeleteAllowances(employee);
+                              setDeleteAllowanceDialogOpen(true);
+                            }}
                           >
                             <DeleteIcon
                               sx={{
@@ -1410,351 +1497,511 @@ const PayrollSystem = () => {
         </TabPanel>
 
         {/* Payslips Tab */}
-<TabPanel value={tabIndex} index={2}>
-  <Box className="payslip-header-container">
-    <Typography variant="h5" className="payslip-section-title">
-      Payslip Management
-    </Typography>
-    <Chip
-      label={`${employeeData.length} Employees`}
-      className="payslip-title-badge"
-      size="small"
-    />
-  </Box>
 
-  {employeeData.length === 0 ? (
-    <Paper className="payslip-no-data-paper">
-      <Typography variant="h6" align="center" sx={{ py: 4 }}>
-        No employee data available. Please add employees first.
-      </Typography>
-    </Paper>
-  ) : (
-    employeeData.map((emp) => (
-      <Paper key={emp.empId} className="payslip-employee-card">
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Box className="payslip-employee-header">
-              <Typography variant="h5">Employee Details</Typography>
-              <Chip
-                label={`ID: ${emp.empId}`}
-                className="payslip-emp-id-chip"
-                size="small"
-              />
-            </Box>
-            <Box className="payslip-details-grid">
-              <Grid container spacing={{xs: 1, sm: 2, md: 3}}>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Box className="payslip-detail-group">
-                    <Box className="payslip-detail-item">
-                      <Typography variant="subtitle2" className="payslip-detail-label">
-                        Name
-                      </Typography>
-                      <Typography variant="body1" className="payslip-detail-value">
-                        {emp.empName}
-                      </Typography>
-                    </Box>
-                    <Box className="payslip-detail-item">
-                      <Typography variant="subtitle2" className="payslip-detail-label">
-                        Department
-                      </Typography>
-                      <Typography variant="body1" className="payslip-detail-value">
-                        {emp.department}
-                      </Typography>
-                    </Box>
-                    <Box className="payslip-detail-item">
-                      <Typography variant="subtitle2" className="payslip-detail-label">
-                        Designation
-                      </Typography>
-                      <Typography variant="body1" className="payslip-detail-value">
-                        {emp.designation}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Box className="payslip-detail-group">
-                    <Box className="payslip-detail-item">
-                      <Typography variant="subtitle2" className="payslip-detail-label">
-                        Bank Name
-                      </Typography>
-                      <Typography variant="body1" className="payslip-detail-value">
-                        {emp.bankName}
-                      </Typography>
-                    </Box>
-                    <Box className="payslip-detail-item">
-                      <Typography variant="subtitle2" className="payslip-detail-label">
-                        Account No
-                      </Typography>
-                      <Typography variant="body1" className="payslip-detail-value">
-                        {emp.bankAccountNo}
-                      </Typography>
-                    </Box>
-                    <Box className="payslip-detail-item">
-                      <Typography variant="subtitle2" className="payslip-detail-label">
-                        PAN No
-                      </Typography>
-                      <Typography variant="body1" className="payslip-detail-value">
-                        {emp.panNo}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Box className="payslip-detail-group">
-                    <Box className="payslip-detail-item">
-                      <Typography variant="subtitle2" className="payslip-detail-label">
-                        PF No
-                      </Typography>
-                      <Typography variant="body1" className="payslip-detail-value">
-                        {emp.pfNo}
-                      </Typography>
-                    </Box>
-                    <Box className="payslip-detail-item">
-                      <Typography variant="subtitle2" className="payslip-detail-label">
-                        UAN No
-                      </Typography>
-                      <Typography variant="body1" className="payslip-detail-value">
-                        {emp.uanNo}
-                      </Typography>
-                    </Box>
-                    <Box className="payslip-detail-item">
-                      <Typography variant="subtitle2" className="payslip-detail-label">
-                        Status
-                      </Typography>
-                      <Typography variant="body1" className="payslip-detail-value">
-                        {emp.status}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-              </Grid>
-            </Box>
-          </Grid>
-
-          {/* Attendance Details Section */}
-          <Grid item xs={12}>
-            <Typography variant="h6" className="payslip-section-header">
-              Attendance Details
+        <TabPanel value={tabIndex} index={2}>
+          <Box className="payslip-header-container">
+            <Typography variant="h5" className="payslip-section-title">
+              Payslip Management
             </Typography>
-            <Box className="payslip-attendance-grid">
-              <Grid container spacing={{xs: 1, sm: 2}}>
-                <Grid item xs={6} sm={3}>
-                  <Paper className="payslip-stat-card">
-                    <Typography variant="subtitle2" className="payslip-stat-label">
-                      Total Days
-                    </Typography>
-                    <Typography variant="h6" className="payslip-stat-value">
-                      {emp.payableDays}
-                    </Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Paper className="payslip-stat-card">
-                    <Typography variant="subtitle2" className="payslip-stat-label">
-                      LOP Days
-                    </Typography>
-                    <Typography variant="h6" className="payslip-stat-value">
-                      {emp.lop}
-                    </Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Paper className="payslip-stat-card">
-                    <Typography variant="subtitle2" className="payslip-stat-label">
-                      Working Days
-                    </Typography>
-                    <Typography variant="h6" className="payslip-stat-value">
-                      {emp.payableDays - emp.lop}
-                    </Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                  <Paper className="payslip-stat-card">
-                    <Typography variant="subtitle2" className="payslip-stat-label">
-                      Per Day Pay
-                    </Typography>
-                    <Typography variant="h6" className="payslip-stat-value">
-                      Rs.{" "}
-                      {calculatePerDayPay(
-                        emp.basicPay,
-                        emp.payableDays
-                      ).toFixed(2)}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              </Grid>
-            </Box>
-          </Grid>
+            <Chip
+              label={`${employeeData.length} Employees`}
+              className="payslip-title-badge"
+              size="small"
+            />
+          </Box>
 
-          {/* Earnings & Deductions Section */}
-          <Grid item xs={12}>
-            <Grid container spacing={{xs: 2, sm: 3}}>
-              <Grid item xs={12} sm={6}>
-                <Paper className="payslip-earnings-section">
-                  <Typography variant="h6" className="payslip-section-header">
-                    Earnings
-                  </Typography>
-                  <Box className="payslip-amount-list">
-                    <Box className="payslip-amount-row">
-                      <Typography variant="body1" className="payslip-amount-label">
-                        Basic Pay
-                      </Typography>
-                      <Typography variant="body1" className="payslip-amount-value">
-                        Rs.{" "}
-                        {calculateAttendanceBasedPay(
-                          emp.basicPay,
-                          emp.payableDays,
-                          emp.lop
-                        ).toFixed(2)}
-                      </Typography>
-                    </Box>
-                    {allowanceData
-                      .filter(
-                        (a) =>
-                          a.empId === emp.empId && a.status === "Active"
-                      )
-                      .map((allowance) => (
-                        <Box
-                          key={
-                            allowance._id ||
-                            `${allowance.empId}_${allowance.name}`
-                          }
-                          className="payslip-amount-row"
-                        >
-                          <Typography variant="body1" className="payslip-amount-label">
-                            {allowance.name}
-                          </Typography>
-                          <Typography variant="body1" className="payslip-amount-value">
-                            Rs.{" "}
-                            {calculateAllowanceAmount(
-                              emp.basicPay,
-                              allowance.percentage
-                            ).toFixed(2)}
-                          </Typography>
-                        </Box>
-                      ))}
-                    {allowanceData.filter(
-                      (a) =>
-                        a.empId === emp.empId && a.status === "Active"
-                    ).length === 0 && (
-                      <Box className="payslip-amount-row payslip-empty-row">
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          align="center"
-                          sx={{ width: "100%" }}
-                        >
-                          No active allowances
-                        </Typography>
-                      </Box>
-                    )}
-                    <Box className="payslip-amount-row payslip-total-row">
-                      <Typography variant="body1" className="payslip-total-label">
-                        Total Earnings
-                      </Typography>
-                      <Typography variant="body1" className="payslip-total-value">
-                        Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-              </Grid>
-
-              {/* Right Column - Deductions */}
-              <Grid item xs={12} sm={6}>
-                <Paper className="payslip-deductions-section">
-                  <Typography variant="h6" className="payslip-section-header">
-                    Deductions
-                  </Typography>
-                  <Box className="payslip-amount-list">
-                    {deductions
-                      .filter(
-                        (d) =>
-                          d.empId === emp.empId && d.status === "Active"
-                      )
-                      .map((deduction) => (
-                        <Box
-                          key={
-                            deduction._id ||
-                            `${deduction.empId}_${deduction.name}`
-                          }
-                          className="payslip-amount-row"
-                        >
-                          <Typography variant="body1" className="payslip-amount-label">
-                            {deduction.name}
-                          </Typography>
-                          <Typography variant="body1" className="payslip-amount-value">
-                            Rs.{" "}
-                            {calculateDeductionAmount(
-                              emp.basicPay,
-                              deduction.percentage
-                            ).toFixed(2)}
-                          </Typography>
-                        </Box>
-                      ))}
-                    {deductions.filter(
-                      (d) =>
-                        d.empId === emp.empId && d.status === "Active"
-                    ).length === 0 && (
-                      <Box className="payslip-amount-row payslip-empty-row">
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          align="center"
-                          sx={{ width: "100%" }}
-                        >
-                          No active deductions
-                        </Typography>
-                      </Box>
-                    )}
-                    <Box className="payslip-amount-row payslip-total-row">
-                      <Typography variant="body1" className="payslip-total-label">
-                        Total Deductions
-                      </Typography>
-                      <Typography variant="body1" className="payslip-total-value">
-                        Rs.{" "}
-                        {calculateTotalDeductions(emp.empId).toFixed(2)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          {/* Net Salary Section */}
-          <Grid item xs={12}>
-            <Paper className="payslip-net-salary-section">
-              <Grid container direction={{xs: 'column', md: 'row'}} spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <Typography variant="h5" className="payslip-net-salary-label">
-                    Net Salary: Rs. {calculateNetSalary(emp.empId).toFixed(2)}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={6} sx={{textAlign: {xs: 'center', md: 'right'}}}>
-                  <Button
-                    variant="contained"
-                    onClick={async () => {
-                      const payslip = await generatePayslip(emp.empId);
-                      if (payslip) {
-                        downloadPayslip(payslip._id);
-                      }
-                    }}
-                    startIcon={<FileDownloadIcon />}
-                    className="payslip-download-button"
-                  >
-                    Generate & Download Payslip
-                  </Button>
-                </Grid>
-              </Grid>
+          {employeeData.length === 0 ? (
+            <Paper className="payslip-no-data-paper">
+              <Typography variant="h6" align="center" sx={{ py: 4 }}>
+                No employee data available. Please add employees first.
+              </Typography>
             </Paper>
-          </Grid>
-        </Grid>
-      </Paper>
-    ))
-  )}
-</TabPanel>
+          ) : (
+            <Box className="payslip-container">
+              {employeeData.map((emp) => (
+                <Paper key={emp.empId} className="payslip-employee-card">
+                  {/* Employee Details Section */}
+                  <Box className="payslip-section">
+                    <Box className="payslip-employee-header">
+                      <Typography variant="h5" className="payslip-header-title">
+                        Employee Details
+                      </Typography>
+                      <Chip
+                        label={`ID: ${emp.empId}`}
+                        className="payslip-emp-id-chip"
+                        size="small"
+                      />
+                    </Box>
 
+                    <Grid
+                      container
+                      spacing={2}
+                      className="payslip-details-grid"
+                    >
+                      <Grid item xs={12} sm={4}>
+                        <Box className="payslip-detail-group">
+                          <Box className="payslip-detail-item">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-detail-label"
+                            >
+                              Name
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              className="payslip-detail-value"
+                            >
+                              {emp.empName}
+                            </Typography>
+                          </Box>
+                          <Box className="payslip-detail-item">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-detail-label"
+                            >
+                              Department
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              className="payslip-detail-value"
+                            >
+                              {emp.department}
+                            </Typography>
+                          </Box>
+                          <Box className="payslip-detail-item">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-detail-label"
+                            >
+                              Designation
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              className="payslip-detail-value"
+                            >
+                              {emp.designation}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+
+                      <Grid item xs={12} sm={4}>
+                        <Box className="payslip-detail-group">
+                          <Box className="payslip-detail-item">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-detail-label"
+                            >
+                              Bank Name
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              className="payslip-detail-value"
+                            >
+                              {emp.bankName}
+                            </Typography>
+                          </Box>
+                          <Box className="payslip-detail-item">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-detail-label"
+                            >
+                              Account No
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              className="payslip-detail-value"
+                            >
+                              {emp.bankAccountNo}
+                            </Typography>
+                          </Box>
+                          <Box className="payslip-detail-item">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-detail-label"
+                            >
+                              PAN No
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              className="payslip-detail-value"
+                            >
+                              {emp.panNo}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+
+                      <Grid item xs={12} sm={4}>
+                        <Box className="payslip-detail-group">
+                          <Box className="payslip-detail-item">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-detail-label"
+                            >
+                              PF No
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              className="payslip-detail-value"
+                            >
+                              {emp.pfNo}
+                            </Typography>
+                          </Box>
+                          <Box className="payslip-detail-item">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-detail-label"
+                            >
+                              UAN No
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              className="payslip-detail-value"
+                            >
+                              {emp.uanNo}
+                            </Typography>
+                          </Box>
+                          <Box className="payslip-detail-item">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-detail-label"
+                            >
+                              Status
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              className="payslip-detail-value"
+                            >
+                              {emp.status}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+
+                  {/* Attendance Details Section */}
+                  <Box className="payslip-section">
+                    <Typography variant="h6" className="payslip-section-header">
+                      Attendance Details
+                    </Typography>
+
+                    <Grid
+                      container
+                      spacing={2}
+                      className="payslip-attendance-grid"
+                    >
+                      <Grid item xs={6} sm={3}>
+                        <Paper className="payslip-stat-card">
+                          <Typography
+                            variant="subtitle2"
+                            className="payslip-stat-label"
+                          >
+                            Total Days
+                          </Typography>
+                          <Typography
+                            variant="h6"
+                            className="payslip-stat-value"
+                          >
+                            {emp.payableDays}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+
+                      <Grid item xs={6} sm={3}>
+                        <Paper className="payslip-stat-card">
+                          <Typography
+                            variant="subtitle2"
+                            className="payslip-stat-label"
+                          >
+                            LOP Days
+                          </Typography>
+                          <Typography
+                            variant="h6"
+                            className="payslip-stat-value"
+                          >
+                            {emp.lop}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+
+                      <Grid item xs={6} sm={3}>
+                        <Paper className="payslip-stat-card">
+                          <Typography
+                            variant="subtitle2"
+                            className="payslip-stat-label"
+                          >
+                            Working Days
+                          </Typography>
+                          <Typography
+                            variant="h6"
+                            className="payslip-stat-value"
+                          >
+                            {emp.payableDays - emp.lop}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+
+                      <Grid item xs={6} sm={3}>
+                        <Paper className="payslip-stat-card">
+                          <Typography
+                            variant="subtitle2"
+                            className="payslip-stat-label"
+                          >
+                            Per Day Pay
+                          </Typography>
+                          <Typography
+                            variant="h6"
+                            className="payslip-stat-value"
+                          >
+                            Rs.{" "}
+                            {calculatePerDayPay(
+                              emp.basicPay,
+                              emp.payableDays
+                            ).toFixed(2)}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                  </Box>
+
+                  {/* Earnings & Deductions Section */}
+                  <Box className="payslip-section">
+                    <Grid
+                      container
+                      spacing={2}
+                      className="payslip-calculations-grid"
+                    >
+                      {/* Earnings Column */}
+                      <Grid item xs={12} sm={6}>
+                        <Paper className="payslip-earnings-section">
+                          <Typography
+                            variant="h6"
+                            className="payslip-section-header"
+                          >
+                            Earnings
+                          </Typography>
+
+                          <Box className="payslip-amount-list">
+                            <Box className="payslip-amount-row">
+                              <Typography
+                                variant="body1"
+                                className="payslip-amount-label"
+                              >
+                                Basic Pay
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-amount-value"
+                              >
+                                Rs.{" "}
+                                {calculateAttendanceBasedPay(
+                                  emp.basicPay,
+                                  emp.payableDays,
+                                  emp.lop
+                                ).toFixed(2)}
+                              </Typography>
+                            </Box>
+
+                            {allowanceData
+                              .filter(
+                                (a) =>
+                                  a.empId === emp.empId && a.status === "Active"
+                              )
+                              .map((allowance) => (
+                                <Box
+                                  key={
+                                    allowance._id ||
+                                    `${allowance.empId}_${allowance.name}`
+                                  }
+                                  className="payslip-amount-row"
+                                >
+                                  <Typography
+                                    variant="body1"
+                                    className="payslip-amount-label"
+                                  >
+                                    {allowance.name}
+                                  </Typography>
+                                  <Typography
+                                    variant="body1"
+                                    className="payslip-amount-value"
+                                  >
+                                    Rs.{" "}
+                                    {calculateAllowanceAmount(
+                                      emp.basicPay,
+                                      allowance.percentage
+                                    ).toFixed(2)}
+                                  </Typography>
+                                </Box>
+                              ))}
+
+                            {allowanceData.filter(
+                              (a) =>
+                                a.empId === emp.empId && a.status === "Active"
+                            ).length === 0 && (
+                              <Box className="payslip-amount-row payslip-empty-row">
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  align="center"
+                                  sx={{ width: "100%" }}
+                                >
+                                  No active allowances
+                                </Typography>
+                              </Box>
+                            )}
+
+                            <Box className="payslip-amount-row payslip-total-row">
+                              <Typography
+                                variant="body1"
+                                className="payslip-total-label"
+                              >
+                                Total Earnings
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-total-value"
+                              >
+                                Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Paper>
+                      </Grid>
+
+                      {/* Deductions Column */}
+                      <Grid item xs={12} sm={6}>
+                        <Paper className="payslip-deductions-section">
+                          <Typography
+                            variant="h6"
+                            className="payslip-section-header"
+                          >
+                            Deductions
+                          </Typography>
+
+                          <Box className="payslip-amount-list">
+                            {deductions
+                              .filter(
+                                (d) =>
+                                  d.empId === emp.empId && d.status === "Active"
+                              )
+                              .map((deduction) => (
+                                <Box
+                                  key={
+                                    deduction._id ||
+                                    `${deduction.empId}_${deduction.name}`
+                                  }
+                                  className="payslip-amount-row"
+                                >
+                                  <Typography
+                                    variant="body1"
+                                    className="payslip-amount-label"
+                                  >
+                                    {deduction.name}
+                                  </Typography>
+                                  <Typography
+                                    variant="body1"
+                                    className="payslip-amount-value"
+                                  >
+                                    Rs.{" "}
+                                    {calculateDeductionAmount(
+                                      emp.basicPay,
+                                      deduction.percentage
+                                    ).toFixed(2)}
+                                  </Typography>
+                                </Box>
+                              ))}
+
+                            {deductions.filter(
+                              (d) =>
+                                d.empId === emp.empId && d.status === "Active"
+                            ).length === 0 && (
+                              <Box className="payslip-amount-row payslip-empty-row">
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  align="center"
+                                  sx={{ width: "100%" }}
+                                >
+                                  No active deductions
+                                </Typography>
+                              </Box>
+                            )}
+
+                            <Box className="payslip-amount-row payslip-total-row">
+                              <Typography
+                                variant="body1"
+                                className="payslip-total-label"
+                              >
+                                Total Deductions
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-total-value"
+                              >
+                                Rs.{" "}
+                                {calculateTotalDeductions(emp.empId).toFixed(2)}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                  </Box>
+
+                  {/* Net Salary Section */}
+                  <Box className="payslip-section">
+                    <Paper className="payslip-net-salary-section">
+                      <Grid
+                        container
+                        spacing={2}
+                        alignItems="center"
+                        className="payslip-net-salary-grid"
+                      >
+                        <Grid
+                          item
+                          xs={12}
+                          sm={6}
+                          className="payslip-net-salary-amount"
+                        >
+                          <Typography
+                            variant="h5"
+                            className="payslip-net-salary-label"
+                          >
+                            Net Salary: Rs.{" "}
+                            {calculateNetSalary(emp.empId).toFixed(2)}
+                          </Typography>
+                        </Grid>
+
+                        <Grid
+                          item
+                          xs={12}
+                          sm={6}
+                          className="payslip-download-container"
+                        >
+                          <Button
+                            variant="contained"
+                            onClick={async () => {
+                              const payslip = await generatePayslip(emp.empId);
+                              if (payslip) {
+                                downloadPayslip(payslip._id);
+                              }
+                            }}
+                            startIcon={<FileDownloadIcon />}
+                            className="payslip-download-button"
+                          >
+                            Generate & Download Payslip
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          )}
+        </TabPanel>
 
         {/* Employee Preview Dialog */}
         <Dialog
@@ -1763,8 +2010,13 @@ const PayrollSystem = () => {
           maxWidth="md"
           fullWidth
           PaperProps={{
-            elevation: 3,
-            sx: { borderRadius: 2, overflow: "hidden" },
+            sx: {
+              width: { xs: "100%", sm: "600px" },
+              maxWidth: "100%",
+              borderRadius: { xs: 0, sm: "20px" },
+              margin: { xs: 0, sm: 2 },
+              overflow: "hidden",
+            },
           }}
         >
           <DialogTitle
@@ -2555,551 +2807,610 @@ const PayrollSystem = () => {
           </DialogActions>
         </Dialog>
         {/* Create Allowance Dialog */}
+        {/* Create Allowance Dialog - Fixed for iPad View */}
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
-          maxWidth="sm"
+          maxWidth="md"
           fullWidth
-          // PaperProps={{
-          //   elevation: 0,
-          //   className: "dialog-paper",
-          // }}
           PaperProps={{
             sx: {
-              width: { xs: "100%", sm: "600px" },
+              borderRadius: { xs: 0, sm: "16px" },
+              margin: { xs: 0, sm: "16px", md: "24px" },
+              width: { xs: "100%", sm: "90%", md: "800px" },
               maxWidth: "100%",
-              borderRadius: { xs: 0, sm: "20px" },
-              margin: { xs: 0, sm: 2 },
+              maxHeight: { xs: "100%", sm: "90vh" },
               overflow: "hidden",
             },
           }}
+          className="allowance-dialog"
         >
           <DialogTitle className="dialog-title">
-            {editMode ? "Edit Allowance" : "Add New Allowance"}
+            {editMode ? "Edit Allowance" : "Add Allowances & Deductions"}
           </DialogTitle>
-          <DialogContent className="dialog-content">
-            {/* <Grid container spacing={2}>
-              <Grid item xs={12}> */}
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={4}>
-                <FormControl fullWidth required>
-                  <InputLabel>Employee</InputLabel>
-                  <Select
-                    value={editMode ? newAllowance.empId : bulkEmployeeId}
-                    onChange={(e) => {
-                      if (editMode) {
-                        setNewAllowance({
-                          ...newAllowance,
-                          empId: e.target.value,
-                        });
-                      } else {
-                        setBulkEmployeeId(e.target.value);
-                      }
-                    }}
-                    label="Employee"
-                  >
-                    {employeeData.map((emp) => (
-                      <MenuItem key={emp.empId} value={emp.empId}>
-                        {emp.empId} - {emp.empName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+          <DialogContent className="allowance-dialog-content">
+            {/* Employee Selection - Keep this outside the scrollable area */}
+            <FormControl fullWidth required sx={{ mb: 2 }}>
+              <InputLabel>Employee</InputLabel>
+              <Select
+                value={editMode ? newAllowance.empId : bulkEmployeeId}
+                onChange={(e) => {
+                  if (editMode) {
+                    setNewAllowance({
+                      ...newAllowance,
+                      empId: e.target.value,
+                    });
+                  } else {
+                    setBulkEmployeeId(e.target.value);
+                  }
+                }}
+                label="Employee"
+              >
+                {employeeData.map((emp) => (
+                  <MenuItem key={emp.empId} value={emp.empId}>
+                    {emp.empId} - {emp.empName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-              {editMode ? (
-                <>
-                  <Grid item xs={12}>
-                    <TextField
-                      label="Allowance Name"
-                      fullWidth
-                      value={newAllowance.name}
-                      onChange={(e) =>
-                        setNewAllowance({
-                          ...newAllowance,
-                          name: e.target.value,
-                        })
-                      }
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      label="Percentage"
-                      type="number"
-                      fullWidth
-                      value={newAllowance.percentage}
-                      onChange={(e) =>
-                        setNewAllowance({
-                          ...newAllowance,
-                          percentage: Math.max(
-                            0,
-                            Math.min(100, Number(e.target.value))
-                          ),
-                        })
-                      }
-                      required
-                      InputProps={{
-                        inputProps: { min: 0, max: 100 },
-                        endAdornment: (
-                          <InputAdornment position="end">%</InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth required>
-                      <InputLabel>Category</InputLabel>
-                      <Select
-                        value={newAllowance.category}
+            {/* Scrollable content area */}
+            <Box
+              sx={{
+                overflowY: "auto",
+                maxHeight: { xs: "60vh", sm: "50vh", md: "60vh" },
+              }}
+            >
+              <Grid container spacing={2}>
+                {editMode ? (
+                  <>
+                    <Grid item xs={12}>
+                      <TextField
+                        label="Allowance Name"
+                        fullWidth
+                        value={newAllowance.name}
                         onChange={(e) =>
                           setNewAllowance({
                             ...newAllowance,
-                            category: e.target.value,
+                            name: e.target.value,
                           })
                         }
-                        label="Category"
-                      >
-                        <MenuItem value="Regular">Regular</MenuItem>
-                        <MenuItem value="Travel">Travel</MenuItem>
-                        <MenuItem value="Special">Special</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth required>
-                      <InputLabel>Status</InputLabel>
-                      <Select
-                        value={newAllowance.status}
+                        required
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        label="Percentage"
+                        type="number"
+                        fullWidth
+                        value={newAllowance.percentage}
                         onChange={(e) =>
                           setNewAllowance({
                             ...newAllowance,
-                            status: e.target.value,
-                          })
-                        }
-                        label="Status"
-                      >
-                        <MenuItem value="Active">Active</MenuItem>
-                        <MenuItem value="Inactive">Inactive</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </>
-              ) : (
-                <>
-                  {/* Table-like structure for allowances, similar to deduction dialog */}
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                      Select Allowances to Add
-                    </Typography>
-                    <TableContainer
-                      component={Paper}
-                      sx={{ maxHeight: 300, mb: 2 }}
-                    >
-                      <Table stickyHeader size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell padding="checkbox">Select</TableCell>
-                            <TableCell>Allowance Type</TableCell>
-                            <TableCell>Description</TableCell>
-                            <TableCell>Percentage (%)</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {[
-                            {
-                              name: "TRAVEL ALLOWANCE",
-                              desc: "For travel-related expenses",
-                            },
-                            {
-                              name: "MEDICAL ALLOWANCE",
-                              desc: "For healthcare expenses",
-                            },
-                            {
-                              name: "HOUSE RENT ALLOWANCE",
-                              desc: "For accommodation expenses",
-                            },
-                            {
-                              name: "DEARNESS ALLOWANCE",
-                              desc: "Cost of living adjustment",
-                            },
-                            {
-                              name: "SPECIAL ALLOWANCE",
-                              desc: "Additional benefits",
-                            },
-                            {
-                              name: "CONVEYANCE ALLOWANCE",
-                              desc: "For daily commute expenses",
-                            },
-                            {
-                              name: "EDUCATION ALLOWANCE",
-                              desc: "For educational expenses",
-                            },
-                            {
-                              name: "MEAL ALLOWANCE",
-                              desc: "For food expenses",
-                            },
-                            {
-                              name: "TELEPHONE ALLOWANCE",
-                              desc: "For communication expenses",
-                            },
-                            {
-                              name: "UNIFORM ALLOWANCE",
-                              desc: "For work attire",
-                            },
-                          ].map((allowance) => (
-                            <TableRow key={allowance.name}>
-                              <TableCell padding="checkbox">
-                                <Checkbox
-                                  checked={selectedAllowances.includes(
-                                    allowance.name
-                                  )}
-                                  onChange={(e) =>
-                                    handleAllowanceSelection(
-                                      allowance.name,
-                                      e.target.checked
-                                    )
-                                  }
-                                />
-                              </TableCell>
-                              <TableCell>{allowance.name}</TableCell>
-                              <TableCell>{allowance.desc}</TableCell>
-                              <TableCell>
-                                <TextField
-                                  type="number"
-                                  size="small"
-                                  value={
-                                    allowancePercentages[allowance.name] || 0
-                                  }
-                                  onChange={(e) =>
-                                    handlePercentageChange(
-                                      allowance.name,
-                                      e.target.value
-                                    )
-                                  }
-                                  disabled={
-                                    !selectedAllowances.includes(allowance.name)
-                                  }
-                                  InputProps={{
-                                    endAdornment: (
-                                      <InputAdornment position="end">
-                                        %
-                                      </InputAdornment>
-                                    ),
-                                    inputProps: { min: 0, max: 100, step: 0.5 },
-                                  }}
-                                  sx={{ width: "100px" }}
-                                />
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mt: 2,
-                      }}
-                    >
-                      <Typography>
-                        {selectedAllowances.length} allowance(s) selected
-                      </Typography>
-                      <Box sx={{ display: "flex", gap: 1 }}>
-                        <TextField
-                          label="Custom Allowance"
-                          size="small"
-                          id="custom-allowance"
-                        />
-                        <TextField
-                          label="Percentage"
-                          type="number"
-                          size="small"
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">%</InputAdornment>
+                            percentage: Math.max(
+                              0,
+                              Math.min(100, Number(e.target.value))
                             ),
-                            inputProps: { min: 0, max: 100 },
-                          }}
-                          sx={{ width: "100px" }}
-                          id="custom-percentage"
-                        />
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={() => {
-                            const customName =
-                              document.getElementById("custom-allowance").value;
-                            const customPercentage =
-                              document.getElementById(
-                                "custom-percentage"
-                              ).value;
-                            if (
-                              customName &&
-                              !selectedAllowances.includes(customName)
-                            ) {
-                              setSelectedAllowances([
-                                ...selectedAllowances,
-                                customName,
-                              ]);
-                              setAllowancePercentages({
-                                ...allowancePercentages,
-                                [customName]: parseFloat(customPercentage) || 0,
-                              });
-                              document.getElementById(
-                                "custom-allowance"
-                              ).value = "";
-                              document.getElementById(
-                                "custom-percentage"
-                              ).value = "";
-                            }
-                          }}
-                        >
-                          Add
-                        </Button>
-                      </Box>
-                    </Box>
-                  </Grid>
-
-                  {selectedAllowances.length > 0 && (
-                    <Grid item xs={12}>
-                      <Paper sx={{ p: 2, bgcolor: "#f5f5f5" }}>
-                        <Typography variant="subtitle2" gutterBottom>
-                          Preview of Allowances to Add:
-                        </Typography>
-                        <TableContainer sx={{ maxHeight: 150 }}>
-                          <Table size="small">
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>Allowance Name</TableCell>
-                                <TableCell>Percentage</TableCell>
-                                <TableCell>Amount (Est.)</TableCell>
-                                <TableCell>Action</TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {selectedAllowances.map((name, index) => {
-                                const employee = employeeData.find(
-                                  (e) => e.empId === bulkEmployeeId
-                                );
-                                const estimatedAmount = employee
-                                  ? calculateAllowanceAmount(
-                                      employee.basicPay,
-                                      allowancePercentages[name] || 0
-                                    )
-                                  : 0;
-
-                                return (
-                                  <TableRow key={index}>
-                                    <TableCell>{name}</TableCell>
-                                    <TableCell>
-                                      {allowancePercentages[name] || 0}%
-                                    </TableCell>
-                                    <TableCell>
-                                      Rs. {estimatedAmount.toFixed(2)}
-                                    </TableCell>
-                                    <TableCell>
-                                      <IconButton
-                                        size="small"
-                                        onClick={() =>
-                                          setSelectedAllowances(
-                                            selectedAllowances.filter(
-                                              (item) => item !== name
-                                            )
-                                          )
-                                        }
-                                      >
-                                        <DeleteIcon fontSize="small" />
-                                      </IconButton>
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      </Paper>
+                          })
+                        }
+                        required
+                        InputProps={{
+                          inputProps: { min: 0, max: 100 },
+                          endAdornment: (
+                            <InputAdornment position="end">%</InputAdornment>
+                          ),
+                        }}
+                      />
                     </Grid>
-                  )}
-
-                  {/* Optional Deduction Selection */}
-                  <Grid item xs={12} sx={{ mt: 3 }}>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        mb: 1,
-                        borderBottom: "1px solid #eee",
-                        pb: 1,
-                        color: "#f44336",
-                      }}
-                    >
-                      Add Deductions (Optional)
-                    </Typography>
-                    <TableContainer
-                      component={Paper}
-                      sx={{ maxHeight: 300, mb: 2 }}
-                    >
-                      <Table stickyHeader size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell padding="checkbox">Select</TableCell>
-                            <TableCell>Deduction Type</TableCell>
-                            <TableCell>Description</TableCell>
-                            <TableCell>Percentage (%)</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {[
-                            {
-                              name: "PROFESSIONAL TAX",
-                              desc: "State-mandated tax on employment",
-                            },
-                            {
-                              name: "INCOME TAX",
-                              desc: "Tax on employee income",
-                            },
-                            {
-                              name: "PROVIDENT FUND",
-                              desc: "Retirement savings contribution",
-                            },
-                            {
-                              name: "HEALTH INSURANCE",
-                              desc: "Medical insurance premium",
-                            },
-                          ].map((deduction) => (
-                            <TableRow key={deduction.name}>
-                              <TableCell padding="checkbox">
-                                <Checkbox
-                                  checked={selectedDeductions.includes(
-                                    deduction.name
-                                  )}
-                                  onChange={(e) =>
-                                    handleDeductionSelection(
-                                      deduction.name,
-                                      e.target.checked
-                                    )
-                                  }
-                                />
+                    <Grid item xs={12}>
+                      <FormControl fullWidth required>
+                        <InputLabel>Category</InputLabel>
+                        <Select
+                          value={newAllowance.category}
+                          onChange={(e) =>
+                            setNewAllowance({
+                              ...newAllowance,
+                              category: e.target.value,
+                            })
+                          }
+                          label="Category"
+                        >
+                          <MenuItem value="Regular">Regular</MenuItem>
+                          <MenuItem value="Travel">Travel</MenuItem>
+                          <MenuItem value="Special">Special</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <FormControl fullWidth required>
+                        <InputLabel>Status</InputLabel>
+                        <Select
+                          value={newAllowance.status}
+                          onChange={(e) =>
+                            setNewAllowance({
+                              ...newAllowance,
+                              status: e.target.value,
+                            })
+                          }
+                          label="Status"
+                        >
+                          <MenuItem value="Active">Active</MenuItem>
+                          <MenuItem value="Inactive">Inactive</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </>
+                ) : (
+                  <>
+                    {/* Allowances Section */}
+                    <Grid item xs={12}>
+                      <Typography
+                        variant="subtitle1"
+                        className="dialog-section-title"
+                      >
+                        Select Allowances to Add
+                      </Typography>
+                      <TableContainer
+                        component={Paper}
+                        className="dialog-table-container"
+                      >
+                        <Table
+                          stickyHeader
+                          size="small"
+                          className="dialog-table"
+                        >
+                          <TableHead>
+                            <TableRow>
+                              <TableCell
+                                padding="checkbox"
+                                className="dialog-table-cell"
+                              >
+                                Select
                               </TableCell>
-                              <TableCell>{deduction.name}</TableCell>
-                              <TableCell>{deduction.desc}</TableCell>
-                              <TableCell>
-                                <TextField
-                                  type="number"
-                                  size="small"
-                                  value={
-                                    deductionPercentages[deduction.name] || 0
-                                  }
-                                  onChange={(e) =>
-                                    handleDeductionPercentageChange(
-                                      deduction.name,
-                                      e.target.value
-                                    )
-                                  }
-                                  disabled={
-                                    !selectedDeductions.includes(deduction.name)
-                                  }
-                                  InputProps={{
-                                    endAdornment: (
-                                      <InputAdornment position="end">
-                                        %
-                                      </InputAdornment>
-                                    ),
-                                    inputProps: { min: 0, max: 100, step: 0.5 },
-                                  }}
-                                  sx={{ width: "100px" }}
-                                />
+                              <TableCell className="dialog-table-cell">
+                                Allowance Type
+                              </TableCell>
+                              <TableCell className="dialog-table-cell dialog-hide-sm">
+                                Description
+                              </TableCell>
+                              <TableCell className="dialog-table-cell">
+                                Percentage (%)
                               </TableCell>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Grid>
-
-                  {selectedDeductions.length > 0 && (
-                    <Grid item xs={12}>
-                      <Paper
-                        sx={{
-                          p: 2,
-                          bgcolor: "#fff8f8",
-                          borderRadius: 2,
-                          mt: 2,
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle2"
-                          gutterBottom
-                          sx={{ color: "#d32f2f" }}
-                        >
-                          Selected Deductions:
-                        </Typography>
-                        <TableContainer sx={{ maxHeight: 150 }}>
-                          <Table size="small">
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>Deduction Name</TableCell>
-                                <TableCell>Percentage</TableCell>
-                                <TableCell>Amount (Est.)</TableCell>
-                                <TableCell>Action</TableCell>
+                          </TableHead>
+                          <TableBody>
+                            {[
+                              {
+                                name: "TRAVEL ALLOWANCE",
+                                desc: "For travel-related expenses",
+                              },
+                              {
+                                name: "MEDICAL ALLOWANCE",
+                                desc: "For healthcare expenses",
+                              },
+                              {
+                                name: "HOUSE RENT ALLOWANCE",
+                                desc: "For accommodation expenses",
+                              },
+                              {
+                                name: "DEARNESS ALLOWANCE",
+                                desc: "Cost of living adjustment",
+                              },
+                              {
+                                name: "SPECIAL ALLOWANCE",
+                                desc: "Additional benefits",
+                              },
+                              {
+                                name: "CONVEYANCE ALLOWANCE",
+                                desc: "For daily commute expenses",
+                              },
+                              {
+                                name: "EDUCATION ALLOWANCE",
+                                desc: "For educational expenses",
+                              },
+                              {
+                                name: "MEAL ALLOWANCE",
+                                desc: "For food expenses",
+                              },
+                              {
+                                name: "TELEPHONE ALLOWANCE",
+                                desc: "For communication expenses",
+                              },
+                              {
+                                name: "UNIFORM ALLOWANCE",
+                                desc: "For work attire",
+                              },
+                            ].map((allowance) => (
+                              <TableRow
+                                key={allowance.name}
+                                className="dialog-table-row"
+                              >
+                                <TableCell
+                                  padding="checkbox"
+                                  className="dialog-table-cell"
+                                >
+                                  <Checkbox
+                                    checked={selectedAllowances.includes(
+                                      allowance.name
+                                    )}
+                                    onChange={(e) =>
+                                      handleAllowanceSelection(
+                                        allowance.name,
+                                        e.target.checked
+                                      )
+                                    }
+                                  />
+                                </TableCell>
+                                <TableCell className="dialog-table-cell">
+                                  {allowance.name}
+                                </TableCell>
+                                <TableCell className="dialog-table-cell dialog-hide-sm">
+                                  {allowance.desc}
+                                </TableCell>
+                                <TableCell className="dialog-table-cell">
+                                  <TextField
+                                    type="number"
+                                    size="small"
+                                    value={
+                                      allowancePercentages[allowance.name] || 0
+                                    }
+                                    onChange={(e) =>
+                                      handlePercentageChange(
+                                        allowance.name,
+                                        e.target.value
+                                      )
+                                    }
+                                    disabled={
+                                      !selectedAllowances.includes(
+                                        allowance.name
+                                      )
+                                    }
+                                    InputProps={{
+                                      endAdornment: (
+                                        <InputAdornment position="end">
+                                          %
+                                        </InputAdornment>
+                                      ),
+                                      inputProps: {
+                                        min: 0,
+                                        max: 100,
+                                        step: 0.5,
+                                      },
+                                    }}
+                                    className="percentage-input"
+                                  />
+                                </TableCell>
                               </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {selectedDeductions.map((name, index) => {
-                                const employee = employeeData.find(
-                                  (e) => e.empId === bulkEmployeeId
-                                );
-                                const estimatedAmount = employee
-                                  ? calculateDeductionAmount(
-                                      employee.basicPay,
-                                      deductionPercentages[name] || 0
-                                    )
-                                  : 0;
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
 
-                                return (
-                                  <TableRow key={index}>
-                                    <TableCell>{name}</TableCell>
-                                    <TableCell>
-                                      {deductionPercentages[name] || 0}%
-                                    </TableCell>
-                                    <TableCell>
-                                      Rs. {estimatedAmount.toFixed(2)}
-                                    </TableCell>
-                                    <TableCell>
-                                      <IconButton
-                                        size="small"
-                                        onClick={() =>
-                                          setSelectedDeductions(
-                                            selectedDeductions.filter(
-                                              (item) => item !== name
-                                            )
-                                          )
-                                        }
-                                      >
-                                        <DeleteIcon fontSize="small" />
-                                      </IconButton>
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      </Paper>
+                      {/* Custom allowance input - restructured for better iPad layout */}
+                      <Box className="custom-allowance-container">
+                        <Typography className="selected-count">
+                          {selectedAllowances.length} allowance(s) selected
+                        </Typography>
+                        <Box className="custom-input-group">
+                          <TextField
+                            label="Custom Allowance"
+                            size="small"
+                            id="custom-allowance"
+                            className="custom-allowance-input"
+                          />
+                          <TextField
+                            label="%"
+                            type="number"
+                            size="small"
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  %
+                                </InputAdornment>
+                              ),
+                              inputProps: { min: 0, max: 100 },
+                            }}
+                            className="custom-percentage-input"
+                            id="custom-percentage"
+                          />
+                          <Button
+                            size="small"
+                            variant="contained"
+                            className="custom-add-button"
+                            onClick={() => {
+                              const customName =
+                                document.getElementById(
+                                  "custom-allowance"
+                                ).value;
+                              const customPercentage =
+                                document.getElementById(
+                                  "custom-percentage"
+                                ).value;
+                              if (
+                                customName &&
+                                !selectedAllowances.includes(customName)
+                              ) {
+                                setSelectedAllowances([
+                                  ...selectedAllowances,
+                                  customName,
+                                ]);
+                                setAllowancePercentages({
+                                  ...allowancePercentages,
+                                  [customName]:
+                                    parseFloat(customPercentage) || 0,
+                                });
+                                document.getElementById(
+                                  "custom-allowance"
+                                ).value = "";
+                                document.getElementById(
+                                  "custom-percentage"
+                                ).value = "";
+                              }
+                            }}
+                          >
+                            Add
+                          </Button>
+                        </Box>
+                      </Box>
                     </Grid>
-                  )}
-                </>
-              )}
-            </Grid>
+
+                    {selectedAllowances.length > 0 && (
+                      <Grid item xs={12}>
+                        <Paper className="selected-items-preview">
+                          <Typography variant="subtitle2" gutterBottom>
+                            Preview of Allowances to Add:
+                          </Typography>
+                          <TableContainer className="preview-table-container">
+                            <Table size="small" className="preview-table">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Allowance Name</TableCell>
+                                  <TableCell>Percentage</TableCell>
+                                  <TableCell>Amount (Est.)</TableCell>
+                                  <TableCell>Action</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {selectedAllowances.map((name, index) => {
+                                  const employee = employeeData.find(
+                                    (e) => e.empId === bulkEmployeeId
+                                  );
+                                  const estimatedAmount = employee
+                                    ? calculateAllowanceAmount(
+                                        employee.basicPay,
+                                        allowancePercentages[name] || 0
+                                      )
+                                    : 0;
+
+                                  return (
+                                    <TableRow key={index}>
+                                      <TableCell>{name}</TableCell>
+                                      <TableCell>
+                                        {allowancePercentages[name] || 0}%
+                                      </TableCell>
+                                      <TableCell>
+                                        Rs. {estimatedAmount.toFixed(2)}
+                                      </TableCell>
+                                      <TableCell>
+                                        <IconButton
+                                          size="small"
+                                          onClick={() =>
+                                            setSelectedAllowances(
+                                              selectedAllowances.filter(
+                                                (item) => item !== name
+                                              )
+                                            )
+                                          }
+                                        >
+                                          <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Paper>
+                      </Grid>
+                    )}
+
+                    {/* Deductions Section */}
+                    <Grid item xs={12} className="deductions-section">
+                      <Typography
+                        variant="subtitle1"
+                        className="dialog-section-title deduction-title"
+                      >
+                        Add Deductions (Optional)
+                      </Typography>
+                      <TableContainer
+                        component={Paper}
+                        className="dialog-table-container"
+                      >
+                        <Table
+                          stickyHeader
+                          size="small"
+                          className="dialog-table"
+                        >
+                          <TableHead>
+                            <TableRow>
+                              <TableCell
+                                padding="checkbox"
+                                className="dialog-table-cell"
+                              >
+                                Select
+                              </TableCell>
+                              <TableCell className="dialog-table-cell">
+                                Deduction Type
+                              </TableCell>
+                              <TableCell className="dialog-table-cell dialog-hide-sm">
+                                Description
+                              </TableCell>
+                              <TableCell className="dialog-table-cell">
+                                Percentage (%)
+                              </TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {[
+                              {
+                                name: "PROFESSIONAL TAX",
+                                desc: "State-mandated tax on employment",
+                              },
+                              {
+                                name: "INCOME TAX",
+                                desc: "Tax on employee income",
+                              },
+                              {
+                                name: "PROVIDENT FUND",
+                                desc: "Retirement savings contribution",
+                              },
+                              {
+                                name: "HEALTH INSURANCE",
+                                desc: "Medical insurance premium",
+                              },
+                            ].map((deduction) => (
+                              <TableRow
+                                key={deduction.name}
+                                className="dialog-table-row"
+                              >
+                                <TableCell
+                                  padding="checkbox"
+                                  className="dialog-table-cell"
+                                >
+                                  <Checkbox
+                                    checked={selectedDeductions.includes(
+                                      deduction.name
+                                    )}
+                                    onChange={(e) =>
+                                      handleDeductionSelection(
+                                        deduction.name,
+                                        e.target.checked
+                                      )
+                                    }
+                                  />
+                                </TableCell>
+                                <TableCell className="dialog-table-cell">
+                                  {deduction.name}
+                                </TableCell>
+                                <TableCell className="dialog-table-cell dialog-hide-sm">
+                                  {deduction.desc}
+                                </TableCell>
+                                <TableCell className="dialog-table-cell">
+                                  <TextField
+                                    type="number"
+                                    size="small"
+                                    value={
+                                      deductionPercentages[deduction.name] || 0
+                                    }
+                                    onChange={(e) =>
+                                      handleDeductionPercentageChange(
+                                        deduction.name,
+                                        e.target.value
+                                      )
+                                    }
+                                    disabled={
+                                      !selectedDeductions.includes(
+                                        deduction.name
+                                      )
+                                    }
+                                    InputProps={{
+                                      endAdornment: (
+                                        <InputAdornment position="end">
+                                          %
+                                        </InputAdornment>
+                                      ),
+                                      inputProps: {
+                                        min: 0,
+                                        max: 100,
+                                        step: 0.5,
+                                      },
+                                    }}
+                                    className="percentage-input"
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Grid>
+
+                    {selectedDeductions.length > 0 && (
+                      <Grid item xs={12}>
+                        <Paper className="selected-items-preview deduction-preview">
+                          <Typography
+                            variant="subtitle2"
+                            gutterBottom
+                            className="deduction-preview-title"
+                          >
+                            Selected Deductions:
+                          </Typography>
+                          <TableContainer className="preview-table-container">
+                            <Table size="small" className="preview-table">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Deduction Name</TableCell>
+                                  <TableCell>Percentage</TableCell>
+                                  <TableCell>Amount (Est.)</TableCell>
+                                  <TableCell>Action</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {selectedDeductions.map((name, index) => {
+                                  const employee = employeeData.find(
+                                    (e) => e.empId === bulkEmployeeId
+                                  );
+                                  const estimatedAmount = employee
+                                    ? calculateDeductionAmount(
+                                        employee.basicPay,
+                                        deductionPercentages[name] || 0
+                                      )
+                                    : 0;
+
+                                  return (
+                                    <TableRow key={index}>
+                                      <TableCell>{name}</TableCell>
+                                      <TableCell>
+                                        {deductionPercentages[name] || 0}%
+                                      </TableCell>
+                                      <TableCell>
+                                        Rs. {estimatedAmount.toFixed(2)}
+                                      </TableCell>
+                                      <TableCell>
+                                        <IconButton
+                                          size="small"
+                                          onClick={() =>
+                                            setSelectedDeductions(
+                                              selectedDeductions.filter(
+                                                (item) => item !== name
+                                              )
+                                            )
+                                          }
+                                        >
+                                          <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Paper>
+                      </Grid>
+                    )}
+                  </>
+                )}
+              </Grid>
+            </Box>
           </DialogContent>
           <DialogActions className="dialog-actions">
             <Button
               onClick={handleCloseDialog}
               color="error"
               variant="outlined"
+              className="dialog-button cancel-button"
             >
               Cancel
             </Button>
@@ -3108,6 +3419,7 @@ const PayrollSystem = () => {
                 onClick={handleAddAllowance}
                 color="primary"
                 variant="contained"
+                className="dialog-button submit-button"
               >
                 Update Allowance
               </Button>
@@ -3117,6 +3429,7 @@ const PayrollSystem = () => {
                 color="primary"
                 variant="contained"
                 disabled={selectedAllowances.length === 0 || !bulkEmployeeId}
+                className="dialog-button submit-button"
               >
                 Add {selectedAllowances.length} Allowance(s)
                 {selectedDeductions.length > 0 &&
@@ -3126,6 +3439,157 @@ const PayrollSystem = () => {
           </DialogActions>
         </Dialog>
       </Paper>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 0, sm: "16px" },
+            width: { xs: "100%", sm: "450px" },
+            maxWidth: "100%",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            color: "white",
+            fontWeight: 600,
+            padding: "16px 24px",
+          }}
+        >
+          Delete Employee
+        </DialogTitle>
+        <DialogContent sx={{ padding: "24px", paddingTop: "24px" }}>
+          <Typography variant="body1">
+            Are you sure you want to delete{" "}
+            <strong>{employeeToDelete?.empName}</strong>? This action cannot be
+            undone and will also remove all associated allowances and
+            deductions.
+          </Typography>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: "16px 24px",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              padding: "6px 16px",
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDeleteEmployee}
+            variant="contained"
+            color="error"
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 24px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Allowances & Deductions Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteAllowanceDialogOpen}
+        onClose={() => setDeleteAllowanceDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 0, sm: "16px" },
+            width: { xs: "100%", sm: "450px" },
+            maxWidth: "100%",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            color: "white",
+            fontWeight: 600,
+            padding: "16px 24px",
+          }}
+        >
+          Delete Allowances & Deductions
+        </DialogTitle>
+        <DialogContent sx={{ padding: "24px", paddingTop: "24px" }}>
+          <Typography variant="body1">
+            Are you sure you want to delete all allowances and deductions for{" "}
+            <strong>{employeeToDeleteAllowances?.empName}</strong>? This action
+            cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: "16px 24px",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setDeleteAllowanceDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              padding: "6px 16px",
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDeleteAllowancesAndDeductions}
+            variant="contained"
+            color="error"
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 24px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

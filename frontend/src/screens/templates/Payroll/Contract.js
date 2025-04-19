@@ -494,8 +494,194 @@ const Contract = () => {
     setFilteredContracts(sortedContracts);
   };
 
-  // 1. First, modify the handleEdit function to populate the formData and show the create page
+  // // 1. First, modify the handleEdit function to populate the formData and show the create page
+  // const handleEdit = (contract) => {
+  //   // Populate the form data with the selected contract's values
+  //   setFormData({
+  //     contractStatus: contract.contractStatus || "Active",
+  //     contractTitle: contract.contract || "",
+  //     employee: contract.employee || "",
+  //     startDate: contract.startDate || "",
+  //     endDate: contract.endDate || "",
+  //     wageType: contract.wageType || "",
+  //     payFrequency: contract.payFrequency || "",
+  //     basicSalary: contract.basicSalary || "",
+  //     filingStatus: contract.filingStatus || "",
+  //     department: contract.department || "",
+  //     position: contract.position || "",
+  //     role: contract.role || "",
+  //     shift: contract.shift || "",
+  //     workType: contract.workType || "",
+  //     noticePeriod: contract.noticePeriod || "",
+  //     contractDocument: null, // Can't pre-fill file inputs
+  //     deductFromBasicPay: contract.deductFromBasicPay || false,
+  //     calculateDailyLeave: contract.calculateDailyLeave || false,
+  //     note: contract.note || "",
+  //   });
+
+  //   // Store the contract ID for updating
+  //   setEditingId(contract._id);
+
+  //   // Reset selected employee when editing
+  //   setSelectedEmployee("");
+
+  //   // Show the create page (which will now function as an edit page)
+  //   setShowCreatePage(true);
+  // };
+
+  // // 2. Modify the handleSaveCreate function to handle both create and update
+  // const handleSaveCreate = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const contractData = {
+  //       contract: formData.contractTitle,
+  //       contractStatus: formData.contractStatus,
+  //       employee: formData.employee,
+  //       startDate: formData.startDate,
+  //       endDate: formData.endDate,
+  //       wageType: formData.wageType,
+  //       payFrequency: formData.payFrequency,
+  //       basicSalary: Number(formData.basicSalary),
+  //       filingStatus: formData.filingStatus,
+  //       department: formData.department,
+  //       position: formData.position,
+  //       role: formData.role,
+  //       shift: formData.shift,
+  //       workType: formData.workType,
+  //       noticePeriod: Number(formData.noticePeriod),
+  //       deductFromBasicPay: formData.deductFromBasicPay,
+  //       calculateDailyLeave: formData.calculateDailyLeave,
+  //       note: formData.note,
+  //     };
+
+  //     // Handle file upload if a document is selected
+  //     if (formData.contractDocument) {
+  //       const formDataWithFile = new FormData();
+  //       formDataWithFile.append("document", formData.contractDocument);
+
+  //       // Upload file first (this would be a separate endpoint in a real app)
+  //       // const uploadResponse = await axios.post('http://localhost:5000/api/upload', formDataWithFile);
+  //       // contractData.documentUrl = uploadResponse.data.url;
+  //     }
+
+  //     let response;
+
+  //     if (editingId) {
+  //       // Update existing contract
+  //       response = await axios.put(
+  //         `http://localhost:5000/api/payroll-contracts/${editingId}`,
+  //         contractData
+  //       );
+
+  //       if (response.data.success) {
+  //         toast.success("Contract updated successfully");
+
+  //         // Update the contracts list
+  //         setContracts(
+  //           contracts.map((contract) =>
+  //             contract._id === editingId ? response.data.data : contract
+  //           )
+  //         );
+
+  //         setFilteredContracts(
+  //           filteredContracts.map((contract) =>
+  //             contract._id === editingId ? response.data.data : contract
+  //           )
+  //         );
+  //       }
+  //     } else {
+  //       // Create new contract
+  //       response = await axios.post(
+  //         "http://localhost:5000/api/payroll-contracts",
+  //         contractData
+  //       );
+
+  //       if (response.data.success) {
+  //         toast.success("Contract created successfully");
+
+  //         // Add the new contract to the list
+  //         setContracts([...contracts, response.data.data]);
+  //         setFilteredContracts([...filteredContracts, response.data.data]);
+  //       }
+  //     }
+
+  //     // Reset form and close create/edit page
+  //     setShowCreatePage(false);
+  //     setEditingId(null);
+  //     setSelectedEmployee("");
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Contract operation error:", error);
+  //     toast.error(error.response?.data?.error || "Failed to process contract");
+  //     setLoading(false);
+  //   }
+  // };
+
+  //   // 1. First, modify the handleEdit function to properly populate the formData
+  // const handleEdit = (contract) => {
+  //   // Populate the form data with the selected contract's values
+  //   setFormData({
+  //     contractStatus: contract.contractStatus || "Active",
+  //     contractTitle: contract.contract || "",
+  //     employee: contract.employee || "",
+  //     startDate: contract.startDate || "",
+  //     endDate: contract.endDate || "",
+  //     wageType: contract.wageType || "",
+  //     payFrequency: contract.payFrequency || "",
+  //     basicSalary: contract.basicSalary || "",
+  //     filingStatus: contract.filingStatus || "",
+  //     department: contract.department || "",
+  //     position: contract.position || "",
+  //     role: contract.role || "",
+  //     shift: contract.shift || "",
+  //     workType: contract.workType || "",
+  //     noticePeriod: contract.noticePeriod || "",
+  //     contractDocument: null, // Can't pre-fill file inputs
+  //     deductFromBasicPay: contract.deductFromBasicPay || false,
+  //     calculateDailyLeave: contract.calculateDailyLeave || false,
+  //     note: contract.note || "",
+  //   });
+
+  //   // Store the contract ID for updating
+  //   setEditingId(contract._id);
+
+  //   // Reset selected employee when editing
+  //   setSelectedEmployee("");
+
+  //   // Show the create page (which will now function as an edit page)
+  //   setShowCreatePage(true);
+  // };
+
+  // 1. Modify the handleEdit function to validate position and role values
   const handleEdit = (contract) => {
+    // Define the available options for position and role
+    const availablePositions = [
+      "HR Manager",
+      "Sales Representative",
+      "Software Developer",
+      "Marketing Specialist",
+      "Accountant",
+      "IT Support",
+    ];
+
+    const availableRoles = [
+      "Intern",
+      "Junior",
+      "Senior",
+      "Manager",
+      "Director",
+    ];
+
+    // Check if the contract's position is in the available options
+    const validPosition = availablePositions.includes(contract.position)
+      ? contract.position
+      : "";
+
+    // Check if the contract's role is in the available options
+    const validRole = availableRoles.includes(contract.role)
+      ? contract.role
+      : "";
+
     // Populate the form data with the selected contract's values
     setFormData({
       contractStatus: contract.contractStatus || "Active",
@@ -508,8 +694,8 @@ const Contract = () => {
       basicSalary: contract.basicSalary || "",
       filingStatus: contract.filingStatus || "",
       department: contract.department || "",
-      position: contract.position || "",
-      role: contract.role || "",
+      position: validPosition, // Use validated position
+      role: validRole, // Use validated role
       shift: contract.shift || "",
       workType: contract.workType || "",
       noticePeriod: contract.noticePeriod || "",
@@ -617,7 +803,55 @@ const Contract = () => {
     }
   };
 
-  // Handle save in edit mode
+  // Add this function to handle inline edit mode
+  const handleInlineEdit = (contract) => {
+    setEditingId(contract._id);
+    setEditedData({
+      ...contract,
+    });
+  };
+
+  // // Handle save in edit mode
+  // const handleSave = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.put(
+  //       `http://localhost:5000/api/payroll-contracts/${editedData._id}`,
+  //       {
+  //         contract: editedData.contract,
+  //         employee: editedData.employee,
+  //         startDate: editedData.startDate,
+  //         endDate: editedData.endDate,
+  //         wageType: editedData.wageType,
+  //         basicSalary: Number(editedData.basicSalary),
+  //         filingStatus: editedData.filingStatus,
+  //         contractStatus: editedData.contractStatus,
+  //       }
+  //     );
+
+  //     if (response.data.success) {
+  //       toast.success("Contract updated successfully");
+  //       const updatedContract = response.data.data;
+  //       setContracts(
+  //         contracts.map((contract) =>
+  //           contract._id === editedData._id ? updatedContract : contract
+  //         )
+  //       );
+  //       setFilteredContracts(
+  //         filteredContracts.map((contract) =>
+  //           contract._id === editedData._id ? updatedContract : contract
+  //         )
+  //       );
+  //       setEditingId(null);
+  //     }
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Save failed:", error);
+  //     toast.error("Failed to update contract");
+  //     setLoading(false);
+  //   }
+  // };
+  // Handle save in edit mode (for inline editing)
   const handleSave = async () => {
     try {
       setLoading(true);
@@ -2453,7 +2687,7 @@ const Contract = () => {
                           </button>
                           <button
                             className="action-button edit-button"
-                            onClick={() => handleEdit(contract)}
+                            onClick={() => handleEdit(contract)} // This calls the main edit function that opens the form
                             title="Edit"
                           >
                             <FaEdit />
