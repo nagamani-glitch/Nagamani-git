@@ -259,18 +259,7 @@ const ShiftRequest = () => {
     }
   };
 
-  //   try {
-  //     await Promise.all(
-  //       selectedAllocations.map((id) => axios.delete(`${API_URL}/${id}`))
-  //     );
-  //     await loadShiftRequests();
-  //     setSelectedAllocations([]);
-  //     setShowSelectionButtons(false);
-  //     setAnchorEl(null);
-  //   } catch (error) {
-  //     console.error("Error bulk deleting shifts:", error);
-  //   }
-  // };
+  
 
   const handleApprove = async (id, e) => {
     e.stopPropagation();

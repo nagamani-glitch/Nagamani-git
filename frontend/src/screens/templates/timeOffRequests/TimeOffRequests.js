@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { styled } from "@mui/material/styles";
 import {
   Box,
   Button,
@@ -43,6 +44,17 @@ import {
   Add,
   AccessTime,
 } from "@mui/icons-material";
+
+// Add this near the top of your file, after the imports
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
 
 const TimeOffRequests = () => {
   const theme = useTheme();
@@ -193,52 +205,11 @@ const TimeOffRequests = () => {
     setCreateOpen(true);
   };
 
-  // const handleDelete = async (id) => {
-  //   try {
-  //     const response = await fetch(
-  //       `http://localhost:5000/api/time-off-requests/${id}`,
-  //       {
-  //         method: "DELETE",
-  //       }
-  //     );
-
-  //     if (!response.ok) throw new Error("Failed to delete request");
-
-  //     showSnackbar("Request deleted successfully");
-  //     fetchRequests();
-  //   } catch (error) {
-  //     showSnackbar("Error deleting request", "error");
-  //   }
-  // };
-
   // Replace the existing handleDelete function with these functions
   const handleDeleteClick = (request) => {
     setItemToDelete(request);
     setDeleteDialogOpen(true);
   };
-
-  // const handleConfirmDelete = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await fetch(
-  //       `http://localhost:5000/api/time-off-requests/${itemToDelete._id}`,
-  //       {
-  //         method: "DELETE",
-  //       }
-  //     );
-
-  //     if (!response.ok) throw new Error("Failed to delete request");
-
-  //     showSnackbar("Request deleted successfully");
-  //     fetchRequests();
-  //     setDeleteDialogOpen(false);
-  //     setItemToDelete(null);
-  //   } catch (error) {
-  //     showSnackbar("Error deleting request", "error");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleConfirmDelete = async () => {
     try {
@@ -415,19 +386,7 @@ const TimeOffRequests = () => {
               <Edit fontSize="small" />
             </IconButton>
           </Tooltip>
-          {/* <Tooltip title="Delete" arrow>
-            <IconButton
-              color="error"
-              onClick={() => handleDelete(request._id)}
-              size="small"
-              sx={{
-                backgroundColor: "error.lighter",
-                "&:hover": { backgroundColor: "error.light" },
-              }}
-            >
-              <Delete fontSize="small" />
-            </IconButton>
-          </Tooltip> */}
+
           <Tooltip title="Delete" arrow>
             <IconButton
               color="error"
@@ -446,101 +405,141 @@ const TimeOffRequests = () => {
     <Container maxWidth="xl" sx={{ py: isMobile ? 2 : 4 }}>
       <Box
         sx={{
-          backgroundColor: "background.paper",
-          borderRadius: 2,
-          boxShadow: 3,
-          overflow: "hidden",
+          p: { xs: 2, sm: 3, md: 4 },
+          backgroundColor: "#f5f5f5",
+          minHeight: "100vh",
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: isMobile ? "flex-start" : "center",
-            p: isMobile ? 2 : 3,
-            borderBottom: 1,
-            borderColor: "divider",
-            flexDirection: isMobile ? "column" : "row",
-            gap: isMobile ? 2 : 0,
-          }}
-        >
+        <Box>
           <Typography
-            variant={isMobile ? "h5" : "h4"}
-            fontWeight="bold"
-            color="primary"
+            variant="h4"
+            sx={{
+              mb: { xs: 2, sm: 3, md: 4 },
+              color: theme.palette.primary.main,
+              fontWeight: 600,
+              letterSpacing: 0.5,
+              fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+            }}
           >
             Time Off Requests
           </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Add />}
-            onClick={handleCreateNew}
+
+          <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box
+              display="flex"
+              flexDirection={{ xs: "column", sm: "row" }}
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              gap={2}
+              sx={{
+                width: "100%",
+                justifyContent: "space-between",
+              }}
+            >
+              <TextField
+                placeholder="Search by name or ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                size="small"
+                sx={{
+                  width: { xs: "100%", sm: "300px" },
+                  marginRight: { xs: 0, sm: "auto" },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: { xs: 1, sm: 1 },
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={handleCreateNew}
+                  sx={{
+                    height: { xs: "auto", sm: 50 },
+                    padding: { xs: "8px 16px", sm: "6px 16px" },
+                    width: { xs: "100%", sm: "auto" },
+                    background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                    color: "white",
+                    "&:hover": {
+                      background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                    },
+                  }}
+                >
+                  Create Request
+                </Button>
+              </Box>
+            </Box>
+          </StyledPaper>
+
+          {/* Status Filter Buttons */}
+          <Box
             sx={{
-              px: 3,
-              py: 1,
-              borderRadius: 2,
-              textTransform: "none",
-              fontSize: "1rem",
-              width: isMobile ? "100%" : "auto",
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 1,
+              mb: 2,
+              mt: 2,
             }}
           >
-            Create Request
-          </Button>
+            <Button
+              sx={{
+                color: "green",
+                justifyContent: { xs: "flex-start", sm: "center" },
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={() => setFilterStatus("Approved")}
+            >
+              ● Approved
+            </Button>
+            <Button
+              sx={{
+                color: "red",
+                justifyContent: { xs: "flex-start", sm: "center" },
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={() => setFilterStatus("Rejected")}
+            >
+              ● Rejected
+            </Button>
+            <Button
+              sx={{
+                color: "orange",
+                justifyContent: { xs: "flex-start", sm: "center" },
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={() => setFilterStatus("Pending")}
+            >
+              ● Pending
+            </Button>
+            <Button
+              sx={{
+                color: "gray",
+                justifyContent: { xs: "flex-start", sm: "center" },
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={() => setFilterStatus("all")}
+            >
+              ● All
+            </Button>
+          </Box>
+
+          <Divider sx={{ mb: 2 }} />
         </Box>
 
         <Box
           sx={{ p: isMobile ? 2 : 3, backgroundColor: "background.default" }}
         >
-          <Box
-            sx={{
-              mb: 3,
-              display: "flex",
-              gap: 2,
-              flexDirection: isMobile ? "column" : "row",
-              width: "100%",
-            }}
-          >
-            <TextField
-              placeholder="Search by name or ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              size="small"
-              sx={{ width: isMobile ? "100%" : "200px" }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search color="action" fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              select
-              value={filterStatus}
-              onChange={handleFilterChange}
-              size="small"
-              sx={{ width: isMobile ? "100%" : "150px" }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FilterList color="action" fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-            >
-              <MenuItem value="all">All</MenuItem>
-              {statusOptions
-                .filter((option) => option !== "All")
-                .map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-            </TextField>
-          </Box>
-
           {isMobile ? (
             // Mobile view - card layout
             <Stack spacing={2}>
@@ -920,11 +919,31 @@ const TimeOffRequests = () => {
             </Grid>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
           <Button
             onClick={() => setPreviewOpen(false)}
             variant="outlined"
             color="primary"
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
           >
             Close
           </Button>
@@ -936,6 +955,18 @@ const TimeOffRequests = () => {
               }}
               variant="contained"
               color="primary"
+              sx={{
+                background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                fontSize: "0.95rem",
+                textTransform: "none",
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+                color: "white",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                },
+              }}
               startIcon={<Edit />}
             >
               Edit
@@ -945,244 +976,405 @@ const TimeOffRequests = () => {
       </Dialog>
 
       {/* Create/Edit Dialog */}
+
+      {/* Create/Edit Dialog */}
       <Dialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        maxWidth="md"
-        fullWidth
-        fullScreen={isMobile}
+        fullScreen={window.innerWidth < 600} // Full screen on mobile
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "600px" },
+            maxWidth: "100%",
+            borderRadius: { xs: 0, sm: "20px" },
+            margin: { xs: 0, sm: 2 },
+            overflow: "hidden",
+          },
+        }}
       >
         <DialogTitle
           sx={{
-            backgroundColor: editMode ? "info.main" : "primary.main",
+            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
             color: "white",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            padding: "24px 32px",
           }}
         >
-          <Typography variant="h6">
-            {editMode ? "Edit Time Off Request" : "Create Time Off Request"}
-          </Typography>
-          <IconButton
-            onClick={() => setCreateOpen(false)}
-            sx={{ color: "white" }}
-          >
-            <Close />
-          </IconButton>
+          {editMode ? "Edit Time Off Request" : "Create Time Off Request"}
         </DialogTitle>
-        <DialogContent sx={{ p: isMobile ? 2 : 3, pt: isMobile ? 2 : 3 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Employee Name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Employee ID"
-                name="empId"
-                value={formData.empId}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Date"
-                name="date"
-                type="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Day"
-                name="day"
-                value={formData.day}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                placeholder="e.g. Monday"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Check In"
-                name="checkIn"
-                value={formData.checkIn}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                placeholder="e.g. 09:00 AM"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AccessTime fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Check Out"
-                name="checkOut"
-                value={formData.checkOut}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                placeholder="e.g. 05:00 PM"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AccessTime fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                label="Shift"
-                name="shift"
-                value={formData.shift}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              >
-                {shiftOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                label="Work Type"
-                name="workType"
-                value={formData.workType}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              >
-                {workTypeOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                label="Minimum Hours"
-                name="minHour"
-                type="number"
-                value={formData.minHour}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">hours</InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                label="At Work"
-                name="atWork"
-                type="number"
-                value={formData.atWork}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">hours</InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                label="Overtime"
-                name="overtime"
-                type="number"
-                value={formData.overtime}
-                onChange={handleInputChange}
-                fullWidth
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">hours</InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Comment"
-                name="comment"
-                value={formData.comment}
-                onChange={handleInputChange}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
-            {editMode && (
-              <Grid item xs={12}>
+
+        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
                 <TextField
-                  select
-                  label="Status"
-                  name="status"
-                  value={formData.status}
+                  label="Employee Name"
+                  name="name"
+                  value={formData.name}
                   onChange={handleInputChange}
                   fullWidth
+                  required
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#1976d2",
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Employee ID"
+                  name="empId"
+                  value={formData.empId}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Date"
+                  name="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Day"
+                  name="day"
+                  value={formData.day}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  placeholder="e.g. Monday"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Check In"
+                  name="checkIn"
+                  value={formData.checkIn}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  placeholder="e.g. 09:00 AM"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AccessTime fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Check Out"
+                  name="checkOut"
+                  value={formData.checkOut}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  placeholder="e.g. 05:00 PM"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AccessTime fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Shift"
+                  name="shift"
+                  value={formData.shift}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
                 >
-                  {statusOptions
-                    .filter((option) => option !== "All")
-                    .map((option) => (
-                      <MenuItem key={option} value={option}>
-                        {option}
-                      </MenuItem>
-                    ))}
+                  {shiftOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
                 </TextField>
               </Grid>
-            )}
-          </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Work Type"
+                  name="workType"
+                  value={formData.workType}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                >
+                  {workTypeOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Minimum Hours"
+                  name="minHour"
+                  type="number"
+                  value={formData.minHour}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">hours</InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="At Work"
+                  name="atWork"
+                  type="number"
+                  value={formData.atWork}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">hours</InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Overtime"
+                  name="overtime"
+                  type="number"
+                  value={formData.overtime}
+                  onChange={handleInputChange}
+                  fullWidth
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">hours</InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Comment"
+                  name="comment"
+                  value={formData.comment}
+                  onChange={handleInputChange}
+                  fullWidth
+                  multiline
+                  rows={4}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              {editMode && (
+                <Grid item xs={12}>
+                  <TextField
+                    select
+                    label="Status"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    fullWidth
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                    }}
+                  >
+                    {statusOptions
+                      .filter((option) => option !== "All")
+                      .map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                  </TextField>
+                </Grid>
+              )}
+            </Grid>
+          </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
+
+        <DialogActions
+          sx={{
+            padding: "24px 32px",
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
           <Button
             onClick={() => setCreateOpen(false)}
-            variant="outlined"
-            color={editMode ? "info" : "primary"}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             variant="contained"
-            color={editMode ? "info" : "primary"}
+            disabled={
+              !formData.name ||
+              !formData.empId ||
+              !formData.date ||
+              !formData.checkIn
+            }
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
           >
             {editMode ? "Update" : "Create"}
           </Button>
         </DialogActions>
       </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}

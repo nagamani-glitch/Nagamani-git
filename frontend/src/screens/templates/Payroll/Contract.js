@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { styled } from "@mui/material/styles";
 import axios from "axios";
 import {
   FaFilter,
@@ -35,7 +36,9 @@ import "react-toastify/dist/ReactToastify.css";
 import "./Contract.css";
 
 import {
+  Divider,
   Dialog,
+  useTheme,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -53,6 +56,12 @@ import {
   CircularProgress,
   Stack,
   Paper,
+  Card,
+  CardContent,
+  Chip,
+  alpha,
+  Fade,
+  Alert,
 } from "@mui/material";
 import {
   Close,
@@ -61,8 +70,18 @@ import {
   AttachMoney as AttachMoneyIcon,
 } from "@mui/icons-material";
 
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
+
 const Contract = () => {
-  // State variables
+  const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
   const [contracts, setContracts] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
@@ -145,6 +164,48 @@ const Contract = () => {
   };
   const filterRef = useRef(null);
   const csvLink = useRef(null);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contractToDelete, setContractToDelete] = useState(null);
+
+  // Then, replace the existing handleDelete function with these two functions
+  const handleDeleteClick = (contract) => {
+    setContractToDelete(contract);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.delete(
+        `http://localhost:5000/api/payroll-contracts/${contractToDelete._id}`
+      );
+
+      if (response.data.success) {
+        toast.success("Contract deleted successfully");
+        setContracts(
+          contracts.filter((contract) => contract._id !== contractToDelete._id)
+        );
+        setFilteredContracts(
+          filteredContracts.filter(
+            (contract) => contract._id !== contractToDelete._id
+          )
+        );
+        setSelectedContracts(
+          selectedContracts.filter(
+            (contractId) => contractId !== contractToDelete._id
+          )
+        );
+      }
+      setDeleteDialogOpen(false);
+      setContractToDelete(null);
+      setLoading(false);
+    } catch (error) {
+      console.error("Delete failed:", error);
+      toast.error("Failed to delete contract");
+      setLoading(false);
+    }
+  };
 
   // Fetch contracts on component mount
   useEffect(() => {
@@ -554,15 +615,6 @@ const Contract = () => {
       toast.error(error.response?.data?.error || "Failed to process contract");
       setLoading(false);
     }
-  };
-
-  // Handle changes in edit mode
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditedData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
   };
 
   // Handle save in edit mode
@@ -1605,223 +1657,83 @@ const Contract = () => {
       )}
 
       {/* Header */}
-      <Box
-        sx={{
-          backgroundColor: "white",
-          borderRadius: "12px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-          padding: "16px 24px",
-          marginBottom: "24px",
-        }}
-      >
-        <Grid container alignItems="center" spacing={2}>
-          <Grid item xs={12} md={4}>
-            <Typography
-              variant="h5"
+
+      <Box>
+        <Typography
+          variant="h4"
+          sx={{
+            mb: { xs: 2, sm: 3, md: 4 },
+            color: theme.palette.primary.main,
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+          }}
+        >
+          <FaFileContract style={{ marginRight: "10px" }} />
+          CONTRACT
+        </Typography>
+
+        <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            gap={2}
+            sx={{
+              width: "100%",
+              justifyContent: "space-between",
+            }}
+          >
+            <TextField
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              size="small"
               sx={{
-                fontWeight: 600,
-                color: "#1976d2",
+                width: { xs: "100%", sm: "300px" },
+                marginRight: { xs: 0, sm: "auto" },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaSearch />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Box
+              sx={{
                 display: "flex",
-                alignItems: "center",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 1, sm: 1 },
+                width: { xs: "100%", sm: "auto" },
               }}
             >
-              <FaFileContract style={{ marginRight: "10px" }} />
-              CONTRACT
-            </Typography>
-          </Grid>
-
-          <Grid item xs={12} md={8}>
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
-              alignItems={{ xs: "flex-start", sm: "center" }}
-              justifyContent="flex-end"
-            >
-              <TextField
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FaSearch />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  minWidth: { xs: "100%", sm: "250px" },
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "15px",
-                    backgroundColor: "#f8fafc",
-                  },
-                }}
-              />
-
-              <Button
-                variant="outlined"
-                startIcon={<FaFilter />}
-                onClick={handleFilterIconClick}
-                sx={{
-                  borderRadius: "8px",
-                  borderColor: "#e0e0e0",
-                  color: "#475569",
-                  "&:hover": {
-                    borderColor: "#1976d2",
-                    backgroundColor: "#f0f7ff",
-                  },
-                }}
-              >
-                Filter
-              </Button>
-
               <Button
                 variant="contained"
                 startIcon={<FaPlus />}
                 onClick={handleCreateClick}
                 sx={{
-                  background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                  height: { xs: "auto", sm: 50 },
+                  padding: { xs: "8px 16px", sm: "6px 16px" },
+                  width: { xs: "100%", sm: "auto" },
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
                   color: "white",
-                  borderRadius: "8px",
                   "&:hover": {
-                    background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                    background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
                   },
-                  boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
+                  borderRadius: "8px",
                 }}
               >
                 Create
               </Button>
-            </Stack>
-          </Grid>
-        </Grid>
+            </Box>
+          </Box>
+        </StyledPaper>
       </Box>
 
-      {/* Filter Dialog - Using Dialog instead of popup */}
-      <Dialog
-        open={showFilterDialog}
-        onClose={() => setShowFilterDialog(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: "12px",
-            p: 2,
-          },
-        }}
-      >
-        <DialogTitle>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Filter Contracts
-          </Typography>
-        </DialogTitle>
-
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            {/* Employee Name Filter */}
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Employee Name"
-                name="employeeName"
-                value={filterData.employeeName}
-                onChange={handleFilterChange}
-                size="small"
-                placeholder="Search by employee name"
-              />
-            </Grid>
-
-            {/* Contract Status Filter */}
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Contract Status</InputLabel>
-                <Select
-                  name="contractStatus"
-                  value={filterData.contractStatus}
-                  onChange={handleFilterChange}
-                  label="Contract Status"
-                >
-                  <MenuItem value="">All</MenuItem>
-                  <MenuItem value="Draft">Draft</MenuItem>
-                  <MenuItem value="Active">Active</MenuItem>
-                  <MenuItem value="Expired">Expired</MenuItem>
-                  <MenuItem value="Terminated">Terminated</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Wage Type Filter */}
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Wage Type</InputLabel>
-                <Select
-                  name="wageType"
-                  value={filterData.wageType}
-                  onChange={handleFilterChange}
-                  label="Wage Type"
-                >
-                  <MenuItem value="">All</MenuItem>
-                  <MenuItem value="Monthly">Monthly</MenuItem>
-                  <MenuItem value="Hourly">Hourly</MenuItem>
-                  <MenuItem value="Daily">Daily</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-          {/* Add more filters as needed */}
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Filing Status</InputLabel>
-              <Select
-                name="filingStatus"
-                value={filterData.filingStatus}
-                onChange={handleFilterChange}
-                label="Filing Status"
-                onClick={(e) => e.stopPropagation()}
-                MenuProps={{
-                  onClick: (e) => e.stopPropagation(),
-                  disableScrollLock: true,
-                }}
-              >
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value="Individual">Individual</MenuItem>
-                <MenuItem value="Head of Household (HOH)">
-                  Head of Household (HOH)
-                </MenuItem>
-                <MenuItem value="Married Filing Jointly (MFJ)">
-                  Married Filing Jointly (MFJ)
-                </MenuItem>
-                <MenuItem value="Married Filing Separately (MFS)">
-                  Married Filing Separately (MFS)
-                </MenuItem>
-                <MenuItem value="Single Filer">Single Filer</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button
-            variant="outlined"
-            onClick={handleResetFilter}
-            sx={{ borderRadius: "8px" }}
-          >
-            Reset
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleApplyFilter}
-            sx={{
-              borderRadius: "8px",
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-              },
-            }}
-          >
-            Apply Filters
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <Divider sx={{ mb: 2 }} />
 
       {/* Export toolbar - Styled version */}
       <Paper
@@ -1856,14 +1768,6 @@ const Contract = () => {
           flexWrap="wrap"
           sx={{ "& button": { minWidth: "auto" } }}
         >
-          {/* <Button
-            size="small"
-            startIcon={<FaFileCsv />}
-            onClick={handleExportCSV}
-            sx={{ color: "#16a34a" }}
-          >
-            CSV
-          </Button> */}
           <Button
             size="small"
             startIcon={<FaFileExcel />}
@@ -1898,217 +1802,487 @@ const Contract = () => {
           </Button>
         </Stack>
       </Paper>
+      {/* Status Filter Buttons */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "end",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 1,
+          mb: 2,
+          mt: 2,
+        }}
+      >
+        <Button
+          sx={{
+            color: "green",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() => {
+            setFilterData({ ...filterData, contractStatus: "Active" });
+            handleApplyFilter();
+          }}
+        >
+          ● Active
+        </Button>
+        <Button
+          sx={{
+            color: "red",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() => {
+            setFilterData({ ...filterData, contractStatus: "Terminated" });
+            handleApplyFilter();
+          }}
+        >
+          ● Terminated
+        </Button>
+        <Button
+          sx={{
+            color: "orange",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() => {
+            setFilterData({ ...filterData, contractStatus: "Draft" });
+            handleApplyFilter();
+          }}
+        >
+          ● Draft
+        </Button>
+        <Button
+          sx={{
+            color: "#9c27b0",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() => {
+            setFilterData({ ...filterData, contractStatus: "Expired" });
+            handleApplyFilter();
+          }}
+        >
+          ● Expired
+        </Button>
+        <Button
+          sx={{
+            color: "gray",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() => {
+            setFilterData({ ...filterData, contractStatus: "" });
+            handleApplyFilter();
+          }}
+        >
+          ● All
+        </Button>
+      </Box>
 
       {/* Dashboard */}
       {showDashboard && dashboardStats && (
-        <div
-          className={`dashboard-container dashboard-${dashboardOrientation}`}
+        <Box
+          sx={{
+            mb: 4,
+            p: { xs: 2, sm: 3 },
+            backgroundColor: "#f8fafc",
+            borderRadius: 2,
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            overflow: "hidden",
+          }}
         >
-          <div className="stats-cards">
-            <div className="stat-card primary">
-              <div className="stat-card-title">Total Contracts</div>
-              <div className="stat-card-value">
-                {dashboardStats.totalContracts || contracts.length}
-              </div>
-              <div className="stat-card-footer">
-                <FaFileContract /> All contracts
-              </div>
-            </div>
-            <div className="stat-card success">
-              <div className="stat-card-title">Active Contracts</div>
-              <div className="stat-card-value">
-                {dashboardStats.byStatus?.active || 0}
-              </div>
-              <div className="stat-card-footer">
-                <FaCheckCircle /> Currently active
-              </div>
-            </div>
-            <div className="stat-card warning">
-              <div className="stat-card-title">Expiring Soon</div>
-              <div className="stat-card-value">
-                {dashboardStats.expiringContracts?.count || 0}
-              </div>
-              <div className="stat-card-footer">
-                <FaCalendarAlt /> Next 30 days
-              </div>
-            </div>
-            <div className="stat-card danger">
-              <div className="stat-card-title">Expired Contracts</div>
-              <div className="stat-card-value">
-                {dashboardStats.byStatus?.expired || 0}
-              </div>
-              <div className="stat-card-footer">
-                <FaTimesCircle /> Need renewal
-              </div>
-            </div>
-          </div>
+          {/* Dashboard Stats Cards */}
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                sx={{
+                  height: "100%",
+                  borderRadius: 2,
+                  boxShadow:
+                    "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                  background:
+                    "linear-gradient(135deg, #1976d2 0%, #64b5f6 100%)",
+                  color: "white",
+                  transition: "transform 0.3s ease",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow:
+                      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                  },
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
+                    {dashboardStats.totalContracts || contracts.length}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 2, opacity: 0.8 }}>
+                    Total Contracts
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <FaFileContract
+                      style={{ marginRight: "8px", opacity: 0.8 }}
+                    />
+                    <Typography variant="caption">All contracts</Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                sx={{
+                  height: "100%",
+                  borderRadius: 2,
+                  boxShadow:
+                    "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                  background:
+                    "linear-gradient(135deg, #4caf50 0%, #81c784 100%)",
+                  color: "white",
+                  transition: "transform 0.3s ease",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow:
+                      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                  },
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
+                    {dashboardStats.byStatus?.active || 0}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 2, opacity: 0.8 }}>
+                    Active Contracts
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <FaCheckCircle
+                      style={{ marginRight: "8px", opacity: 0.8 }}
+                    />
+                    <Typography variant="caption">Currently active</Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                sx={{
+                  height: "100%",
+                  borderRadius: 2,
+                  boxShadow:
+                    "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                  background:
+                    "linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)",
+                  color: "white",
+                  transition: "transform 0.3s ease",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow:
+                      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                  },
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
+                    {dashboardStats.expiringContracts?.count || 0}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 2, opacity: 0.8 }}>
+                    Expiring Soon
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <FaCalendarAlt
+                      style={{ marginRight: "8px", opacity: 0.8 }}
+                    />
+                    <Typography variant="caption">Next 30 days</Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                sx={{
+                  height: "100%",
+                  borderRadius: 2,
+                  boxShadow:
+                    "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                  background:
+                    "linear-gradient(135deg, #f44336 0%, #e57373 100%)",
+                  color: "white",
+                  transition: "transform 0.3s ease",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow:
+                      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                  },
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
+                    {dashboardStats.byStatus?.expired || 0}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 2, opacity: 0.8 }}>
+                    Expired Contracts
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <FaTimesCircle
+                      style={{ marginRight: "8px", opacity: 0.8 }}
+                    />
+                    <Typography variant="caption">Need renewal</Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
 
           {/* Expiring contracts alert */}
           {dashboardStats.expiringContracts?.count > 0 && (
-            <div className="expiring-contracts-alert">
-              <div className="expiring-contracts-header">
-                <FaExclamationTriangle /> Contracts Expiring Soon
-              </div>
-              <ul className="expiring-contracts-list">
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 2, sm: 3 },
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "warning.light",
+                backgroundColor: alpha(theme.palette.warning.light, 0.1),
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  mb: 2,
+                  color: "warning.dark",
+                  gap: 1,
+                }}
+              >
+                <FaExclamationTriangle />
+                <Typography variant="h6" fontWeight="bold">
+                  Contracts Expiring Soon
+                </Typography>
+              </Box>
+
+              <Grid container spacing={2}>
                 {dashboardStats.expiringContracts.contracts.map(
                   (contract, index) => (
-                    <li key={index} className="expiring-contract-item">
-                      {contract.employee}'s {contract.contract} contract expires
-                      on {new Date(contract.endDate).toLocaleDateString()}
-                      <button
-                        className="renew-button"
-                        onClick={() => {
-                          setRenewalData({
-                            id: contract._id,
-                            startDate: new Date(contract.endDate)
-                              .toISOString()
-                              .split("T")[0],
-                            endDate: "",
-                            basicSalary: contract.basicSalary,
-                            renewalReason: "",
-                          });
-                          setShowRenewModal(true);
+                    <Grid item xs={12} sm={6} md={4} key={index}>
+                      <Card
+                        sx={{
+                          borderRadius: 2,
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                          transition: "all 0.3s ease",
+                          "&:hover": {
+                            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                            borderColor: theme.palette.warning.main,
+                          },
+                          border: "1px solid",
+                          borderColor: alpha(theme.palette.warning.main, 0.3),
                         }}
                       >
-                        Renew
-                      </button>
-                    </li>
+                        <CardContent sx={{ p: 2 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              mb: 1,
+                            }}
+                          >
+                            <Typography
+                              variant="subtitle1"
+                              fontWeight="bold"
+                              noWrap
+                              sx={{ maxWidth: "70%" }}
+                            >
+                              {contract.employee}
+                            </Typography>
+                            <Chip
+                              label={contract.contract}
+                              size="small"
+                              sx={{
+                                backgroundColor: alpha(
+                                  theme.palette.primary.main,
+                                  0.1
+                                ),
+                                color: theme.palette.primary.main,
+                                fontWeight: 500,
+                              }}
+                            />
+                          </Box>
+
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mb: 1 }}
+                          >
+                            Expires on:{" "}
+                            <b>
+                              {new Date(contract.endDate).toLocaleDateString()}
+                            </b>
+                          </Typography>
+
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "flex-end",
+                              mt: 1,
+                            }}
+                          >
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="warning"
+                              startIcon={<FaRedo />}
+                              onClick={() => {
+                                setRenewalData({
+                                  id: contract._id,
+                                  startDate: new Date(contract.endDate)
+                                    .toISOString()
+                                    .split("T")[0],
+                                  endDate: "",
+                                  basicSalary: contract.basicSalary,
+                                  renewalReason: "",
+                                });
+                                setShowRenewModal(true);
+                              }}
+                              sx={{
+                                borderRadius: "8px",
+                                textTransform: "none",
+                                fontWeight: 500,
+                              }}
+                            >
+                              Renew Contract
+                            </Button>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
                   )
                 )}
-              </ul>
-            </div>
+              </Grid>
+            </Paper>
           )}
-        </div>
+        </Box>
       )}
 
       {/* Options bar for bulk actions */}
       {selectedContracts.length > 0 && (
-        <div className="options-bar">
-          <span>
-            <strong>{selectedContracts.length}</strong> contracts selected
-          </span>
-          <select
-            className="bulk-action-select"
-            value={bulkAction}
-            onChange={handleBulkActionChange}
+        <Paper
+          elevation={1}
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "stretch", sm: "center" },
+            justifyContent: "space-between",
+            p: { xs: 2, sm: 2 },
+            mb: 3,
+            borderRadius: 2,
+            backgroundColor: alpha(theme.palette.primary.light, 0.08),
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+          }}
+        >
+          <Box
+            sx={{ display: "flex", alignItems: "center", mb: { xs: 2, sm: 0 } }}
           >
-            <option value="">Bulk Actions</option>
-            <option value="delete">Delete Selected</option>
-            <option value="export">Export Selected</option>
-            <option value="status">Update Status</option>
-          </select>
-          <button
-            className="bulk-action-button"
-            onClick={handleApplyBulkAction}
-          >
-            Apply
-          </button>
-          <button
-            onClick={() => {
-              setSelectedContracts([]);
-              setSelectAll(false);
+            <Typography
+              variant="body1"
+              sx={{
+                fontWeight: 600,
+                color: theme.palette.primary.main,
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <FaClipboardCheck style={{ marginRight: "8px" }} />
+              <strong>{selectedContracts.length}</strong> contracts selected
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 2,
+              width: { xs: "100%", sm: "auto" },
             }}
           >
-            Clear Selection
-          </button>
-        </div>
+            <FormControl
+              size="small"
+              sx={{
+                minWidth: { xs: "100%", sm: 150 },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "8px",
+                  backgroundColor: "white",
+                },
+              }}
+            >
+              <Select
+                value={bulkAction}
+                onChange={handleBulkActionChange}
+                displayEmpty
+                inputProps={{ "aria-label": "Bulk Actions" }}
+              >
+                <MenuItem value="" disabled>
+                  <Typography variant="body2" color="text.secondary">
+                    Bulk Actions
+                  </Typography>
+                </MenuItem>
+                <MenuItem value="delete">Delete Selected</MenuItem>
+                <MenuItem value="export">Export Selected</MenuItem>
+                <MenuItem value="status">Update Status</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Button
+              variant="contained"
+              onClick={handleApplyBulkAction}
+              disabled={!bulkAction}
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                color: "white",
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                "&:hover": {
+                  backgroundColor: theme.palette.primary.dark,
+                },
+                "&.Mui-disabled": {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.3),
+                  color: "white",
+                },
+              }}
+            >
+              Apply
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setSelectedContracts([]);
+                setSelectAll(false);
+              }}
+              sx={{
+                borderColor: alpha(theme.palette.primary.main, 0.5),
+                color: theme.palette.primary.main,
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                "&:hover": {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                  borderColor: theme.palette.primary.main,
+                },
+              }}
+            >
+              Clear Selection
+            </Button>
+          </Box>
+        </Paper>
       )}
 
       {/* Table */}
       <div className="contract-table-container">
         <table className="contract-table">
-          {/* <thead>
-            <tr>
-              <th>
-                <input
-                  type="checkbox"
-                  checked={selectAll}
-                  onChange={handleSelectAll}
-                />
-              </th>
-              <th onClick={() => handleSort("contract")}>
-                Contractor Name{" "}
-                {sortConfig.key === "contract" ? (
-                  sortConfig.direction === "asc" ? (
-                    <FaSortUp />
-                  ) : (
-                    <FaSortDown />
-                  )
-                ) : null}
-              </th>
-              <th onClick={() => handleSort("employee")}>
-                Employee{" "}
-                {sortConfig.key === "employee" ? (
-                  sortConfig.direction === "asc" ? (
-                    <FaSortUp />
-                  ) : (
-                    <FaSortDown />
-                  )
-                ) : null}
-              </th>
-              <th onClick={() => handleSort("startDate")}>
-                Start Date{" "}
-                {sortConfig.key === "startDate" ? (
-                  sortConfig.direction === "asc" ? (
-                    <FaSortUp />
-                  ) : (
-                    <FaSortDown />
-                  )
-                ) : null}
-              </th>
-              <th onClick={() => handleSort("endDate")}>
-                End Date{" "}
-                {sortConfig.key === "endDate" ? (
-                  sortConfig.direction === "asc" ? (
-                    <FaSortUp />
-                  ) : (
-                    <FaSortDown />
-                  )
-                ) : null}
-              </th>
-              <th onClick={() => handleSort("wageType")}>
-                Wage Type{" "}
-                {sortConfig.key === "wageType" ? (
-                  sortConfig.direction === "asc" ? (
-                    <FaSortUp />
-                  ) : (
-                    <FaSortDown />
-                  )
-                ) : null}
-              </th>
-              <th onClick={() => handleSort("basicSalary")}>
-                Basic Salary{" "}
-                {sortConfig.key === "basicSalary" ? (
-                  sortConfig.direction === "asc" ? (
-                    <FaSortUp />
-                  ) : (
-                    <FaSortDown />
-                  )
-                ) : null}
-              </th>
-              <th onClick={() => handleSort("filingStatus")}>
-                Filing Status{" "}
-                {sortConfig.key === "filingStatus" ? (
-                  sortConfig.direction === "asc" ? (
-                    <FaSortUp />
-                  ) : (
-                    <FaSortDown />
-                  )
-                ) : null}
-              </th>
-              <th onClick={() => handleSort("contractStatus")}>
-                Contract Status{" "}
-                {sortConfig.key === "contractStatus" ? (
-                  sortConfig.direction === "asc" ? (
-                    <FaSortUp />
-                  ) : (
-                    <FaSortDown />
-                  )
-                ) : null}
-              </th>
-              <th>Actions</th>
-            </tr>
-          </thead> */}
           <thead>
             <tr>
               <th style={{ backgroundColor: "#1976d2", color: "white" }}>
@@ -2286,7 +2460,7 @@ const Contract = () => {
                           </button>
                           <button
                             className="action-button delete-button"
-                            onClick={() => handleDelete(contract._id)}
+                            onClick={() => handleDeleteClick(contract)}
                             title="Delete"
                           >
                             <FaTrash />
@@ -2727,13 +2901,47 @@ const Contract = () => {
 
       {/* Renew Contract Modal */}
       {showRenewModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 className="modal-header">Renew Contract</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label>New Start Date</label>
-                <input
+        <Dialog
+          open={true}
+          onClose={() => setShowRenewModal(false)}
+          PaperProps={{
+            sx: {
+              width: { xs: "95%", sm: "500px" },
+              maxWidth: "500px",
+              borderRadius: "20px",
+              overflow: "hidden",
+              margin: { xs: "8px", sm: "32px" },
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #ff9800, #ffb74d)",
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              fontWeight: 600,
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <FaRedo />
+            Renew Contract
+          </DialogTitle>
+
+          <DialogContent
+            sx={{
+              padding: { xs: "24px", sm: "32px" },
+              backgroundColor: "#f8fafc",
+              paddingTop: { xs: "24px", sm: "32px" },
+            }}
+          >
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="New Start Date"
                   type="date"
                   value={renewalData.startDate}
                   onChange={(e) =>
@@ -2742,110 +2950,286 @@ const Contract = () => {
                       startDate: e.target.value,
                     })
                   }
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#ff9800",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#ff9800",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#ff9800",
+                    },
+                  }}
                 />
-              </div>
-              <div className="form-group">
-                <label>New End Date</label>
-                <input
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="New End Date"
                   type="date"
                   value={renewalData.endDate}
                   onChange={(e) =>
                     setRenewalData({ ...renewalData, endDate: e.target.value })
                   }
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#ff9800",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#ff9800",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#ff9800",
+                    },
+                  }}
                 />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>New Basic Salary</label>
-              <input
-                type="number"
-                value={renewalData.basicSalary}
-                onChange={(e) =>
-                  setRenewalData({
-                    ...renewalData,
-                    basicSalary: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="form-group">
-              <label>Renewal Reason</label>
-              <textarea
-                value={renewalData.renewalReason}
-                onChange={(e) =>
-                  setRenewalData({
-                    ...renewalData,
-                    renewalReason: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="modal-footer">
-              <button
-                className="modal-save-button"
-                onClick={() => {
-                  // In a real app, you would make an API call to renew the contract
-                  // For now, we'll just update it locally
-                  const updatedContracts = contracts.map((contract) => {
-                    if (contract._id === renewalData.id) {
-                      return {
-                        ...contract,
-                        startDate: renewalData.startDate,
-                        endDate: renewalData.endDate,
-                        basicSalary: Number(renewalData.basicSalary),
-                        contractStatus: "Active",
-                        note: contract.note
-                          ? `${contract.note}\nRenewal: ${renewalData.renewalReason}`
-                          : `Renewal: ${renewalData.renewalReason}`,
-                      };
-                    }
-                    return contract;
-                  });
+              </Grid>
 
-                  setContracts(updatedContracts);
-                  setFilteredContracts(updatedContracts);
-                  setShowRenewModal(false);
-                  toast.success("Contract renewed successfully");
-                }}
-              >
-                Renew Contract
-              </button>
-              <button
-                className="modal-close-button"
-                onClick={() => setShowRenewModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="New Basic Salary"
+                  type="number"
+                  value={renewalData.basicSalary}
+                  onChange={(e) =>
+                    setRenewalData({
+                      ...renewalData,
+                      basicSalary: e.target.value,
+                    })
+                  }
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AttachMoneyIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#ff9800",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#ff9800",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#ff9800",
+                    },
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Renewal Reason"
+                  multiline
+                  rows={4}
+                  value={renewalData.renewalReason}
+                  onChange={(e) =>
+                    setRenewalData({
+                      ...renewalData,
+                      renewalReason: e.target.value,
+                    })
+                  }
+                  placeholder="Please provide a reason for contract renewal..."
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#ff9800",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#ff9800",
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#ff9800",
+                    },
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+
+          <DialogActions
+            sx={{
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              backgroundColor: "#f8fafc",
+              borderTop: "1px solid #e0e0e0",
+              gap: 2,
+            }}
+          >
+            <Button
+              onClick={() => setShowRenewModal(false)}
+              sx={{
+                border: "2px solid #ff9800",
+                color: "#ff9800",
+                "&:hover": {
+                  border: "2px solid #ffb74d",
+                  backgroundColor: "#fff8e1",
+                  color: "#ff9800",
+                },
+                textTransform: "none",
+                borderRadius: "8px",
+                px: 3,
+                fontWeight: 600,
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              onClick={() => {
+                // In a real app, you would make an API call to renew the contract
+                // For now, we'll just update it locally
+                const updatedContracts = contracts.map((contract) => {
+                  if (contract._id === renewalData.id) {
+                    return {
+                      ...contract,
+                      startDate: renewalData.startDate,
+                      endDate: renewalData.endDate,
+                      basicSalary: Number(renewalData.basicSalary),
+                      contractStatus: "Active",
+                      note: contract.note
+                        ? `${contract.note}\nRenewal: ${renewalData.renewalReason}`
+                        : `Renewal: ${renewalData.renewalReason}`,
+                    };
+                  }
+                  return contract;
+                });
+
+                setContracts(updatedContracts);
+                setFilteredContracts(updatedContracts);
+                setShowRenewModal(false);
+                toast.success("Contract renewed successfully");
+              }}
+              variant="contained"
+              sx={{
+                background: "linear-gradient(45deg, #ff9800, #ffb74d)",
+                fontSize: "0.95rem",
+                textTransform: "none",
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(255, 152, 0, 0.2)",
+                color: "white",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #f57c00, #ff9800)",
+                },
+              }}
+            >
+              Renew Contract
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
 
       {/* Bulk Update Modal */}
       {showBulkUpdateModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 className="modal-header">Update Multiple Contracts</h3>
-            <div className="form-group">
-              <label>Set Contract Status</label>
-              <select
-                value={bulkUpdateData.value}
-                onChange={(e) =>
-                  setBulkUpdateData({
-                    ...bulkUpdateData,
-                    value: e.target.value,
-                  })
-                }
+        <Dialog
+          open={true}
+          onClose={() => setShowBulkUpdateModal(false)}
+          PaperProps={{
+            sx: {
+              width: { xs: "95%", sm: "500px" },
+              maxWidth: "500px",
+              borderRadius: "20px",
+              overflow: "hidden",
+              margin: { xs: "8px", sm: "32px" },
+            },
+          }}
+          TransitionComponent={Fade}
+          TransitionProps={{
+            timeout: 300,
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              fontWeight: 600,
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <FaEdit />
+            Update Multiple Contracts
+          </DialogTitle>
+
+          <DialogContent
+            sx={{
+              padding: { xs: "24px", sm: "32px" },
+              backgroundColor: "#f8fafc",
+              paddingTop: { xs: "24px", sm: "32px" },
+            }}
+          >
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                Set Contract Status
+              </Typography>
+              <FormControl
+                fullWidth
+                variant="outlined"
+                size="small"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: theme.palette.primary.main,
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: theme.palette.primary.main,
+                    },
+                  },
+                }}
               >
-                <option value="Active">Active</option>
-                <option value="Draft">Draft</option>
-                <option value="Expired">Expired</option>
-                <option value="Terminated">Terminated</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Reason for Update</label>
-              <textarea
+                <Select
+                  value={bulkUpdateData.value || "Active"}
+                  onChange={(e) =>
+                    setBulkUpdateData({
+                      ...bulkUpdateData,
+                      value: e.target.value,
+                    })
+                  }
+                  displayEmpty
+                >
+                  <MenuItem value="Active">Active</MenuItem>
+                  <MenuItem value="Draft">Draft</MenuItem>
+                  <MenuItem value="Expired">Expired</MenuItem>
+                  <MenuItem value="Terminated">Terminated</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                Reason for Update
+              </Typography>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                placeholder="Optional reason for this update"
                 value={bulkUpdateData.reason || ""}
                 onChange={(e) =>
                   setBulkUpdateData({
@@ -2853,23 +3237,240 @@ const Contract = () => {
                     reason: e.target.value,
                   })
                 }
-                placeholder="Optional reason for this update"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: theme.palette.primary.main,
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: theme.palette.primary.main,
+                    },
+                  },
+                }}
               />
-            </div>
-            <div className="modal-footer">
-              <button className="modal-save-button" onClick={handleBulkUpdate}>
-                Update {selectedContracts.length} Contracts
-              </button>
-              <button
-                className="modal-close-button"
-                onClick={() => setShowBulkUpdateModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+            </Box>
+
+            <Box sx={{ mt: 3 }}>
+              <Alert severity="info" sx={{ borderRadius: "8px" }}>
+                This action will update the status of {selectedContracts.length}{" "}
+                selected contracts.
+              </Alert>
+            </Box>
+          </DialogContent>
+
+          <DialogActions
+            sx={{
+              padding: { xs: "16px 24px", sm: "24px 32px" },
+              backgroundColor: "#f8fafc",
+              borderTop: "1px solid #e0e0e0",
+              gap: 2,
+            }}
+          >
+            <Button
+              onClick={() => setShowBulkUpdateModal(false)}
+              sx={{
+                border: "2px solid #1976d2",
+                color: "#1976d2",
+                "&:hover": {
+                  border: "2px solid #64b5f6",
+                  backgroundColor: "#e3f2fd",
+                  color: "#1976d2",
+                },
+                textTransform: "none",
+                borderRadius: "8px",
+                px: 3,
+                fontWeight: 600,
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              onClick={handleBulkUpdate}
+              variant="contained"
+              disabled={loading}
+              startIcon={
+                loading ? <CircularProgress size={20} color="inherit" /> : null
+              }
+              sx={{
+                background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                fontSize: "0.95rem",
+                textTransform: "none",
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+                color: "white",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+                },
+              }}
+            >
+              {loading
+                ? "Updating..."
+                : `Update ${selectedContracts.length} Contracts`}
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
+        TransitionComponent={Fade}
+        TransitionProps={{
+          timeout: 300,
+        }}
+        sx={{
+          "& .MuiDialog-container": {
+            justifyContent: "center",
+            alignItems: "center",
+            "& .MuiPaper-root": {
+              margin: { xs: "16px", sm: "32px" },
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+            },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <FaTrash />
+          Confirm Deletion
+        </DialogTitle>
+
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Are you sure you want to delete this contract? This action cannot be
+            undone.
+          </Alert>
+
+          {contractToDelete && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+              <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                Contract: {contractToDelete.contract}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Employee: {contractToDelete.employee}
+              </Typography>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Start Date: {contractToDelete.startDate}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  End Date: {contractToDelete.endDate || "N/A"}
+                </Typography>
+              </Box>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Wage Type: {contractToDelete.wageType}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Basic Salary: ${contractToDelete.basicSalary}
+                </Typography>
+              </Box>
+              <Box sx={{ mt: 1 }}>
+                <Chip
+                  label={contractToDelete.contractStatus || "Active"}
+                  color={
+                    contractToDelete.contractStatus === "Active"
+                      ? "success"
+                      : contractToDelete.contractStatus === "Expired"
+                      ? "error"
+                      : contractToDelete.contractStatus === "Draft"
+                      ? "warning"
+                      : "default"
+                  }
+                  size="small"
+                  sx={{ mr: 1 }}
+                />
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

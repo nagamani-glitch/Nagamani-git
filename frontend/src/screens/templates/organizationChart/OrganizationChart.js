@@ -179,9 +179,53 @@ const OrganizationChart = () => {
     }
   };
 
+  // const handleUpdatePosition = async () => {
+  //   try {
+  //     if (!editingPosition) return;
+
+  //     // Rename designation to title for API compatibility
+  //     const positionData = {
+  //       ...newPosition,
+  //       title: newPosition.designation,
+  //     };
+  //     delete positionData.designation;
+
+  //     await axios.put(
+  //       `${API_URL}/positions/${editingPosition._id}`,
+  //       positionData
+  //     );
+  //     await fetchOrganizationChart();
+  //     setIsEditDialogOpen(false);
+  //     resetForm();
+  //     setAlert({
+  //       open: true,
+  //       message: "Position updated successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating position:", error);
+  //     setAlert({
+  //       open: true,
+  //       message: "Error updating position",
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  // Updated to show delete confirmation dialog
+
+  // Now, fix the handleUpdatePosition function to properly use the editingNodeId
   const handleUpdatePosition = async () => {
     try {
-      if (!editingPosition) return;
+      if (!editingNodeId) {
+        console.error("No position ID found for update");
+        setAlert({
+          open: true,
+          message: "Error: No position ID found",
+          severity: "error",
+        });
+        return;
+      }
 
       // Rename designation to title for API compatibility
       const positionData = {
@@ -190,10 +234,12 @@ const OrganizationChart = () => {
       };
       delete positionData.designation;
 
-      await axios.put(
-        `${API_URL}/positions/${editingPosition._id}`,
-        positionData
-      );
+      console.log("Updating position with ID:", editingNodeId);
+      console.log("Update data:", positionData);
+
+      // Use the editingNodeId directly
+      await axios.put(`${API_URL}/positions/${editingNodeId}`, positionData);
+
       await fetchOrganizationChart();
       setIsEditDialogOpen(false);
       resetForm();
@@ -206,13 +252,14 @@ const OrganizationChart = () => {
       console.error("Error updating position:", error);
       setAlert({
         open: true,
-        message: "Error updating position",
+        message:
+          "Error updating position: " +
+          (error.response?.data?.message || error.message),
         severity: "error",
       });
     }
   };
 
-  // Updated to show delete confirmation dialog
   const handleDeleteClick = (node) => {
     setPositionToDelete(node);
     setDeleteDialogOpen(true);
@@ -264,6 +311,20 @@ const OrganizationChart = () => {
   //   setEditingPosition(null);
   // };
 
+  // const resetForm = () => {
+  //   setNewPosition({
+  //     name: "",
+  //     designation: "",
+  //     email: "",
+  //     employeeId: "",
+  //     department: "",
+  //     parentId: "",
+  //     status: "active",
+  //   });
+  //   setSelectedEmployee(null);
+  //   setEditingNodeId(null); // Add this line
+  // };
+  // Update the resetForm function to clear both editingPosition and editingNodeId
   const resetForm = () => {
     setNewPosition({
       name: "",
@@ -275,7 +336,8 @@ const OrganizationChart = () => {
       status: "active",
     });
     setSelectedEmployee(null);
-    setEditingNodeId(null); // Add this line
+    setEditingPosition(null);
+    setEditingNodeId(null);
   };
 
   const showNodeDetails = (node) => {
@@ -533,7 +595,8 @@ const OrganizationChart = () => {
   };
 
   const openEditDialog = (node) => {
-    setEditingNodeId(node._id); // Add this line
+    setEditingNodeId(node._id); // Set the ID
+    setEditingPosition(node); // Set the full node object
     setNewPosition({
       name: node.name,
       designation: node.title,
@@ -1744,9 +1807,9 @@ const OrganizationChart = () => {
         Update Position
       </Button> * */}
           <Button
-            onClick={handleUpdatePosition} // Make sure this is correct
+            onClick={handleUpdatePosition}
             variant="contained"
-            disabled={false} // Make sure it's not disabled
+            disabled={!newPosition.name || !newPosition.designation} // Add validation
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
               fontSize: { xs: "0.9rem", sm: "0.95rem" },

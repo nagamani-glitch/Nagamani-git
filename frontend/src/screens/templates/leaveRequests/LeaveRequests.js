@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import {styled} from "@mui/material/styles";
 import axios from "axios";
 import {
   Button,
@@ -22,6 +23,14 @@ import {
   CardContent,
   Chip,
   Divider,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  alpha,
 } from "@mui/material";
 import {
   FilterList,
@@ -41,6 +50,16 @@ import { Stack } from "@mui/material";
 
 // Use the new API endpoint for leave requests
 const API_URL = "http://localhost:5000/api/leave-requests";
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
 
 const LEAVE_TYPES = [
   { value: "annual", label: "Annual Leave" },
@@ -309,313 +328,864 @@ const LeaveRequests = () => {
   });
 
   // Render mobile card view for each leave request
-  const renderMobileCard = (leave) => (
-    <Card className="mobile-leave-card" key={leave._id}>
-      <CardContent>
-        <Box className="mobile-card-header">
-          <Typography variant="h6" className="mobile-card-title">
-            {leave.employeeName}
-          </Typography>
-          <Chip
-            label={leave.status}
-            className={getStatusBadgeClass(leave.status)}
-            size="small"
-          />
-        </Box>
+  // const renderMobileCard = (leave) => (
+  //   <Card className="mobile-leave-card" key={leave._id}>
+  //     <CardContent>
+  //       <Box className="mobile-card-header">
+  //         <Typography variant="h6" className="mobile-card-title">
+  //           {leave.employeeName}
+  //         </Typography>
+  //         <Chip
+  //           label={leave.status}
+  //           className={getStatusBadgeClass(leave.status)}
+  //           size="small"
+  //         />
+  //       </Box>
 
-        <Typography variant="body2" className="employee-code">
-          {leave.employeeCode}
-        </Typography>
+  //       <Typography variant="body2" className="employee-code">
+  //         {leave.employeeCode}
+  //       </Typography>
 
-        <Divider sx={{ my: 1.5 }} />
+  //       <Divider sx={{ my: 1.5 }} />
 
-        <Box className="mobile-card-row">
-          <Typography variant="body2" className="mobile-card-label">
-            <Person
-              fontSize="small"
-              sx={{ mr: 0.5, verticalAlign: "middle" }}
-            />
-            Leave Type:
-          </Typography>
-          <Typography variant="body2" className="mobile-card-value">
-            {getLeaveTypeName(leave.leaveType)}
-          </Typography>
-        </Box>
+  //       <Box className="mobile-card-row">
+  //         <Typography variant="body2" className="mobile-card-label">
+  //           <Person
+  //             fontSize="small"
+  //             sx={{ mr: 0.5, verticalAlign: "middle" }}
+  //           />
+  //           Leave Type:
+  //         </Typography>
+  //         <Typography variant="body2" className="mobile-card-value">
+  //           {getLeaveTypeName(leave.leaveType)}
+  //         </Typography>
+  //       </Box>
 
-        <Box className="mobile-card-row">
-          <Typography variant="body2" className="mobile-card-label">
-            <CalendarToday
-              fontSize="small"
-              sx={{ mr: 0.5, verticalAlign: "middle" }}
-            />
-            Duration:
-          </Typography>
-          <Typography variant="body2" className="mobile-card-value">
-            {new Date(leave.startDate).toLocaleDateString()} -{" "}
-            {new Date(leave.endDate).toLocaleDateString()}
-            <span className="leave-days">
-              {leave.halfDay
-                ? "Half Day"
-                : `${
-                    leave.numberOfDays ||
-                    calculateDays(leave.startDate, leave.endDate, leave.halfDay)
-                  } days`}
-              {leave.halfDay && ` (${leave.halfDayType})`}
-            </span>
-          </Typography>
-        </Box>
+  //       <Box className="mobile-card-row">
+  //         <Typography variant="body2" className="mobile-card-label">
+  //           <CalendarToday
+  //             fontSize="small"
+  //             sx={{ mr: 0.5, verticalAlign: "middle" }}
+  //           />
+  //           Duration:
+  //         </Typography>
+  //         <Typography variant="body2" className="mobile-card-value">
+  //           {new Date(leave.startDate).toLocaleDateString()} -{" "}
+  //           {new Date(leave.endDate).toLocaleDateString()}
+  //           <span className="leave-days">
+  //             {leave.halfDay
+  //               ? "Half Day"
+  //               : `${
+  //                   leave.numberOfDays ||
+  //                   calculateDays(leave.startDate, leave.endDate, leave.halfDay)
+  //                 } days`}
+  //             {leave.halfDay && ` (${leave.halfDayType})`}
+  //           </span>
+  //         </Typography>
+  //       </Box>
 
-        <Box className="mobile-card-row">
-          <Typography variant="body2" className="mobile-card-label">
-            <Description
-              fontSize="small"
-              sx={{ mr: 0.5, verticalAlign: "middle" }}
-            />
-            Reason:
-          </Typography>
-          <Typography
-            variant="body2"
-            className="mobile-card-value leave-reason"
+  //       <Box className="mobile-card-row">
+  //         <Typography variant="body2" className="mobile-card-label">
+  //           <Description
+  //             fontSize="small"
+  //             sx={{ mr: 0.5, verticalAlign: "middle" }}
+  //           />
+  //           Reason:
+  //         </Typography>
+  //         <Typography
+  //           variant="body2"
+  //           className="mobile-card-value leave-reason"
+  //         >
+  //           {leave.reason}
+  //         </Typography>
+  //       </Box>
+
+  //       {leave.status === "rejected" && leave.rejectionReason && (
+  //         <Box className="mobile-card-row">
+  //           <Typography variant="body2" className="mobile-card-label">
+  //             <Info
+  //               fontSize="small"
+  //               sx={{ mr: 0.5, verticalAlign: "middle" }}
+  //             />
+  //             Rejection Reason:
+  //           </Typography>
+  //           <Typography variant="body2" className="mobile-card-value">
+  //             {leave.rejectionReason}
+  //           </Typography>
+  //         </Box>
+  //       )}
+
+  //       <Divider sx={{ my: 1.5 }} />
+
+  //       <Box className="mobile-card-actions">
+  //         {leave.status === "pending" && (
+  //           <>
+  //             <Tooltip title="Approve">
+  //               <IconButton
+  //                 onClick={() => handleApproveRequest(leave._id)}
+  //                 color="success"
+  //                 disabled={loading}
+  //                 size="small"
+  //               >
+  //                 <CheckCircle />
+  //               </IconButton>
+  //             </Tooltip>
+  //             <Tooltip title="Reject">
+  //               <IconButton
+  //                 onClick={() => handleOpenRejectDialog(leave._id)}
+  //                 color="error"
+  //                 disabled={loading}
+  //                 size="small"
+  //               >
+  //                 <Cancel />
+  //               </IconButton>
+  //             </Tooltip>
+  //           </>
+  //         )}
+  //         <Tooltip title="View/Add Comment">
+  //           <IconButton
+  //             onClick={() => handleOpenCommentDialog(leave._id)}
+  //             disabled={loading}
+  //             size="small"
+  //           >
+  //             <ChatBubbleOutline />
+  //           </IconButton>
+  //         </Tooltip>
+  //         <Tooltip title="Cancel Request">
+  //           <IconButton
+  //             onClick={() => handleOpenDeleteDialog(leave._id)}
+  //             color="error"
+  //             disabled={loading}
+  //             className="delete-button"
+  //             size="small"
+  //           >
+  //             <DeleteOutline />
+  //           </IconButton>
+  //         </Tooltip>
+  //       </Box>
+  //     </CardContent>
+  //   </Card>
+  // );
+
+  // Render mobile card view for each leave request
+const renderMobileCard = (leave) => (
+  <Card
+    key={leave._id}
+    sx={{
+      mb: 2,
+      borderRadius: 2,
+      boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+      overflow: "hidden",
+    }}
+  >
+    <CardContent sx={{ p: 0 }}>
+      {/* Card Header with Employee Info and Status */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          p: 2,
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+          backgroundColor: alpha(theme.palette.primary.light, 0.05),
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              bgcolor: alpha(theme.palette.primary.main, 0.8),
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "bold",
+              fontSize: "1rem",
+            }}
           >
-            {leave.reason}
-          </Typography>
-        </Box>
-
-        {leave.status === "rejected" && leave.rejectionReason && (
-          <Box className="mobile-card-row">
-            <Typography variant="body2" className="mobile-card-label">
-              <Info
-                fontSize="small"
-                sx={{ mr: 0.5, verticalAlign: "middle" }}
-              />
-              Rejection Reason:
+            {leave.employeeName?.[0] || "U"}
+          </Box>
+          <Box>
+            <Typography variant="subtitle1" fontWeight={600}>
+              {leave.employeeName}
             </Typography>
-            <Typography variant="body2" className="mobile-card-value">
-              {leave.rejectionReason}
+            <Typography variant="caption" color="text.secondary">
+              {leave.employeeCode}
             </Typography>
           </Box>
-        )}
-
-        <Divider sx={{ my: 1.5 }} />
-
-        <Box className="mobile-card-actions">
-          {leave.status === "pending" && (
-            <>
-              <Tooltip title="Approve">
-                <IconButton
-                  onClick={() => handleApproveRequest(leave._id)}
-                  color="success"
-                  disabled={loading}
-                  size="small"
-                >
-                  <CheckCircle />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Reject">
-                <IconButton
-                  onClick={() => handleOpenRejectDialog(leave._id)}
-                  color="error"
-                  disabled={loading}
-                  size="small"
-                >
-                  <Cancel />
-                </IconButton>
-              </Tooltip>
-            </>
-          )}
-          <Tooltip title="View/Add Comment">
-            <IconButton
-              onClick={() => handleOpenCommentDialog(leave._id)}
-              disabled={loading}
-              size="small"
-            >
-              <ChatBubbleOutline />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Cancel Request">
-            <IconButton
-              onClick={() => handleOpenDeleteDialog(leave._id)}
-              color="error"
-              disabled={loading}
-              className="delete-button"
-              size="small"
-            >
-              <DeleteOutline />
-            </IconButton>
-          </Tooltip>
         </Box>
-      </CardContent>
-    </Card>
-  );
+        <Box
+          sx={{
+            display: "inline-block",
+            px: 1.5,
+            py: 0.5,
+            borderRadius: 1,
+            fontSize: "0.75rem",
+            fontWeight: "medium",
+            backgroundColor:
+              leave.status === "approved"
+                ? alpha("#4caf50", 0.1)
+                : leave.status === "rejected"
+                ? alpha("#f44336", 0.1)
+                : alpha("#ff9800", 0.1),
+            color:
+              leave.status === "approved"
+                ? "#2e7d32"
+                : leave.status === "rejected"
+                ? "#d32f2f"
+                : "#e65100",
+          }}
+        >
+          {leave.status}
+        </Box>
+      </Box>
+
+      {/* Card Body with Leave Details */}
+      <Box sx={{ p: 2 }}>
+        <Stack spacing={1.5}>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary" sx={{ display: "flex", alignItems: "center" }}>
+              <Person fontSize="small" sx={{ mr: 0.5 }} />
+              Leave Type:
+            </Typography>
+            <Typography variant="body2" fontWeight={500}>
+              {getLeaveTypeName(leave.leaveType)}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2" color="text.secondary" sx={{ display: "flex", alignItems: "center" }}>
+              <CalendarToday fontSize="small" sx={{ mr: 0.5 }} />
+              Duration:
+            </Typography>
+            <Box sx={{ textAlign: "right" }}>
+              <Typography variant="body2" fontWeight={500}>
+                {new Date(leave.startDate).toLocaleDateString()} -{" "}
+                {new Date(leave.endDate).toLocaleDateString()}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {leave.halfDay
+                  ? "Half Day"
+                  : `${
+                      leave.numberOfDays ||
+                      calculateDays(leave.startDate, leave.endDate, leave.halfDay)
+                    } days`}
+                {leave.halfDay && ` (${leave.halfDayType})`}
+              </Typography>
+            </Box>
+          </Box>
+
+          <Box>
+            <Typography variant="body2" color="text.secondary" sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+              <Description fontSize="small" sx={{ mr: 0.5 }} />
+              Reason:
+            </Typography>
+            <Typography variant="body2" sx={{ pl: 3 }}>
+              {leave.reason}
+            </Typography>
+          </Box>
+
+          {leave.status === "rejected" && leave.rejectionReason && (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                <Info fontSize="small" sx={{ mr: 0.5 }} />
+                Rejection Reason:
+              </Typography>
+              <Typography variant="body2" color="error.main" sx={{ pl: 3 }}>
+                {leave.rejectionReason}
+              </Typography>
+            </Box>
+          )}
+        </Stack>
+      </Box>
+
+      {/* Card Footer with Action Buttons */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 1,
+          p: 2,
+          borderTop: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+          backgroundColor: alpha(theme.palette.primary.light, 0.02),
+        }}
+      >
+        {leave.status === "pending" && (
+          <>
+            <Tooltip title="Approve">
+              <IconButton
+                onClick={() => handleApproveRequest(leave._id)}
+                color="success"
+                disabled={loading}
+                size="small"
+                sx={{
+                  backgroundColor: alpha("#4caf50", 0.1),
+                  "&:hover": {
+                    backgroundColor: alpha("#4caf50", 0.2),
+                  },
+                }}
+              >
+                <CheckCircle />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Reject">
+              <IconButton
+                onClick={() => handleOpenRejectDialog(leave._id)}
+                color="error"
+                disabled={loading}
+                size="small"
+                sx={{
+                  backgroundColor: alpha("#f44336", 0.1),
+                  "&:hover": {
+                    backgroundColor: alpha("#f44336", 0.2),
+                  },
+                }}
+              >
+                <Cancel />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
+        <Tooltip title="View/Add Comment">
+          <IconButton
+            onClick={() => handleOpenCommentDialog(leave._id)}
+            disabled={loading}
+            size="small"
+            sx={{
+              backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              "&:hover": {
+                backgroundColor: alpha(theme.palette.primary.main, 0.2),
+              },
+            }}
+          >
+            <ChatBubbleOutline />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Cancel Request">
+          <IconButton
+            onClick={() => handleOpenDeleteDialog(leave._id)}
+            color="error"
+            disabled={loading}
+            className="delete-button"
+            size="small"
+            sx={{
+              backgroundColor: alpha("#f44336", 0.1),
+              "&:hover": {
+                backgroundColor: alpha("#f44336", 0.2),
+              },
+            }}
+          >
+            <DeleteOutline />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    </CardContent>
+  </Card>
+);
+
 
   return (
     <div className="leave-requests-container">
-      <div className="leave-requests-header">
-        <Typography variant="h5" className="leave-requests-title">
-          Leave Requests Management
-        </Typography>
-        <div className="leave-requests-controls">
-          <TextField
-            className="leave-requests-search"
-            placeholder="Search by employee, type, status or reason..."
-            variant="outlined"
-            size="small"
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: <Search sx={{ color: "action.active", mr: 1 }} />,
-            }}
-          />
-          <div className="leave-requests-actions">
-            <Button
-              variant="outlined"
-              onClick={(event) => setFilterAnchorEl(event.currentTarget)}
-              startIcon={<FilterList />}
-            >
-              Filter
-            </Button>
-          </div>
-        </div>
-      </div>
+      <Box
+  sx={{
+    p: { xs: 2, sm: 3, md: 4 },
+    backgroundColor: "#f5f5f5",
+    minHeight: "100vh",
+  }}
+>
+     
+        
+      <Typography
+    variant="h4"
+    sx={{
+      mb: { xs: 2, sm: 3, md: 4 },
+      color: theme.palette.primary.main,
+      fontWeight: 600,
+      letterSpacing: 0.5,
+      fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+    }}
+  >
+    Leave Requests Management
+  </Typography>
 
-      <div className="leave-requests-table-container">
-        {loading && !leaveData.length ? (
-          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-            <CircularProgress className="loading-spinner" />
-          </Box>
-        ) : !filteredLeaveData.length ? (
-          <Box sx={{ p: 4, textAlign: "center" }} className="empty-state">
-            <Typography
-              variant="body1"
-              color="textSecondary"
-              className="empty-state-text"
+       
+
+<StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box
+      display="flex"
+      flexDirection={{ xs: "column", sm: "row" }}
+      alignItems={{ xs: "flex-start", sm: "center" }}
+      gap={2}
+      sx={{
+        width: "100%",
+        justifyContent: "space-between",
+      }}
+    >
+      <TextField
+        //className="leave-requests-search"
+        placeholder="Search by employee, type, status or reason..."
+        variant="outlined"
+        size="small"
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{
+          width: { xs: "100%", sm: "300px" },
+          marginRight: { xs: 0, sm: "auto" },
+          mb: { xs: 2, sm: 0 },
+        }}
+        InputProps={{
+          startAdornment: <Search sx={{ color: "action.active", mr: 1 }} />,
+        }}
+      />
+
+      {/* <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: { xs: 1, sm: 1 },
+          width: { xs: "100%", sm: "100%" },
+        }}
+      >
+        <Button
+          variant="outlined"
+          onClick={(event) => setFilterAnchorEl(event.currentTarget)}
+          startIcon={<FilterList />}
+          sx={{
+            height: { xs: "auto", sm: 40 },
+            whiteSpace: "nowrap",
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
+          Filters
+        </Button>
+      </Box> */}
+    </Box>
+  </StyledPaper>
+
+  {/* Status Filter Buttons */}
+  <Box
+    sx={{
+      display: "flex",
+      flexDirection: { xs: "column", sm: "row" },
+      gap: 1,
+      mb: 2,
+      mt: 2,
+    }}
+  >
+    <Button
+      sx={{
+        color: "green",
+        justifyContent: { xs: "flex-start", sm: "center" },
+        width: { xs: "100%", sm: "auto" },
+      }}
+      onClick={() => setFilters({...filters, status: "approved"})}
+    >
+      ● Approved
+    </Button>
+    <Button
+      sx={{
+        color: "red",
+        justifyContent: { xs: "flex-start", sm: "center" },
+        width: { xs: "100%", sm: "auto" },
+      }}
+      onClick={() => setFilters({...filters, status: "rejected"})}
+    >
+      ● Rejected
+    </Button>
+    <Button
+      sx={{
+        color: "orange",
+        justifyContent: { xs: "flex-start", sm: "center" },
+        width: { xs: "100%", sm: "auto" },
+      }}
+      onClick={() => setFilters({...filters, status: "pending"})}
+    >
+      ● Pending
+    </Button>
+    <Button
+      sx={{
+        color: "gray",
+        justifyContent: { xs: "flex-start", sm: "center" },
+        width: { xs: "100%", sm: "auto" },
+      }}
+      onClick={() => setFilters({...filters, status: ""})}
+    >
+      ● All
+    </Button>
+  </Box>
+
+  <Divider sx={{ mb: 2 }} />
+      
+
+
+
+<div className="leave-requests-table-container">
+  {loading && !leaveData.length ? (
+    <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+      <CircularProgress className="loading-spinner" />
+    </Box>
+  ) : !filteredLeaveData.length ? (
+    <Box sx={{ p: 4, textAlign: "center" }} className="empty-state">
+      <Typography
+        variant="body1"
+        color="textSecondary"
+        className="empty-state-text"
+      >
+        No leave requests found
+      </Typography>
+    </Box>
+  ) : isMobile ? (
+    // Mobile view - card layout
+   // Replace the mobile-cards-container div with this Box component
+<Box sx={{ mt: 2 }}>
+  {filteredLeaveData.map((leave) => renderMobileCard(leave))}
+</Box>
+
+  ) : (
+    // Desktop/Tablet view - table layout
+    <TableContainer
+      component={Paper}
+      sx={{
+        maxHeight: { xs: 350, sm: 400, md: 450 },
+        overflowY: "auto",
+        overflowX: "auto",
+        mx: 0,
+        borderRadius: 2,
+        boxShadow:
+          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        mb: 4,
+        "& .MuiTableContainer-root": {
+          scrollbarWidth: "thin",
+          "&::-webkit-scrollbar": {
+            width: 8,
+            height: 8,
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: alpha(theme.palette.primary.light, 0.1),
+            borderRadius: 8,
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: alpha(theme.palette.primary.main, 0.2),
+            borderRadius: 8,
+            "&:hover": {
+              backgroundColor: alpha(theme.palette.primary.main, 0.3),
+            },
+          },
+        },
+      }}
+    >
+      <Table stickyHeader>
+        <TableHead>
+          <TableRow>
+            <TableCell
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                color: "white",
+                fontWeight: "bold",
+                minWidth: 180,
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+              }}
             >
-              No leave requests found
-            </Typography>
-          </Box>
-        ) : isMobile ? (
-          // Mobile view - card layout
-          <div className="mobile-cards-container">
-            {filteredLeaveData.map((leave) => renderMobileCard(leave))}
-          </div>
-        ) : (
-          // Desktop/Tablet view - table layout
-          <table className="leave-requests-table">
-            <thead>
-              <tr>
-                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
-                  Employee
-                </th>
-                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
-                  Leave Type
-                </th>
-                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
-                  Duration
-                </th>
-                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
-                  Reason
-                </th>
-                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
-                  Status
-                </th>
-                <th style={{ backgroundColor: "#1976d2", color: "white" }}>
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredLeaveData.map((leave) => (
-                <tr key={leave._id}>
-                  <td>
-                    <div>
-                      <strong>{leave.employeeName}</strong>
-                      <div className="employee-code">{leave.employeeCode}</div>
-                    </div>
-                  </td>
-                  <td>{getLeaveTypeName(leave.leaveType)}</td>
-                  <td>
-                    <div>
-                      {new Date(leave.startDate).toLocaleDateString()} -{" "}
-                      {new Date(leave.endDate).toLocaleDateString()}
-                      <div className="leave-days">
-                        {leave.halfDay
-                          ? "Half Day"
-                          : `${
-                              leave.numberOfDays ||
-                              calculateDays(
-                                leave.startDate,
-                                leave.endDate,
-                                leave.halfDay
-                              )
-                            } days`}
-                        {leave.halfDay && ` (${leave.halfDayType})`}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="leave-reason">{leave.reason}</div>
-                  </td>
-                  <td>
-                    <span className={getStatusBadgeClass(leave.status)}>
-                      {leave.status}
-                    </span>
-                    {leave.status === "rejected" && leave.rejectionReason && (
-                      <Tooltip title={leave.rejectionReason}>
-                        <IconButton size="small">
-                          <Info fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </td>
-                  <td>
-                    <div className="confirmation-actions">
-                      {leave.status === "pending" && (
-                        <>
-                          <Tooltip title="Approve">
-                            <IconButton
-                              onClick={() => handleApproveRequest(leave._id)}
-                              color="success"
-                              disabled={loading}
-                            >
-                              <CheckCircle />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Reject">
-                            <IconButton
-                              onClick={() => handleOpenRejectDialog(leave._id)}
-                              color="error"
-                              disabled={loading}
-                            >
-                              <Cancel />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
-                      <Tooltip title="View/Add Comment">
-                        <IconButton
-                          onClick={() => handleOpenCommentDialog(leave._id)}
-                          disabled={loading}
-                        >
-                          <ChatBubbleOutline />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Cancel Request">
-                        <IconButton
-                          onClick={() => handleOpenDeleteDialog(leave._id)}
-                          color="error"
-                          disabled={loading}
-                          className="delete-button"
-                        >
-                          <DeleteOutline />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+              Employee
+            </TableCell>
+            <TableCell
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                color: "white",
+                fontWeight: "bold",
+                minWidth: 150,
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+              }}
+            >
+              Leave Type
+            </TableCell>
+            <TableCell
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                color: "white",
+                fontWeight: "bold",
+                minWidth: 180,
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+              }}
+            >
+              Duration
+            </TableCell>
+            <TableCell
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                color: "white",
+                fontWeight: "bold",
+                minWidth: 200,
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+              }}
+            >
+              Reason
+            </TableCell>
+            <TableCell
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                color: "white",
+                fontWeight: "bold",
+                minWidth: 100,
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+              }}
+            >
+              Status
+            </TableCell>
+            <TableCell
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                color: "white",
+                fontWeight: "bold",
+                minWidth: 150,
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+                textAlign: "center",
+              }}
+            >
+              Actions
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {filteredLeaveData.map((leave) => (
+            <TableRow
+              key={leave._id}
+              sx={{
+                "&:nth-of-type(odd)": {
+                  backgroundColor: alpha(theme.palette.primary.light, 0.05),
+                },
+                "&:hover": {
+                  backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                  transition: "background-color 0.2s ease",
+                },
+                // Hide last border
+                "&:last-child td, &:last-child th": {
+                  borderBottom: 0,
+                },
+              }}
+            >
+              <TableCell>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      bgcolor: alpha(theme.palette.primary.main, 0.8),
+                      color: "white",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: "0.875rem",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {leave.employeeName?.[0] || "U"}
+                  </Box>
+                  <Box sx={{ display: "flex", flexDirection: "column" }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {leave.employeeName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {leave.employeeCode}
+                    </Typography>
+                  </Box>
+                </Box>
+              </TableCell>
+              <TableCell>
+                <Typography variant="body2">
+                  {getLeaveTypeName(leave.leaveType)}
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography variant="body2">
+                  {new Date(leave.startDate).toLocaleDateString()} -{" "}
+                  {new Date(leave.endDate).toLocaleDateString()}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {leave.halfDay
+                    ? "Half Day"
+                    : `${
+                        leave.numberOfDays ||
+                        calculateDays(
+                          leave.startDate,
+                          leave.endDate,
+                          leave.halfDay
+                        )
+                      } days`}
+                  {leave.halfDay && ` (${leave.halfDayType})`}
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    maxWidth: 200,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {leave.reason}
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Box
+                  sx={{
+                    display: "inline-block",
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 1,
+                    fontSize: "0.75rem",
+                    fontWeight: "medium",
+                    backgroundColor:
+                      leave.status === "approved"
+                        ? alpha("#4caf50", 0.1)
+                        : leave.status === "rejected"
+                        ? alpha("#f44336", 0.1)
+                        : alpha("#ff9800", 0.1),
+                    color:
+                      leave.status === "approved"
+                        ? "#2e7d32"
+                        : leave.status === "rejected"
+                        ? "#d32f2f"
+                        : "#e65100",
+                  }}
+                >
+                  {leave.status}
+                </Box>
+                {leave.status === "rejected" && leave.rejectionReason && (
+                  <Tooltip title={leave.rejectionReason}>
+                    <IconButton size="small">
+                      <Info fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </TableCell>
+              <TableCell>
+                <Box
+                  sx={{ display: "flex", justifyContent: "center", gap: 1 }}
+                >
+                  {leave.status === "pending" && (
+                    <>
+                      <IconButton
+                        size="small"
+                        color="success"
+                        onClick={() => handleApproveRequest(leave._id)}
+                        disabled={loading}
+                        sx={{
+                          backgroundColor: alpha("#4caf50", 0.1),
+                          "&:hover": {
+                            backgroundColor: alpha("#4caf50", 0.2),
+                          },
+                          "&.Mui-disabled": {
+                            backgroundColor: alpha("#e0e0e0", 0.3),
+                          },
+                        }}
+                      >
+                        <CheckCircle fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleOpenRejectDialog(leave._id)}
+                        disabled={loading}
+                        sx={{
+                          backgroundColor: alpha("#f44336", 0.1),
+                          "&:hover": {
+                            backgroundColor: alpha("#f44336", 0.2),
+                          },
+                          "&.Mui-disabled": {
+                            backgroundColor: alpha("#e0e0e0", 0.3),
+                          },
+                        }}
+                      >
+                        <Cancel fontSize="small" />
+                      </IconButton>
+                    </>
+                  )}
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenCommentDialog(leave._id)}
+                    disabled={loading}
+                    sx={{
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                      "&:hover": {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                      },
+                      "&.Mui-disabled": {
+                        backgroundColor: alpha("#e0e0e0", 0.3),
+                      },
+                    }}
+                  >
+                    <ChatBubbleOutline fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => handleOpenDeleteDialog(leave._id)}
+                    disabled={loading}
+                    className="delete-button"
+                    sx={{
+                      backgroundColor: alpha("#f44336", 0.1),
+                      "&:hover": {
+                        backgroundColor: alpha("#f44336", 0.2),
+                      },
+                      "&.Mui-disabled": {
+                        backgroundColor: alpha("#e0e0e0", 0.3),
+                      },
+                    }}
+                  >
+                    <DeleteOutline fontSize="small" />
+                  </IconButton>
+                </Box>
+              </TableCell>
+            </TableRow>
+          ))}
+          {filteredLeaveData.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                <Typography variant="body1" color="text.secondary">
+                  No leave requests found matching your filters.
+                </Typography>
+                <Button
+                  variant="text"
+                  color="primary"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setFilters({
+                      type: "",
+                      status: "",
+                      dateRange: { start: "", end: "" },
+                    });
+                  }}
+                  sx={{ mt: 1 }}
+                >
+                  Clear filters
+                </Button>
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  )}
+</div>
+
 
       {/* Reject Dialog */}
       <Dialog
@@ -624,7 +1194,15 @@ const LeaveRequests = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle sx={{ bgcolor: "#fef2f2", color: "#dc2626" }}>
+        <DialogTitle 
+        sx={{
+           //bgcolor: "#fef2f2", color: "#dc2626" 
+           background: "linear-gradient(45deg,rgb(220, 38, 38),rgb(209, 175, 175))",
+           color: "white",
+      fontSize: "1.5rem",
+      fontWeight: 600,
+      padding: "24px 32px",
+           }}>
           Reject Leave Request
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
@@ -647,12 +1225,47 @@ const LeaveRequests = () => {
             }
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsRejectDialogOpen(false)}>Cancel</Button>
+        <DialogActions
+         sx={{
+          padding: "24px 32px",
+          backgroundColor: "#f8fafc",
+          borderTop: "1px solid #e0e0e0",
+          gap: 2,
+        }}
+        >
+          <Button onClick={() => setIsRejectDialogOpen(false)}
+             sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+            >
+            Cancel
+            </Button>
           <Button
             onClick={handleRejectRequest}
             color="error"
             disabled={!rejectionReason.trim() || loading}
+            sx={{
+              background: "linear-gradient(45deg,rgb(227, 158, 158),rgb(202, 177, 177))",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg,rgb(231, 22, 22),rgb(132, 11, 11))",
+              },
+            }}
           >
             {loading ? <CircularProgress size={24} /> : "Reject"}
           </Button>
@@ -665,8 +1278,25 @@ const LeaveRequests = () => {
         onClose={handleCloseCommentDialog}
         maxWidth="sm"
         fullWidth
+        fullScreen={window.innerWidth < 600} // Full screen on mobile
+  PaperProps={{
+    sx: {
+      width: { xs: "100%", sm: "600px" },
+      maxWidth: "100%",
+      borderRadius: { xs: 0, sm: "20px" },
+      margin: { xs: 0, sm: 2 },
+      overflow: "hidden",
+    },
+  }}
       >
-        <DialogTitle>Add/Edit Comment</DialogTitle>
+        <DialogTitle sx={{
+      background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+      color: "white",
+      fontSize: "1.5rem",
+      fontWeight: 600,
+      padding: "24px 32px",
+    }}>
+      Add/Edit Comment</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -677,14 +1307,59 @@ const LeaveRequests = () => {
             rows={4}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                backgroundColor: "white",
+                borderRadius: "12px",
+                "&:hover fieldset": {
+                  borderColor: "#1976d2",
+                },
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: "#1976d2",
+              },
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseCommentDialog}>Cancel</Button>
+        <DialogActions 
+        sx={{
+          padding: "24px 32px",
+          backgroundColor: "#f8fafc",
+          borderTop: "1px solid #e0e0e0",
+          gap: 2,
+        }}
+        >
+          <Button onClick={handleCloseCommentDialog}
+          sx={{
+            border: "2px solid #1976d2",
+            color: "#1976d2",
+            "&:hover": {
+              border: "2px solid #64b5f6",
+              backgroundColor: "#e3f2fd",
+              color: "#1976d2",
+            },
+            textTransform: "none",
+            borderRadius: "8px",
+            px: 3,
+            fontWeight: 600,
+          }}
+          >Cancel</Button>
           <Button
             onClick={handleSaveComment}
             color="primary"
             disabled={loading}
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
+              },
+            }}
           >
             {loading ? <CircularProgress size={24} /> : "Save"}
           </Button>
@@ -697,11 +1372,32 @@ const LeaveRequests = () => {
         onClose={() => setIsDeleteDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
       >
-        <DialogTitle sx={{ bgcolor: "#fef2f2", color: "#dc2626" }}>
+        <DialogTitle 
+        sx={{
+          background: "linear-gradient(45deg, #f44336, #ff7961)",
+          fontSize: { xs: "1.25rem", sm: "1.5rem" },
+          fontWeight: 600,
+          padding: { xs: "16px 24px", sm: "24px 32px" },
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+        }}
+        >
           Cancel Leave Request
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
+          
           <Typography variant="body1" sx={{ mb: 2 }}>
             Are you sure you want to cancel this leave request?
           </Typography>
@@ -710,14 +1406,45 @@ const LeaveRequests = () => {
             system. This should only be done for administrative purposes.
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsDeleteDialogOpen(false)}>
+        <DialogActions sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}>
+          <Button onClick={() => setIsDeleteDialogOpen(false)}
+             sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
+            >
             No, Keep It
           </Button>
           <Button
             onClick={handleConfirmDelete}
             color="error"
             disabled={loading}
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
           >
             {loading ? <CircularProgress size={24} /> : "Yes, Cancel It"}
           </Button>
@@ -725,7 +1452,7 @@ const LeaveRequests = () => {
       </Dialog>
 
       {/* Filter Popover */}
-      <Popover
+      {/* <Popover
         open={Boolean(filterAnchorEl)}
         anchorEl={filterAnchorEl}
         onClose={() => setFilterAnchorEl(null)}
@@ -831,7 +1558,7 @@ const LeaveRequests = () => {
             </Box>
           </Stack>
         </Box>
-      </Popover>
+      </Popover> */}
 
       {/* Snackbar for notifications */}
       <Snackbar
@@ -848,6 +1575,7 @@ const LeaveRequests = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+    </Box>
     </div>
   );
 };

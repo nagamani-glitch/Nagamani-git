@@ -102,61 +102,140 @@ const TimesheetDashboard = () => {
     }
   }, [todayTimesheet?.status]);
 
+  // const fetchTimesheetData = async () => {
+  //   try {
+  //     setTodayLoading(true);
+  //     const todayResponse = await timesheetService.getTodayTimesheet(
+  //       employeeId
+  //     );
+  //     setTodayTimesheet(todayResponse.data.timesheet);
+  //     setTodayLoading(false);
+
+  //     setWeeklyLoading(true);
+  //     const weeklyResponse = await timesheetService.getWeeklyTimesheets(
+  //       employeeId
+  //     );
+  //     setWeeklyTimesheets(weeklyResponse.data.timesheets);
+  //     calculateWeeklyStats(weeklyResponse.data.timesheets);
+  //     setWeeklyLoading(false);
+  //   } catch (error) {
+  //     console.error("Failed to fetch timesheet data:", error);
+  //     setTodayLoading(false);
+  //     setWeeklyLoading(false);
+  //   }
+  // };
+
+  // const calculateWeeklyStats = (timesheets) => {
+  //   if (!timesheets.length) return;
+
+  //   const totalSeconds = timesheets.reduce(
+  //     (acc, curr) => acc + (curr.duration || 0),
+  //     0
+  //   );
+  //   const daysWorked = timesheets.length;
+  //   const standardDaySeconds = 8 * 3600;
+
+  //   const onTimeCount = timesheets.filter((timesheet) => {
+  //     const checkInTime = new Date(timesheet.checkInTime);
+  //     return checkInTime.getHours() <= 9 && checkInTime.getMinutes() <= 15;
+  //   }).length;
+
+  //   const overtimeSeconds = timesheets.reduce((acc, curr) => {
+  //     return acc + Math.max(0, (curr.duration || 0) - standardDaySeconds);
+  //   }, 0);
+
+  //   setWeeklyStats({
+  //     totalHours: formatDuration(totalSeconds),
+  //     averageDaily: formatDuration(totalSeconds / daysWorked),
+  //     onTimePercentage: Math.round((onTimeCount / timesheets.length) * 100),
+  //     overtime: formatDuration(overtimeSeconds),
+  //   });
+  // };
+
+
+
+  // const formatDuration = (seconds) => {
+  //   const hours = Math.floor(seconds / 3600);
+  //   const minutes = Math.floor((seconds % 3600) / 60);
+  //   return `${hours}h ${minutes}m`;
+  // };
+
+  // Improve the calculateWeeklyStats function to handle empty data better
+
   const fetchTimesheetData = async () => {
     try {
       setTodayLoading(true);
       const todayResponse = await timesheetService.getTodayTimesheet(
         employeeId
       );
-      setTodayTimesheet(todayResponse.data.timesheet);
+      setTodayTimesheet(todayResponse.data?.timesheet || null);
       setTodayLoading(false);
-
+  
       setWeeklyLoading(true);
       const weeklyResponse = await timesheetService.getWeeklyTimesheets(
         employeeId
       );
-      setWeeklyTimesheets(weeklyResponse.data.timesheets);
-      calculateWeeklyStats(weeklyResponse.data.timesheets);
+      const timesheets = weeklyResponse.data?.timesheets || [];
+      setWeeklyTimesheets(timesheets);
+      calculateWeeklyStats(timesheets);
       setWeeklyLoading(false);
     } catch (error) {
       console.error("Failed to fetch timesheet data:", error);
+      setTodayTimesheet(null);
+      setWeeklyTimesheets([]);
+      calculateWeeklyStats([]); // Update stats even on error
       setTodayLoading(false);
       setWeeklyLoading(false);
     }
   };
+  
+
 
   const calculateWeeklyStats = (timesheets) => {
-    if (!timesheets.length) return;
-
-    const totalSeconds = timesheets.reduce(
-      (acc, curr) => acc + (curr.duration || 0),
-      0
-    );
-    const daysWorked = timesheets.length;
-    const standardDaySeconds = 8 * 3600;
-
-    const onTimeCount = timesheets.filter((timesheet) => {
-      const checkInTime = new Date(timesheet.checkInTime);
-      return checkInTime.getHours() <= 9 && checkInTime.getMinutes() <= 15;
-    }).length;
-
-    const overtimeSeconds = timesheets.reduce((acc, curr) => {
-      return acc + Math.max(0, (curr.duration || 0) - standardDaySeconds);
-    }, 0);
-
+  if (!timesheets || !timesheets.length) {
     setWeeklyStats({
-      totalHours: formatDuration(totalSeconds),
-      averageDaily: formatDuration(totalSeconds / daysWorked),
-      onTimePercentage: Math.round((onTimeCount / timesheets.length) * 100),
-      overtime: formatDuration(overtimeSeconds),
+      totalHours: "0h 0m",
+      averageDaily: "0h 0m",
+      onTimePercentage: 0,
+      overtime: "0h 0m",
     });
-  };
+    return;
+  }
 
-  const formatDuration = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
-  };
+  const totalSeconds = timesheets.reduce(
+    (acc, curr) => acc + (curr.duration || 0),
+    0
+  );
+  const daysWorked = timesheets.length || 1; // Prevent division by zero
+  const standardDaySeconds = 8 * 3600;
+
+  const onTimeCount = timesheets.filter((timesheet) => {
+    if (!timesheet.checkInTime) return false;
+    const checkInTime = new Date(timesheet.checkInTime);
+    return checkInTime.getHours() <= 9 && checkInTime.getMinutes() <= 15;
+  }).length;
+
+  const overtimeSeconds = timesheets.reduce((acc, curr) => {
+    return acc + Math.max(0, (curr.duration || 0) - standardDaySeconds);
+  }, 0);
+
+  setWeeklyStats({
+    totalHours: formatDuration(totalSeconds),
+    averageDaily: formatDuration(totalSeconds / daysWorked),
+    onTimePercentage: daysWorked > 0 ? Math.round((onTimeCount / daysWorked) * 100) : 0,
+    overtime: formatDuration(overtimeSeconds),
+  });
+};
+
+// Improve the formatDuration function to handle edge cases
+const formatDuration = (seconds) => {
+  if (!seconds || isNaN(seconds)) return "0h 0m";
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${hours}h ${minutes}m`;
+};
+
 
   if (todayLoading && weeklyLoading) {
     return (
