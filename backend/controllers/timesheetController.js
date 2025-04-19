@@ -25,31 +25,66 @@ export const checkIn = async (req, res) => {
     }
 };
  
-// Check-out handler
+// // Check-out handler
+// export const checkOut = async (req, res) => {
+//     try {
+//         const { employeeId, duration } = req.body;
+       
+//         const timesheet = await Timesheet.findOne({
+//             employeeId,
+//             status: 'active'
+//         });
+ 
+//         if (!timesheet) {
+//             return res.status(400).json({ message: 'No active check-in found' });
+//         }
+ 
+//         timesheet.checkOutTime = new Date();
+//         timesheet.duration = duration;
+//         timesheet.status = 'completed';
+//         await timesheet.save();
+ 
+//         res.json(timesheet);
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// };
+ 
 export const checkOut = async (req, res) => {
     try {
         const { employeeId, duration } = req.body;
-       
+        
         const timesheet = await Timesheet.findOne({
             employeeId,
             status: 'active'
         });
- 
+
         if (!timesheet) {
             return res.status(400).json({ message: 'No active check-in found' });
         }
- 
-        timesheet.checkOutTime = new Date();
-        timesheet.duration = duration;
+
+        const checkOutTime = new Date();
+        timesheet.checkOutTime = checkOutTime;
+        
+        // Calculate duration in seconds if not provided
+        if (!duration) {
+            const checkInTime = new Date(timesheet.checkInTime);
+            const durationInSeconds = Math.floor((checkOutTime - checkInTime) / 1000);
+            timesheet.duration = durationInSeconds;
+        } else {
+            timesheet.duration = duration;
+        }
+        
         timesheet.status = 'completed';
         await timesheet.save();
- 
+
         res.json(timesheet);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
- 
+
+
 // Get today's timesheet
 export const getTodayTimesheet = async (req, res) => {
     try {

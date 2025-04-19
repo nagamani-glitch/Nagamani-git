@@ -550,14 +550,48 @@ const Header = () => {
     }
   };
 
+  // const handleTimerClick = async () => {
+  //   if (isLoading) return;
+
+  //   setIsLoading(true);
+  //   try {
+  //     if (isTimerRunning) {
+  //       // Log out
+  //       await timesheetService.checkOut(employeeId);
+  //       cleanupTimesheet();
+  //       setIsTimerRunning(false);
+  //       setTimer(0);
+  //       setStartTime(null);
+  //       localStorage.removeItem("checkInTime");
+  //       showToastMessage("Successfully logged out");
+  //     } else {
+  //       // Log in
+  //       const response = await timesheetService.checkIn(employeeId);
+  //       const checkInTime = new Date(response.data.checkInTime);
+  //       startTimerWithTime(checkInTime);
+  //       showToastMessage("Successfully logged in");
+  //     }
+  //   } catch (error) {
+  //     console.error("Timesheet operation failed:", error);
+  //     showToastMessage("Operation failed. Please try again.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleTimerClick = async () => {
     if (isLoading) return;
 
     setIsLoading(true);
     try {
       if (isTimerRunning) {
-        // Log out
-        await timesheetService.checkOut(employeeId);
+        // Calculate duration in seconds
+        const checkInTime = new Date(startTime);
+        const checkOutTime = new Date();
+        const durationInSeconds = Math.floor((checkOutTime - checkInTime) / 1000);
+        
+        // Log out with duration
+        await timesheetService.checkOut(employeeId, durationInSeconds);
         cleanupTimesheet();
         setIsTimerRunning(false);
         setTimer(0);
@@ -578,6 +612,7 @@ const Header = () => {
       setIsLoading(false);
     }
   };
+
 
   const showToastMessage = (message) => {
     setToastMessage(message);
