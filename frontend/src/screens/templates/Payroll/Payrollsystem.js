@@ -938,401 +938,282 @@ const PayrollSystem = () => {
         </Alert>
       </Snackbar>
 
-      <Paper className="main-paper" elevation={0}>
-        <AppBar position="static" className="payroll-appbar" elevation={0}>
-          <Tabs
-            value={tabIndex}
-            onChange={(e, newIndex) => setTabIndex(newIndex)}
-            variant="fullWidth"
-            className="payroll-tabs"
-            TabIndicatorProps={{
-              style: {
-                backgroundColor: "white",
-                height: "3px",
-              },
-            }}
-          >
-            <Tab
-              label="Employees"
-              icon={<AddCircleIcon />}
-              iconPosition="start"
-              className="tab-item"
-            />
-            <Tab
-              label="Allowances-Deductions"
-              icon={<AttachMoneyIcon />}
-              iconPosition="start"
-              className="tab-item"
-            />
-            <Tab
-              label="Payslips"
-              icon={<DescriptionIcon />}
-              iconPosition="start"
-              className="tab-item"
-            />
-          </Tabs>
-        </AppBar>
+        <Paper className="main-paper" elevation={0}>
+  <AppBar position="static" className="payroll-appbar" elevation={0}>
+    <Tabs
+      value={tabIndex}
+      onChange={(e, newIndex) => setTabIndex(newIndex)}
+      variant="fullWidth"
+      className="payroll-tabs"
+      TabIndicatorProps={{
+        style: {
+          backgroundColor: "white",
+          height: "3px",
+        },
+      }}
+      centered
+    >
+      <Tab
+        label={<span className="tab-label">Employees</span>}
+        icon={<AddCircleIcon className="tab-icon" />}
+        className="tab-item"
+        aria-label="Employees Tab"
+      />
+
+      <Tab
+  label={
+    <span className="tab-label">
+      <span className="full-label">Allowances-Deductions</span>
+      <span className="short-label">Allowances</span>
+    </span>
+  }
+  icon={<AttachMoneyIcon className="tab-icon" />}
+  className="tab-item"
+  aria-label="Allowances and Deductions Tab"
+/>
+      <Tab
+        label={<span className="tab-label">Payslips</span>}
+        icon={<DescriptionIcon className="tab-icon" />}
+        className="tab-item"
+        aria-label="Payslips Tab"
+      />
+    </Tabs>
+  </AppBar>
 
         {/* Employees Tab */}
-        <TabPanel value={tabIndex} index={0}>
-          <Box className="header-container">
-            <Typography variant="h5" className="section-title">
-              Employee Management
-              <span className="title-badge">{employeeData.length} Total</span>
-            </Typography>
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                style={{ display: "none" }}
-                id="excel-upload"
-                onChange={importFromExcel}
-              />
-              <label htmlFor="excel-upload">
-                <Button
-                  variant="contained"
-                  component="span"
-                  startIcon={<CloudUploadIcon />}
-                  className="import-button"
+<TabPanel value={tabIndex} index={0}>
+  <Box className="header-container">
+    <Typography variant="h5" className="section-title">
+      Employee Management
+      <span className="title-badge">{employeeData.length} Total</span>
+    </Typography>
+    <Box className="header-actions">
+      <input
+        type="file"
+        accept=".xlsx,.xls"
+        style={{ display: "none" }}
+        id="excel-upload"
+        onChange={importFromExcel}
+      />
+      <label htmlFor="excel-upload">
+        <Button
+          variant="contained"
+          component="span"
+          startIcon={<CloudUploadIcon />}
+          className="import-button"
+        >
+          <span className="button-text">Import Excel</span>
+        </Button>
+      </label>
+      <Button
+        variant="contained"
+        onClick={exportToExcel}
+        startIcon={<CloudDownloadIcon />}
+        className="export-button"
+      >
+        <span className="button-text">Export Excel</span>
+      </Button>
+      <Button
+        variant="contained"
+        onClick={() => {
+          setEditMode(false);
+          setNewEmployee({
+            empId: "",
+            empName: "",
+            basicPay: "",
+            bankName: "",
+            bankAccountNo: "",
+            pfNo: "",
+            uanNo: "",
+            panNo: "",
+            payableDays: 30,
+            lop: 0,
+            department: "",
+            designation: "",
+            email: "",
+            status: "Active",
+          });
+          setOpenEmployeeDialog(true);
+        }}
+        startIcon={<AddCircleIcon />}
+        className="create-button"
+      >
+        <span className="button-text">Add Employee</span>
+      </Button>
+    </Box>
+  </Box>
+
+  <TableContainer
+    component={Paper}
+    className="table-container"
+    sx={{ overflowX: "auto" }}
+  >
+    <Table className="responsive-table">
+      <TableHead>
+        <TableRow className="table-header">
+          <TableCell className="table-cell" data-priority="1">
+            Emp ID
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            Name
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            Department
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            Designation
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            Basic Pay
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            Bank Details
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            PF/UAN
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            Payable Days
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            LOP Days
+          </TableCell>
+          <TableCell className="table-cell action-column" data-priority="1">
+            Actions
+          </TableCell>
+        </TableRow>
+      </TableHead>
+
+      <TableBody>
+        {employeeData.map((item) => (
+          <TableRow key={item.empId} className="table-row">
+            <TableCell className="table-cell" data-label="Emp ID">
+              {item.empId}
+            </TableCell>
+            <TableCell className="table-cell" data-label="Name">
+              {item.empName}
+            </TableCell>
+            <TableCell className="table-cell" data-label="Department">
+              {item.department}
+            </TableCell>
+            <TableCell className="table-cell" data-label="Designation">
+              {item.designation}
+            </TableCell>
+            <TableCell className="table-cell amount-cell" data-label="Basic Pay">
+              Rs. {item.basicPay}
+            </TableCell>
+            <TableCell className="table-cell" data-label="Bank Details">
+              <Typography variant="body2">{item.bankName}</Typography>
+              <Typography variant="caption">
+                {item.bankAccountNo}
+              </Typography>
+            </TableCell>
+            <TableCell className="table-cell" data-label="PF/UAN">
+              <Typography variant="body2">PF: {item.pfNo}</Typography>
+              <Typography variant="caption">
+                UAN: {item.uanNo}
+              </Typography>
+            </TableCell>
+            <TableCell className="table-cell" data-label="Payable Days">
+              {item.payableDays}
+            </TableCell>
+            <TableCell className="table-cell" data-label="LOP Days">
+              {item.lop}
+            </TableCell>
+            <TableCell className="table-cell action-cell" data-label="Actions">
+              <Tooltip title="Preview">
+                <IconButton
+                  className="preview-button"
+                  onClick={() => handleOpenEmployeePreview(item.empId)}
                 >
-                  Import Excel
-                </Button>
-              </label>
-              <Button
-                variant="contained"
-                onClick={exportToExcel}
-                startIcon={<CloudDownloadIcon />}
-                className="export-button"
-              >
-                Export Excel
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setEditMode(false);
-                  setNewEmployee({
-                    empId: "",
-                    empName: "",
-                    basicPay: "",
-                    bankName: "",
-                    bankAccountNo: "",
-                    pfNo: "",
-                    uanNo: "",
-                    panNo: "",
-                    payableDays: 30,
-                    lop: 0,
-                    department: "",
-                    designation: "",
-                    email: "",
-                    status: "Active",
-                  });
-                  setOpenEmployeeDialog(true);
-                }}
-                startIcon={<AddCircleIcon />}
-                className="create-button"
-              >
-                Add Employee
-              </Button>
-            </Box>
-          </Box>
-
-          <TableContainer component={Paper} className="table-container">
-            <Table>
-              {/* <TableHead>
-              <TableRow className="table-header">
-                <TableCell>Emp ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Department</TableCell>
-                <TableCell>Designation</TableCell>
-                <TableCell>Basic Pay</TableCell>
-                <TableCell>Bank Details</TableCell>
-                <TableCell>PF/UAN</TableCell>
-                <TableCell>Payable Days</TableCell>
-                <TableCell>LOP Days</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead> */}
-              <TableHead>
-                <TableRow className="table-header">
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Emp ID
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Name
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Department
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Designation
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Basic Pay
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Bank Details
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    PF/UAN
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Payable Days
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    LOP Days
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {employeeData.map((item) => (
-                  <TableRow key={item.empId} className="table-row">
-                    <TableCell>{item.empId}</TableCell>
-                    <TableCell>{item.empName}</TableCell>
-                    <TableCell>{item.department}</TableCell>
-                    <TableCell>{item.designation}</TableCell>
-                    <TableCell className="amount-cell">
-                      Rs. {item.basicPay}
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{item.bankName}</Typography>
-                      <Typography variant="caption">
-                        {item.bankAccountNo}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">PF: {item.pfNo}</Typography>
-                      <Typography variant="caption">
-                        UAN: {item.uanNo}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{item.payableDays}</TableCell>
-                    <TableCell>{item.lop}</TableCell>
-
-                    <TableCell className="action-cell">
-                      <Tooltip title="Preview">
-                        <IconButton
-                          className="preview-button"
-                          onClick={() => handleOpenEmployeePreview(item.empId)}
-                        >
-                          <PreviewIcon
-                            sx={{
-                              color: "#4caf50",
-                              transition: "all 0.3s ease",
-                              "&:hover": {
-                                color: "#2e7d32",
-                                transform: "scale(1.1)",
-                              },
-                            }}
-                          />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit">
-                        <IconButton
-                          className="edit-button"
-                          onClick={() => {
-                            setEditMode(true);
-                            setSelectedItem(item);
-                            setNewEmployee({ ...item });
-                            setOpenEmployeeDialog(true);
-                          }}
-                        >
-                          <EditIcon
-                            sx={{
-                              color: "#007bff",
-                              transition: "all 0.3s ease",
-                              "&:hover": {
-                                color: "#0056b3",
-                                transform: "scale(1.1)",
-                              },
-                            }}
-                          />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton
-                          className="delete-button"
-                          onClick={() => handleDeleteEmployee(item.empId)}
-                        >
-                          <DeleteIcon
-                            sx={{
-                              color: "#d32f2f",
-                              transition: "all 0.3s ease",
-                              "&:hover": {
-                                color: "#ff1744",
-                                transform: "scale(1.1)",
-                              },
-                            }}
-                          />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </TabPanel>
+                  <PreviewIcon className="action-icon preview-icon" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Edit">
+                <IconButton
+                  className="edit-button"
+                  onClick={() => {
+                    setEditMode(true);
+                    setSelectedItem(item);
+                    setNewEmployee({ ...item });
+                    setOpenEmployeeDialog(true);
+                  }}
+                >
+                  <EditIcon className="action-icon edit-icon" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Delete">
+                <IconButton
+                  className="delete-button"
+                  onClick={() => handleDeleteEmployee(item.empId)}
+                >
+                  <DeleteIcon className="action-icon delete-icon" />
+                </IconButton>
+              </Tooltip>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </TableContainer>
+</TabPanel>
 
         {/* Allowances & Deductions Tab */}
-
         <TabPanel value={tabIndex} index={1}>
-          <Box className="header-container">
-            <Typography variant="h5" className="section-title">
-              Allowances & Deductions Management
-            </Typography>
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setEditMode(false);
-                  setNewAllowance({
-                    empId: "",
-                    name: "",
-                    percentage: 0,
-                    category: "Regular",
-                    status: "Active",
-                  });
-                  setOpenDialog(true);
-                }}
-                startIcon={<AddCircleIcon />}
-                className="create-button"
-                sx={{ bgcolor: "#4caf50" }}
-              >
-                Create
-              </Button>
-            </Box>
-          </Box>
+  <Box className="header-container">
+    <Box className="title-container">
+      <Typography variant="h5" className="section-title">
+        Allowances & Deductions
+      </Typography>
+      <span className="title-badge">Management</span>
+    </Box>
+    <Box className="header-actions">
+      <Button
+        variant="contained"
+        onClick={() => {
+          setEditMode(false);
+          setNewAllowance({
+            empId: "",
+            name: "",
+            percentage: 0,
+            category: "Regular",
+            status: "Active",
+          });
+          setOpenDialog(true);
+        }}
+        startIcon={<AddCircleIcon />}
+        className="create-button allowance-create-button"
+      >
+        <span className="button-text">Create</span>
+      </Button>
+    </Box>
+  </Box>
 
           {/* Combined Employee-based Table */}
 
           <TableContainer component={Paper} className="table-container">
-            <Table>
-              {/* <TableHead>
-              <TableRow className="table-header">
-                <TableCell>Employee</TableCell>
-                <TableCell>Department</TableCell>
-                <TableCell>Basic Pay</TableCell>
-                <TableCell>Net Impact</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead> */}
-              <TableHead>
-                <TableRow className="table-header">
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Employee
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Department
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Basic Pay
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Net Impact
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
+    <Table className="responsive-table">
+      <TableHead>
+        <TableRow className="table-header">
+          <TableCell className="table-cell" data-priority="1">
+            Employee
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            Department
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            Basic Pay
+          </TableCell>
+          <TableCell className="table-cell" data-priority="1">
+            Net Impact
+          </TableCell>
+          <TableCell className="table-cell action-column" data-priority="1" align="center">
+            Actions
+          </TableCell>
+        </TableRow>
+      </TableHead>
 
-              <TableBody>
+      <TableBody>
                 {employeeData.map((employee) => {
                   // Get all allowances for this employee
                   const employeeAllowances = allowanceData.filter(
@@ -1529,467 +1410,351 @@ const PayrollSystem = () => {
         </TabPanel>
 
         {/* Payslips Tab */}
-        <TabPanel value={tabIndex} index={2}>
-          <Box className="payslip-header-container">
-            <Typography variant="h5" className="payslip-section-title">
-              Payslip Management
-            </Typography>
-            <Chip
-              label={`${employeeData.length} Employees`}
-              className="payslip-title-badge"
-              size="small"
-            />
-          </Box>
+<TabPanel value={tabIndex} index={2}>
+  <Box className="payslip-header-container">
+    <Typography variant="h5" className="payslip-section-title">
+      Payslip Management
+    </Typography>
+    <Chip
+      label={`${employeeData.length} Employees`}
+      className="payslip-title-badge"
+      size="small"
+    />
+  </Box>
 
-          {employeeData.length === 0 ? (
-            <Paper className="payslip-no-data-paper">
-              <Typography variant="h6" align="center" sx={{ py: 4 }}>
-                No employee data available. Please add employees first.
-              </Typography>
-            </Paper>
-          ) : (
-            employeeData.map((emp) => (
-              <Paper key={emp.empId} className="payslip-employee-card">
-                <Grid container spacing={3}>
-                  {/* Employee Details Section */}
-                  <Grid item xs={12}>
-                    <Typography
-                      variant="h5"
-                      className="payslip-employee-header"
-                    >
-                      Employee Details
-                      <Chip
-                        label={`ID: ${emp.empId}`}
-                        className="payslip-emp-id-chip"
-                      />
-                    </Typography>
-                    <Box className="payslip-details-grid">
-                      <Grid container spacing={3}>
-                        <Grid item xs={12} sm={4}>
-                          <Box className="payslip-detail-group">
-                            <Box className="payslip-detail-item">
-                              <Typography
-                                variant="subtitle2"
-                                className="payslip-detail-label"
-                              >
-                                Name
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-detail-value"
-                              >
-                                {emp.empName}
-                              </Typography>
-                            </Box>
-                            <Box className="payslip-detail-item">
-                              <Typography
-                                variant="subtitle2"
-                                className="payslip-detail-label"
-                              >
-                                Department
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-detail-value"
-                              >
-                                {emp.department}
-                              </Typography>
-                            </Box>
-                            <Box className="payslip-detail-item">
-                              <Typography
-                                variant="subtitle2"
-                                className="payslip-detail-label"
-                              >
-                                Designation
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-detail-value"
-                              >
-                                {emp.designation}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          <Box className="payslip-detail-group">
-                            <Box className="payslip-detail-item">
-                              <Typography
-                                variant="subtitle2"
-                                className="payslip-detail-label"
-                              >
-                                Bank Name
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-detail-value"
-                              >
-                                {emp.bankName}
-                              </Typography>
-                            </Box>
-                            <Box className="payslip-detail-item">
-                              <Typography
-                                variant="subtitle2"
-                                className="payslip-detail-label"
-                              >
-                                Account No
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-detail-value"
-                              >
-                                {emp.bankAccountNo}
-                              </Typography>
-                            </Box>
-                            <Box className="payslip-detail-item">
-                              <Typography
-                                variant="subtitle2"
-                                className="payslip-detail-label"
-                              >
-                                PAN No
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-detail-value"
-                              >
-                                {emp.panNo}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                          <Box className="payslip-detail-group">
-                            <Box className="payslip-detail-item">
-                              <Typography
-                                variant="subtitle2"
-                                className="payslip-detail-label"
-                              >
-                                PF No
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-detail-value"
-                              >
-                                {emp.pfNo}
-                              </Typography>
-                            </Box>
-                            <Box className="payslip-detail-item">
-                              <Typography
-                                variant="subtitle2"
-                                className="payslip-detail-label"
-                              >
-                                UAN No
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-detail-value"
-                              >
-                                {emp.uanNo}
-                              </Typography>
-                            </Box>
-                            <Box className="payslip-detail-item">
-                              <Typography
-                                variant="subtitle2"
-                                className="payslip-detail-label"
-                              >
-                                Status
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-detail-value"
-                              >
-                                {emp.status}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </Grid>
-                      </Grid>
+  {employeeData.length === 0 ? (
+    <Paper className="payslip-no-data-paper">
+      <Typography variant="h6" align="center" sx={{ py: 4 }}>
+        No employee data available. Please add employees first.
+      </Typography>
+    </Paper>
+  ) : (
+    employeeData.map((emp) => (
+      <Paper key={emp.empId} className="payslip-employee-card">
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Box className="payslip-employee-header">
+              <Typography variant="h5">Employee Details</Typography>
+              <Chip
+                label={`ID: ${emp.empId}`}
+                className="payslip-emp-id-chip"
+                size="small"
+              />
+            </Box>
+            <Box className="payslip-details-grid">
+              <Grid container spacing={{xs: 1, sm: 2, md: 3}}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Box className="payslip-detail-group">
+                    <Box className="payslip-detail-item">
+                      <Typography variant="subtitle2" className="payslip-detail-label">
+                        Name
+                      </Typography>
+                      <Typography variant="body1" className="payslip-detail-value">
+                        {emp.empName}
+                      </Typography>
                     </Box>
-                  </Grid>
-
-                  {/* Attendance Details Section */}
-                  <Grid item xs={12}>
-                    <Typography variant="h6" className="payslip-section-header">
-                      Attendance Details
-                    </Typography>
-                    <Box className="payslip-attendance-grid">
-                      <Grid container spacing={2}>
-                        <Grid item xs={6} sm={3}>
-                          <Paper className="payslip-stat-card">
-                            <Typography
-                              variant="subtitle2"
-                              className="payslip-stat-label"
-                            >
-                              Total Days
-                            </Typography>
-                            <Typography
-                              variant="h6"
-                              className="payslip-stat-value"
-                            >
-                              {emp.payableDays}
-                            </Typography>
-                          </Paper>
-                        </Grid>
-                        <Grid item xs={6} sm={3}>
-                          <Paper className="payslip-stat-card">
-                            <Typography
-                              variant="subtitle2"
-                              className="payslip-stat-label"
-                            >
-                              LOP Days
-                            </Typography>
-                            <Typography
-                              variant="h6"
-                              className="payslip-stat-value"
-                            >
-                              {emp.lop}
-                            </Typography>
-                          </Paper>
-                        </Grid>
-                        <Grid item xs={6} sm={3}>
-                          <Paper className="payslip-stat-card">
-                            <Typography
-                              variant="subtitle2"
-                              className="payslip-stat-label"
-                            >
-                              Working Days
-                            </Typography>
-                            <Typography
-                              variant="h6"
-                              className="payslip-stat-value"
-                            >
-                              {emp.payableDays - emp.lop}
-                            </Typography>
-                          </Paper>
-                        </Grid>
-                        <Grid item xs={6} sm={3}>
-                          <Paper className="payslip-stat-card">
-                            <Typography
-                              variant="subtitle2"
-                              className="payslip-stat-label"
-                            >
-                              Per Day Pay
-                            </Typography>
-                            <Typography
-                              variant="h6"
-                              className="payslip-stat-value"
-                            >
-                              Rs.{" "}
-                              {calculatePerDayPay(
-                                emp.basicPay,
-                                emp.payableDays
-                              ).toFixed(2)}
-                            </Typography>
-                          </Paper>
-                        </Grid>
-                      </Grid>
+                    <Box className="payslip-detail-item">
+                      <Typography variant="subtitle2" className="payslip-detail-label">
+                        Department
+                      </Typography>
+                      <Typography variant="body1" className="payslip-detail-value">
+                        {emp.department}
+                      </Typography>
                     </Box>
-                  </Grid>
-
-                  {/* Earnings & Deductions Section */}
-                  <Grid item xs={12}>
-                    <Grid container spacing={3}>
-                      {/* Left Column - Earnings */}
-                      <Grid item xs={12} md={6}>
-                        <Paper className="payslip-earnings-section">
-                          <Typography
-                            variant="h6"
-                            className="payslip-section-header"
-                          >
-                            Earnings
-                          </Typography>
-                          <Box className="payslip-amount-list">
-                            <Box className="payslip-amount-row">
-                              <Typography
-                                variant="body1"
-                                className="payslip-amount-label"
-                              >
-                                Basic Pay
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-amount-value"
-                              >
-                                Rs.{" "}
-                                {calculateAttendanceBasedPay(
-                                  emp.basicPay,
-                                  emp.payableDays,
-                                  emp.lop
-                                ).toFixed(2)}
-                              </Typography>
-                            </Box>
-                            {allowanceData
-                              .filter(
-                                (a) =>
-                                  a.empId === emp.empId && a.status === "Active"
-                              )
-                              .map((allowance) => (
-                                <Box
-                                  key={
-                                    allowance._id ||
-                                    `${allowance.empId}_${allowance.name}`
-                                  }
-                                  className="payslip-amount-row"
-                                >
-                                  <Typography
-                                    variant="body1"
-                                    className="payslip-amount-label"
-                                  >
-                                    {allowance.name}
-                                  </Typography>
-                                  <Typography
-                                    variant="body1"
-                                    className="payslip-amount-value"
-                                  >
-                                    Rs.{" "}
-                                    {calculateAllowanceAmount(
-                                      emp.basicPay,
-                                      allowance.percentage
-                                    ).toFixed(2)}
-                                  </Typography>
-                                </Box>
-                              ))}
-                            <Box className="payslip-amount-row payslip-total-row">
-                              <Typography
-                                variant="body1"
-                                className="payslip-total-label"
-                              >
-                                Total Earnings
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-total-value"
-                              >
-                                Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </Paper>
-                      </Grid>
-
-                      {/* Right Column - Deductions */}
-                      <Grid item xs={12} md={6}>
-                        <Paper className="payslip-deductions-section">
-                          <Typography
-                            variant="h6"
-                            className="payslip-section-header"
-                          >
-                            Deductions
-                          </Typography>
-                          <Box className="payslip-amount-list">
-                            {deductions
-                              .filter(
-                                (d) =>
-                                  d.empId === emp.empId && d.status === "Active"
-                              )
-                              .map((deduction) => (
-                                <Box
-                                  key={
-                                    deduction._id ||
-                                    `${deduction.empId}_${deduction.name}`
-                                  }
-                                  className="payslip-amount-row"
-                                >
-                                  <Typography
-                                    variant="body1"
-                                    className="payslip-amount-label"
-                                  >
-                                    {deduction.name}
-                                  </Typography>
-                                  <Typography
-                                    variant="body1"
-                                    className="payslip-amount-value"
-                                  >
-                                    Rs.{" "}
-                                    {calculateDeductionAmount(
-                                      emp.basicPay,
-                                      deduction.percentage
-                                    ).toFixed(2)}
-                                  </Typography>
-                                </Box>
-                              ))}
-                            {deductions.filter(
-                              (d) =>
-                                d.empId === emp.empId && d.status === "Active"
-                            ).length === 0 && (
-                              <Box className="payslip-amount-row payslip-empty-row">
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                  align="center"
-                                  sx={{ width: "100%" }}
-                                >
-                                  No active deductions
-                                </Typography>
-                              </Box>
-                            )}
-                            <Box className="payslip-amount-row payslip-total-row">
-                              <Typography
-                                variant="body1"
-                                className="payslip-total-label"
-                              >
-                                Total Deductions
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-total-value"
-                              >
-                                Rs.{" "}
-                                {calculateTotalDeductions(emp.empId).toFixed(2)}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </Paper>
-                      </Grid>
-                    </Grid>
-                  </Grid>
-
-                  {/* Net Salary Section */}
-                  <Grid item xs={12}>
-                    <Paper className="payslip-net-salary-section">
-                      <Grid
-                        container
-                        alignItems="center"
-                        justifyContent="space-between"
-                        spacing={2}
-                      >
-                        <Grid item xs={12} md={6}>
-                          <Typography
-                            variant="h5"
-                            className="payslip-net-salary-label"
-                          >
-                            Net Salary: Rs.{" "}
-                            {calculateNetSalary(emp.empId).toFixed(2)}
-                          </Typography>
-                        </Grid>
-                        <Grid
-                          item
-                          xs={12}
-                          md={6}
-                          sx={{ textAlign: { xs: "left", md: "right" } }}
-                        >
-                          <Button
-                            variant="contained"
-                            onClick={async () => {
-                              const payslip = await generatePayslip(emp.empId);
-                              if (payslip) {
-                                downloadPayslip(payslip._id);
-                              }
-                            }}
-                            startIcon={<FileDownloadIcon />}
-                            className="payslip-download-button"
-                          >
-                            Generate & Download Payslip
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    </Paper>
-                  </Grid>
+                    <Box className="payslip-detail-item">
+                      <Typography variant="subtitle2" className="payslip-detail-label">
+                        Designation
+                      </Typography>
+                      <Typography variant="body1" className="payslip-detail-value">
+                        {emp.designation}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Grid>
-              </Paper>
-            ))
-          )}
-        </TabPanel>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Box className="payslip-detail-group">
+                    <Box className="payslip-detail-item">
+                      <Typography variant="subtitle2" className="payslip-detail-label">
+                        Bank Name
+                      </Typography>
+                      <Typography variant="body1" className="payslip-detail-value">
+                        {emp.bankName}
+                      </Typography>
+                    </Box>
+                    <Box className="payslip-detail-item">
+                      <Typography variant="subtitle2" className="payslip-detail-label">
+                        Account No
+                      </Typography>
+                      <Typography variant="body1" className="payslip-detail-value">
+                        {emp.bankAccountNo}
+                      </Typography>
+                    </Box>
+                    <Box className="payslip-detail-item">
+                      <Typography variant="subtitle2" className="payslip-detail-label">
+                        PAN No
+                      </Typography>
+                      <Typography variant="body1" className="payslip-detail-value">
+                        {emp.panNo}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Box className="payslip-detail-group">
+                    <Box className="payslip-detail-item">
+                      <Typography variant="subtitle2" className="payslip-detail-label">
+                        PF No
+                      </Typography>
+                      <Typography variant="body1" className="payslip-detail-value">
+                        {emp.pfNo}
+                      </Typography>
+                    </Box>
+                    <Box className="payslip-detail-item">
+                      <Typography variant="subtitle2" className="payslip-detail-label">
+                        UAN No
+                      </Typography>
+                      <Typography variant="body1" className="payslip-detail-value">
+                        {emp.uanNo}
+                      </Typography>
+                    </Box>
+                    <Box className="payslip-detail-item">
+                      <Typography variant="subtitle2" className="payslip-detail-label">
+                        Status
+                      </Typography>
+                      <Typography variant="body1" className="payslip-detail-value">
+                        {emp.status}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+          </Grid>
+
+          {/* Attendance Details Section */}
+          <Grid item xs={12}>
+            <Typography variant="h6" className="payslip-section-header">
+              Attendance Details
+            </Typography>
+            <Box className="payslip-attendance-grid">
+              <Grid container spacing={{xs: 1, sm: 2}}>
+                <Grid item xs={6} sm={3}>
+                  <Paper className="payslip-stat-card">
+                    <Typography variant="subtitle2" className="payslip-stat-label">
+                      Total Days
+                    </Typography>
+                    <Typography variant="h6" className="payslip-stat-value">
+                      {emp.payableDays}
+                    </Typography>
+                  </Paper>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <Paper className="payslip-stat-card">
+                    <Typography variant="subtitle2" className="payslip-stat-label">
+                      LOP Days
+                    </Typography>
+                    <Typography variant="h6" className="payslip-stat-value">
+                      {emp.lop}
+                    </Typography>
+                  </Paper>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <Paper className="payslip-stat-card">
+                    <Typography variant="subtitle2" className="payslip-stat-label">
+                      Working Days
+                    </Typography>
+                    <Typography variant="h6" className="payslip-stat-value">
+                      {emp.payableDays - emp.lop}
+                    </Typography>
+                  </Paper>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <Paper className="payslip-stat-card">
+                    <Typography variant="subtitle2" className="payslip-stat-label">
+                      Per Day Pay
+                    </Typography>
+                    <Typography variant="h6" className="payslip-stat-value">
+                      Rs.{" "}
+                      {calculatePerDayPay(
+                        emp.basicPay,
+                        emp.payableDays
+                      ).toFixed(2)}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Box>
+          </Grid>
+
+          {/* Earnings & Deductions Section */}
+          <Grid item xs={12}>
+            <Grid container spacing={{xs: 2, sm: 3}}>
+              <Grid item xs={12} sm={6}>
+                <Paper className="payslip-earnings-section">
+                  <Typography variant="h6" className="payslip-section-header">
+                    Earnings
+                  </Typography>
+                  <Box className="payslip-amount-list">
+                    <Box className="payslip-amount-row">
+                      <Typography variant="body1" className="payslip-amount-label">
+                        Basic Pay
+                      </Typography>
+                      <Typography variant="body1" className="payslip-amount-value">
+                        Rs.{" "}
+                        {calculateAttendanceBasedPay(
+                          emp.basicPay,
+                          emp.payableDays,
+                          emp.lop
+                        ).toFixed(2)}
+                      </Typography>
+                    </Box>
+                    {allowanceData
+                      .filter(
+                        (a) =>
+                          a.empId === emp.empId && a.status === "Active"
+                      )
+                      .map((allowance) => (
+                        <Box
+                          key={
+                            allowance._id ||
+                            `${allowance.empId}_${allowance.name}`
+                          }
+                          className="payslip-amount-row"
+                        >
+                          <Typography variant="body1" className="payslip-amount-label">
+                            {allowance.name}
+                          </Typography>
+                          <Typography variant="body1" className="payslip-amount-value">
+                            Rs.{" "}
+                            {calculateAllowanceAmount(
+                              emp.basicPay,
+                              allowance.percentage
+                            ).toFixed(2)}
+                          </Typography>
+                        </Box>
+                      ))}
+                    {allowanceData.filter(
+                      (a) =>
+                        a.empId === emp.empId && a.status === "Active"
+                    ).length === 0 && (
+                      <Box className="payslip-amount-row payslip-empty-row">
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          align="center"
+                          sx={{ width: "100%" }}
+                        >
+                          No active allowances
+                        </Typography>
+                      </Box>
+                    )}
+                    <Box className="payslip-amount-row payslip-total-row">
+                      <Typography variant="body1" className="payslip-total-label">
+                        Total Earnings
+                      </Typography>
+                      <Typography variant="body1" className="payslip-total-value">
+                        Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Paper>
+              </Grid>
+
+              {/* Right Column - Deductions */}
+              <Grid item xs={12} sm={6}>
+                <Paper className="payslip-deductions-section">
+                  <Typography variant="h6" className="payslip-section-header">
+                    Deductions
+                  </Typography>
+                  <Box className="payslip-amount-list">
+                    {deductions
+                      .filter(
+                        (d) =>
+                          d.empId === emp.empId && d.status === "Active"
+                      )
+                      .map((deduction) => (
+                        <Box
+                          key={
+                            deduction._id ||
+                            `${deduction.empId}_${deduction.name}`
+                          }
+                          className="payslip-amount-row"
+                        >
+                          <Typography variant="body1" className="payslip-amount-label">
+                            {deduction.name}
+                          </Typography>
+                          <Typography variant="body1" className="payslip-amount-value">
+                            Rs.{" "}
+                            {calculateDeductionAmount(
+                              emp.basicPay,
+                              deduction.percentage
+                            ).toFixed(2)}
+                          </Typography>
+                        </Box>
+                      ))}
+                    {deductions.filter(
+                      (d) =>
+                        d.empId === emp.empId && d.status === "Active"
+                    ).length === 0 && (
+                      <Box className="payslip-amount-row payslip-empty-row">
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          align="center"
+                          sx={{ width: "100%" }}
+                        >
+                          No active deductions
+                        </Typography>
+                      </Box>
+                    )}
+                    <Box className="payslip-amount-row payslip-total-row">
+                      <Typography variant="body1" className="payslip-total-label">
+                        Total Deductions
+                      </Typography>
+                      <Typography variant="body1" className="payslip-total-value">
+                        Rs.{" "}
+                        {calculateTotalDeductions(emp.empId).toFixed(2)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Paper>
+              </Grid>
+            </Grid>
+          </Grid>
+
+          {/* Net Salary Section */}
+          <Grid item xs={12}>
+            <Paper className="payslip-net-salary-section">
+              <Grid container direction={{xs: 'column', md: 'row'}} spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h5" className="payslip-net-salary-label">
+                    Net Salary: Rs. {calculateNetSalary(emp.empId).toFixed(2)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6} sx={{textAlign: {xs: 'center', md: 'right'}}}>
+                  <Button
+                    variant="contained"
+                    onClick={async () => {
+                      const payslip = await generatePayslip(emp.empId);
+                      if (payslip) {
+                        downloadPayslip(payslip._id);
+                      }
+                    }}
+                    startIcon={<FileDownloadIcon />}
+                    className="payslip-download-button"
+                  >
+                    Generate & Download Payslip
+                  </Button>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Paper>
+    ))
+  )}
+</TabPanel>
+
 
         {/* Employee Preview Dialog */}
         <Dialog
@@ -2051,8 +1816,10 @@ const PayrollSystem = () => {
                       />
                     </Box>
 
+                    {/* <Grid container spacing={2}>
+                      <Grid item xs={12} md={4}> */}
                     <Grid container spacing={2}>
-                      <Grid item xs={12} md={4}>
+                      <Grid item xs={12} sm={6} md={4}>
                         <Typography variant="subtitle2" color="textSecondary">
                           Department
                         </Typography>
@@ -2540,9 +2307,18 @@ const PayrollSystem = () => {
           onClose={handleCloseEmployeeDialog}
           maxWidth="md"
           fullWidth
+          // PaperProps={{
+          //   elevation: 0,
+          //   className: "dialog-paper",
+          // }}
           PaperProps={{
-            elevation: 0,
-            className: "dialog-paper",
+            sx: {
+              width: { xs: "100%", sm: "600px" },
+              maxWidth: "100%",
+              borderRadius: { xs: 0, sm: "20px" },
+              margin: { xs: 0, sm: 2 },
+              overflow: "hidden",
+            },
           }}
         >
           <DialogTitle className="dialog-title">
@@ -2587,8 +2363,10 @@ const PayrollSystem = () => {
               </Box>
             )}
 
+            {/* <Grid container spacing={2}>
+              <Grid item xs={12} md={6}> */}
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   label="Employee ID"
                   fullWidth
@@ -2782,17 +2560,28 @@ const PayrollSystem = () => {
           onClose={handleCloseDialog}
           maxWidth="sm"
           fullWidth
+          // PaperProps={{
+          //   elevation: 0,
+          //   className: "dialog-paper",
+          // }}
           PaperProps={{
-            elevation: 0,
-            className: "dialog-paper",
+            sx: {
+              width: { xs: "100%", sm: "600px" },
+              maxWidth: "100%",
+              borderRadius: { xs: 0, sm: "20px" },
+              margin: { xs: 0, sm: 2 },
+              overflow: "hidden",
+            },
           }}
         >
           <DialogTitle className="dialog-title">
             {editMode ? "Edit Allowance" : "Add New Allowance"}
           </DialogTitle>
           <DialogContent className="dialog-content">
+            {/* <Grid container spacing={2}>
+              <Grid item xs={12}> */}
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6} md={4}>
                 <FormControl fullWidth required>
                   <InputLabel>Employee</InputLabel>
                   <Select

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import CreateFeedback from "./CreateFeedback";
+import {styled} from "@mui/material/styles";
 import {
   Box,
   Typography,
@@ -42,6 +43,7 @@ import {
   CardContent,
   Drawer,
   Divider,
+  InputAdornment
 } from "@mui/material";
 
 import {
@@ -78,6 +80,18 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
 import "./Feedback.css";
+
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
+
 
 const Feedback = () => {
   const theme = useTheme();
@@ -262,32 +276,7 @@ const Feedback = () => {
     setIsCreateModalOpen(true);
   };
 
-  // // Add these functions to your component
-  // const handleDeleteClick = (feedback) => {
-  //   console.log("Feedback object:", feedback); // Debug log
-  //   setItemToDelete(feedback);
-  //   setDeleteDialogOpen(true);
-  // };
 
-  // const handleConfirmDelete = async () => {
-  //   try {
-  //     setLoading(true);
-  //     await axios.delete(`http://localhost:5000/api/feedback/${itemToDelete._id || itemToDelete.id}`);
-  //     await fetchFeedbacks();
-  //     setDeleteDialogOpen(false);
-  //     setItemToDelete(null);
-  //   } catch (error) {
-  //     console.error("Error deleting feedback:", error);
-  //     setError("Failed to delete feedback");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // const handleCloseDeleteDialog = () => {
-  //   setDeleteDialogOpen(false);
-  //   setItemToDelete(null);
-  // };
   // Add these functions to your component
   const handleDeleteClick = (feedback) => {
     console.log("Feedback object:", feedback); // Debug log
@@ -784,6 +773,13 @@ const Feedback = () => {
 
   return (
     <div className="feedback">
+      <Box
+  sx={{
+    p: { xs: 2, sm: 3, md: 4 },
+    backgroundColor: "#f5f5f5",
+    minHeight: "100vh",
+  }}
+>
       {/* Mobile Menu Drawer */}
       <Drawer
         anchor="left"
@@ -793,10 +789,20 @@ const Feedback = () => {
           sx: { width: "80%", maxWidth: "300px" },
         }}
       >
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-            Feedback Menu
-          </Typography>
+        <Box>
+        <Typography
+      variant="h4"
+      sx={{
+        mb: { xs: 2, sm: 3, md: 4 },
+        color: theme.palette.primary.main,
+        fontWeight: 600,
+        letterSpacing: 0.5,
+        fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+      }}
+    >
+      Feedbacks
+    </Typography>
+
           <Divider sx={{ mb: 2 }} />
 
           <Typography
@@ -864,7 +870,9 @@ const Feedback = () => {
           >
             ACTIONS
           </Typography>
-          <Stack spacing={2}>
+
+
+          {/* <Stack spacing={2}>
             <Button
               fullWidth
               variant="outlined"
@@ -913,9 +921,129 @@ const Feedback = () => {
             >
               Export
             </Button>
-          </Stack>
+          </Stack> */}
+
+<StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+      <Box
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row" }}
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        gap={2}
+        sx={{
+          width: "100%",
+          justifyContent: "space-between",
+        }}
+      >
+        <TextField
+          placeholder="Search"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          size="small"
+          sx={{
+            width: { xs: "100%", sm: "300px" },
+            marginRight: { xs: 0, sm: "auto" },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search color="primary" />
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: 1, sm: 1 },
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleFilterClick}
+            startIcon={<FilterList />}
+            sx={{
+              height: { xs: "auto", sm: 50 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              borderColor: "#1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                borderColor: "#1565c0",
+                backgroundColor: "#e3f2fd",
+              },
+            }}
+          >
+            Filter
+          </Button>
+
+          <Button
+            onClick={fetchAnalytics}
+            startIcon={<BarChartIcon />}
+            sx={{
+              height: { xs: "auto", sm: 50 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              borderColor: "#1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                borderColor: "#1565c0",
+                backgroundColor: "#e3f2fd",
+              },
+            }}
+            variant="outlined"
+          >
+            Analytics
+          </Button>
+
+          <Button
+            onClick={(e) => setExportOptions(e.currentTarget)}
+            startIcon={<GetAppIcon />}
+            sx={{
+              height: { xs: "auto", sm: 50 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              borderColor: "#1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                borderColor: "#1565c0",
+                backgroundColor: "#e3f2fd",
+              },
+            }}
+            variant="outlined"
+          >
+            Export
+          </Button>
+
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            startIcon={<Add />}
+            sx={{
+              height: { xs: "auto", sm: 50 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+              color: "white",
+              "&:hover": {
+                background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+              },
+            }}
+            variant="contained"
+          >
+            Create
+          </Button>
+        </Box>
+      </Box>
+    </StyledPaper>
+
+
         </Box>
       </Drawer>
+
+
+
 
       {/* Action Menu for Mobile */}
       <Menu
@@ -950,17 +1078,7 @@ const Feedback = () => {
           </ListItemIcon>
           <ListItemText>View History</ListItemText>
         </MenuItem>
-        {/* <MenuItem
-          onClick={() => {
-            handleDeleteClick(currentFeedbackId);
-            handleActionMenuClose();
-          }}
-        >
-          <ListItemIcon>
-            <Delete fontSize="small" color="error" />
-          </ListItemIcon>
-          <ListItemText>Delete</ListItemText>
-        </MenuItem> */}
+      
         <MenuItem
           onClick={() => {
             handleDeleteClick(
@@ -1916,41 +2034,7 @@ const Feedback = () => {
           // Table View for Tablet and Desktop
           <Box sx={{ overflowX: "auto" }}>
             <Table sx={{ minWidth: 650 }}>
-              {/* <TableHead>
-                <TableRow sx={{ backgroundColor: "#f8fafc" }}>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      indeterminate={
-                        selectedItems.length > 0 &&
-                        selectedItems.length < filteredFeedbackData.length
-                      }
-                      checked={
-                        filteredFeedbackData.length > 0 &&
-                        selectedItems.length === filteredFeedbackData.length
-                      }
-                      onChange={handleSelectAll}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: "#475569", py: 2 }}>
-                    Employee
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: "#475569", py: 2 }}>
-                    Title
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: "#475569", py: 2 }}>
-                    Status
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: "#475569", py: 2 }}>
-                    Start Date
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: "#475569", py: 2 }}>
-                    Due Date
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: "#475569", py: 2 }}>
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead> */}
+            
               <TableHead>
                 <TableRow>
                   <TableCell
@@ -2399,6 +2483,8 @@ const Feedback = () => {
           </Button>
         </DialogActions>
       </Dialog>
+    
+    </Box>
     </div>
   );
 };
