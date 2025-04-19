@@ -240,41 +240,125 @@ align-content: space-around;
   color: white !important;
 }
 
-/* Enhanced Payslip Styles */
-.payslip-card {
+/* No data message */
+.payslip-no-data-paper {
   padding: 2rem;
-  margin-bottom: 2rem;
-  background: white;
-  border-radius: 16px;
-  box-shadow: var(--shadow-md);
-  animation: fadeIn 0.5s ease-out;
+  margin: 2rem;
+  text-align: center;
+  background-color: #f9f9f9;
+  border-radius: 12px;
 }
 
-.payslip-header {
+/* Employee Card Styles */
+.payslip-employee-card {
+  padding: 2rem;
+  margin: 0 2rem 2rem 2rem;
+  background: white;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  animation: fadeIn 0.5s ease-out;
+  overflow: hidden;
+}
+
+.payslip-employee-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-bottom: 1.5rem;
   margin-bottom: 1.5rem;
   border-bottom: 2px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-weight: 600;
 }
 
-.emp-id-chip {
+.payslip-emp-id-chip {
   background: var(--sky-light) !important;
   color: var(--sky-dark) !important;
   font-weight: 600 !important;
   padding: 0.5rem 1rem !important;
 }
 
-.details-grid {
+.payslip-details-grid {
   background: linear-gradient(145deg, #ffffff, var(--sky-light));
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
 }
 
-.stat-card {
-  padding: 1.2rem;
+.payslip-detail-group {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.payslip-detail-item {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  margin-bottom: 1rem;
+  align-items: baseline;
+  position: relative;
+}
+
+.payslip-detail-item:after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.payslip-detail-item:last-child:after {
+  display: none;
+}
+
+.payslip-detail-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.payslip-detail-value {
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive adjustments for employee details */
+@media (max-width: 960px) {
+  .payslip-detail-item {
+    grid-template-columns: 100px 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .payslip-detail-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  
+  .payslip-detail-label {
+    margin-bottom: 0.25rem;
+  }
+  
+  .payslip-detail-item:after {
+    bottom: -0.25rem;
+  }
+}
+
+.attendance-grid {
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {  padding: 1.2rem;
   text-align: center;
   background: white;
   border-radius: 12px;
@@ -298,6 +382,14 @@ align-content: space-around;
   font-weight: 600;
 }
 
+.section-header {
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+  font-weight: 600;
+}
+
 .earnings-section,
 .deductions-section {
   height: 100%;
@@ -305,13 +397,6 @@ align-content: space-around;
   background: white;
   border-radius: 16px;
   box-shadow: var(--shadow-md);
-}
-
-.section-header {
-  color: var(--text-primary);
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--border-color);
 }
 
 .amount-list {
@@ -324,7 +409,7 @@ align-content: space-around;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   background: var(--background-light);
   border-radius: 8px;
   transition: var(--transition-base);
@@ -343,21 +428,22 @@ align-content: space-around;
 }
 
 .net-salary-section {
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   background: linear-gradient(145deg, var(--sky-medium), var(--sky-dark));
   border-radius: 16px;
   color: white;
   box-shadow: var(--shadow-lg);
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .download-button {
   background: white !important;
   color: var(--sky-dark) !important;
-  padding: 0.75rem 2rem !important;
+  padding: 0.75rem 1.5rem !important;
   border-radius: 12px !important;
   font-weight: 600 !important;
   transition: var(--transition-base) !important;
+  text-transform: none !important;
 }
 
 .download-button:hover {
@@ -366,6 +452,48 @@ align-content: space-around;
   background: var(--sky-light) !important;
 }
 
+/* Responsive adjustments for payslip tab */
+@media (max-width: 960px) {
+  .payslip-card {
+    padding: 1.5rem;
+    margin: 0 1rem 1.5rem 1rem;
+  }
+  
+  .details-grid, 
+  .earnings-section,
+  .deductions-section {
+    padding: 1rem;
+  }
+  
+  .net-salary-section {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .payslip-card {
+    padding: 1rem;
+    margin: 0 0.5rem 1rem 0.5rem;
+  }
+  
+  .payslip-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .emp-id-chip {
+    align-self: flex-start;
+  }
+  
+  .amount-row {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .download-button {
+    width: 100%;
+    margin-top: 1rem;
+  }
+}
 /* Dialog Styles */
 .dialog-paper {
   border-radius: 20px !important;
@@ -557,3 +685,216 @@ align-content: space-around;
   }
 }
 
+.payslip-detail-value {
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+/* Attendance Section */
+.payslip-attendance-grid {
+  margin-bottom: 1.5rem;
+}
+
+.payslip-section-header {
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+  font-weight: 600;
+}
+
+.payslip-stat-card {
+  padding: 1.2rem;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-base);
+  height: 100%;
+}
+
+.payslip-stat-card:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(145deg, #ffffff, var(--sky-light));
+  box-shadow: var(--shadow-md);
+}
+
+.payslip-stat-label {
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.payslip-stat-value {
+  color: var(--sky-dark);
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+/* Earnings and Deductions Sections */
+.payslip-earnings-section,
+.payslip-deductions-section {
+  height: 100%;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.payslip-amount-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.payslip-amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--background-light);
+  border-radius: 8px;
+  transition: var(--transition-base);
+}
+
+.payslip-amount-row:hover {
+  background: var(--sky-light);
+  transform: translateX(4px);
+}
+
+.payslip-amount-label {
+  font-weight: 500;
+}
+
+.payslip-amount-value {
+  font-weight: 600;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.payslip-total-row {
+  margin-top: 1rem;
+  background: linear-gradient(135deg, var(--sky-medium), var(--sky-dark));
+  color: white;
+}
+
+.payslip-total-label, 
+.payslip-total-value {
+  color: white;
+  font-weight: 600;
+}
+
+.payslip-empty-row {
+  background: #f5f5f5;
+  color: #757575;
+  justify-content: center;
+}
+
+.payslip-empty-row:hover {
+  transform: none;
+  background: #f5f5f5;
+}
+
+/* Net Salary Section */
+.payslip-net-salary-section {
+  padding: 1.5rem 2rem;
+  background: linear-gradient(145deg, var(--sky-medium), var(--sky-dark));
+  border-radius: 16px;
+  color: white;
+  box-shadow: var(--shadow-lg);
+  margin-top: 1.5rem;
+}
+
+.payslip-net-salary-label {
+  font-weight: 700;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.payslip-download-button {
+  background: white !important;
+  color: var(--sky-dark) !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  transition: var(--transition-base) !important;
+  text-transform: none !important;
+  min-width: 250px;
+}
+
+.payslip-download-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md) !important;
+  background: var(--sky-light) !important;
+}
+
+/* Responsive adjustments for payslip tab */
+@media (max-width: 960px) {
+  .payslip-employee-card {
+    padding: 1.5rem;
+    margin: 0 1rem 1.5rem 1rem;
+  }
+  
+  .payslip-details-grid, 
+  .payslip-earnings-section,
+  .payslip-deductions-section {
+    padding: 1rem;
+  }
+  
+  .payslip-net-salary-section {
+    padding: 1.25rem;
+  }
+  
+  .payslip-detail-item {
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
+  
+  .payslip-detail-label {
+    min-width: auto;
+    margin-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .payslip-employee-card {
+    padding: 1rem;
+    margin: 0 0.5rem 1rem 0.5rem;
+  }
+  
+  .payslip-employee-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .payslip-emp-id-chip {
+    align-self: flex-start;
+  }
+  
+  .payslip-amount-row {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .payslip-download-button {
+    width: 100%;
+    margin-top: 1rem;
+    min-width: auto;
+  }
+  
+  .payslip-stat-card {
+    padding: 0.75rem;
+  }
+  
+  .payslip-stat-value {
+    font-size: 1.1rem;
+  }
+  
+  .payslip-header-container {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .payslip-section-title {
+    font-size: 1.5rem;
+  }
+}

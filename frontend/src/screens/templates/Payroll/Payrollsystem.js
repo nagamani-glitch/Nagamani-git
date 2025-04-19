@@ -1530,239 +1530,467 @@ const PayrollSystem = () => {
 
         {/* Payslips Tab */}
         <TabPanel value={tabIndex} index={2}>
-          {employeeData.map((emp) => (
-            <Paper
-              key={emp.empId}
-              className="payslip-card"
-              sx={{
-                marginBottom: "2rem",
-                borderRadius: "12px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              }}
-            >
-              <Grid container spacing={3}>
-                {/* Employee Details Section */}
-                <Grid item xs={12}>
-                  <Typography variant="h5" className="payslip-header">
-                    Employee Details
-                    <Chip label={`ID: ${emp.empId}`} className="emp-id-chip" />
-                  </Typography>
-                  <Box className="details-grid">
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={4}>
-                        <Typography>
-                          <strong>Name:</strong> {emp.empName}
-                        </Typography>
-                        <Typography>
-                          <strong>Department:</strong> {emp.department}
-                        </Typography>
-                        <Typography>
-                          <strong>Designation:</strong> {emp.designation}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} md={4}>
-                        <Typography>
-                          <strong>Bank Name:</strong> {emp.bankName}
-                        </Typography>
-                        <Typography>
-                          <strong>Account No:</strong> {emp.bankAccountNo}
-                        </Typography>
-                        <Typography>
-                          <strong>PAN No:</strong> {emp.panNo}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} md={4}>
-                        <Typography>
-                          <strong>PF No:</strong> {emp.pfNo}
-                        </Typography>
-                        <Typography>
-                          <strong>UAN No:</strong> {emp.uanNo}
-                        </Typography>
-                        <Typography>
-                          <strong>Status:</strong> {emp.status}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
+          <Box className="payslip-header-container">
+            <Typography variant="h5" className="payslip-section-title">
+              Payslip Management
+            </Typography>
+            <Chip
+              label={`${employeeData.length} Employees`}
+              className="payslip-title-badge"
+              size="small"
+            />
+          </Box>
 
-                {/* Attendance Details Section */}
-                <Grid item xs={12}>
-                  <Typography variant="h6" className="section-header">
-                    Attendance Details
-                  </Typography>
-                  <Box className="attendance-grid">
-                    <Grid container spacing={2}>
-                      <Grid item xs={6} md={3}>
-                        <Paper className="stat-card">
-                          <Typography variant="subtitle2">
-                            Total Days
-                          </Typography>
-                          <Typography variant="h6">
-                            {emp.payableDays}
-                          </Typography>
-                        </Paper>
-                      </Grid>
-                      <Grid item xs={6} md={3}>
-                        <Paper className="stat-card">
-                          <Typography variant="subtitle2">LOP Days</Typography>
-                          <Typography variant="h6">{emp.lop}</Typography>
-                        </Paper>
-                      </Grid>
-                      <Grid item xs={6} md={3}>
-                        <Paper className="stat-card">
-                          <Typography variant="subtitle2">
-                            Working Days
-                          </Typography>
-                          <Typography variant="h6">
-                            {emp.payableDays - emp.lop}
-                          </Typography>
-                        </Paper>
-                      </Grid>
-                      <Grid item xs={6} md={3}>
-                        <Paper className="stat-card">
-                          <Typography variant="subtitle2">
-                            Per Day Pay
-                          </Typography>
-                          <Typography variant="h6">
-                            Rs.{" "}
-                            {calculatePerDayPay(
-                              emp.basicPay,
-                              emp.payableDays
-                            ).toFixed(2)}
-                          </Typography>
-                        </Paper>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
-
-                <Grid container spacing={3}>
-                  {/* Left Column - Earnings */}
-                  <Grid item xs={12} md={6}>
-                    <Paper className="earnings-section">
-                      <Typography variant="h6" className="section-header">
-                        Earnings
-                      </Typography>
-                      <Box className="amount-list">
-                        <Box className="amount-row">
-                          <Typography>Basic Pay</Typography>
-                          <Typography>
-                            Rs.{" "}
-                            {calculateAttendanceBasedPay(
-                              emp.basicPay,
-                              emp.payableDays,
-                              emp.lop
-                            ).toFixed(2)}
-                          </Typography>
-                        </Box>
-                        {allowanceData
-                          .filter(
-                            (a) =>
-                              a.empId === emp.empId && a.status === "Active"
-                          )
-                          .map((allowance) => (
-                            <Box key={allowance._id} className="amount-row">
-                              <Typography>{allowance.name}</Typography>
-                              <Typography>
-                                Rs.{" "}
-                                {calculateAllowanceAmount(
-                                  emp.basicPay,
-                                  allowance.percentage
-                                ).toFixed(2)}
-                              </Typography>
-                            </Box>
-                          ))}
-                        <Box className="amount-row total">
-                          <Typography>
-                            <strong>Total Earnings</strong>
-                          </Typography>
-                          <Typography>
-                            <strong>
-                              Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
-                            </strong>
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Paper>
-                  </Grid>
-
-                  {/* Right Column - Deductions */}
-                  <Grid item xs={12} md={6}>
-                    <Paper className="deductions-section">
-                      <Typography variant="h6" className="section-header">
-                        Deductions
-                      </Typography>
-                      <Box className="amount-list">
-                        {deductions
-                          .filter(
-                            (d) =>
-                              d.empId === emp.empId && d.status === "Active"
-                          )
-                          .map((deduction) => (
-                            <Box key={deduction._id} className="amount-row">
-                              <Typography>{deduction.name}</Typography>
-                              <Typography>
-                                Rs.{" "}
-                                {calculateDeductionAmount(
-                                  emp.basicPay,
-                                  deduction.percentage
-                                ).toFixed(2)}
-                              </Typography>
-                            </Box>
-                          ))}
-                        <Box className="amount-row total">
-                          <Typography>
-                            <strong>Total Deductions</strong>
-                          </Typography>
-                          <Typography>
-                            <strong>
-                              Rs.{" "}
-                              {calculateTotalDeductions(emp.empId).toFixed(2)}
-                            </strong>
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Paper>
-                  </Grid>
-                </Grid>
-
-                {/* Net Salary Section */}
-                <Grid item xs={12}>
-                  <Paper className="net-salary-section">
-                    <Grid
-                      container
-                      alignItems="center"
-                      justifyContent="space-between"
-                    >
-                      <Grid item>
-                        <Typography variant="h5">
-                          Net Salary: Rs.{" "}
-                          {calculateNetSalary(emp.empId).toFixed(2)}
-                        </Typography>
-                      </Grid>
-                      <Grid item>
-                        <Button
-                          variant="contained"
-                          onClick={async () => {
-                            const payslip = await generatePayslip(emp.empId);
-                            if (payslip) {
-                              downloadPayslip(payslip._id);
-                            }
-                          }}
-                          startIcon={<FileDownloadIcon />}
-                          className="download-button"
-                        >
-                          Generate & Download Payslip
-                        </Button>
-                      </Grid>
-                    </Grid>
-                  </Paper>
-                </Grid>
-              </Grid>
+          {employeeData.length === 0 ? (
+            <Paper className="payslip-no-data-paper">
+              <Typography variant="h6" align="center" sx={{ py: 4 }}>
+                No employee data available. Please add employees first.
+              </Typography>
             </Paper>
-          ))}
+          ) : (
+            employeeData.map((emp) => (
+              <Paper key={emp.empId} className="payslip-employee-card">
+                <Grid container spacing={3}>
+                  {/* Employee Details Section */}
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="h5"
+                      className="payslip-employee-header"
+                    >
+                      Employee Details
+                      <Chip
+                        label={`ID: ${emp.empId}`}
+                        className="payslip-emp-id-chip"
+                      />
+                    </Typography>
+                    <Box className="payslip-details-grid">
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} sm={4}>
+                          <Box className="payslip-detail-group">
+                            <Box className="payslip-detail-item">
+                              <Typography
+                                variant="subtitle2"
+                                className="payslip-detail-label"
+                              >
+                                Name
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-detail-value"
+                              >
+                                {emp.empName}
+                              </Typography>
+                            </Box>
+                            <Box className="payslip-detail-item">
+                              <Typography
+                                variant="subtitle2"
+                                className="payslip-detail-label"
+                              >
+                                Department
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-detail-value"
+                              >
+                                {emp.department}
+                              </Typography>
+                            </Box>
+                            <Box className="payslip-detail-item">
+                              <Typography
+                                variant="subtitle2"
+                                className="payslip-detail-label"
+                              >
+                                Designation
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-detail-value"
+                              >
+                                {emp.designation}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <Box className="payslip-detail-group">
+                            <Box className="payslip-detail-item">
+                              <Typography
+                                variant="subtitle2"
+                                className="payslip-detail-label"
+                              >
+                                Bank Name
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-detail-value"
+                              >
+                                {emp.bankName}
+                              </Typography>
+                            </Box>
+                            <Box className="payslip-detail-item">
+                              <Typography
+                                variant="subtitle2"
+                                className="payslip-detail-label"
+                              >
+                                Account No
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-detail-value"
+                              >
+                                {emp.bankAccountNo}
+                              </Typography>
+                            </Box>
+                            <Box className="payslip-detail-item">
+                              <Typography
+                                variant="subtitle2"
+                                className="payslip-detail-label"
+                              >
+                                PAN No
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-detail-value"
+                              >
+                                {emp.panNo}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <Box className="payslip-detail-group">
+                            <Box className="payslip-detail-item">
+                              <Typography
+                                variant="subtitle2"
+                                className="payslip-detail-label"
+                              >
+                                PF No
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-detail-value"
+                              >
+                                {emp.pfNo}
+                              </Typography>
+                            </Box>
+                            <Box className="payslip-detail-item">
+                              <Typography
+                                variant="subtitle2"
+                                className="payslip-detail-label"
+                              >
+                                UAN No
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-detail-value"
+                              >
+                                {emp.uanNo}
+                              </Typography>
+                            </Box>
+                            <Box className="payslip-detail-item">
+                              <Typography
+                                variant="subtitle2"
+                                className="payslip-detail-label"
+                              >
+                                Status
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-detail-value"
+                              >
+                                {emp.status}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </Grid>
+
+                  {/* Attendance Details Section */}
+                  <Grid item xs={12}>
+                    <Typography variant="h6" className="payslip-section-header">
+                      Attendance Details
+                    </Typography>
+                    <Box className="payslip-attendance-grid">
+                      <Grid container spacing={2}>
+                        <Grid item xs={6} sm={3}>
+                          <Paper className="payslip-stat-card">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-stat-label"
+                            >
+                              Total Days
+                            </Typography>
+                            <Typography
+                              variant="h6"
+                              className="payslip-stat-value"
+                            >
+                              {emp.payableDays}
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                          <Paper className="payslip-stat-card">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-stat-label"
+                            >
+                              LOP Days
+                            </Typography>
+                            <Typography
+                              variant="h6"
+                              className="payslip-stat-value"
+                            >
+                              {emp.lop}
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                          <Paper className="payslip-stat-card">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-stat-label"
+                            >
+                              Working Days
+                            </Typography>
+                            <Typography
+                              variant="h6"
+                              className="payslip-stat-value"
+                            >
+                              {emp.payableDays - emp.lop}
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                          <Paper className="payslip-stat-card">
+                            <Typography
+                              variant="subtitle2"
+                              className="payslip-stat-label"
+                            >
+                              Per Day Pay
+                            </Typography>
+                            <Typography
+                              variant="h6"
+                              className="payslip-stat-value"
+                            >
+                              Rs.{" "}
+                              {calculatePerDayPay(
+                                emp.basicPay,
+                                emp.payableDays
+                              ).toFixed(2)}
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </Grid>
+
+                  {/* Earnings & Deductions Section */}
+                  <Grid item xs={12}>
+                    <Grid container spacing={3}>
+                      {/* Left Column - Earnings */}
+                      <Grid item xs={12} md={6}>
+                        <Paper className="payslip-earnings-section">
+                          <Typography
+                            variant="h6"
+                            className="payslip-section-header"
+                          >
+                            Earnings
+                          </Typography>
+                          <Box className="payslip-amount-list">
+                            <Box className="payslip-amount-row">
+                              <Typography
+                                variant="body1"
+                                className="payslip-amount-label"
+                              >
+                                Basic Pay
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-amount-value"
+                              >
+                                Rs.{" "}
+                                {calculateAttendanceBasedPay(
+                                  emp.basicPay,
+                                  emp.payableDays,
+                                  emp.lop
+                                ).toFixed(2)}
+                              </Typography>
+                            </Box>
+                            {allowanceData
+                              .filter(
+                                (a) =>
+                                  a.empId === emp.empId && a.status === "Active"
+                              )
+                              .map((allowance) => (
+                                <Box
+                                  key={
+                                    allowance._id ||
+                                    `${allowance.empId}_${allowance.name}`
+                                  }
+                                  className="payslip-amount-row"
+                                >
+                                  <Typography
+                                    variant="body1"
+                                    className="payslip-amount-label"
+                                  >
+                                    {allowance.name}
+                                  </Typography>
+                                  <Typography
+                                    variant="body1"
+                                    className="payslip-amount-value"
+                                  >
+                                    Rs.{" "}
+                                    {calculateAllowanceAmount(
+                                      emp.basicPay,
+                                      allowance.percentage
+                                    ).toFixed(2)}
+                                  </Typography>
+                                </Box>
+                              ))}
+                            <Box className="payslip-amount-row payslip-total-row">
+                              <Typography
+                                variant="body1"
+                                className="payslip-total-label"
+                              >
+                                Total Earnings
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-total-value"
+                              >
+                                Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Paper>
+                      </Grid>
+
+                      {/* Right Column - Deductions */}
+                      <Grid item xs={12} md={6}>
+                        <Paper className="payslip-deductions-section">
+                          <Typography
+                            variant="h6"
+                            className="payslip-section-header"
+                          >
+                            Deductions
+                          </Typography>
+                          <Box className="payslip-amount-list">
+                            {deductions
+                              .filter(
+                                (d) =>
+                                  d.empId === emp.empId && d.status === "Active"
+                              )
+                              .map((deduction) => (
+                                <Box
+                                  key={
+                                    deduction._id ||
+                                    `${deduction.empId}_${deduction.name}`
+                                  }
+                                  className="payslip-amount-row"
+                                >
+                                  <Typography
+                                    variant="body1"
+                                    className="payslip-amount-label"
+                                  >
+                                    {deduction.name}
+                                  </Typography>
+                                  <Typography
+                                    variant="body1"
+                                    className="payslip-amount-value"
+                                  >
+                                    Rs.{" "}
+                                    {calculateDeductionAmount(
+                                      emp.basicPay,
+                                      deduction.percentage
+                                    ).toFixed(2)}
+                                  </Typography>
+                                </Box>
+                              ))}
+                            {deductions.filter(
+                              (d) =>
+                                d.empId === emp.empId && d.status === "Active"
+                            ).length === 0 && (
+                              <Box className="payslip-amount-row payslip-empty-row">
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  align="center"
+                                  sx={{ width: "100%" }}
+                                >
+                                  No active deductions
+                                </Typography>
+                              </Box>
+                            )}
+                            <Box className="payslip-amount-row payslip-total-row">
+                              <Typography
+                                variant="body1"
+                                className="payslip-total-label"
+                              >
+                                Total Deductions
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                className="payslip-total-value"
+                              >
+                                Rs.{" "}
+                                {calculateTotalDeductions(emp.empId).toFixed(2)}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+
+                  {/* Net Salary Section */}
+                  <Grid item xs={12}>
+                    <Paper className="payslip-net-salary-section">
+                      <Grid
+                        container
+                        alignItems="center"
+                        justifyContent="space-between"
+                        spacing={2}
+                      >
+                        <Grid item xs={12} md={6}>
+                          <Typography
+                            variant="h5"
+                            className="payslip-net-salary-label"
+                          >
+                            Net Salary: Rs.{" "}
+                            {calculateNetSalary(emp.empId).toFixed(2)}
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          xs={12}
+                          md={6}
+                          sx={{ textAlign: { xs: "left", md: "right" } }}
+                        >
+                          <Button
+                            variant="contained"
+                            onClick={async () => {
+                              const payslip = await generatePayslip(emp.empId);
+                              if (payslip) {
+                                downloadPayslip(payslip._id);
+                              }
+                            }}
+                            startIcon={<FileDownloadIcon />}
+                            className="payslip-download-button"
+                          >
+                            Generate & Download Payslip
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </Paper>
+            ))
+          )}
         </TabPanel>
+
         {/* Employee Preview Dialog */}
         <Dialog
           open={employeePreviewDialogOpen}
