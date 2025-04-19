@@ -1057,25 +1057,25 @@ const PayrollSystem = () => {
           <TableCell className="table-cell" data-priority="1">
             Name
           </TableCell>
-          <TableCell className="table-cell" data-priority="2">
+          <TableCell className="table-cell" data-priority="1">
             Department
           </TableCell>
-          <TableCell className="table-cell" data-priority="2">
+          <TableCell className="table-cell" data-priority="1">
             Designation
           </TableCell>
           <TableCell className="table-cell" data-priority="1">
             Basic Pay
           </TableCell>
-          <TableCell className="table-cell" data-priority="3">
+          <TableCell className="table-cell" data-priority="1">
             Bank Details
           </TableCell>
-          <TableCell className="table-cell" data-priority="3">
+          <TableCell className="table-cell" data-priority="1">
             PF/UAN
           </TableCell>
-          <TableCell className="table-cell" data-priority="2">
+          <TableCell className="table-cell" data-priority="1">
             Payable Days
           </TableCell>
-          <TableCell className="table-cell" data-priority="2">
+          <TableCell className="table-cell" data-priority="1">
             LOP Days
           </TableCell>
           <TableCell className="table-cell action-column" data-priority="1">
