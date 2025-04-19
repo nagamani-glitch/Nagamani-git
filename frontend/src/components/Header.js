@@ -158,28 +158,99 @@ const Header = () => {
     navigate("/login");
   };
 
+  // const getPathIndicator = () => {
+  //   const path = location.pathname.split("/").filter(Boolean);
+  //   return path.map((segment, index) => (
+  //     <span key={index}>
+  //       <span
+  //         className="path-link"
+  //         onClick={() => navigate(`/${path.slice(0, index + 1).join("/")}`)}
+  //         style={{
+  //           cursor: "pointer",
+  //           color: "#fff",
+  //           textDecoration: "none",
+  //           "&:hover": {
+  //             textDecoration: "underline",
+  //           },
+  //         }}
+  //       >
+  //         {segment.charAt(0).toUpperCase() + segment.slice(1)}
+  //       </span>
+  //       {index < path.length - 1 && " > "}
+  //     </span>
+  //   ));
+  // };
+  
   const getPathIndicator = () => {
     const path = location.pathname.split("/").filter(Boolean);
-    return path.map((segment, index) => (
-      <span key={index}>
-        <span
-          className="path-link"
-          onClick={() => navigate(`/${path.slice(0, index + 1).join("/")}`)}
-          style={{
-            cursor: "pointer",
-            color: "#fff",
-            textDecoration: "none",
-            "&:hover": {
-              textDecoration: "underline",
-            },
-          }}
-        >
-          {segment.charAt(0).toUpperCase() + segment.slice(1)}
+    
+    // Special case for sensitive routes
+    if (path.includes("reset-password")) {
+      return (
+        <span>
+          <span
+            className="path-link"
+            onClick={() => navigate("/")}
+            style={{
+              cursor: "pointer",
+              color: "#fff",
+              textDecoration: "none",
+              "&:hover": {
+                textDecoration: "underline",
+              },
+            }}
+          >
+            Home
+          </span>
+          {" > "}
+          <span
+            className="path-link"
+            style={{
+              color: "#fff",
+              textDecoration: "none",
+            }}
+          >
+            Reset Password
+          </span>
         </span>
-        {index < path.length - 1 && " > "}
-      </span>
-    ));
+      );
+    }
+    
+    // Regular path handling for other routes
+    return path.map((segment, index) => {
+      // Format the segment for display (capitalize, replace hyphens with spaces)
+      let displaySegment = segment
+        .split("-")
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+        
+      // Truncate very long segments (like tokens)
+      if (displaySegment.length > 20) {
+        displaySegment = displaySegment.substring(0, 10) + "...";
+      }
+      
+      return (
+        <span key={index}>
+          <span
+            className="path-link"
+            onClick={() => navigate(`/${path.slice(0, index + 1).join("/")}`)}
+            style={{
+              cursor: "pointer",
+              color: "#fff",
+              textDecoration: "none",
+              "&:hover": {
+                textDecoration: "underline",
+              },
+            }}
+          >
+            {displaySegment}
+          </span>
+          {index < path.length - 1 && " > "}
+        </span>
+      );
+    });
   };
+  
   return (
     <>
       <NotificationSidebar
