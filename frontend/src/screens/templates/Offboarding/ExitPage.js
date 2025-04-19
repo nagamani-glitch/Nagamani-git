@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { styled } from "@mui/material";
 import {
   Box,
   Typography,
@@ -45,6 +46,8 @@ import {
   Autocomplete,
   useMediaQuery,
   useTheme,
+  InputAdornment,
+  Fade,
 } from "@mui/material";
 import {
   Search,
@@ -68,10 +71,20 @@ import {
 
 import "./ExitPage.css";
 
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
+
 const ExitPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isMedium = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const [searchTerm, setSearchTerm] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -583,84 +596,96 @@ const ExitPage = () => {
     <div className="home-page">
       <Box
         sx={{
-          backgroundColor: "white",
-          borderRadius: "12px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-          padding: isMobile ? "16px 20px" : "24px 32px",
-          marginBottom: "24px",
+          p: { xs: 2, sm: 3, md: 4 },
+          backgroundColor: "#f5f5f5",
+          //minHeight: "100vh",
         }}
       >
-        <Stack
-          direction={isMobile || isMedium ? "column" : "row"} // Change this line
-          justifyContent="space-between"
-          alignItems={isMobile || isMedium ? "flex-start" : "center"} // Change this line
-          spacing={isMobile || isMedium ? 2 : 0} // Change this line
-        >
+        <Box>
           <Typography
-            variant={isMobile ? "h5" : "h4"}
+            variant="h4"
             sx={{
+              mb: { xs: 2, sm: 3, md: 4 },
+              color: theme.palette.primary.main,
               fontWeight: 600,
-              background: "#1976d2",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              letterSpacing: 0.5,
+              fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
             }}
           >
             Offboarding
           </Typography>
-
-          <Stack
-            direction={isMobile ? "column" : "row"}
-            spacing={2}
-            alignItems={isMobile ? "stretch" : "center"}
-            width={isMobile || isMedium ? "100%" : "auto"} // Change this line
-          >
-            <TextField
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              size="small"
+          <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box
+              display="flex"
+              flexDirection={{ xs: "column", sm: "row" }}
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              gap={2}
               sx={{
-                width: isMobile || isMedium ? "100%" : "300px", // Change this line
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "#f8fafc",
-                  borderRadius: "8px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
+                width: "100%",
+                justifyContent: "space-between",
               }}
-              InputProps={{
-                startAdornment: (
-                  <Search sx={{ color: "action.active", mr: 1 }} />
-                ),
-              }}
-            />
-
-            <Button
-              onClick={() => {
-                setCreateOpen(true);
-                setEditMode(false);
-                setEditData(null);
-              }}
-              startIcon={<Add />}
-              sx={{
-                background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-                color: "white",
-                "&:hover": {
-                  background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-                },
-                textTransform: "none",
-                borderRadius: "8px",
-                height: "40px",
-                boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
-                width: isMobile || isMedium ? "100%" : "auto", // Change this line
-              }}
-              variant="contained"
             >
-              Create
-            </Button>
-          </Stack>
-        </Stack>
+              <TextField
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                size="small"
+                sx={{
+                  width: { xs: "100%", sm: "300px" },
+                  marginRight: { xs: 0, sm: "auto" },
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f8fafc",
+                    borderRadius: "8px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: "action.active", mr: 1 }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: { xs: 1, sm: 1 },
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                <Button
+                  onClick={() => {
+                    setCreateOpen(true);
+                    setEditMode(false);
+                    setEditData(null);
+                  }}
+                  startIcon={<Add />}
+                  sx={{
+                    height: { xs: "auto", sm: 50 },
+                    padding: { xs: "8px 16px", sm: "6px 16px" },
+                    width: { xs: "100%", sm: "auto" },
+                    background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                    color: "white",
+                    "&:hover": {
+                      background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                    },
+                    textTransform: "none",
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
+                  }}
+                  variant="contained"
+                >
+                  Create
+                </Button>
+              </Box>
+            </Box>
+          </StyledPaper>
+        </Box>
       </Box>
 
       {/* View Tabs */}
@@ -714,7 +739,7 @@ const ExitPage = () => {
       {/* List View */}
       {tabValue === 0 && (
         <div className="offboarding-list">
-          <Box sx={{ padding: isMobile ? "0 16px" : "0 32px" }}>
+          <Box sx={{ padding: isMobile ? "0" : "0 16px" }}>
             {filteredStages.map((stage, index) => (
               <Box
                 key={index}
@@ -724,6 +749,7 @@ const ExitPage = () => {
                   boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                   mb: 3,
                   overflow: "hidden",
+                  width: "100%",
                 }}
               >
                 <Box
@@ -790,116 +816,327 @@ const ExitPage = () => {
                 </Box>
 
                 {stage.expanded && (
-                  <Box sx={{ p: isMobile ? 2 : 3 }}>
+                  <Box sx={{ p: isMobile ? 1 : 3 }}>
                     {stage.employees.length > 0 ? (
-                      <TableContainer>
-                        <Table>
-                          <TableHead>
-                            <TableRow sx={{ backgroundColor: "#f8fafc" }}>
-                              <TableCell
-                                sx={{ fontWeight: 600, color: "#475569" }}
-                              >
-                                Employee
-                              </TableCell>
-                              {!isMobile && (
-                                <>
-                                  <TableCell
-                                    sx={{ fontWeight: 600, color: "#475569" }}
-                                  >
-                                    Notice Period
-                                  </TableCell>
-                                  <TableCell
-                                    sx={{ fontWeight: 600, color: "#475569" }}
-                                  >
-                                    Start Date
-                                  </TableCell>
-                                </>
-                              )}
-                              <TableCell
-                                sx={{ fontWeight: 600, color: "#475569" }}
-                              >
-                                End Date
-                              </TableCell>
-                              {!isMobile && (
-                                <>
-                                  <TableCell
-                                    sx={{ fontWeight: 600, color: "#475569" }}
-                                  >
-                                    Task Status
-                                  </TableCell>
-                                  <TableCell
-                                    sx={{ fontWeight: 600, color: "#475569" }}
-                                  >
-                                    Manager
-                                  </TableCell>
-                                </>
-                              )}
-                              <TableCell
-                                sx={{ fontWeight: 600, color: "#475569" }}
-                              >
-                                Actions
-                              </TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
+                      <Box sx={{ overflowX: "auto" }}>
+                        {isMobile ? (
+                          // Mobile view - card layout
+                          <Box sx={{ p: 1 }}>
                             {stage.employees.map((emp) => (
-                              <TableRow
+                              <Paper
                                 key={emp._id}
                                 sx={{
-                                  "&:hover": { backgroundColor: "#f8fafc" },
+                                  p: 2,
+                                  mb: 2,
+                                  borderRadius: 2,
+                                  border: `1px solid ${stage.color}30`,
+                                  "&:hover": {
+                                    boxShadow: `0 4px 12px ${stage.color}20`,
+                                    borderColor: `${stage.color}50`,
+                                  },
+                                  transition: "all 0.3s ease",
                                 }}
                               >
-                                <TableCell>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    mb: 2,
+                                  }}
+                                >
+                                  <Avatar
+                                    sx={{
+                                      bgcolor: stage.color,
+                                      width: 40,
+                                      height: 40,
+                                      mr: 1.5,
+                                    }}
+                                  >
+                                    {emp.employeeName.charAt(0)}
+                                  </Avatar>
+                                  <Box>
+                                    <Typography
+                                      variant="subtitle1"
+                                      sx={{ fontWeight: 600 }}
+                                    >
+                                      {emp.employeeName}
+                                    </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ color: "#64748b" }}
+                                    >
+                                      {emp.position || "Position not specified"}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+
+                                <Divider sx={{ my: 1.5 }} />
+
+                                <Grid container spacing={1}>
+                                  <Grid item xs={6}>
+                                    <Typography
+                                      variant="caption"
+                                      sx={{ color: "#64748b" }}
+                                    >
+                                      Start Date:
+                                    </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ fontWeight: 500 }}
+                                    >
+                                      {new Date(
+                                        emp.startDate
+                                      ).toLocaleDateString()}
+                                    </Typography>
+                                  </Grid>
+                                  <Grid item xs={6}>
+                                    <Typography
+                                      variant="caption"
+                                      sx={{ color: "#64748b" }}
+                                    >
+                                      End Date:
+                                    </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ fontWeight: 500 }}
+                                    >
+                                      {new Date(
+                                        emp.endDate
+                                      ).toLocaleDateString()}
+                                    </Typography>
+                                  </Grid>
+                                  <Grid item xs={6}>
+                                    <Typography
+                                      variant="caption"
+                                      sx={{ color: "#64748b" }}
+                                    >
+                                      Manager:
+                                    </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ fontWeight: 500 }}
+                                    >
+                                      {emp.manager}
+                                    </Typography>
+                                  </Grid>
+                                  <Grid item xs={6}>
+                                    <Typography
+                                      variant="caption"
+                                      sx={{ color: "#64748b" }}
+                                    >
+                                      Notice Period:
+                                    </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ fontWeight: 500 }}
+                                    >
+                                      {emp.noticePeriod}
+                                    </Typography>
+                                  </Grid>
+                                </Grid>
+
+                                <Box sx={{ mt: 2 }}>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: "#64748b" }}
+                                  >
+                                    Completion
+                                  </Typography>
                                   <Box
                                     sx={{
                                       display: "flex",
                                       alignItems: "center",
+                                      mt: 0.5,
                                     }}
                                   >
-                                    <Avatar
-                                      sx={{
-                                        width: 32,
-                                        height: 32,
-                                        bgcolor: stage.color,
-                                        fontSize: "14px",
-                                        mr: 1,
-                                      }}
-                                    >
-                                      {emp.employeeName.charAt(0)}
-                                    </Avatar>
-                                    <Box>
-                                      <Typography
-                                        variant="body2"
-                                        sx={{ fontWeight: 500 }}
-                                      >
-                                        {emp.employeeName}
-                                      </Typography>
-                                      {emp.position && !isMobile && (
-                                        <Typography
-                                          variant="caption"
-                                          sx={{ color: "#64748b" }}
-                                        >
-                                          {emp.position}
-                                        </Typography>
-                                      )}
+                                    <Box sx={{ flex: 1, mr: 1 }}>
+                                      <LinearProgress
+                                        variant="determinate"
+                                        value={calculateCompletionPercentage(
+                                          emp
+                                        )}
+                                        sx={{
+                                          height: 6,
+                                          borderRadius: 3,
+                                          backgroundColor: "#e2e8f0",
+                                          "& .MuiLinearProgress-bar": {
+                                            backgroundColor: stage.color,
+                                            borderRadius: 3,
+                                          },
+                                        }}
+                                      />
                                     </Box>
+                                    <Typography
+                                      variant="caption"
+                                      sx={{ fontWeight: 500 }}
+                                    >
+                                      {emp.taskStatus}
+                                    </Typography>
                                   </Box>
-                                </TableCell>
-                                {!isMobile && (
-                                  <>
-                                    <TableCell>{emp.noticePeriod}</TableCell>
-                                    <TableCell>
-                                      {new Date(
-                                        emp.startDate
-                                      ).toLocaleDateString()}
+                                </Box>
+
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    mt: 2,
+                                    flexWrap: "wrap",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Button
+                                    size="small"
+                                    startIcon={<Visibility fontSize="small" />}
+                                    onClick={() => handleViewDetails(emp)}
+                                    sx={{
+                                      color: stage.color,
+                                      borderColor: stage.color,
+                                      "&:hover": {
+                                        backgroundColor: `${stage.color}10`,
+                                        borderColor: stage.color,
+                                      },
+                                      textTransform: "none",
+                                    }}
+                                    variant="outlined"
+                                  >
+                                    Details
+                                  </Button>
+
+                                  <Box sx={{ display: "flex", gap: 1 }}>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleEditClick(emp)}
+                                      sx={{
+                                        color: "#1976d2",
+                                        "&:hover": {
+                                          backgroundColor: "#e3f2fd",
+                                        },
+                                      }}
+                                      disabled={emp.officiallyOffboarded}
+                                    >
+                                      <Edit fontSize="small" />
+                                    </IconButton>
+
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        setConfirmDialog({
+                                          open: true,
+                                          id: emp._id,
+                                          action: "delete",
+                                        })
+                                      }
+                                      sx={{
+                                        color: "#ef4444",
+                                        "&:hover": {
+                                          backgroundColor: "#fee2e2",
+                                        },
+                                      }}
+                                      disabled={emp.officiallyOffboarded}
+                                    >
+                                      <Delete fontSize="small" />
+                                    </IconButton>
+
+                                    {index < offboardingStages.length - 1 &&
+                                      !emp.officiallyOffboarded && (
+                                        <IconButton
+                                          size="small"
+                                          onClick={() =>
+                                            handleMoveToNextStage(emp)
+                                          }
+                                          sx={{
+                                            color: "#4caf50",
+                                            "&:hover": {
+                                              backgroundColor: "#e8f5e9",
+                                            },
+                                          }}
+                                        >
+                                          <AssignmentTurnedIn fontSize="small" />
+                                        </IconButton>
+                                      )}
+                                  </Box>
+                                </Box>
+                              </Paper>
+                            ))}
+                          </Box>
+                        ) : (
+                          // Tablet and desktop view - table layout
+                          <TableContainer>
+                            <Table size={isTablet ? "small" : "medium"}>
+                              <TableHead>
+                                <TableRow sx={{ backgroundColor: "#f8fafc" }}>
+                                  <TableCell
+                                    sx={{ fontWeight: 600, color: "#475569" }}
+                                  >
+                                    Employee
+                                  </TableCell>
+                                  {!isMobile && (
+                                    <>
+                                      <TableCell
+                                        sx={{
+                                          fontWeight: 600,
+                                          color: "#475569",
+                                        }}
+                                      >
+                                        Notice Period
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{
+                                          fontWeight: 600,
+                                          color: "#475569",
+                                        }}
+                                      >
+                                        Start Date
+                                      </TableCell>
+                                    </>
+                                  )}
+                                  <TableCell
+                                    sx={{ fontWeight: 600, color: "#475569" }}
+                                  >
+                                    End Date
+                                  </TableCell>
+                                  {!isMobile && !isTablet && (
+                                    <>
+                                      <TableCell
+                                        sx={{
+                                          fontWeight: 600,
+                                          color: "#475569",
+                                        }}
+                                      >
+                                        Task Status
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{
+                                          fontWeight: 600,
+                                          color: "#475569",
+                                        }}
+                                      >
+                                        Manager
+                                      </TableCell>
+                                    </>
+                                  )}
+                                  {isTablet && (
+                                    <TableCell
+                                      sx={{ fontWeight: 600, color: "#475569" }}
+                                    >
+                                      Status
                                     </TableCell>
-                                  </>
-                                )}
-                                <TableCell>
-                                  {new Date(emp.endDate).toLocaleDateString()}
-                                </TableCell>
-                                {!isMobile && (
-                                  <>
+                                  )}
+                                  <TableCell
+                                    sx={{ fontWeight: 600, color: "#475569" }}
+                                  >
+                                    Actions
+                                  </TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {stage.employees.map((emp) => (
+                                  <TableRow
+                                    key={emp._id}
+                                    sx={{
+                                      "&:hover": { backgroundColor: "#f8fafc" },
+                                    }}
+                                  >
                                     <TableCell>
                                       <Box
                                         sx={{
@@ -907,127 +1144,257 @@ const ExitPage = () => {
                                           alignItems: "center",
                                         }}
                                       >
-                                        <Box sx={{ width: 60, mr: 1 }}>
-                                          <LinearProgress
-                                            variant="determinate"
-                                            value={calculateCompletionPercentage(
-                                              emp
-                                            )}
-                                            sx={{
-                                              height: 6,
-                                              borderRadius: 3,
-                                              backgroundColor: "#e2e8f0",
-                                              "& .MuiLinearProgress-bar": {
-                                                backgroundColor: stage.color,
-                                                borderRadius: 3,
-                                              },
-                                            }}
-                                          />
-                                        </Box>
-                                        <Typography
-                                          variant="caption"
-                                          sx={{ fontWeight: 500 }}
+                                        <Avatar
+                                          sx={{
+                                            width: 32,
+                                            height: 32,
+                                            bgcolor: stage.color,
+                                            fontSize: "14px",
+                                            mr: 1,
+                                          }}
                                         >
-                                          {emp.taskStatus}
-                                        </Typography>
+                                          {emp.employeeName.charAt(0)}
+                                        </Avatar>
+                                        <Box>
+                                          <Typography
+                                            variant="body2"
+                                            sx={{ fontWeight: 500 }}
+                                          >
+                                            {emp.employeeName}
+                                          </Typography>
+                                          {emp.position && !isMobile && (
+                                            <Typography
+                                              variant="caption"
+                                              sx={{ color: "#64748b" }}
+                                            >
+                                              {emp.position}
+                                            </Typography>
+                                          )}
+                                        </Box>
                                       </Box>
                                     </TableCell>
-                                    <TableCell>{emp.manager}</TableCell>
-                                  </>
-                                )}
-                                <TableCell>
-                                  <Stack direction="row" spacing={1}>
-                                    <Tooltip title="View Details">
-                                      <IconButton
-                                        onClick={() => handleViewDetails(emp)}
-                                        size="small"
-                                        sx={{
-                                          color: "#1976d2",
-                                          "&:hover": {
-                                            backgroundColor: "#e3f2fd",
-                                          },
-                                        }}
-                                      >
-                                        <Visibility fontSize="small" />
-                                      </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Edit">
-                                      <IconButton
-                                        onClick={() => handleEditClick(emp)}
-                                        size="small"
-                                        sx={{
-                                          color: "#1976d2",
-                                          "&:hover": {
-                                            backgroundColor: "#e3f2fd",
-                                          },
-                                        }}
-                                        disabled={emp.officiallyOffboarded}
-                                      >
-                                        <Edit fontSize="small" />
-                                      </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Delete">
-                                      <IconButton
-                                        onClick={() =>
-                                          setConfirmDialog({
-                                            open: true,
-                                            id: emp._id,
-                                            action: "delete",
-                                          })
-                                        }
-                                        size="small"
-                                        sx={{
-                                          color: "#ef4444",
-                                          "&:hover": {
-                                            backgroundColor: "#fee2e2",
-                                          },
-                                        }}
-                                        disabled={emp.officiallyOffboarded}
-                                      >
-                                        <Delete fontSize="small" />
-                                      </IconButton>
-                                    </Tooltip>
-                                    {index < offboardingStages.length - 1 &&
-                                      !emp.officiallyOffboarded && (
-                                        <Tooltip
-                                          title={`Move to ${
-                                            offboardingStages[index + 1]
-                                              .stageName
-                                          }`}
-                                        >
-                                          <IconButton
-                                            onClick={() =>
-                                              handleMoveToNextStage(emp)
-                                            }
-                                            size="small"
+                                    {!isMobile && (
+                                      <>
+                                        <TableCell>
+                                          {emp.noticePeriod}
+                                        </TableCell>
+                                        <TableCell>
+                                          {new Date(
+                                            emp.startDate
+                                          ).toLocaleDateString()}
+                                        </TableCell>
+                                      </>
+                                    )}
+                                    <TableCell>
+                                      {new Date(
+                                        emp.endDate
+                                      ).toLocaleDateString()}
+                                    </TableCell>
+                                    {!isMobile && !isTablet && (
+                                      <>
+                                        <TableCell>
+                                          <Box
                                             sx={{
-                                              color: "#4caf50",
+                                              display: "flex",
+                                              alignItems: "center",
+                                            }}
+                                          >
+                                            <Box sx={{ width: 60, mr: 1 }}>
+                                              <LinearProgress
+                                                variant="determinate"
+                                                value={calculateCompletionPercentage(
+                                                  emp
+                                                )}
+                                                sx={{
+                                                  height: 6,
+                                                  borderRadius: 3,
+                                                  backgroundColor: "#e2e8f0",
+                                                  "& .MuiLinearProgress-bar": {
+                                                    backgroundColor:
+                                                      stage.color,
+                                                    borderRadius: 3,
+                                                  },
+                                                }}
+                                              />
+                                            </Box>
+                                            <Typography
+                                              variant="caption"
+                                              sx={{ fontWeight: 500 }}
+                                            >
+                                              {emp.taskStatus}
+                                            </Typography>
+                                          </Box>
+                                        </TableCell>
+                                        <TableCell>{emp.manager}</TableCell>
+                                      </>
+                                    )}
+                                    {isTablet && (
+                                      <TableCell>
+                                        <Box
+                                          sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          <Box sx={{ width: 40, mr: 1 }}>
+                                            <LinearProgress
+                                              variant="determinate"
+                                              value={calculateCompletionPercentage(
+                                                emp
+                                              )}
+                                              sx={{
+                                                height: 4,
+                                                borderRadius: 3,
+                                                backgroundColor: "#e2e8f0",
+                                                "& .MuiLinearProgress-bar": {
+                                                  backgroundColor: stage.color,
+                                                  borderRadius: 3,
+                                                },
+                                              }}
+                                            />
+                                            />
+                                          </Box>
+                                          <Typography
+                                            variant="caption"
+                                            sx={{ fontWeight: 500 }}
+                                          >
+                                            {emp.taskStatus}
+                                          </Typography>
+                                        </Box>
+                                      </TableCell>
+                                    )}
+                                    <TableCell>
+                                      <Box sx={{ display: "flex", gap: 1 }}>
+                                        <Tooltip title="View Details">
+                                          <IconButton
+                                            size="small"
+                                            onClick={() =>
+                                              handleViewDetails(emp)
+                                            }
+                                            sx={{
+                                              color: stage.color,
                                               "&:hover": {
-                                                backgroundColor: "#e8f5e9",
+                                                backgroundColor: `${stage.color}20`,
                                               },
                                             }}
                                           >
-                                            <AssignmentTurnedIn fontSize="small" />
+                                            <Visibility fontSize="small" />
                                           </IconButton>
                                         </Tooltip>
-                                      )}
-                                  </Stack>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
+
+                                        <Tooltip title="Edit">
+                                          <IconButton
+                                            size="small"
+                                            onClick={() => handleEditClick(emp)}
+                                            sx={{
+                                              color: "#1976d2",
+                                              "&:hover": {
+                                                backgroundColor: "#e3f2fd",
+                                              },
+                                            }}
+                                            disabled={emp.officiallyOffboarded}
+                                          >
+                                            <Edit fontSize="small" />
+                                          </IconButton>
+                                        </Tooltip>
+
+                                        <Tooltip title="Delete">
+                                          <IconButton
+                                            size="small"
+                                            onClick={() =>
+                                              setConfirmDialog({
+                                                open: true,
+                                                id: emp._id,
+                                                action: "delete",
+                                              })
+                                            }
+                                            sx={{
+                                              color: "#ef4444",
+                                              "&:hover": {
+                                                backgroundColor: "#fee2e2",
+                                              },
+                                            }}
+                                            disabled={emp.officiallyOffboarded}
+                                          >
+                                            <Delete fontSize="small" />
+                                          </IconButton>
+                                        </Tooltip>
+
+                                        {index < offboardingStages.length - 1 &&
+                                          !emp.officiallyOffboarded && (
+                                            <Tooltip title="Move to Next Stage">
+                                              <IconButton
+                                                size="small"
+                                                onClick={() =>
+                                                  handleMoveToNextStage(emp)
+                                                }
+                                                sx={{
+                                                  color: "#4caf50",
+                                                  "&:hover": {
+                                                    backgroundColor: "#e8f5e9",
+                                                  },
+                                                }}
+                                              >
+                                                <AssignmentTurnedIn fontSize="small" />
+                                              </IconButton>
+                                            </Tooltip>
+                                          )}
+                                      </Box>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        )}
+                      </Box>
                     ) : (
-                      <Typography
+                      <Box
                         sx={{
-                          textAlign: "center",
-                          color: "#64748b",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
                           py: 4,
                         }}
                       >
-                        No employees in this stage.
-                      </Typography>
+                        <img
+                          src="/assets/empty-state.svg"
+                          alt="No employees"
+                          style={{
+                            width: "120px",
+                            marginBottom: "16px",
+                            opacity: 0.7,
+                          }}
+                        />
+                        <Typography
+                          variant="body1"
+                          sx={{ color: "#64748b", mb: 1 }}
+                        >
+                          No employees in this stage
+                        </Typography>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<Add />}
+                          onClick={() => {
+                            setCreateOpen(true);
+                            setEditMode(false);
+                            setEditData(null);
+                          }}
+                          sx={{
+                            textTransform: "none",
+                            borderColor: stage.color,
+                            color: stage.color,
+                            "&:hover": {
+                              borderColor: stage.color,
+                              backgroundColor: `${stage.color}10`,
+                            },
+                          }}
+                        >
+                          Add Employee
+                        </Button>
+                      </Box>
                     )}
                   </Box>
                 )}
@@ -2817,40 +3184,217 @@ const ExitPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Confirmation Dialog */}
+      {/* Delete confirmation dialog */}
       <Dialog
-        open={confirmDialog.open}
+        open={confirmDialog.open && confirmDialog.action === "delete"}
         onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
+        TransitionComponent={Fade}
+        TransitionProps={{
+          timeout: 300,
+        }}
       >
-        <DialogTitle>Confirm Action</DialogTitle>
-        <DialogContent>
-          <Typography>
-            {confirmDialog.action === "delete"
-              ? "Are you sure you want to delete this offboarding record? This action cannot be undone."
-              : confirmDialog.action === "finalize"
-              ? "Are you sure you want to finalize this offboarding? This will mark the employee as officially offboarded and lock the record."
-              : "Are you sure you want to proceed with this action?"}
-          </Typography>
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Delete />
+          Confirm Deletion
+        </DialogTitle>
+
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Are you sure you want to delete this offboarding record? This action
+            cannot be undone.
+          </Alert>
+
+          {confirmDialog.id && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+              <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                Offboarding Record Details:
+              </Typography>
+
+              {(() => {
+                const employee = offboardingStages
+                  .flatMap((stage) => stage.employees)
+                  .find((emp) => emp._id === confirmDialog.id);
+
+                if (employee) {
+                  return (
+                    <Box
+                      sx={{
+                        mt: 1,
+                        p: 1.5,
+                        bgcolor: "#fff",
+                        borderRadius: 1,
+                        border: "1px solid #e2e8f0",
+                      }}
+                    >
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 1.5 }}
+                      >
+                        <Avatar
+                          sx={{
+                            bgcolor: getStageColor(employee.stage),
+                            width: 32,
+                            height: 32,
+                            mr: 1.5,
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          {employee.employeeName.charAt(0)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {employee.employeeName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {employee.employeeId}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      <Divider sx={{ my: 1 }} />
+
+                      <Grid container spacing={1} sx={{ mt: 0.5 }}>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">
+                            Department:
+                          </Typography>
+                          <Typography variant="body2">
+                            {employee.department || "Not specified"}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">
+                            Position:
+                          </Typography>
+                          <Typography variant="body2">
+                            {employee.position || "Not specified"}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">
+                            Start Date:
+                          </Typography>
+                          <Typography variant="body2">
+                            {new Date(employee.startDate).toLocaleDateString()}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">
+                            End Date:
+                          </Typography>
+                          <Typography variant="body2">
+                            {new Date(employee.endDate).toLocaleDateString()}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+
+                      <Box sx={{ mt: 1.5 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          Current Stage:
+                        </Typography>
+                        <Chip
+                          label={employee.stage}
+                          size="small"
+                          sx={{
+                            ml: 1,
+                            backgroundColor: `${getStageColor(
+                              employee.stage
+                            )}20`,
+                            color: getStageColor(employee.stage),
+                            fontWeight: 500,
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  );
+                }
+                return (
+                  <Typography variant="body2" color="text.secondary">
+                    Record details not available
+                  </Typography>
+                );
+              })()}
+            </Box>
+          )}
         </DialogContent>
-        <DialogActions>
+
+        <DialogActions
+          sx={{
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            backgroundColor: "#f8fafc",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
           <Button
             onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              px: 3,
+              fontWeight: 600,
+            }}
           >
             Cancel
           </Button>
+
           <Button
-            variant="contained"
-            color={confirmDialog.action === "delete" ? "error" : "primary"}
             onClick={() => {
-              if (confirmDialog.action === "delete") {
-                handleDelete(confirmDialog.id);
-              } else if (confirmDialog.action === "finalize") {
-                completeOffboarding(confirmDialog.id);
-              }
+              handleDelete(confirmDialog.id);
               setConfirmDialog({ open: false, id: null, action: null });
             }}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 32px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
           >
-            Confirm
+            {loading ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
