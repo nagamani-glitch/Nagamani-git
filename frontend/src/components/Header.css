@@ -73,25 +73,164 @@ body {
 
 .check-in-out-box {
   margin-right: 15px;
+  position: relative;
 }
 
 .timer-button {
-  background-color: #28a745;
-  border: none;
-  padding: 8px 16px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  background-color: #28a745 !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border-radius: 50px !important;
+  min-width: 140px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.timer-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+  border-radius: 50px;
 }
 
 .timer-button.active {
-  background-color: #dc3545;
+  background-color: #dc3545 !important;
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3) !important;
 }
 
 .timer-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.timer-button:active {
+  transform: translateY(1px) !important;
+}
+
+.timer-icon-container {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.timer-icon {
+  color: white;
+  font-size: 16px;
+}
+
+.timer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.timer-label {
+  font-size: 12px;
+  opacity: 0.9;
+  font-weight: 400;
+  color: white;
+}
+
+.timer-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+
+.rotate {
+  animation: rotate 2s linear infinite;
+}
+
+.beat {
+  animation: beat 1.2s ease infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes beat {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@media (max-width: 992px) {
+  .navbar-collapse-container .check-in-out-box {
+    flex: 0 0 auto !important;
+    width: calc(33.333% - 10px) !important;
+    margin: 5px !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 15px 5px !important;
+    text-align: center !important;
+    min-height: 100px !important;
+  }
+  
+  .navbar-collapse-container .timer-button {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    min-width: auto !important;
+  }
+  
+  .navbar-collapse-container .timer-button.active {
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
+  
+  .navbar-collapse-container .timer-icon-container {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 5px;
+  }
+  
+  .navbar-collapse-container .timer-icon {
+    font-size: 20px;
+  }
+  
+  .navbar-collapse-container .timer-content {
+    align-items: center;
+  }
+  
+  .navbar-collapse-container .timer-label {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+  
+  .navbar-collapse-container .timer-value {
+    font-size: 14px;
+  }
 }
 
 .icon-link {
