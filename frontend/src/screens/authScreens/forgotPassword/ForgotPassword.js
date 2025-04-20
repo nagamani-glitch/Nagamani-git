@@ -68,36 +68,49 @@ const ForgotPassword = () => {
                 transition={{ duration: 0.5 }}
             >
                 <Container
-                    component="main"
-                    maxWidth="xs"
-                    sx={{
-                        position: 'relative',
-                        zIndex: 1,
-                        p: 4,
-                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                        borderRadius: '20px',
-                        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-                        backdropFilter: 'blur(15px)',
-                        border: '1px solid rgba(255, 255, 255, 0.18)',
-                        '& .MuiTextField-root': {
-                            '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                                },
-                                '&:hover fieldset': {
-                                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                                },
-                            },
-                            '& .MuiInputLabel-root': {
-                                color: 'rgba(255, 255, 255, 0.7)',
-                            },
-                            '& .MuiOutlinedInput-input': {
-                                color: 'white',
-                                backgroundColor:'#000',
-                            },
-                        }
-                    }}
-                >
+  component="main"
+  maxWidth="xs"
+  sx={{
+    mt: 8,
+    p: 4,
+    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+    borderRadius: '20px',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backdropFilter: 'blur(15px)',
+    border: '1px solid rgba(255, 255, 255, 0.18)',
+    '& .MuiTextField-root': {
+      '& .MuiOutlinedInput-root': {
+        backgroundColor: 'black',
+        '& fieldset': {
+          borderColor: 'rgba(255, 255, 255, 0.3)',
+        },
+        '&:hover fieldset': {
+          borderColor: 'rgba(255, 255, 255, 0.5)',
+        },
+        '& input': {
+          color: 'white',
+          '&::placeholder': {
+            color: 'rgba(255, 255, 255, 0.7)',
+          },
+          // Add these styles for autofill
+          '&:-webkit-autofill': {
+            WebkitBoxShadow: '0 0 0 1000px black inset',
+            WebkitTextFillColor: 'white',
+            caretColor: 'white',
+            transition: 'background-color 5000s ease-in-out 0s',
+          },
+          '&:-webkit-autofill:hover, &:-webkit-autofill:focus': {
+            WebkitBoxShadow: '0 0 0 1000px black inset',
+            WebkitTextFillColor: 'white',
+          },
+        }
+      },
+      '& .MuiInputLabel-root': {
+        color: 'rgba(255, 255, 255, 0.7)',
+      }
+    }
+  }}
+>
                     <Typography 
                         variant="h4" 
                         sx={{ 

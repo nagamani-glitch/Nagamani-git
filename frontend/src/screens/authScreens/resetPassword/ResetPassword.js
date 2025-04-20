@@ -198,9 +198,17 @@ const ResetPassword = () => {
                                     color: 'white',
                                     '&::placeholder': {
                                         color: 'rgba(255, 255, 255, 0.7)',
-                                    }
-                                }
-                            },
+                                    },
+                                '&:-webkit-autofill': {
+                                        WebkitBoxShadow: '0 0 0 1000px black inset',
+                                        WebkitTextFillColor: 'white',
+                                    },
+                                '&:-webkit-autofill:hover, &:-webkit-autofill:focus': {
+                                    WebkitBoxShadow: '0 0 0 1000px black inset',
+                                    WebkitTextFillColor: 'white',      
+                                },
+                            }
+                        },
                             '& .MuiInputLabel-root': {
                                 color: 'rgba(255, 255, 255, 0.7)',
                             }

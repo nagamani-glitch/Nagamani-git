@@ -220,8 +220,18 @@ const apiData = {
                   color: 'white',
                   '&::placeholder': {
                     color: 'rgba(255, 255, 255, 0.7)',
-                  }
-                }
+                  },
+                  '&:-webkit-autofill': {
+            WebkitBoxShadow: '0 0 0 1000px black inset',
+            WebkitTextFillColor: 'white',
+            caretColor: 'white',
+            transition: 'background-color 5000s ease-in-out 0s',
+                },
+                '&:-webkit-autofill:hover, &:-webkit-autofill:focus': {
+            WebkitBoxShadow: '0 0 0 1000px black inset',
+            WebkitTextFillColor: 'white',
+          },
+        }
               },
               '& .MuiInputLabel-root': {
                 color: 'rgba(255, 255, 255, 0.7)',
