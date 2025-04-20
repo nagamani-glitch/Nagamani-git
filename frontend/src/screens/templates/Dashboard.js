@@ -32,7 +32,6 @@ import ProfilePage from "./profilePage/ProfilePage";
 import MyLeaveRequests from "./myLeaveRequests/MyLeaveRequests";
 import LeaveRequests from "./leaveRequests/LeaveRequests";
 import AssetHistory from "./Assets/AssetHistory";
-import AssetView from "./Assets/AssetView";
 import AssetBatch from "./Assets/AssetBatch";
 import AssetDashboard from "./Assets/AssetDashboard";
 import Holidays from "./configuration/Holidays";
@@ -110,7 +109,6 @@ function Dashboard() {
           <Route path="/leave-requests" element={<LeaveRequests />} />
           <Route path="/my-leave-requests" element={<MyLeaveRequests />} />
           <Route path="/assets-dashboard" element={<AssetDashboard />} />
-          <Route path="/asset-view" element={<AssetView />} />
           <Route path="/asset-batches" element={<AssetBatch />} />
           <Route path="/asset-history" element={<AssetHistory />} />
           <Route path="/faq-category" element={<FaqCategory />} />

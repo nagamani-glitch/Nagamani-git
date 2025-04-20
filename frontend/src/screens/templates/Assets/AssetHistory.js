@@ -75,8 +75,15 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 const AssetHistory = () => {
     const theme = useTheme();
     const [assets, setAssets] = useState([]);
+    const [batches, setBatches] = useState([]);
     const [editingAssetId, setEditingAssetId] = useState(null);
-    const [editData, setEditData] = useState({ status: '', returnDate: '' });
+    const [editData, setEditData] = useState({ 
+      status: '', 
+      returnDate: '',
+      allottedDate: '',
+      currentEmployee: '',
+      batch: '' 
+    });
     const [newAssetData, setNewAssetData] = useState({ 
       name: '', 
       category: '', 
@@ -84,17 +91,83 @@ const AssetHistory = () => {
       returnDate: '', 
       allottedDate: '',
       currentEmployee: '',
-      previousEmployees: []
+      previousEmployees: [],
+      batch: ''
     });
+    
+    const [selectedAsset, setSelectedAsset] = useState(null);
+    const [isBatchDetailsOpen, setIsBatchDetailsOpen] = useState(false);
+    const [selectedBatchDetails, setSelectedBatchDetails] = useState(null);
+    
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-   
+    
+    const handleAssetNameClick = async (asset) => {
+      setSelectedAsset(asset);
+      
+      // If the asset has a batch, fetch the batch details
+      if (asset.batch) {
+        try {
+          // First try to find the batch in the already loaded batches
+          const batchDetails = batches.find(b => b.batchNumber === asset.batch);
+          
+          if (batchDetails) {
+            setSelectedBatchDetails(batchDetails);
+            setIsBatchDetailsOpen(true);
+          } else {
+            // If not found locally, fetch from API
+            const response = await axios.get(`${API_URL}/api/asset-batches/by-number/${asset.batch}`);
+            if (response.data) {
+              setSelectedBatchDetails(response.data);
+              setIsBatchDetailsOpen(true);
+            } else {
+              // Show a more user-friendly message
+              alert(`No batch found with number ${asset.batch}. Please check the batch number.`);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching batch details:', error);
+          alert('Failed to load batch details. Please try again later.');
+        }
+      } else {
+        // Show a more user-friendly message
+        alert('This asset is not associated with any batch. You can edit the asset to add a batch.');
+      }
+    };  
+    
+    // In fetchAssets function
+const fetchAssets = async () => {
+  try {
+    setLoading(true);
+    const response = await axios.get(`${API_URL}/api/assets`);
+    console.log('Fetched assets:', response.data);
+    setAssets(response.data);
+    setLoading(false);
+  } catch (error) {
+    console.error('Error fetching asset history:', error);
+    setError('Failed to load assets');
+    setLoading(false);
+  }
+};
+
+// In fetchBatches function
+const fetchBatches = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/asset-batches`);
+    console.log('Fetched batches:', response.data);
+    setBatches(response.data);
+  } catch (error) {
+    console.error('Error fetching batches:', error);
+  }
+};
+
     useEffect(() => {
       fetchAssets();
+      fetchBatches(); // Fetch batches when component mounts
     
       // Listen for asset updates from AssetView
       const handleAssetsUpdated = () => {
@@ -102,31 +175,28 @@ const AssetHistory = () => {
         fetchAssets();
       };
     
+      // Listen for batch updates from AssetBatch
+      const handleBatchesUpdated = () => {
+        console.log('Batches updated event received, refreshing batches list');
+        fetchBatches();
+      };
+    
       window.addEventListener('assetsUpdated', handleAssetsUpdated);
+      window.addEventListener('batchesUpdated', handleBatchesUpdated);
       window.addEventListener('storage', (e) => {
         if (e.key === 'assetsUpdated') {
           fetchAssets();
+        }
+        if (e.key === 'batchesUpdated') {
+          fetchBatches();
         }
       });
     
       return () => {
         window.removeEventListener('assetsUpdated', handleAssetsUpdated);
+        window.removeEventListener('batchesUpdated', handleBatchesUpdated);
       };
-    }, []);
-   
-    const fetchAssets = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${API_URL}/api/assets`);
-        setAssets(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching asset history:', error);
-        setError('Failed to load assets');
-        setLoading(false);
-      }
-    };
-   
+    }, []);   
     const handleDelete = async (id) => {
       if (window.confirm('Are you sure you want to delete this asset?')) {
         try {
@@ -154,7 +224,8 @@ const AssetHistory = () => {
         status: asset.status || '',
         returnDate: asset.returnDate ? new Date(asset.returnDate).toISOString().split('T')[0] : '',
         allottedDate: asset.allottedDate ? new Date(asset.allottedDate).toISOString().split('T')[0] : '',
-        currentEmployee: asset.currentEmployee || ''
+        currentEmployee: asset.currentEmployee || '',
+        batch: asset.batch || ''
       });
     };
    
@@ -168,9 +239,8 @@ const AssetHistory = () => {
           status: newAssetData.status,
           currentEmployee: newAssetData.currentEmployee,
           previousEmployees: newAssetData.previousEmployees || [],
-          // Format the allottedDate properly
+          batch: newAssetData.batch || '',
           allottedDate: newAssetData.allottedDate ? new Date(newAssetData.allottedDate).toISOString() : null,
-          // Format the returnDate properly if it exists
           returnDate: newAssetData.returnDate ? new Date(newAssetData.returnDate).toISOString() : null
         };
         
@@ -185,7 +255,8 @@ const AssetHistory = () => {
           returnDate: '', 
           allottedDate: '',
           currentEmployee: '',
-          previousEmployees: []
+          previousEmployees: [],
+          batch: ''
         });
         setIsAddModalOpen(false);
       
@@ -203,6 +274,7 @@ const AssetHistory = () => {
       }
     };
     
+    
     const handleUpdate = async (e) => {
       e.preventDefault();
       try {
@@ -212,7 +284,9 @@ const AssetHistory = () => {
           // Format the allottedDate properly if it exists
           allottedDate: editData.allottedDate ? new Date(editData.allottedDate).toISOString() : null,
           // Format the returnDate properly if it exists
-          returnDate: editData.returnDate ? new Date(editData.returnDate).toISOString() : null
+          returnDate: editData.returnDate ? new Date(editData.returnDate).toISOString() : null,
+          // Make sure batch is included
+          batch: editData.batch || ''
         };
         
         console.log('Updating asset with data:', updatedData); // Add this line to debug
@@ -239,7 +313,8 @@ const AssetHistory = () => {
       (asset.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (asset.status?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (asset.category?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (asset.currentEmployee?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+      (asset.currentEmployee?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (asset.batch?.toLowerCase() || '').includes(searchTerm.toLowerCase()) // Add this line to include batch in search
     );
 
     const handlePreviousEmployeesChange = (e) => {
@@ -411,7 +486,175 @@ const AssetHistory = () => {
           </Typography>
         )}
 
-        <TableContainer
+        <Dialog
+          open={isBatchDetailsOpen}
+          onClose={() => setIsBatchDetailsOpen(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              width: "700px",
+              maxWidth: "90vw",
+              borderRadius: "20px",
+              overflow: "hidden"
+            }
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+              color: "white",
+              fontSize: "1.5rem",
+              fontWeight: 600,
+              padding: "24px 32px",
+              position: "relative"
+            }}
+          >
+            Batch Details
+            <IconButton
+              onClick={() => setIsBatchDetailsOpen(false)}
+              sx={{
+                position: 'absolute',
+                right: 16,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'white'
+              }}
+            >
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
+            {selectedBatchDetails ? (
+              <Stack spacing={3}>
+                <Box>
+                  <Typography variant="subtitle1" color="text.secondary">Batch Number</Typography>
+                  <Typography variant="h6">{selectedBatchDetails.batchNumber}</Typography>
+                </Box>
+                
+                <Box>
+                  <Typography variant="subtitle1" color="text.secondary">Description</Typography>
+                  <Typography variant="body1">{selectedBatchDetails.description}</Typography>
+                </Box>
+                
+                <Box>
+                  <Typography variant="subtitle1" color="text.secondary">Number of Assets</Typography>
+                  <Typography variant="body1">{selectedBatchDetails.numberOfAssets}</Typography>
+                </Box>
+                
+                {selectedAsset && (
+                  <Box>
+                    <Typography variant="subtitle1" color="text.secondary">Current Asset</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                      <Box
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          bgcolor: "#1976d2",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "bold",
+                          fontSize: "0.875rem",
+                        }}
+                      >
+                        {selectedAsset.name?.[0] || "A"}
+                      </Box>
+                      <Box>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          {toSentenceCase(selectedAsset.name)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {toSentenceCase(selectedAsset.category)} • {selectedAsset.status}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                )}
+                
+                <Divider sx={{ my: 1 }} />
+                
+                <Typography variant="subtitle1">Other Assets in this Batch</Typography>
+                
+                <Box sx={{ maxHeight: 200, overflow: 'auto' }}>
+                  {assets
+                    .filter(a => a.batch === selectedBatchDetails.batchNumber && a._id !== (selectedAsset?._id || ''))
+                    .map(asset => (
+                      <Box 
+                        key={asset._id} 
+                        sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 1, 
+                          mb: 1,
+                          p: 1,
+                          borderRadius: 1,
+                          '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' }
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: "50%",
+                            bgcolor: "#64b5f6",
+                            color: "white",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: "bold",
+                            fontSize: "0.75rem",
+                          }}
+                        >
+                          {asset.name?.[0] || "A"}
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {toSentenceCase(asset.name)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {asset.status}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    ))}
+                    
+                  {assets.filter(a => a.batch === selectedBatchDetails.batchNumber && a._id !== (selectedAsset?._id || '')).length === 0 && (
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                      No other assets in this batch
+                    </Typography>
+                  )}
+                </Box>
+                
+                <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 2 }}>
+                  <Button
+                    onClick={() => setIsBatchDetailsOpen(false)}
+                    sx={{
+                      border: '2px solid #1976d2',
+                      color: '#1976d2',
+                      '&:hover': {
+                        border: '2px solid #64b5f6',
+                        backgroundColor: '#e3f2fd',
+                      },
+                      borderRadius: '8px',
+                      px: 4,
+                      py: 1,
+                      fontWeight: 600
+                    }}
+                  >
+                    Close
+                  </Button>
+                </Stack>
+              </Stack>
+            ) : (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <Typography>Loading batch details...</Typography>
+              </Box>
+            )}
+          </DialogContent>
+        </Dialog>        <TableContainer
         component={Paper}
         sx={{
           maxHeight: { xs: 350, sm: 400, md: 450 },
@@ -447,6 +690,7 @@ const AssetHistory = () => {
             <TableRow>
               <StyledTableCell sx={{ minWidth: 180 }}>Asset Name</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 150 }}>Category</StyledTableCell>
+              <StyledTableCell sx={{ minWidth: 150 }}>Batch</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 180 }}>Current Employee</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 130 }}>Allotted Date</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 130 }}>Return Date</StyledTableCell>
@@ -458,22 +702,33 @@ const AssetHistory = () => {
             {filteredAssets.map((asset) => (
               <StyledTableRow key={asset._id}>
                 <TableCell>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: "50%",
-                      bgcolor: "#1976d2", // Fixed blue color instead of theme palette
-                      color: "white",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: "bold",
-                      fontSize: "0.875rem",
-                      flexShrink: 0,
+                  <Box 
+                    display="flex" 
+                    alignItems="center" 
+                    gap={1}
+                    onClick={() => handleAssetNameClick(asset)}
+                    sx={{ 
+                      cursor: 'pointer',
+                      '&:hover': {
+                        textDecoration: 'underline',
+                        color: theme.palette.primary.main
+                      }
                     }}
-                    
+                  >
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: "50%",
+                        bgcolor: "#1976d2",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: "bold",
+                        fontSize: "0.875rem",
+                        flexShrink: 0,
+                      }}
                     >
                       {asset.name?.[0] || "A"}
                     </Box>
@@ -488,6 +743,30 @@ const AssetHistory = () => {
                   </Typography>
                 </TableCell>
                 <TableCell>
+                  {asset.batch ? (
+                    <Chip
+                      label={asset.batch}
+                      size="small"
+                      onClick={() => handleAssetNameClick(asset)}
+                      sx={{
+                        backgroundColor: alpha(theme.palette.info.main, 0.1),
+                        color: theme.palette.info.dark,
+                        borderColor: theme.palette.info.main,
+                        borderWidth: 1,
+                        borderStyle: 'solid',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        '&:hover': {
+                          backgroundColor: alpha(theme.palette.info.main, 0.2),
+                        }
+                      }}
+                    />
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No Batch
+                    </Typography>
+                  )}
+                </TableCell>                <TableCell>
                   <Typography variant="body2" sx={{ color: "#2563eb" }}>
                     {toSentenceCase(asset.currentEmployee) || 'None'}
                   </Typography>
@@ -513,7 +792,7 @@ const AssetHistory = () => {
                         }) 
                       : 'N/A'}
                   </Typography>
-                </TableCell>                               
+                </TableCell>
                 <TableCell>
                   <Box
                     sx={{
@@ -523,27 +802,15 @@ const AssetHistory = () => {
                       borderRadius: 1,
                       fontSize: "0.75rem",
                       fontWeight: "medium",
-                      backgroundColor:
-                        asset.status === "Available"
-                          ? alpha("#4caf50", 0.1)
-                          : asset.status === "In Use"
-                          ? alpha("#1976d2", 0.1)
-                          : alpha("#ff9800", 0.1),
-                      color:
-                        asset.status === "Available"
-                          ? "#2e7d32"
-                          : asset.status === "In Use"
-                          ? "#1565c0"
-                          : "#e65100",
+                      backgroundColor: getStatusBgColor(asset.status),
+                      color: getStatusTextColor(asset.status),
                     }}
                   >
                     {asset.status}
                   </Box>
                 </TableCell>
                 <TableCell align="center">
-                  <Box
-                    sx={{ display: "flex", justifyContent: "center", gap: 1 }}
-                  >
+                  <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
                     <IconButton 
                       onClick={() => handleEditClick(asset)}
                       size="small"
@@ -576,7 +843,7 @@ const AssetHistory = () => {
             ))}
             {filteredAssets.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                   <Typography variant="body1" color="text.secondary">
                     No assets found matching your search criteria.
                   </Typography>
@@ -652,17 +919,22 @@ const AssetHistory = () => {
                 }}
               />
 
-              <FormControl fullWidth>
+              <FormControl 
+                fullWidth 
+                sx={{ 
+                  '& .MuiOutlinedInput-root': { 
+                    backgroundColor: "white", 
+                    borderRadius: '8px' 
+                  } 
+                }}
+              >
                 <InputLabel>Category</InputLabel>
                 <Select
                   name="category"
                   value={newAssetData.category}
                   onChange={(e) => setNewAssetData({ ...newAssetData, category: e.target.value })}
                   required
-                  sx={{ 
-                    borderRadius: '8px',
-                    backgroundColor: "white"
-                  }}
+                  label="Category"
                 >
                   <MenuItem value="Hardware">Hardware</MenuItem>
                   <MenuItem value="Software">Software</MenuItem>
@@ -670,7 +942,30 @@ const AssetHistory = () => {
                   <MenuItem value="Office Equipment">Office Equipment</MenuItem>
                 </Select>
               </FormControl>
-
+              <FormControl 
+                fullWidth 
+                sx={{ 
+                  '& .MuiOutlinedInput-root': { 
+                    backgroundColor: "white", 
+                    borderRadius: '8px' 
+                  } 
+                }}
+              >
+                <InputLabel>Batch</InputLabel>
+                <Select
+                  value={newAssetData.batch || ''}
+                  onChange={(e) => setNewAssetData({ ...newAssetData, batch: e.target.value })}
+                  label="Batch"
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {batches.map((batch) => (
+                    <MenuItem key={batch._id} value={batch.batchNumber}>
+                      {batch.batchNumber} - {batch.description}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
               <FormControl fullWidth>
                 <InputLabel>Status</InputLabel>
                 <Select
