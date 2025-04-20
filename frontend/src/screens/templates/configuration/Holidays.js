@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
+
 import {
   fetchHolidays,
   createHoliday,
@@ -64,6 +65,7 @@ const validationSchema = Yup.object().shape({
 });
 
 export default function Holidays() {
+  const theme = useTheme();
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -71,10 +73,10 @@ export default function Holidays() {
   const [showModal, setShowModal] = useState(false);
   const [editingHoliday, setEditingHoliday] = useState(null);
   const holidaysRef = useRef(null);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-  
+
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
   // Add delete confirmation dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [holidayToDelete, setHolidayToDelete] = useState(null);
@@ -154,7 +156,7 @@ export default function Holidays() {
 
   const handleConfirmDelete = async () => {
     if (!holidayToDelete) return;
-    
+
     try {
       setLoading(true);
       await deleteHoliday(holidayToDelete._id);
@@ -200,104 +202,130 @@ export default function Holidays() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-      
+
       <Paper
         elevation={3}
-        sx={{ p: isMobile ? 2 : 3, borderRadius: 2, backgroundColor: "#ffffff" }}
+        sx={{
+          p: isMobile ? 2 : 3,
+          borderRadius: 2,
+          backgroundColor: "#ffffff",
+        }}
       >
         <Box
           sx={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-            padding: isMobile ? "16px" : isTablet ? "20px 24px" : "24px 32px",
-            marginBottom: "24px",
+            p: { xs: 2, sm: 3, md: 4 },
+            backgroundColor: "#f5f5f5",
+            //minHeight: "100vh",
           }}
         >
-          <Stack
-            direction={isMobile ? "column" : "row"}
-            justifyContent="space-between"
-            alignItems={isMobile ? "flex-start" : "center"}
-            spacing={isMobile ? 2 : 0}
-          >
+          <Box>
             <Typography
-              variant={isMobile ? "h5" : "h4"}
+              variant="h4"
               sx={{
+                mb: { xs: 2, sm: 3, md: 4 },
+                color: theme.palette.primary.main,
                 fontWeight: 600,
-                background: "#1976d2",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                mb: isMobile ? 1 : 0,
+                letterSpacing: 0.5,
+                fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
               }}
             >
               Holidays Management
             </Typography>
 
-            <Stack 
-              direction={isMobile ? "column" : "row"} 
-              spacing={isMobile ? 1 : 2} 
-              alignItems={isMobile ? "stretch" : "center"}
-              width={isMobile ? "100%" : "auto"}
+            <Paper
+              elevation={3}
+              sx={{
+                p: { xs: 2, sm: 3 },
+                borderRadius: 2,
+                backgroundColor: "#ffffff",
+                mb: 3,
+              }}
             >
-              <TextField
-                placeholder="Search holidays..."
-                value={filterQuery}
-                onChange={(e) => setFilterQuery(e.target.value)}
-                size="small"
-                fullWidth={isMobile}
+              <Box
+                display="flex"
+                flexDirection={{ xs: "column", sm: "row" }}
+                alignItems={{ xs: "flex-start", sm: "center" }}
+                gap={2}
                 sx={{
-                  width: isMobile ? "100%" : isTablet ? "200px" : "300px",
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "#f8fafc",
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
+                  width: "100%",
+                  justifyContent: "space-between",
                 }}
-                InputProps={{
-                  startAdornment: (
-                    <Search sx={{ color: "action.active", mr: 1 }} />
-                  ),
-                }}
-              />
-
-              <Button
-                onClick={() => {
-                  setEditingHoliday(null);
-                  setShowModal(true);
-                }}
-                startIcon={<Add />}
-                fullWidth={isMobile}
-                sx={{
-                  background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-                  color: "white",
-                  "&:hover": {
-                    background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-                  },
-                  textTransform: "none",
-                  borderRadius: "8px",
-                  height: "40px",
-                  boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
-                }}
-                variant="contained"
               >
-                Add Holiday
-              </Button>
-            </Stack>
-          </Stack>
+                <TextField
+                  placeholder="Search holidays..."
+                  value={filterQuery}
+                  onChange={(e) => setFilterQuery(e.target.value)}
+                  size="small"
+                  sx={{
+                    width: { xs: "100%", sm: "300px" },
+                    marginRight: { xs: 0, sm: "auto" },
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#f8fafc",
+                      borderRadius: "8px",
+                      "&:hover fieldset": {
+                        borderColor: theme.palette.primary.main,
+                      },
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <Search sx={{ color: "action.active", mr: 1 }} />
+                    ),
+                  }}
+                />
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: 1, sm: 1 },
+                    width: { xs: "100%", sm: "auto" },
+                  }}
+                >
+                  <Button
+                    onClick={() => {
+                      setEditingHoliday(null);
+                      setShowModal(true);
+                    }}
+                    startIcon={<Add />}
+                    sx={{
+                      height: { xs: "auto", sm: 50 },
+                      padding: { xs: "8px 16px", sm: "6px 16px" },
+                      width: { xs: "100%", sm: "auto" },
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                      color: "white",
+                      "&:hover": {
+                        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                      },
+                    }}
+                    variant="contained"
+                  >
+                    Add Holiday
+                  </Button>
+                </Box>
+              </Box>
+            </Paper>
+          </Box>
         </Box>
 
         {loading && (
-          <Typography sx={{ textAlign: "center" }}>Loading...</Typography>
-        )}
-        {error && (
-          <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
-            {error}
-          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+            <CircularProgress />
+          </Box>
         )}
 
-        <Grid container spacing={isMobile ? 2 : 3} ref={holidaysRef}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Grid
+          container
+          spacing={isMobile ? 2 : 3}
+          ref={holidaysRef}
+          sx={{ mt: 2 }}
+        >
           {holidays
             .filter((holiday) =>
               holiday.name.toLowerCase().includes(filterQuery.toLowerCase())
@@ -310,81 +338,255 @@ export default function Holidays() {
                   transition={{ duration: 0.3 }}
                 >
                   <Card
+                    elevation={2}
                     sx={{
                       height: "100%",
-                      "&:hover": { boxShadow: 6 },
-                      transition: "box-shadow 0.3s",
+                      display: "flex",
+                      flexDirection: "column",
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        boxShadow: 8,
+                        transform: "translateY(-4px)",
+                      },
+                      border: `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <CardContent>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", mb: 2 }}
+                    <Box
+                      sx={{
+                        p: 2,
+                        background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <EventIcon />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 600,
+                          wordBreak: "break-word",
+                          overflowWrap: "break-word",
+                          fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem" },
+                        }}
                       >
-                        <EventIcon sx={{ mr: 1, color: "#3b82f6" }} />
-                        <Typography 
-                          variant={isMobile ? "subtitle1" : "h6"}
-                          sx={{ 
-                            wordBreak: "break-word",
-                            overflowWrap: "break-word"
+                        {holiday.name}
+                      </Typography>
+                    </Box>
+
+                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                      <Box sx={{ mb: 2 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            mb: 1.5,
                           }}
                         >
-                          {holiday.name}
-                        </Typography>
-                      </Box>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              color: "text.secondary",
+                              width: "100px",
+                            }}
+                          >
+                            Start Date:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 500,
+                              color: theme.palette.text.primary,
+                            }}
+                          >
+                            {new Date(holiday.startDate).toLocaleDateString(
+                              undefined,
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
+                          </Typography>
+                        </Box>
 
-                      <Typography
-                        variant="body2"
-                        sx={{ mb: 1, color: "text.secondary" }}
-                      >
-                        Start:{" "}
-                        {new Date(holiday.startDate).toLocaleDateString()}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ mb: 1, color: "text.secondary" }}
-                      >
-                        End: {new Date(holiday.endDate).toLocaleDateString()}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ mb: 2, color: "text.secondary" }}
-                      >
-                        Recurring: {holiday.recurring ? "Yes" : "No"}
-                      </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            mb: 1.5,
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              color: "text.secondary",
+                              width: "100px",
+                            }}
+                          >
+                            End Date:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 500,
+                              color: theme.palette.text.primary,
+                            }}
+                          >
+                            {new Date(holiday.endDate).toLocaleDateString(
+                              undefined,
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
+                          </Typography>
+                        </Box>
+
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              color: "text.secondary",
+                              width: "100px",
+                            }}
+                          >
+                            Recurring:
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: 1,
+                              fontSize: "0.75rem",
+                              fontWeight: "medium",
+                              backgroundColor: holiday.recurring
+                                ? `${theme.palette.success.light}20`
+                                : `${theme.palette.info.light}20`,
+                              color: holiday.recurring
+                                ? theme.palette.success.dark
+                                : theme.palette.info.dark,
+                            }}
+                          >
+                            {holiday.recurring ? "Yes" : "No"}
+                          </Box>
+                        </Box>
+                      </Box>
 
                       <Box
                         sx={{
                           display: "flex",
-                          gap: 1,
                           justifyContent: "flex-end",
+                          gap: 1,
+                          mt: 2,
                         }}
                       >
-                        <IconButton
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<EditIcon fontSize="small" />}
                           onClick={() => handleEdit(holiday)}
                           sx={{
-                            backgroundColor: "#3b82f6",
-                            color: "white",
-                            "&:hover": { backgroundColor: "#2563eb" },
+                            borderRadius: 1.5,
+                            textTransform: "none",
+                            borderColor: theme.palette.primary.main,
+                            color: theme.palette.primary.main,
+                            "&:hover": {
+                              backgroundColor: `${theme.palette.primary.main}10`,
+                              borderColor: theme.palette.primary.main,
+                            },
                           }}
                         >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
+                          Edit
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          startIcon={<DeleteIcon fontSize="small" />}
                           onClick={() => handleDeleteClick(holiday)}
                           sx={{
-                            backgroundColor: "#ef4444",
-                            color: "white",
-                            "&:hover": { backgroundColor: "#dc2626" },
+                            borderRadius: 1.5,
+                            textTransform: "none",
+                            borderColor: theme.palette.error.main,
+                            color: theme.palette.error.main,
+                            "&:hover": {
+                              backgroundColor: `${theme.palette.error.main}10`,
+                              borderColor: theme.palette.error.main,
+                            },
                           }}
                         >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                          Delete
+                        </Button>
                       </Box>
                     </CardContent>
                   </Card>
                 </motion.div>
               </Grid>
             ))}
+
+          {/* Empty state when no holidays match the filter */}
+          {holidays.filter((holiday) =>
+            holiday.name.toLowerCase().includes(filterQuery.toLowerCase())
+          ).length === 0 && (
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  textAlign: "center",
+                  py: 8,
+                  px: 2,
+                  backgroundColor: "white",
+                  borderRadius: 2,
+                  border: `1px dashed ${theme.palette.divider}`,
+                }}
+              >
+                <EventIcon
+                  sx={{
+                    fontSize: 60,
+                    color: theme.palette.action.disabled,
+                    mb: 2,
+                  }}
+                />
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No holidays found
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  {filterQuery
+                    ? `No holidays match "${filterQuery}". Try a different search term.`
+                    : "There are no holidays in the system yet."}
+                </Typography>
+                {filterQuery && (
+                  <Button
+                    variant="outlined"
+                    onClick={() => setFilterQuery("")}
+                    sx={{ mr: 1 }}
+                  >
+                    Clear Search
+                  </Button>
+                )}
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={() => {
+                    setEditingHoliday(null);
+                    setShowModal(true);
+                  }}
+                >
+                  Add Holiday
+                </Button>
+              </Box>
+            </Grid>
+          )}
         </Grid>
 
         {/* Add Holiday Dialog */}
@@ -591,7 +793,7 @@ export default function Holidays() {
             <DeleteIcon />
             Confirm Deletion
           </DialogTitle>
-          <DialogContent 
+          <DialogContent
             sx={{
               padding: { xs: "24px", sm: "32px" },
               backgroundColor: "#f8fafc",
@@ -606,11 +808,17 @@ export default function Holidays() {
                 <Typography variant="body1" fontWeight={600} color="#2c3e50">
                   Holiday: {holidayToDelete.name}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Start Date: {new Date(holidayToDelete.startDate).toLocaleDateString()}
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
+                  Start Date:{" "}
+                  {new Date(holidayToDelete.startDate).toLocaleDateString()}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  End Date: {new Date(holidayToDelete.endDate).toLocaleDateString()}
+                  End Date:{" "}
+                  {new Date(holidayToDelete.endDate).toLocaleDateString()}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Recurring: {holidayToDelete.recurring ? "Yes" : "No"}
@@ -618,7 +826,7 @@ export default function Holidays() {
               </Box>
             )}
           </DialogContent>
-          <DialogActions 
+          <DialogActions
             sx={{
               padding: { xs: "16px 24px", sm: "24px 32px" },
               backgroundColor: "#f8fafc",
@@ -673,4 +881,3 @@ export default function Holidays() {
     </Container>
   );
 }
-

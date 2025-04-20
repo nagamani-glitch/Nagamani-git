@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { styled } from "@mui/material/styles";
 import {
   Container,
   Paper,
@@ -10,7 +11,6 @@ import {
   IconButton,
   Box,
   Button,
-  Modal,
   Card,
   CardContent,
   Stack,
@@ -23,6 +23,9 @@ import {
   Alert,
   CircularProgress,
   Snackbar,
+  InputAdornment,
+  Divider,
+  Tooltip,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -31,6 +34,7 @@ import {
   Add,
   Search,
   Close,
+  QuestionAnswer,
 } from "@mui/icons-material";
 import {
   ViewList as ViewListIcon,
@@ -41,17 +45,15 @@ import { ToggleButtonGroup, ToggleButton } from "@mui/lab";
 const apiBaseURL =
   process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 4,
-};
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
 
 export default function FaqPage() {
   const { categoryId } = useParams();
@@ -74,7 +76,6 @@ export default function FaqPage() {
     severity: "success",
   });
 
-  // Add responsive hooks
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
@@ -150,41 +151,41 @@ export default function FaqPage() {
     setEditingFaq({ ...editingFaq, [name]: toSentenceCase(value) });
   };
 
-  const handleAddSubmit = async (e) => {
-    e.preventDefault();
+  // const handleAddSubmit = async (e) => {
+  //   e.preventDefault();
 
-    if (!categoryId) {
-      setError("Category ID is missing.");
-      showSnackbar("Category ID is missing", "error");
-      return;
-    }
-    if (!formData.question || !formData.answer) {
-      setError("Both question and answer are required.");
-      showSnackbar("Both question and answer are required", "error");
-      return;
-    }
+  //   if (!categoryId) {
+  //     setError("Category ID is missing.");
+  //     showSnackbar("Category ID is missing", "error");
+  //     return;
+  //   }
+  //   if (!formData.question || !formData.answer) {
+  //     setError("Both question and answer are required.");
+  //     showSnackbar("Both question and answer are required", "error");
+  //     return;
+  //   }
 
-    try {
-      setLoading(true);
-      console.log("Adding FAQ:", { ...formData, categoryId });
-      const { data: newFaq } = await axios.post(
-        `${apiBaseURL}/api/faqs/category/${categoryId}`,
-        formData
-      );
-      setFaqs([...faqs, newFaq]);
-      setFilteredFaqs([...faqs, newFaq]);
-      setIsAddModalOpen(false);
-      setFormData({ question: "", answer: "" });
-      setError(null);
-      showSnackbar("FAQ added successfully");
-    } catch (err) {
-      console.error("Error adding FAQ:", err.response?.data || err.message);
-      setError("Failed to add FAQ.");
-      showSnackbar("Failed to add FAQ", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     setLoading(true);
+  //     console.log("Adding FAQ:", { ...formData, categoryId });
+  //     const { data: newFaq } = await axios.post(
+  //       `${apiBaseURL}/api/faqs/category/${categoryId}`,
+  //       formData
+  //     );
+  //     setFaqs([...faqs, newFaq]);
+  //     setFilteredFaqs([...faqs, newFaq]);
+  //     setIsAddModalOpen(false);
+  //     setFormData({ question: "", answer: "" });
+  //     setError(null);
+  //     showSnackbar("FAQ added successfully");
+  //   } catch (err) {
+  //     console.error("Error adding FAQ:", err.response?.data || err.message);
+  //     setError("Failed to add FAQ.");
+  //     showSnackbar("Failed to add FAQ", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
@@ -226,6 +227,47 @@ export default function FaqPage() {
     setFaqToDelete(null);
   };
 
+  // In the handleAddSubmit function, after successfully adding a new FAQ:S
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!categoryId) {
+      setError("Category ID is missing.");
+      showSnackbar("Category ID is missing", "error");
+      return;
+    }
+    if (!formData.question || !formData.answer) {
+      setError("Both question and answer are required.");
+      showSnackbar("Both question and answer are required", "error");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log("Adding FAQ:", { ...formData, categoryId });
+      const { data: newFaq } = await axios.post(
+        `${apiBaseURL}/api/faqs/category/${categoryId}`,
+        formData
+      );
+      setFaqs([...faqs, newFaq]);
+      setFilteredFaqs([...faqs, newFaq]);
+      setIsAddModalOpen(false);
+      setFormData({ question: "", answer: "" });
+      setError(null);
+      showSnackbar("FAQ added successfully");
+
+      // Update the category title with new count
+      fetchCategoryTitle();
+    } catch (err) {
+      console.error("Error adding FAQ:", err.response?.data || err.message);
+      setError("Failed to add FAQ.");
+      showSnackbar("Failed to add FAQ", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Similarly, in the handleConfirmDelete function:
   const handleConfirmDelete = async () => {
     if (!faqToDelete) return;
 
@@ -237,6 +279,9 @@ export default function FaqPage() {
       setFilteredFaqs(updatedFaqs);
       setError(null);
       showSnackbar("FAQ deleted successfully");
+
+      // Update the category title with new count
+      fetchCategoryTitle();
     } catch (err) {
       console.error("Error deleting FAQ:", err.response?.data || err.message);
       setError("Failed to delete FAQ.");
@@ -297,127 +342,192 @@ export default function FaqPage() {
       >
         <Box
           sx={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-            padding: isMobile ? "16px" : isTablet ? "20px 24px" : "24px 32px",
-            marginBottom: "24px",
+            p: { xs: 2, sm: 3, md: 4 },
+            backgroundColor: "#f5f5f5",
+            //minHeight: "100vh",
           }}
         >
-          <Stack
-            direction={isMobile ? "column" : "row"}
-            justifyContent="space-between"
-            alignItems={isMobile ? "flex-start" : "center"}
-            spacing={isMobile ? 2 : 0}
-          >
+          <Box>
             <Typography
-              variant={isMobile ? "h5" : "h4"}
+              variant="h4"
               sx={{
+                mb: { xs: 2, sm: 3, md: 4 },
+                color: theme.palette.primary.main,
                 fontWeight: 600,
-                background: "#1976d2",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                mb: isMobile ? 1 : 0,
+                letterSpacing: 0.5,
+                fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
               }}
             >
               {categoryTitle || "Loading..."} - FAQs
             </Typography>
 
-            <Stack
-              direction={isMobile ? "column" : "row"}
-              spacing={isMobile ? 1 : 2}
-              alignItems={isMobile ? "stretch" : "center"}
-              width={isMobile ? "100%" : "auto"}
-            >
-              <TextField
-                placeholder="Search FAQs..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                size="small"
-                fullWidth={isMobile}
-                sx={{
-                  width: isMobile ? "100%" : isTablet ? "200px" : "300px",
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "#f8fafc",
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <Search sx={{ color: "action.active", mr: 1 }} />
-                  ),
-                }}
-              />
-
+            <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
               <Box
+                display="flex"
+                flexDirection={{ xs: "column", sm: "row" }}
+                alignItems={{ xs: "flex-start", sm: "center" }}
+                gap={2}
                 sx={{
-                  display: "flex",
-                  gap: 1,
-                  width: isMobile ? "100%" : "auto",
+                  width: "100%",
+                  justifyContent: "space-between",
                 }}
               >
-                <ToggleButtonGroup
-                  value={viewType}
-                  exclusive
-                  onChange={handleViewChange}
+                <TextField
+                  placeholder="Search FAQs..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  size="small"
                   sx={{
-                    "& .MuiToggleButton-root": {
-                      border: "1px solid #e2e8f0",
-                      "&.Mui-selected": {
-                        background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-                        color: "white",
-                        "&:hover": {
-                          background:
-                            "linear-gradient(45deg, #1565c0, #42a5f5)",
-                        },
+                    width: { xs: "100%", sm: "300px" },
+                    marginRight: { xs: 0, sm: "auto" },
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#f8fafc",
+                      borderRadius: "8px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
                       },
                     },
-                    display: isMobile ? "none" : "flex",
                   }}
-                >
-                  <ToggleButton value="list" aria-label="list view">
-                    <ViewListIcon />
-                  </ToggleButton>
-                  <ToggleButton value="grid" aria-label="grid view">
-                    <ViewModuleIcon />
-                  </ToggleButton>
-                </ToggleButtonGroup>
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search sx={{ color: "action.active", mr: 1 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
-                <Button
-                  onClick={() => setIsAddModalOpen(true)}
-                  startIcon={<Add />}
-                  fullWidth={isMobile}
+                <Box
                   sx={{
-                    background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-                    color: "white",
-                    "&:hover": {
-                      background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-                    },
-                    textTransform: "none",
-                    borderRadius: "8px",
-                    height: "40px",
-                    boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: 1, sm: 1 },
+                    width: { xs: "100%", sm: "auto" },
                   }}
-                  variant="contained"
                 >
-                  Add FAQ
-                </Button>
+                  <ToggleButtonGroup
+                    value={viewType}
+                    exclusive
+                    onChange={handleViewChange}
+                    sx={{
+                      "& .MuiToggleButton-root": {
+                        border: "1px solid #e2e8f0",
+                        "&.Mui-selected": {
+                          background:
+                            "linear-gradient(45deg, #1976d2, #64b5f6)",
+                          color: "white",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(45deg, #1565c0, #42a5f5)",
+                          },
+                        },
+                      },
+                      display: isMobile ? "none" : "flex",
+                    }}
+                  >
+                    <ToggleButton value="list" aria-label="list view">
+                      <ViewListIcon />
+                    </ToggleButton>
+                    <ToggleButton value="grid" aria-label="grid view">
+                      <ViewModuleIcon />
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+
+                  <Button
+                    onClick={() => setIsAddModalOpen(true)}
+                    startIcon={<Add />}
+                    sx={{
+                      height: { xs: "auto", sm: 40 },
+                      padding: { xs: "8px 16px", sm: "6px 16px" },
+                      width: { xs: "100%", sm: "auto" },
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                      color: "white",
+                      "&:hover": {
+                        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                      },
+                      textTransform: "none",
+                      borderRadius: "8px",
+                      boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
+                      fontWeight: 500,
+                    }}
+                    variant="contained"
+                  >
+                    Add FAQ
+                  </Button>
+                </Box>
               </Box>
-            </Stack>
-          </Stack>
+            </StyledPaper>
+          </Box>
         </Box>
 
+        {/* FAQ summary cards */}
+        <Box sx={{ mb: 3, display: "flex", flexWrap: "wrap", gap: 2, mt: 2 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              bgcolor: "#e6f7ff",
+              border: "1px solid #91d5ff",
+              flex: 1,
+              minWidth: isMobile ? "100%" : isTablet ? "45%" : "200px",
+            }}
+          >
+            <QuestionAnswer sx={{ color: "#1890ff", mr: 1 }} />
+            <Box>
+              <Typography variant="body2" color="#1890ff" fontWeight={500}>
+                Total FAQs
+              </Typography>
+              <Typography variant="h6" fontWeight={600}>
+                {faqs.length}
+              </Typography>
+            </Box>
+          </Paper>
+
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              bgcolor: "#fff7e6",
+              border: "1px solid #ffd591",
+              flex: 1,
+              minWidth: isMobile ? "100%" : isTablet ? "45%" : "200px",
+            }}
+          >
+            <Search sx={{ color: "#fa8c16", mr: 1 }} />
+            <Box>
+              <Typography variant="body2" color="#fa8c16" fontWeight={500}>
+                Search Results
+              </Typography>
+              <Typography variant="h6" fontWeight={600}>
+                {searchQuery ? filteredFaqs.length : faqs.length}
+              </Typography>
+            </Box>
+          </Paper>
+        </Box>
+
+        <Divider sx={{ mb: 2 }} />
+
+        {/* Total FAQ and search card  */}
+
         {loading && (
-          <Typography sx={{ textAlign: "center" }}>Loading...</Typography>
+          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+            <CircularProgress />
+          </Box>
         )}
+
         {error && (
-          <Typography color="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
             {error}
-          </Typography>
+          </Alert>
         )}
+
+        {/* FAQ cards */}
 
         <Box
           sx={{
@@ -438,64 +548,114 @@ export default function FaqPage() {
                 sx={{
                   height: "100%",
                   borderRadius: "12px",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                  overflow: "hidden",
+                  border: "1px solid rgba(25, 118, 210, 0.08)",
                   "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    transform: "translateY(-5px)",
+                    boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                    borderColor: "rgba(25, 118, 210, 0.2)",
+                  },
+                  position: "relative",
+                  "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: "4px",
+                    background: "linear-gradient(90deg, #1976d2, #64b5f6)",
                   },
                 }}
               >
-                <CardContent>
-                  <Typography
-                    variant={isMobile ? "subtitle1" : "h6"}
-                    sx={{
-                      mb: 2,
-                      fontWeight: 600,
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {faq.question}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      mb: 3,
-                      color: "text.secondary",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {faq.answer}
-                  </Typography>
+                <CardContent sx={{ p: 0 }}>
+                  <Box sx={{ p: 3, pb: 2 }}>
+                    <Typography
+                      variant={isMobile ? "subtitle1" : "h6"}
+                      sx={{
+                        mb: 2,
+                        fontWeight: 600,
+                        wordBreak: "break-word",
+                        color: "#334155",
+                        lineHeight: 1.4,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {faq.question}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mb: 3,
+                        color: "#64748b",
+                        wordBreak: "break-word",
+                        lineHeight: 1.6,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 4,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        backgroundColor: "rgba(25, 118, 210, 0.04)",
+                        p: 2,
+                        borderRadius: "8px",
+                        borderLeft: "3px solid #1976d2",
+                      }}
+                    >
+                      {faq.answer}
+                    </Typography>
+                  </Box>
+
+                  <Divider sx={{ opacity: 0.6 }} />
+
                   <Stack
                     direction="row"
                     spacing={1}
                     justifyContent="flex-end"
-                    sx={{ mt: 2 }}
+                    sx={{
+                      p: 2,
+                      backgroundColor: "rgba(25, 118, 210, 0.02)",
+                    }}
                   >
-                    <IconButton
-                      onClick={() => {
-                        setEditingFaq(faq);
-                        setIsEditModalOpen(true);
-                      }}
-                      sx={{
-                        backgroundColor: "#3b82f6",
-                        color: "white",
-                        "&:hover": { backgroundColor: "#2563eb" },
-                      }}
-                    >
-                      <Edit fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => handleDeleteClick(faq)}
-                      sx={{
-                        backgroundColor: "#ef4444",
-                        color: "white",
-                        "&:hover": { backgroundColor: "#dc2626" },
-                      }}
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
+                    <Tooltip title="Edit FAQ">
+                      <IconButton
+                        onClick={() => {
+                          setEditingFaq(faq);
+                          setIsEditModalOpen(true);
+                        }}
+                        sx={{
+                          backgroundColor: "#3b82f6",
+                          color: "white",
+                          "&:hover": {
+                            backgroundColor: "#2563eb",
+                            transform: "scale(1.05)",
+                          },
+                          transition: "all 0.2s ease",
+                          boxShadow: "0 2px 8px rgba(59, 130, 246, 0.3)",
+                        }}
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete FAQ">
+                      <IconButton
+                        onClick={() => handleDeleteClick(faq)}
+                        sx={{
+                          backgroundColor: "#ef4444",
+                          color: "white",
+                          "&:hover": {
+                            backgroundColor: "#dc2626",
+                            transform: "scale(1.05)",
+                          },
+                          transition: "all 0.2s ease",
+                          boxShadow: "0 2px 8px rgba(239, 68, 68, 0.3)",
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </Stack>
                 </CardContent>
               </Card>
@@ -503,17 +663,8 @@ export default function FaqPage() {
           ))}
         </Box>
 
+        {/* Back to main Faq Category page */}
         <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-start" }}>
-          {/* <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate("/Dashboards/faq")}
-            sx={{
-              color: "#1976d2",
-              "&:hover": { backgroundColor: "#e3f2fd" },
-            }}
-          >
-            Back to Categories
-          </Button> */}
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate("/Dashboards/faq-category")}

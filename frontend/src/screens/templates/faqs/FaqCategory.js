@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { styled } from "@mui/material/styles";
 import {
   Container,
   Paper,
@@ -10,7 +11,6 @@ import {
   IconButton,
   Box,
   Button,
-  Modal,
   Card,
   CardContent,
   Grid,
@@ -24,6 +24,10 @@ import {
   DialogActions,
   CircularProgress,
   Snackbar,
+  InputAdornment,
+  Divider,
+  Avatar,
+  Chip,
 } from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
@@ -33,22 +37,22 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
+  QuestionAnswer,
+  ArrowForward,
 } from "@mui/icons-material";
 
 const apiBaseURL =
   process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 4,
-};
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
 
 export default function FaqCategory() {
   const [categories, setCategories] = useState([]);
@@ -71,7 +75,6 @@ export default function FaqCategory() {
     severity: "success",
   });
 
-  // Add responsive hooks
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
@@ -221,87 +224,99 @@ export default function FaqCategory() {
       >
         <Box
           sx={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-            padding: isMobile ? "16px" : isTablet ? "20px 24px" : "24px 32px",
-            marginBottom: "24px",
+            p: { xs: 2, sm: 3, md: 4 },
+            backgroundColor: "#f5f5f5",
+            // minHeight: "100vh",
           }}
         >
-          <Stack
-            direction={isMobile ? "column" : "row"}
-            justifyContent="space-between"
-            alignItems={isMobile ? "flex-start" : "center"}
-            spacing={isMobile ? 2 : 0}
-          >
+          <Box>
             <Typography
-              variant={isMobile ? "h5" : "h4"}
+              variant="h4"
               sx={{
+                mb: { xs: 2, sm: 3, md: 4 },
+                color: theme.palette.primary.main,
                 fontWeight: 600,
-                background: "#1976d2",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                mb: isMobile ? 1 : 0,
+                letterSpacing: 0.5,
+                fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
               }}
             >
               FAQ Categories
             </Typography>
 
-            <Stack
-              direction={isMobile ? "column" : "row"}
-              spacing={isMobile ? 1 : 2}
-              alignItems={isMobile ? "stretch" : "center"}
-              width={isMobile ? "100%" : "auto"}
-            >
-              <TextField
-                placeholder="Search categories..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                size="small"
-                fullWidth={isMobile}
+            <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box
+                display="flex"
+                flexDirection={{ xs: "column", sm: "row" }}
+                alignItems={{ xs: "flex-start", sm: "center" }}
+                gap={2}
                 sx={{
-                  width: isMobile ? "100%" : isTablet ? "200px" : "300px",
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "#f8fafc",
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
+                  width: "100%",
+                  justifyContent: "space-between",
                 }}
-                InputProps={{
-                  startAdornment: (
-                    <Search sx={{ color: "action.active", mr: 1 }} />
-                  ),
-                }}
-              />
-
-              <Button
-                onClick={() => {
-                  setEditingCategoryId(null);
-                  setIsAddModalOpen(true);
-                  setFormData({ title: "", description: "" });
-                  setErrorMessage(null);
-                }}
-                startIcon={<Add />}
-                fullWidth={isMobile}
-                sx={{
-                  background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-                  color: "white",
-                  "&:hover": {
-                    background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-                  },
-                  textTransform: "none",
-                  borderRadius: "8px",
-                  height: "40px",
-                  boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
-                }}
-                variant="contained"
               >
-                Create Category
-              </Button>
-            </Stack>
-          </Stack>
+                <TextField
+                  placeholder="Search categories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  size="small"
+                  sx={{
+                    width: { xs: "100%", sm: "300px" },
+                    marginRight: { xs: 0, sm: "auto" },
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#f8fafc",
+                      borderRadius: "8px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search sx={{ color: "action.active", mr: 1 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: 1, sm: 1 },
+                    width: { xs: "100%", sm: "auto" },
+                  }}
+                >
+                  <Button
+                    onClick={() => {
+                      setEditingCategoryId(null);
+                      setIsAddModalOpen(true);
+                      setFormData({ title: "", description: "" });
+                      setErrorMessage(null);
+                    }}
+                    startIcon={<Add />}
+                    sx={{
+                      height: { xs: "auto", sm: 40 },
+                      padding: { xs: "8px 16px", sm: "6px 16px" },
+                      width: { xs: "100%", sm: "auto" },
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                      color: "white",
+                      "&:hover": {
+                        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                      },
+                      textTransform: "none",
+                      borderRadius: "8px",
+                      boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
+                      fontWeight: 500,
+                    }}
+                    variant="contained"
+                  >
+                    Create Category
+                  </Button>
+                </Box>
+              </Box>
+            </StyledPaper>
+          </Box>
         </Box>
 
         <Grid container spacing={isMobile ? 2 : 3}>
@@ -315,15 +330,52 @@ export default function FaqCategory() {
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card sx={{ position: "relative", height: "100%" }}>
-                    <CardContent>
-                      <Box sx={{ position: "absolute", top: 8, right: 8 }}>
+                  <Card
+                    sx={{
+                      position: "relative",
+                      height: "100%",
+                      borderRadius: "12px",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                      transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                      overflow: "hidden",
+                      border: "1px solid rgba(25, 118, 210, 0.08)",
+                      "&:hover": {
+                        boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                        borderColor: "rgba(25, 118, 210, 0.2)",
+                      },
+                      "&::before": {
+                        content: '""',
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: "4px",
+                        background: "linear-gradient(90deg, #1976d2, #64b5f6)",
+                      },
+                    }}
+                  >
+                    <CardContent sx={{ p: 0 }}>
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          zIndex: 2,
+                        }}
+                      >
                         <IconButton
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowActions(
                               showActions === category._id ? null : category._id
                             );
+                          }}
+                          sx={{
+                            backgroundColor: "white",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            "&:hover": {
+                              backgroundColor: "#f8fafc",
+                            },
                           }}
                         >
                           <MoreVertIcon />
@@ -341,8 +393,10 @@ export default function FaqCategory() {
                                 top: "100%",
                                 backgroundColor: "white",
                                 borderRadius: "8px",
-                                boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                                boxShadow: "0 4px 15px rgba(0,0,0,0.15)",
                                 zIndex: 10,
+                                padding: "4px",
+                                marginTop: "4px",
                               }}
                             >
                               <Box sx={{ display: "flex", gap: 1 }}>
@@ -351,7 +405,13 @@ export default function FaqCategory() {
                                   sx={{
                                     backgroundColor: "#3b82f6",
                                     color: "white",
-                                    "&:hover": { backgroundColor: "#2563eb" },
+                                    "&:hover": {
+                                      backgroundColor: "#2563eb",
+                                      transform: "scale(1.05)",
+                                    },
+                                    transition: "all 0.2s ease",
+                                    boxShadow:
+                                      "0 2px 8px rgba(59, 130, 246, 0.3)",
                                   }}
                                 >
                                   <EditIcon fontSize="small" />
@@ -361,7 +421,13 @@ export default function FaqCategory() {
                                   sx={{
                                     backgroundColor: "#ef4444",
                                     color: "white",
-                                    "&:hover": { backgroundColor: "#dc2626" },
+                                    "&:hover": {
+                                      backgroundColor: "#dc2626",
+                                      transform: "scale(1.05)",
+                                    },
+                                    transition: "all 0.2s ease",
+                                    boxShadow:
+                                      "0 2px 8px rgba(239, 68, 68, 0.3)",
                                   }}
                                 >
                                   <DeleteIcon fontSize="small" />
@@ -372,40 +438,108 @@ export default function FaqCategory() {
                         </AnimatePresence>
                       </Box>
 
-                      <Typography
-                        variant={isMobile ? "subtitle1" : "h6"}
+                      <Box sx={{ p: 3, pb: 2 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            mb: 2,
+                            gap: 1.5,
+                          }}
+                        >
+                          <Avatar
+                            sx={{
+                              bgcolor: "primary.main",
+                              width: 48,
+                              height: 48,
+                              boxShadow: "0 2px 10px rgba(25, 118, 210, 0.2)",
+                            }}
+                          >
+                            <QuestionAnswer />
+                          </Avatar>
+                          <Typography
+                            variant={isMobile ? "subtitle1" : "h6"}
+                            sx={{
+                              pr: 5, // Add padding to prevent text from going under the more icon
+                              wordBreak: "break-word",
+                              fontWeight: 600,
+                              color: "#334155",
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {category.title}
+                          </Typography>
+                        </Box>
+
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            mb: 3,
+                            color: "#64748b",
+                            wordBreak: "break-word",
+                            lineHeight: 1.6,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            backgroundColor: "rgba(25, 118, 210, 0.04)",
+                            p: 2,
+                            borderRadius: "8px",
+                            borderLeft: "3px solid #1976d2",
+                          }}
+                        >
+                          {category.description || "No description available."}
+                        </Typography>
+                      </Box>
+
+                      <Divider sx={{ opacity: 0.6 }} />
+
+                      <Box
                         sx={{
-                          mb: 2,
-                          pr: 5, // Add padding to prevent text from going under the more icon
-                          wordBreak: "break-word",
+                          p: 2,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
                         }}
                       >
-                        {category.title}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          mb: 2,
-                          color: "text.secondary",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {category.description}
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        onClick={() =>
-                          navigate(`/Dashboards/faq/${category._id}`)
-                        }
-                        sx={{
-                          mt: "auto",
-                          backgroundColor: "#3b82f6",
-                          "&:hover": { backgroundColor: "#2563eb" },
-                          width: isMobile ? "100%" : "auto",
-                        }}
-                      >
-                        View FAQs
-                      </Button>
+                        <Chip
+                          icon={<QuestionAnswer fontSize="small" />}
+                          label={`${category.faqCount || 0} FAQs`}
+                          size="small"
+                          sx={{
+                            backgroundColor: "rgba(25, 118, 210, 0.1)",
+                            color: "primary.main",
+                            fontWeight: 500,
+                            borderRadius: "6px",
+                          }}
+                        />
+
+                        <Button
+                          variant="contained"
+                          onClick={() =>
+                            navigate(`/Dashboards/faq/${category._id}`)
+                          }
+                          sx={{
+                            background:
+                              "linear-gradient(45deg, #1976d2, #64b5f6)",
+                            color: "white",
+                            "&:hover": {
+                              background:
+                                "linear-gradient(45deg, #1565c0, #42a5f5)",
+                              transform: "translateY(-2px)",
+                            },
+                            width: isMobile ? "auto" : "auto",
+                            textTransform: "none",
+                            borderRadius: "8px",
+                            boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
+                            transition: "all 0.2s ease",
+                            fontWeight: 500,
+                          }}
+                          endIcon={<ArrowForward />}
+                        >
+                          View FAQs
+                        </Button>
+                      </Box>
                     </CardContent>
                   </Card>
                 </motion.div>

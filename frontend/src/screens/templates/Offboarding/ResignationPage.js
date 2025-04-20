@@ -3,6 +3,8 @@ import { FaList, FaTh, FaEnvelope } from "react-icons/fa";
 import ReactQuill from "react-quill";
 import axios from "axios";
 import "react-quill/dist/quill.snow.css";
+import { styled } from "@mui/material/styles";
+import { MoreVert, Info, CalendarToday } from "@mui/icons-material";
 import {
   Box,
   Stack,
@@ -42,6 +44,9 @@ import {
   Snackbar,
   Fade,
   Zoom,
+  InputAdornment,
+  TableContainer,
+  Menu,
 } from "@mui/material";
 import {
   Search,
@@ -65,6 +70,16 @@ import {
 import { LoadingButton } from "@mui/lab";
 
 import "./ResignationPage.css";
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
 
 const ResignationPage = () => {
   const theme = useTheme();
@@ -94,6 +109,56 @@ const ResignationPage = () => {
   });
 
   const [data, setData] = useState([]);
+
+  const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const handleStatusMenuOpen = (event, item) => {
+    setStatusMenuAnchorEl(event.currentTarget);
+    setSelectedItem(item);
+  };
+
+  const handleStatusMenuClose = () => {
+    setStatusMenuAnchorEl(null);
+    setSelectedItem(null);
+  };
+
+  const handleStatusChange = async (newStatus) => {
+    if (!selectedItem) return;
+
+    try {
+      setLoading(true);
+      await axios.put(
+        `http://localhost:5000/api/resignations/${selectedItem._id}`,
+        {
+          status: newStatus,
+        }
+      );
+
+      // Update the local state
+      setData(
+        data.map((item) =>
+          item._id === selectedItem._id ? { ...item, status: newStatus } : item
+        )
+      );
+
+      setSnackbar({
+        open: true,
+        message: `Status updated to ${newStatus}`,
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error updating status:", error);
+      setSnackbar({
+        open: true,
+        message: "Error updating status",
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+      handleStatusMenuClose();
+    }
+  };
 
   useEffect(() => {
     fetchResignations();
@@ -146,25 +211,6 @@ const ResignationPage = () => {
     });
   };
 
-  // const handleDeleteClick = async (id) => {
-  //   try {
-  //     await axios.delete(`http://localhost:5000/api/resignations/${id}`);
-  //     await fetchResignations();
-  //     setSnackbar({
-  //       open: true,
-  //       message: "Resignation letter deleted successfully",
-  //       severity: "success",
-  //     });
-  //   } catch (error) {
-  //     console.error("Error deleting resignation:", error);
-  //     setSnackbar({
-  //       open: true,
-  //       message: "Failed to delete resignation letter",
-  //       severity: "error",
-  //     });
-  //   }
-  // };
-  // Replace the existing handleDeleteClick function with these functions
   const handleDeleteClick = (resignation) => {
     setItemToDelete(resignation);
     setDeleteDialogOpen(true);
@@ -415,131 +461,123 @@ const ResignationPage = () => {
     <div className="resignation-letters">
       <Box
         sx={{
-          backgroundColor: "white",
-          borderRadius: "12px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          padding: isMobile
-            ? "16px 20px"
-            : isTablet
-            ? "20px 24px"
-            : "24px 32px",
-          marginBottom: "24px",
-          transition: "all 0.3s ease",
-          "&:hover": {
-            boxShadow: "0 6px 24px rgba(0,0,0,0.12)",
-          },
+          p: { xs: 2, sm: 3, md: 4 },
+          backgroundColor: "#f5f5f5",
+          // minHeight: "100vh",
         }}
       >
-        <Stack
-          direction={isMobile || isTablet ? "column" : "row"}
-          justifyContent="space-between"
-          alignItems={isMobile || isTablet ? "flex-start" : "center"}
-          spacing={isMobile || isTablet ? 2 : 0}
-        >
+        <Box>
           <Typography
-            variant={isMobile ? "h5" : "h4"}
+            variant="h4"
             sx={{
-              fontWeight: 700,
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              marginBottom: isMobile || isTablet ? 1 : 0,
-              letterSpacing: "-0.5px",
+              mb: { xs: 2, sm: 3, md: 4 },
+              color: theme.palette.primary.main,
+              fontWeight: 600,
+              letterSpacing: 0.5,
+              fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
             }}
           >
             Resignations
           </Typography>
 
-          <Stack
-            direction={isMobile ? "column" : "row"}
-            spacing={isMobile ? 1.5 : 2}
-            alignItems={isMobile ? "stretch" : "center"}
-            width={isMobile || isTablet ? "100%" : "auto"}
-          >
-            <TextField
-              placeholder="Search by name, email or position"
-              value={searchTerm}
-              onChange={handleSearch}
-              size="small"
+          <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box
+              display="flex"
+              flexDirection={{ xs: "column", sm: "row" }}
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              gap={2}
               sx={{
-                width: isMobile || isTablet ? "100%" : "300px",
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "#f8fafc",
-                  borderRadius: "8px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#1976d2",
-                    borderWidth: "2px",
-                  },
-                },
+                width: "100%",
+                justifyContent: "space-between",
               }}
-              InputProps={{
-                startAdornment: (
-                  <Search sx={{ color: "action.active", mr: 1 }} />
-                ),
-              }}
-            />
-
-            <Stack
-              direction="row"
-              spacing={1}
-              width={isMobile ? "100%" : "auto"}
-              justifyContent={isMobile ? "space-between" : "flex-start"}
             >
-              <ButtonGroup
-                variant="outlined"
+              <TextField
+                placeholder="Search by name, email or position"
+                value={searchTerm}
+                onChange={handleSearch}
+                size="small"
                 sx={{
-                  height: "40px",
-                  flexGrow: isMobile ? 1 : 0,
-                  "& .MuiButtonGroup-grouped": {
-                    flex: isMobile ? 1 : "auto",
-                    borderColor: "#1976d2",
+                  width: { xs: "100%", sm: "300px" },
+                  marginRight: { xs: 0, sm: "auto" },
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f8fafc",
+                    borderRadius: "8px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
                   },
                 }}
-              >
-                <Tooltip title="List View">
-                  <IconButton
-                    onClick={() => handleViewChange("list")}
-                    sx={{
-                      color: viewMode === "list" ? "white" : "#64748b",
-                      backgroundColor:
-                        viewMode === "list" ? "#1976d2" : "transparent",
-                      borderColor: "#1976d2",
-                      "&:hover": {
-                        backgroundColor:
-                          viewMode === "list" ? "#1565c0" : "#e3f2fd",
-                      },
-                    }}
-                  >
-                    <FaList />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Grid View">
-                  <IconButton
-                    onClick={() => handleViewChange("grid")}
-                    sx={{
-                      color: viewMode === "grid" ? "white" : "#64748b",
-                      backgroundColor:
-                        viewMode === "grid" ? "#1976d2" : "transparent",
-                      borderColor: "#1976d2",
-                      "&:hover": {
-                        backgroundColor:
-                          viewMode === "grid" ? "#1565c0" : "#e3f2fd",
-                      },
-                    }}
-                  >
-                    <FaTh />
-                  </IconButton>
-                </Tooltip>
-              </ButtonGroup>
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: "action.active", mr: 1 }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-              <Tooltip title="Filter Resignations">
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: { xs: 1, sm: 1 },
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                <ButtonGroup
+                  variant="outlined"
+                  sx={{
+                    height: { xs: "auto", sm: 40 },
+                    flexGrow: isMobile ? 1 : 0,
+                    "& .MuiButtonGroup-grouped": {
+                      flex: isMobile ? 1 : "auto",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                >
+                  <Tooltip title="List View">
+                    <IconButton
+                      onClick={() => handleViewChange("list")}
+                      sx={{
+                        color: viewMode === "list" ? "white" : "#64748b",
+                        backgroundColor:
+                          viewMode === "list" ? "#1976d2" : "transparent",
+                        borderColor: "#1976d2",
+                        "&:hover": {
+                          backgroundColor:
+                            viewMode === "list" ? "#1565c0" : "#e3f2fd",
+                        },
+                      }}
+                    >
+                      <FaList />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Grid View">
+                    <IconButton
+                      onClick={() => handleViewChange("grid")}
+                      sx={{
+                        color: viewMode === "grid" ? "white" : "#64748b",
+                        backgroundColor:
+                          viewMode === "grid" ? "#1976d2" : "transparent",
+                        borderColor: "#1976d2",
+                        "&:hover": {
+                          backgroundColor:
+                            viewMode === "grid" ? "#1565c0" : "#e3f2fd",
+                        },
+                      }}
+                    >
+                      <FaTh />
+                    </IconButton>
+                  </Tooltip>
+                </ButtonGroup>
+
                 <Button
                   onClick={toggleFilter}
                   startIcon={<FilterList />}
                   sx={{
+                    height: { xs: "auto", sm: 40 },
+                    padding: { xs: "8px 16px", sm: "6px 16px" },
+                    width: { xs: "100%", sm: "auto" },
                     borderColor: "#1976d2",
                     color: "#1976d2",
                     "&:hover": {
@@ -548,72 +586,43 @@ const ResignationPage = () => {
                     },
                     textTransform: "none",
                     borderRadius: "8px",
-                    height: "40px",
-                    display: isMobile ? "none" : "flex", // Hide on mobile to save space
                     fontWeight: 500,
                   }}
                   variant="outlined"
                 >
                   {selectedStatus ? `Filter: ${selectedStatus}` : "Filter"}
                 </Button>
-              </Tooltip>
 
-              <Tooltip title="Create New Resignation">
                 <Button
                   onClick={handleCreateClick}
                   startIcon={<Add />}
                   sx={{
-                    background: "linear-gradient(45deg, #1976d2, #64b5f6)",
+                    height: { xs: "auto", sm: 40 },
+                    padding: { xs: "8px 16px", sm: "6px 16px" },
+                    width: { xs: "100%", sm: "auto" },
+                    background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
                     color: "white",
                     "&:hover": {
-                      background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-                      boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
-                      transform: "translateY(-2px)",
+                      background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
                     },
                     textTransform: "none",
                     borderRadius: "8px",
-                    height: "40px",
                     boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
-                    width: isMobile ? "100%" : "auto",
-                    flexGrow: isMobile ? 1 : 0,
                     fontWeight: 500,
-                    transition: "all 0.3s ease",
                   }}
                   variant="contained"
                 >
                   Create
                 </Button>
-              </Tooltip>
-            </Stack>
-
-            {isMobile && (
-              <Button
-                onClick={toggleFilter}
-                startIcon={<FilterList />}
-                sx={{
-                  borderColor: "#1976d2",
-                  color: "#1976d2",
-                  "&:hover": {
-                    borderColor: "#1565c0",
-                    backgroundColor: "#e3f2fd",
-                  },
-                  textTransform: "none",
-                  borderRadius: "8px",
-                  height: "40px",
-                  width: "100%",
-                  fontWeight: 500,
-                }}
-                variant="outlined"
-              >
-                {selectedStatus ? `Filter: ${selectedStatus}` : "Filter"}
-              </Button>
-            )}
-          </Stack>
-        </Stack>
+              </Box>
+            </Box>
+          </StyledPaper>
+        </Box>
       </Box>
 
       {/* Status summary cards */}
-      <Box sx={{ mb: 3, display: "flex", flexWrap: "wrap", gap: 2 }}>
+
+      <Box sx={{ mb: 3, display: "flex", flexWrap: "wrap", gap: 2, mt: 2 }}>
         <Paper
           elevation={0}
           sx={{
@@ -710,6 +719,8 @@ const ResignationPage = () => {
           </Box>
         </Paper>
       </Box>
+
+      <Divider sx={{ mb: 2 }} />
 
       {/*** Filter Popup ***/}
       <Popover
@@ -817,45 +828,6 @@ const ResignationPage = () => {
         </Box>
       </Popover>
 
-      {/* Empty state */}
-      {filteredData.length === 0 && !loading && (
-        <Paper
-          sx={{
-            p: 4,
-            borderRadius: 2,
-            textAlign: "center",
-            bgcolor: "white",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-            mb: 3,
-          }}
-        >
-          <Box sx={{ mb: 2 }}>
-            <Email sx={{ fontSize: 60, color: "#1976d2", opacity: 0.5 }} />
-          </Box>
-          <Typography variant="h6" gutterBottom>
-            No resignation letters found
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            {searchTerm || selectedStatus
-              ? "Try adjusting your search or filter criteria"
-              : "Create your first resignation letter to get started"}
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={handleCreateClick}
-            sx={{
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              borderRadius: 2,
-              textTransform: "none",
-              fontWeight: 500,
-            }}
-          >
-            Create Resignation Letter
-          </Button>
-        </Paper>
-      )}
-
       {/* List View */}
       {viewMode === "list" && filteredData.length > 0 && (
         <Paper
@@ -864,330 +836,646 @@ const ResignationPage = () => {
             boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
             overflow: "hidden",
             mb: 3,
+            width: "100%",
           }}
           elevation={0}
         >
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    color: "white",
-                    width: isMobile || isTablet ? "40%" : "25%",
-                    borderBottom: "2px solid #1565c0",
-                    py: 2,
-                    backgroundColor: "#1976d2",
-                  }}
-                >
-                  Employee
-                </TableCell>
-                {!isMobile && (
-                  <TableCell
-                    sx={{
-                      fontWeight: 600,
-                      color: "white",
-                      borderBottom: "2px solid #1565c0",
-                      py: 2,
-                      backgroundColor: "#1976d2",
-                    }}
-                  >
-                    Position
-                  </TableCell>
-                )}
-                {!isMobile && !isTablet && (
-                  <TableCell
-                    sx={{
-                      fontWeight: 600,
-                      color: "white",
-                      borderBottom: "2px solid #1565c0",
-                      py: 2,
-                      backgroundColor: "#1976d2",
-                    }}
-                  >
-                    Email
-                  </TableCell>
-                )}
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    color: "white",
-                    width: isMobile ? "30%" : "15%",
-                    borderBottom: "2px solid #1565c0",
-                    py: 2,
-                    backgroundColor: "#1976d2",
-                  }}
-                >
-                  Status
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    color: "white",
-                    width: isMobile ? "30%" : "20%",
-                    borderBottom: "2px solid #1565c0",
-                    py: 2,
-                    backgroundColor: "#1976d2",
-                  }}
-                >
-                  Actions
-                </TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {filteredData.map((item) => (
-                <TableRow
-                  key={item._id}
-                  sx={{
-                    "&:hover": { backgroundColor: "#f8fafc" },
-                    transition: "background-color 0.2s ease",
-                  }}
-                >
-                  <TableCell sx={{ py: 2 }}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Avatar
-                        sx={{
-                          bgcolor: getStatusColor(item.status).color,
-                          width: 40,
-                          height: 40,
-                          mr: 1.5,
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {item.name.charAt(0)}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                          {item.name}
-                        </Typography>
-                        {isMobile && (
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "#64748b" }}
-                          >
-                            {item.position}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  {!isMobile && (
-                    <TableCell sx={{ py: 2 }}>{item.position}</TableCell>
-                  )}
-                  {!isMobile && !isTablet && (
-                    <TableCell sx={{ py: 2 }}>{item.email}</TableCell>
-                  )}
-                  <TableCell sx={{ py: 2 }}>
-                    <Chip
-                      icon={getStatusColor(item.status).icon}
-                      label={item.status}
-                      size="small"
+          {isMobile ? (
+            // Mobile view - simplified table with fewer columns
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell
                       sx={{
-                        backgroundColor: getStatusColor(item.status).bg,
-                        color: getStatusColor(item.status).color,
                         fontWeight: 600,
-                        borderRadius: "6px",
-                        py: 0.5,
-                        border: `1px solid ${
-                          getStatusColor(item.status).color
-                        }20`,
+                        color: "white",
+                        backgroundColor: "#1976d2",
+                        borderBottom: "2px solid #1565c0",
+                        py: 1.5,
+                        width: "60%",
                       }}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ py: 2 }}>
-                    <Stack direction="row" spacing={1}>
-                      <Tooltip title="View Details">
-                        <IconButton
+                    >
+                      Employee
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "white",
+                        backgroundColor: "#1976d2",
+                        borderBottom: "2px solid #1565c0",
+                        py: 1.5,
+                        width: "40%",
+                      }}
+                    >
+                      Actions
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredData.map((item) => (
+                    <TableRow
+                      key={item._id}
+                      sx={{
+                        "&:hover": { backgroundColor: "#f8fafc" },
+                        transition: "background-color 0.2s ease",
+                      }}
+                    >
+                      <TableCell sx={{ py: 1.5 }}>
+                        <Box sx={{ display: "flex", flexDirection: "column" }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              mb: 0.5,
+                            }}
+                          >
+                            <Avatar
+                              sx={{
+                                bgcolor: getStatusColor(item.status).color,
+                                width: 32,
+                                height: 32,
+                                mr: 1,
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {item.name.charAt(0)}
+                            </Avatar>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {item.name}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ pl: 5 }}>
+                            <Chip
+                              icon={getStatusColor(item.status).icon}
+                              label={item.status}
+                              size="small"
+                              sx={{
+                                backgroundColor: getStatusColor(item.status).bg,
+                                color: getStatusColor(item.status).color,
+                                fontWeight: 600,
+                                borderRadius: "6px",
+                                py: 0.5,
+                                border: `1px solid ${
+                                  getStatusColor(item.status).color
+                                }20`,
+                                fontSize: "0.7rem",
+                                height: "24px",
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ py: 1.5 }}>
+                        <Stack direction="row" spacing={0.5}>
+                          <Tooltip title="View Details">
+                            <IconButton
+                              size="small"
+                              onClick={() => handlePreview(item)}
+                              sx={{
+                                color: "#1976d2",
+                                "&:hover": {
+                                  backgroundColor: "#e3f2fd",
+                                },
+                                padding: "4px",
+                              }}
+                            >
+                              <Visibility fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Edit">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEditClick(item)}
+                              sx={{
+                                color: "#1976d2",
+                                "&:hover": {
+                                  backgroundColor: "#e3f2fd",
+                                },
+                                padding: "4px",
+                              }}
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteClick(item)}
+                              sx={{
+                                color: "#ef4444",
+                                "&:hover": {
+                                  backgroundColor: "#fee2e2",
+                                },
+                                padding: "4px",
+                              }}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : isTablet ? (
+            // Tablet view - more columns but still simplified
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "white",
+                        width: "30%",
+                        borderBottom: "2px solid #1565c0",
+                        py: 2,
+                        backgroundColor: "#1976d2",
+                      }}
+                    >
+                      Employee
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "white",
+                        width: "25%",
+                        borderBottom: "2px solid #1565c0",
+                        py: 2,
+                        backgroundColor: "#1976d2",
+                      }}
+                    >
+                      Position
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "white",
+                        width: "20%",
+                        borderBottom: "2px solid #1565c0",
+                        py: 2,
+                        backgroundColor: "#1976d2",
+                      }}
+                    >
+                      Status
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "white",
+                        width: "25%",
+                        borderBottom: "2px solid #1565c0",
+                        py: 2,
+                        backgroundColor: "#1976d2",
+                      }}
+                    >
+                      Actions
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredData.map((item) => (
+                    <TableRow
+                      key={item._id}
+                      sx={{
+                        "&:hover": { backgroundColor: "#f8fafc" },
+                        transition: "background-color 0.2s ease",
+                      }}
+                    >
+                      <TableCell sx={{ py: 2 }}>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <Avatar
+                            sx={{
+                              bgcolor: getStatusColor(item.status).color,
+                              width: 36,
+                              height: 36,
+                              mr: 1.5,
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {item.name.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography
+                              variant="body1"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {item.name}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "#64748b" }}
+                            >
+                              {item.email}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>{item.position}</TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <Chip
+                          icon={getStatusColor(item.status).icon}
+                          label={item.status}
                           size="small"
-                          onClick={() => handlePreview(item)}
                           sx={{
-                            color: "#1976d2",
-                            "&:hover": {
-                              backgroundColor: "#e3f2fd",
-                              transform: "translateY(-2px)",
-                            },
-                            transition: "all 0.2s ease",
+                            backgroundColor: getStatusColor(item.status).bg,
+                            color: getStatusColor(item.status).color,
+                            fontWeight: 600,
+                            borderRadius: "6px",
+                            py: 0.5,
+                            border: `1px solid ${
+                              getStatusColor(item.status).color
+                            }20`,
                           }}
-                        >
-                          <Visibility fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEditClick(item)}
-                          sx={{
-                            color: "#1976d2",
-                            "&:hover": {
-                              backgroundColor: "#e3f2fd",
-                              transform: "translateY(-2px)",
-                            },
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      {/* <Tooltip title="Delete">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDeleteClick(item._id)}
-                          sx={{
-                            color: "#ef4444",
-                            "&:hover": { 
-                              backgroundColor: "#fee2e2",
-                              transform: "translateY(-2px)"
-                            },
-                            transition: "all 0.2s ease"
-                          }}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Tooltip> */}
-                      <Tooltip title="Delete">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDeleteClick(item)}
-                          sx={{
-                            color: "#ef4444",
-                            "&:hover": {
-                              backgroundColor: "#fee2e2",
-                              transform: "translateY(-2px)",
-                            },
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                        />
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <Stack direction="row" spacing={1}>
+                          <Tooltip title="View Details">
+                            <IconButton
+                              size="small"
+                              onClick={() => handlePreview(item)}
+                              sx={{
+                                color: "#1976d2",
+                                "&:hover": {
+                                  backgroundColor: "#e3f2fd",
+                                  transform: "translateY(-2px)",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <Visibility fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Edit">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEditClick(item)}
+                              sx={{
+                                color: "#1976d2",
+                                "&:hover": {
+                                  backgroundColor: "#e3f2fd",
+                                  transform: "translateY(-2px)",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteClick(item)}
+                              sx={{
+                                color: "#ef4444",
+                                "&:hover": {
+                                  backgroundColor: "#fee2e2",
+                                  transform: "translateY(-2px)",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Send Email">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleSendEmail(item)}
+                              sx={{
+                                color: "#1976d2",
+                                "&:hover": {
+                                  backgroundColor: "#e3f2fd",
+                                  transform: "translateY(-2px)",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <EmailOutlined fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            // Desktop view - full table with all columns
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "white",
+                        width: isMobile || isTablet ? "40%" : "25%",
+                        borderBottom: "2px solid #1565c0",
+                        py: 2,
+                        backgroundColor: "#1976d2",
+                      }}
+                    >
+                      Employee
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "white",
+                        borderBottom: "2px solid #1565c0",
+                        py: 2,
+                        backgroundColor: "#1976d2",
+                      }}
+                    >
+                      Position
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "white",
+                        borderBottom: "2px solid #1565c0",
+                        py: 2,
+                        backgroundColor: "#1976d2",
+                      }}
+                    >
+                      Email
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "white",
+                        width: isMobile ? "30%" : "15%",
+                        borderBottom: "2px solid #1565c0",
+                        py: 2,
+                        backgroundColor: "#1976d2",
+                      }}
+                    >
+                      Status
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "white",
+                        width: isMobile ? "30%" : "20%",
+                        borderBottom: "2px solid #1565c0",
+                        py: 2,
+                        backgroundColor: "#1976d2",
+                      }}
+                    >
+                      Actions
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
 
-                      <Tooltip title="Send Email">
-                        <IconButton
+                <TableBody>
+                  {filteredData.map((item) => (
+                    <TableRow
+                      key={item._id}
+                      sx={{
+                        "&:hover": { backgroundColor: "#f8fafc" },
+                        transition: "background-color 0.2s ease",
+                      }}
+                    >
+                      <TableCell sx={{ py: 2 }}>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <Avatar
+                            sx={{
+                              bgcolor: getStatusColor(item.status).color,
+                              width: 40,
+                              height: 40,
+                              mr: 1.5,
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {item.name.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography
+                              variant="body1"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {item.name}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>{item.position}</TableCell>
+                      <TableCell sx={{ py: 2 }}>{item.email}</TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <Chip
+                          icon={getStatusColor(item.status).icon}
+                          label={item.status}
                           size="small"
-                          onClick={() => handleSendEmail(item)}
                           sx={{
-                            color: "#1976d2",
-                            "&:hover": {
-                              backgroundColor: "#e3f2fd",
-                              transform: "translateY(-2px)",
-                            },
-                            transition: "all 0.2s ease",
+                            backgroundColor: getStatusColor(item.status).bg,
+                            color: getStatusColor(item.status).color,
+                            fontWeight: 600,
+                            borderRadius: "6px",
+                            py: 0.5,
+                            border: `1px solid ${
+                              getStatusColor(item.status).color
+                            }20`,
                           }}
-                        >
-                          <EmailOutlined fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                        />
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <Stack direction="row" spacing={1}>
+                          <Tooltip title="View Details">
+                            <IconButton
+                              size="small"
+                              onClick={() => handlePreview(item)}
+                              sx={{
+                                color: "#1976d2",
+                                "&:hover": {
+                                  backgroundColor: "#e3f2fd",
+                                  transform: "translateY(-2px)",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <Visibility fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Edit">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEditClick(item)}
+                              sx={{
+                                color: "#1976d2",
+                                "&:hover": {
+                                  backgroundColor: "#e3f2fd",
+                                  transform: "translateY(-2px)",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteClick(item)}
+                              sx={{
+                                color: "#ef4444",
+                                "&:hover": {
+                                  backgroundColor: "#fee2e2",
+                                  transform: "translateY(-2px)",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Send Email">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleSendEmail(item)}
+                              sx={{
+                                color: "#1976d2",
+                                "&:hover": {
+                                  backgroundColor: "#e3f2fd",
+                                  transform: "translateY(-2px)",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <EmailOutlined fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Change Status">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => handleStatusMenuOpen(e, item)}
+                              sx={{
+                                color: "#4caf50",
+                                "&:hover": {
+                                  backgroundColor: "#e8f5e9",
+                                  transform: "translateY(-2px)",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <MoreVert fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </Paper>
       )}
 
       {/* Grid View */}
-      {viewMode === "grid" && filteredData.length > 0 && (
-        <Grid container spacing={isMobile ? 2 : 3}>
+      {viewMode === "grid" && (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(3, 1fr)",
+              lg: "repeat(4, 1fr)",
+            },
+            gap: 3,
+            mb: 3,
+          }}
+        >
           {filteredData.map((item) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={item._id}>
-              <Card
+            <Paper
+              key={item._id}
+              elevation={0}
+              sx={{
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                "&:hover": {
+                  transform: "translateY(-5px)",
+                  boxShadow: "0 8px 25px rgba(0,0,0,0.12)",
+                },
+                border: `1px solid ${getStatusColor(item.status).color}20`,
+              }}
+            >
+              <Box
                 sx={{
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-8px)",
-                    boxShadow: "0 12px 24px rgba(0,0,0,0.12)",
-                  },
-                  height: "100%",
+                  p: 2,
                   display: "flex",
                   flexDirection: "column",
-                  overflow: "hidden",
-                  border: "1px solid #e2e8f0",
+                  alignItems: "center",
+                  borderBottom: `1px solid ${
+                    getStatusColor(item.status).color
+                  }20`,
+                  backgroundColor: `${getStatusColor(item.status).color}05`,
                 }}
               >
-                <CardHeader
-                  avatar={
-                    <Avatar
-                      sx={{
-                        bgcolor: getStatusColor(item.status).color,
-                        fontWeight: "bold",
-                        width: 45,
-                        height: 45,
-                        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      {item.name.charAt(0)}
-                    </Avatar>
-                  }
-                  title={
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 600, fontSize: "1.1rem" }}
-                    >
-                      {item.name}
-                    </Typography>
-                  }
-                  subheader={
-                    <Typography variant="body2" color="text.secondary">
-                      {item.position}
-                    </Typography>
-                  }
-                  action={
-                    <Chip
-                      icon={getStatusColor(item.status).icon}
-                      label={item.status}
-                      size="small"
-                      sx={{
-                        backgroundColor: getStatusColor(item.status).bg,
-                        color: getStatusColor(item.status).color,
-                        fontWeight: 600,
-                        borderRadius: "6px",
-                        py: 0.5,
-                        border: `1px solid ${
-                          getStatusColor(item.status).color
-                        }20`,
-                      }}
-                    />
-                  }
+                <Avatar
                   sx={{
-                    pb: 1,
-                    "& .MuiCardHeader-content": {
-                      overflow: "hidden",
-                    },
+                    bgcolor: getStatusColor(item.status).color,
+                    width: 64,
+                    height: 64,
+                    mb: 1.5,
+                    fontWeight: "bold",
+                    fontSize: "1.5rem",
+                  }}
+                >
+                  {item.name.charAt(0)}
+                </Avatar>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 600, textAlign: "center", mb: 0.5 }}
+                >
+                  {item.name}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#64748b", textAlign: "center", mb: 1 }}
+                >
+                  {item.position}
+                </Typography>
+                <Chip
+                  icon={getStatusColor(item.status).icon}
+                  label={item.status}
+                  size="small"
+                  sx={{
+                    backgroundColor: getStatusColor(item.status).bg,
+                    color: getStatusColor(item.status).color,
+                    fontWeight: 600,
+                    borderRadius: "6px",
+                    py: 0.5,
+                    border: `1px solid ${getStatusColor(item.status).color}20`,
                   }}
                 />
-                <Divider sx={{ mx: 2 }} />
-                <CardContent sx={{ flexGrow: 1, pt: 2 }}>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                      display: "-webkit-box",
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      mb: 2,
-                      lineHeight: 1.6,
-                      height: "4.8em", // Fixed height for 3 lines
-                    }}
-                  >
-                    {item.description.replace(/<[^>]*>?/gm, "")}
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      mt: 2,
-                      color: "#64748b",
-                    }}
-                  >
-                    <EmailOutlined fontSize="small" sx={{ mr: 1 }} />
+              </Box>
+
+              <Box sx={{ p: 2 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    mb: 2,
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Email fontSize="small" sx={{ color: "#64748b", mr: 1 }} />
                     <Typography
                       variant="body2"
                       sx={{
+                        color: "#334155",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -1196,83 +1484,166 @@ const ResignationPage = () => {
                       {item.email}
                     </Typography>
                   </Box>
-                </CardContent>
-                <Divider sx={{ mx: 2 }} />
-                <CardActions sx={{ justifyContent: "space-between", p: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <CalendarToday
+                      fontSize="small"
+                      sx={{ color: "#64748b", mr: 1 }}
+                    />
+                    <Typography variant="body2" sx={{ color: "#334155" }}>
+                      {new Date(item.date).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                  {item.reason && (
+                    <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+                      <Info
+                        fontSize="small"
+                        sx={{ color: "#64748b", mr: 1, mt: 0.3 }}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#334155",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {item.reason}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                <Divider sx={{ mb: 2 }} />
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <Button
+                    variant="outlined"
                     size="small"
                     startIcon={<Visibility />}
                     onClick={() => handlePreview(item)}
                     sx={{
-                      color: "#1976d2",
+                      borderColor: getStatusColor(item.status).color,
+                      color: getStatusColor(item.status).color,
                       "&:hover": {
-                        backgroundColor: "#e3f2fd",
+                        borderColor: getStatusColor(item.status).color,
+                        backgroundColor: `${
+                          getStatusColor(item.status).color
+                        }10`,
                       },
                       textTransform: "none",
-                      fontWeight: 500,
+                      borderRadius: "8px",
                     }}
                   >
-                    View
+                    Details
                   </Button>
-                  <Box>
-                    <Tooltip title="Edit">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleEditClick(item)}
-                        sx={{
-                          color: "#1976d2",
-                          "&:hover": { backgroundColor: "#e3f2fd" },
-                          mr: 0.5,
-                        }}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    {/* <Tooltip title="Delete">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteClick(item._id)}
-                        sx={{
-                          color: "#ef4444",
-                          "&:hover": { backgroundColor: "#fee2e2" },
-                          mr: 0.5,
-                        }}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Tooltip> */}
-                    <Tooltip title="Delete">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteClick(item)}
-                        sx={{
-                          color: "#ef4444",
-                          "&:hover": { backgroundColor: "#fee2e2" },
-                          mr: 0.5,
-                        }}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
 
-                    <Tooltip title="Send Email">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleSendEmail(item)}
-                        sx={{
-                          color: "#1976d2",
-                          "&:hover": { backgroundColor: "#e3f2fd" },
-                        }}
-                      >
-                        <EmailOutlined fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                  <Box>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEditClick(item)}
+                      sx={{
+                        color: "#1976d2",
+                        "&:hover": { backgroundColor: "#e3f2fd" },
+                        mr: 0.5,
+                      }}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteClick(item)}
+                      sx={{
+                        color: "#ef4444",
+                        "&:hover": { backgroundColor: "#fee2e2" },
+                      }}
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleStatusMenuOpen(e, item)}
+                      sx={{
+                        color: "#4caf50",
+                        "&:hover": { backgroundColor: "#e8f5e9" },
+                        ml: 0.5,
+                      }}
+                    >
+                      <MoreVert fontSize="small" />
+                    </IconButton>
                   </Box>
-                </CardActions>
-              </Card>
-            </Grid>
+                </Box>
+              </Box>
+            </Paper>
           ))}
-        </Grid>
+        </Box>
+      )}
+
+      {/* Empty state */}
+      {filteredData.length === 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            py: 8,
+            px: 2,
+            textAlign: "center",
+            backgroundColor: "white",
+            borderRadius: "12px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+          }}
+        >
+          <img
+            src="/assets/empty-state.svg"
+            alt="No data"
+            style={{ width: "180px", marginBottom: "24px", opacity: 0.7 }}
+          />
+          <Typography
+            variant="h6"
+            sx={{ mb: 1, fontWeight: 600, color: "#334155" }}
+          >
+            No resignation requests found
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{ mb: 3, color: "#64748b", maxWidth: "500px" }}
+          >
+            {searchTerm
+              ? `No results found for "${searchTerm}". Try a different search term or clear filters.`
+              : selectedStatus
+              ? `No ${selectedStatus.toLowerCase()} resignation requests found. Try a different filter.`
+              : "There are no resignation requests yet. Create a new request to get started."}
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleCreateClick}
+            sx={{
+              background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+              color: "white",
+              "&:hover": {
+                background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
+              fontWeight: 500,
+              px: 3,
+              py: 1,
+            }}
+          >
+            Create New Request
+          </Button>
+        </Box>
       )}
 
       {/* Create/Edit Dialog */}
@@ -1401,7 +1772,7 @@ const ResignationPage = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            {/* <Grid item xs={12} md={6}>
               <FormControl fullWidth margin="normal" variant="outlined">
                 <InputLabel id="status-label">Status</InputLabel>
                 <Select
@@ -1460,7 +1831,64 @@ const ResignationPage = () => {
                   </MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
+            </Grid> */}
+
+            {/* Status Change Menu */}
+            <Menu
+              anchorEl={statusMenuAnchorEl}
+              open={Boolean(statusMenuAnchorEl)}
+              onClose={handleStatusMenuClose}
+              PaperProps={{
+                sx: {
+                  mt: 1.5,
+                  boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+                  borderRadius: "8px",
+                  minWidth: 180,
+                },
+              }}
+            >
+              <MenuItem
+                onClick={() => handleStatusChange("Requested")}
+                sx={{
+                  color: "#2f54eb",
+                  "&:hover": { backgroundColor: "#f0f5ff" },
+                }}
+              >
+                <Email fontSize="small" sx={{ mr: 1.5 }} />
+                Requested
+              </MenuItem>
+              <MenuItem
+                onClick={() => handleStatusChange("Pending")}
+                sx={{
+                  color: "#fa8c16",
+                  "&:hover": { backgroundColor: "#fff7e6" },
+                }}
+              >
+                <AccessTime fontSize="small" sx={{ mr: 1.5 }} />
+                Pending
+              </MenuItem>
+              <MenuItem
+                onClick={() => handleStatusChange("Approved")}
+                sx={{
+                  color: "#1890ff",
+                  "&:hover": { backgroundColor: "#e6f7ff" },
+                }}
+              >
+                <CheckCircle fontSize="small" sx={{ mr: 1.5 }} />
+                Approved
+              </MenuItem>
+              <MenuItem
+                onClick={() => handleStatusChange("Rejected")}
+                sx={{
+                  color: "#ff4d4f",
+                  "&:hover": { backgroundColor: "#fff1f0" },
+                }}
+              >
+                <Cancel fontSize="small" sx={{ mr: 1.5 }} />
+                Rejected
+              </MenuItem>
+            </Menu>
+
             <Grid item xs={12}>
               <Typography
                 variant="subtitle1"
@@ -1718,6 +2146,7 @@ const ResignationPage = () => {
           </>
         )}
       </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}

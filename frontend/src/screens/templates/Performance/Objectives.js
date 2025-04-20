@@ -28,7 +28,6 @@ import {
   Paper,
   Badge,
   Avatar,
-  AvatarGroup,
   Tabs,
   Tab,
   LinearProgress,
@@ -37,7 +36,7 @@ import {
   Autocomplete,
   useMediaQuery,
   useTheme,
-  Zoom,
+  
   Fade,
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
@@ -58,7 +57,7 @@ import {
   Home,
   Dashboard,
   Assessment,
-  MoreVert,
+  
   Close,
   Menu as MenuIcon,
 } from "@mui/icons-material";
@@ -90,7 +89,7 @@ const Objectives = () => {
   const [currentObjective, setCurrentObjective] = useState(null);
   const [showArchivedTable, setShowArchivedTable] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  //const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   // Add these state variables for delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -287,96 +286,13 @@ const Objectives = () => {
     setSearchTerm(e.target.value);
   };
 
-  // Handle delete
-  // const handleDeleteClick = async (id) => {
-  //   if (
-  //     window.confirm(
-  //       "Are you sure you want to delete this objective? This action cannot be undone."
-  //     )
-  //   ) {
-  //     try {
-  //       setLoading(true);
-  //       await axios.delete(`${API_URL}/${id}`);
-  //       setObjectives(objectives.filter((obj) => obj._id !== id));
-  //       setNotification({
-  //         open: true,
-  //         message: "Objective deleted successfully",
-  //         severity: "success",
-  //       });
-  //       setLoading(false);
-  //     } catch (error) {
-  //       console.error("Error deleting objective:", error);
-  //       setNotification({
-  //         open: true,
-  //         message: "Failed to delete objective",
-  //         severity: "error",
-  //       });
-  //       setLoading(false);
-  //     }
-  //   }
-  // };
-
-  //   // Replace the existing handleDeleteClick function with these two functions
-  // const handleDeleteClickClick = (objective) => {
-  //   setItemToDelete(objective);
-  //   setDeleteDialogOpen(true);
-  // };
-  // Add this function definition
-  // const handleDelete = async (id) => {
-  //   if (
-  //     window.confirm(
-  //       "Are you sure you want to delete this objective? This action cannot be undone."
-  //     )
-  //   ) {
-  //     try {
-  //       setLoading(true);
-  //       await axios.delete(`${API_URL}/${id}`);
-  //       setObjectives(objectives.filter((obj) => obj._id !== id));
-  //       setNotification({
-  //         open: true,
-  //         message: "Objective deleted successfully",
-  //         severity: "success",
-  //       });
-  //       setLoading(false);
-  //     } catch (error) {
-  //       console.error("Error deleting objective:", error);
-  //       setNotification({
-  //         open: true,
-  //         message: "Failed to delete objective",
-  //         severity: "error",
-  //       });
-  //       setLoading(false);
-  //     }
-  //   }
-  // };
+ 
   const handleDeleteClick = (objective) => {
     setItemToDelete(objective);
     setDeleteDialogOpen(true);
   };
 
-  // const handleConfirmDelete = async () => {
-  //   try {
-  //     setLoading(true);
-  //     await axios.delete(`${API_URL}/${itemToDelete._id}`);
-  //     setObjectives(objectives.filter((obj) => obj._id !== itemToDelete._id));
-  //     setNotification({
-  //       open: true,
-  //       message: "Objective deleted successfully",
-  //       severity: "success",
-  //     });
-  //     setDeleteDialogOpen(false);
-  //     setItemToDelete(null);
-  //   } catch (error) {
-  //     console.error("Error deleting objective:", error);
-  //     setNotification({
-  //       open: true,
-  //       message: "Failed to delete objective",
-  //       severity: "error",
-  //     });
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+
 
   const handleConfirmDelete = async () => {
     try {
@@ -582,21 +498,18 @@ const Objectives = () => {
     loadObjectives();
   };
 
-  // Handle page change
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+  
 
   // Handle rows per page change
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(1);
-  };
+  // const handleChangeRowsPerPage = (event) => {
+  //   setRowsPerPage(parseInt(event.target.value, 10));
+  //   setPage(1);
+  // };
 
-  // Handle view mode change
-  const handleViewModeChange = (mode) => {
-    setViewMode(mode);
-  };
+  // // Handle view mode change
+  // const handleViewModeChange = (mode) => {
+  //   setViewMode(mode);
+  // };
 
   // Calculate progress for an objective (mock function)
   const calculateProgress = (objective) => {
@@ -609,14 +522,14 @@ const Objectives = () => {
     return moment(dateString).format("MMM DD, YYYY");
   };
 
-  // Handlers for managers and assignees
-  const handleManagerInputChange = (e) => {
-    setManagerInput(e.target.value);
-  };
+  // // Handlers for managers and assignees
+  // const handleManagerInputChange = (e) => {
+  //   setManagerInput(e.target.value);
+  // };
 
-  const handleAssigneeInputChange = (e) => {
-    setAssigneeInput(e.target.value);
-  };
+  // const handleAssigneeInputChange = (e) => {
+  //   setAssigneeInput(e.target.value);
+  // };
 
   const handleAddManager = () => {
     if (managerInput.trim() !== "") {
@@ -656,19 +569,19 @@ const Objectives = () => {
     }));
   };
 
-  const handleManagerKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddManager();
-    }
-  };
+  // const handleManagerKeyDown = (e) => {
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     handleAddManager();
+  //   }
+  // };
 
-  const handleAssigneeKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddAssignee();
-    }
-  };
+  // const handleAssigneeKeyDown = (e) => {
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     handleAddAssignee();
+  //   }
+  // };
 
   // Key Results handlers
   const handleKeyResultInputChange = (e) => {
@@ -1836,10 +1749,11 @@ const Objectives = () => {
           fullWidth
           PaperProps={{
             sx: {
-              width: { xs: "95%", sm: "800px" },
-              borderRadius: "20px",
+              width: { xs: "100%", sm: "600px" },
+              maxWidth: "100%",
+              borderRadius: { xs: 0, sm: "20px" },
+              margin: { xs: 0, sm: 2 },
               overflow: "hidden",
-              margin: { xs: "16px", sm: "auto" },
             },
           }}
         >
@@ -2459,10 +2373,11 @@ const Objectives = () => {
           fullWidth
           PaperProps={{
             sx: {
-              width: { xs: "95%", sm: "800px" },
-              borderRadius: "20px",
+              width: { xs: "100%", sm: "600px" },
+              maxWidth: "100%",
+              borderRadius: { xs: 0, sm: "20px" },
+              margin: { xs: 0, sm: 2 },
               overflow: "hidden",
-              margin: { xs: "16px", sm: "auto" },
             },
           }}
         >

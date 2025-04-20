@@ -25,7 +25,8 @@ import {
   DialogActions,
   Alert,
   CircularProgress,
-  Snackbar
+  Snackbar,
+  InputAdornment,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -38,18 +39,6 @@ import {
 
 const apiBaseURL =
   process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
-
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 4,
-};
 
 function RestrictLeaves() {
   const [restrictLeaves, setRestrictLeaves] = useState([]);
@@ -65,12 +54,12 @@ function RestrictLeaves() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
-  
+
   // Add responsive hooks
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-  
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
   // Add delete confirmation dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [leaveToDelete, setLeaveToDelete] = useState(null);
@@ -195,10 +184,12 @@ function RestrictLeaves() {
 
   const handleConfirmDelete = async () => {
     if (!leaveToDelete) return;
-    
+
     try {
       setLoading(true);
-      await axios.delete(`${apiBaseURL}/api/restrictLeaves/${leaveToDelete._id}`);
+      await axios.delete(
+        `${apiBaseURL}/api/restrictLeaves/${leaveToDelete._id}`
+      );
       console.log(`Deleted restricted leave with ID: ${leaveToDelete._id}`);
       fetchRestrictLeaves();
       showSnackbar("Restricted leave deleted successfully");
@@ -250,101 +241,123 @@ function RestrictLeaves() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-      
+
       <Paper
         elevation={3}
-        sx={{ p: isMobile ? 2 : 3, borderRadius: 2, backgroundColor: "#ffffff" }}
+        sx={{
+          p: isMobile ? 2 : 3,
+          borderRadius: 2,
+          backgroundColor: "#ffffff",
+        }}
       >
         <Box
           sx={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-            padding: isMobile ? '16px' : isTablet ? '20px 24px' : '24px 32px',
-            marginBottom: "24px",
+            p: { xs: 2, sm: 3, md: 4 },
+            backgroundColor: "#f5f5f5",
+            //minHeight: "100vh",
           }}
         >
-          <Stack
-            direction={isMobile ? "column" : "row"}
-            justifyContent="space-between"
-            alignItems={isMobile ? "flex-start" : "center"}
-            spacing={isMobile ? 2 : 0}
-          >
+          <Box>
             <Typography
-              variant={isMobile ? "h5" : "h4"}
+              variant="h4"
               sx={{
+                mb: { xs: 2, sm: 3, md: 4 },
+                color: theme.palette.primary.main,
                 fontWeight: 600,
-                background: "#1976d2",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                mb: isMobile ? 1 : 0
+                letterSpacing: 0.5,
+                fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
               }}
             >
               Restricted Leaves Management
             </Typography>
 
-            <Stack 
-              direction={isMobile ? "column" : "row"} 
-              spacing={isMobile ? 1 : 2} 
-              alignItems={isMobile ? "stretch" : "center"}
-              width={isMobile ? "100%" : "auto"}
+            <Paper
+              elevation={3}
+              sx={{
+                p: { xs: 2, sm: 3 },
+                borderRadius: 2,
+                backgroundColor: "#ffffff",
+                mb: 3,
+              }}
             >
-              <TextField
-                placeholder="Search restricted leaves..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                size="small"
-                fullWidth={isMobile}
+              <Box
+                display="flex"
+                flexDirection={{ xs: "column", sm: "row" }}
+                alignItems={{ xs: "flex-start", sm: "center" }}
+                gap={2}
                 sx={{
-                  width: isMobile ? "100%" : isTablet ? "200px" : "300px",
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "#f8fafc",
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#1976d2",
-                    },
-                  },
+                  width: "100%",
+                  justifyContent: "space-between",
                 }}
-                InputProps={{
-                  startAdornment: (
-                    <SearchIcon sx={{ color: "action.active", mr: 1 }} />
-                  ),
-                }}
-              />
-
-              <Button
-                onClick={() => {
-                  setFormData({
-                    title: "",
-                    startDate: "",
-                    endDate: "",
-                    department: "",
-                    jobPosition: "",
-                    description: "",
-                  });
-                  setIsAddModalOpen(true);
-                  setIsEditing(false);
-                }}
-                startIcon={<AddIcon />}
-                fullWidth={isMobile}
-                sx={{
-                  background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-                  color: "white",
-                  "&:hover": {
-                    background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-                  },
-                  textTransform: "none",
-                  borderRadius: "8px",
-                  height: "40px",
-                  boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
-                }}
-                variant="contained"
               >
-                Add Restricted Leave
-              </Button>
-            </Stack>
-          </Stack>
+                <TextField
+                  placeholder="Search restricted leaves..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  size="small"
+                  sx={{
+                    width: { xs: "100%", sm: "300px" },
+                    marginRight: { xs: 0, sm: "auto" },
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#f8fafc",
+                      borderRadius: "8px",
+                      "&:hover fieldset": {
+                        borderColor: theme.palette.primary.main,
+                      },
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: 1, sm: 1 },
+                    width: { xs: "100%", sm: "auto" },
+                  }}
+                >
+                  <Button
+                    onClick={() => {
+                      setFormData({
+                        title: "",
+                        startDate: "",
+                        endDate: "",
+                        department: "",
+                        jobPosition: "",
+                        description: "",
+                      });
+                      setIsAddModalOpen(true);
+                      setIsEditing(false);
+                    }}
+                    //startIcon={<AddIcon />}
+                    sx={{
+                      height: { xs: "auto", sm: 70 },
+                      padding: { xs: "8px 16px", sm: "6px 16px" },
+                      width: { xs: "100%", sm: "auto" },
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                      color: "white",
+                      "&:hover": {
+                        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                      },
+                    }}
+                    variant="contained"
+                  >
+                    Add Restricted Leave
+                  </Button>
+                </Box>
+              </Box>
+            </Paper>
+          </Box>
         </Box>
+
+        {/* Cards */}
 
         <Grid container spacing={isMobile ? 2 : 3}>
           {restrictLeaves
@@ -366,82 +379,194 @@ function RestrictLeaves() {
                   transition={{ duration: 0.3 }}
                 >
                   <Card
+                    elevation={2}
                     sx={{
                       height: "100%",
-                      "&:hover": { boxShadow: 6 },
-                      transition: "box-shadow 0.3s",
+                      display: "flex",
+                      flexDirection: "column",
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        boxShadow: 8,
+                        transform: "translateY(-4px)",
+                      },
+                      border: `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <CardContent>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", mb: 2 }}
+                    <Box
+                      sx={{
+                        p: 2,
+                        background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <EventIcon />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 600,
+                          wordBreak: "break-word",
+                          overflowWrap: "break-word",
+                          fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem" },
+                        }}
                       >
-                        <EventIcon sx={{ mr: 1, color: "#3b82f6" }} />
-                        <Typography 
-                          variant={isMobile ? "subtitle1" : "h6"}
-                          sx={{ 
-                            wordBreak: "break-word",
-                            overflowWrap: "break-word"
-                          }}
-                        >
-                          {leave.title}
-                        </Typography>
-                      </Box>
+                        {leave.title}
+                      </Typography>
+                    </Box>
 
-                      <Typography
-                        variant="body2"
-                        sx={{ mb: 1, color: "text.secondary" }}
-                      >
-                        Start: {formatDate(leave.startDate)}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ mb: 1, color: "text.secondary" }}
-                      >
-                        End: {formatDate(leave.endDate)}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ mb: 1, color: "text.secondary" }}
-                      >
-                        Department: {leave.department}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ mb: 1, color: "text.secondary" }}
-                      >
-                        Position: {leave.jobPosition}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ mb: 2, color: "text.secondary" }}
-                      >
-                        Description: {leave.description}
-                      </Typography>
+                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                          <Typography
+                            variant="subtitle2"
+                            color="text.secondary"
+                          >
+                            Start Date
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={500}
+                            sx={{ mt: 0.5 }}
+                          >
+                            {formatDate(leave.startDate)}
+                          </Typography>
+                        </Grid>
+
+                        <Grid item xs={6}>
+                          <Typography
+                            variant="subtitle2"
+                            color="text.secondary"
+                          >
+                            End Date
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={500}
+                            sx={{ mt: 0.5 }}
+                          >
+                            {formatDate(leave.endDate)}
+                          </Typography>
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <Typography
+                            variant="subtitle2"
+                            color="text.secondary"
+                          >
+                            Department
+                          </Typography>
+                          <Box
+                            sx={{
+                              mt: 0.5,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: 1,
+                              fontSize: "0.75rem",
+                              fontWeight: "medium",
+                              backgroundColor: `${theme.palette.info.light}15`,
+                              color: theme.palette.info.dark,
+                            }}
+                          >
+                            {leave.department}
+                          </Box>
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <Typography
+                            variant="subtitle2"
+                            color="text.secondary"
+                          >
+                            Position
+                          </Typography>
+                          <Box
+                            sx={{
+                              mt: 0.5,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: 1,
+                              fontSize: "0.75rem",
+                              fontWeight: "medium",
+                              backgroundColor: `${theme.palette.success.light}15`,
+                              color: theme.palette.success.dark,
+                            }}
+                          >
+                            {leave.jobPosition}
+                          </Box>
+                        </Grid>
+
+                        <Grid item xs={12}>
+                          <Typography
+                            variant="subtitle2"
+                            color="text.secondary"
+                          >
+                            Description
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              mt: 0.5,
+                              color: theme.palette.text.primary,
+                              display: "-webkit-box",
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            {leave.description}
+                          </Typography>
+                        </Grid>
+                      </Grid>
 
                       <Box
                         sx={{
                           display: "flex",
-                          gap: 1,
                           justifyContent: "flex-end",
+                          gap: 1,
+                          mt: 3,
+                          pt: 2,
+                          borderTop: `1px solid ${theme.palette.divider}`,
                         }}
                       >
                         <IconButton
                           onClick={() => handleEdit(leave)}
+                          size="small"
                           sx={{
-                            backgroundColor: "#3b82f6",
-                            color: "white",
-                            "&:hover": { backgroundColor: "#2563eb" },
+                            backgroundColor: `${theme.palette.primary.main}15`,
+                            color: theme.palette.primary.main,
+                            "&:hover": {
+                              backgroundColor: `${theme.palette.primary.main}25`,
+                              transform: "translateY(-2px)",
+                            },
+                            transition: "all 0.2s ease",
+                            width: 36,
+                            height: 36,
                           }}
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
                         <IconButton
                           onClick={() => handleDeleteClick(leave)}
+                          size="small"
                           sx={{
-                            backgroundColor: "#ef4444",
-                            color: "white",
-                            "&:hover": { backgroundColor: "#dc2626" },
+                            backgroundColor: `${theme.palette.error.main}15`,
+                            color: theme.palette.error.main,
+                            "&:hover": {
+                              backgroundColor: `${theme.palette.error.main}25`,
+                              transform: "translateY(-2px)",
+                            },
+                            transition: "all 0.2s ease",
+                            width: 36,
+                            height: 36,
                           }}
                         >
                           <DeleteIcon fontSize="small" />
@@ -452,8 +577,79 @@ function RestrictLeaves() {
                 </motion.div>
               </Grid>
             ))}
+
+          {/* Empty state when no leaves match the filter */}
+          {restrictLeaves.filter(
+            (leave) =>
+              leave.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              leave.department
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              leave.jobPosition.toLowerCase().includes(searchTerm.toLowerCase())
+          ).length === 0 && (
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  textAlign: "center",
+                  py: 8,
+                  px: 2,
+                  backgroundColor: "white",
+                  borderRadius: 2,
+                  border: `1px dashed ${theme.palette.divider}`,
+                }}
+              >
+                <EventIcon
+                  sx={{
+                    fontSize: 60,
+                    color: theme.palette.action.disabled,
+                    mb: 2,
+                  }}
+                />
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No restricted leaves found
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  {searchTerm
+                    ? `No restricted leaves match your search criteria. Try a different search term.`
+                    : "There are no restricted leaves in the system yet."}
+                </Typography>
+                {searchTerm && (
+                  <Button
+                    variant="outlined"
+                    onClick={() => setSearchTerm("")}
+                    sx={{ mr: 1 }}
+                  >
+                    Clear Search
+                  </Button>
+                )}
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    setFormData({
+                      title: "",
+                      startDate: "",
+                      endDate: "",
+                      department: "",
+                      jobPosition: "",
+                      description: "",
+                    });
+                    setIsAddModalOpen(true);
+                    setIsEditing(false);
+                  }}
+                >
+                  Add Restricted Leave
+                </Button>
+              </Box>
+            </Grid>
+          )}
         </Grid>
 
+        {/* Create Dialog */}
         <Dialog
           open={isAddModalOpen}
           maxWidth="md"
@@ -542,7 +738,7 @@ function RestrictLeaves() {
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "8px",
                       },
-                      mt: isMobile ? 0 : undefined
+                      mt: isMobile ? 0 : undefined,
                     }}
                   />
                 </Stack>
@@ -690,7 +886,7 @@ function RestrictLeaves() {
             <DeleteIcon />
             Confirm Deletion
           </DialogTitle>
-          <DialogContent 
+          <DialogContent
             sx={{
               padding: { xs: "24px", sm: "32px" },
               backgroundColor: "#f8fafc",
@@ -705,7 +901,11 @@ function RestrictLeaves() {
                 <Typography variant="body1" fontWeight={600} color="#2c3e50">
                   Restricted Leave: {leaveToDelete.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
                   Start Date: {formatDate(leaveToDelete.startDate)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -720,7 +920,7 @@ function RestrictLeaves() {
               </Box>
             )}
           </DialogContent>
-          <DialogActions 
+          <DialogActions
             sx={{
               padding: { xs: "16px 24px", sm: "24px 32px" },
               backgroundColor: "#f8fafc",
@@ -777,4 +977,3 @@ function RestrictLeaves() {
 }
 
 export default RestrictLeaves;
-
