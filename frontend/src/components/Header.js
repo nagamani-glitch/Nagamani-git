@@ -386,13 +386,24 @@ const Header = () => {
                         <Spinner animation="border" size="sm" />
                       ) : isTimerRunning ? (
                         <>
-                          <FaSignOutAlt className="rotate" />
-                          <span>{`${formatTime(timer)}`}</span>
+                          <div className="timer-icon-container">
+                            <FaSignOutAlt className="timer-icon rotate" />
+                          </div>
+                          <div className="timer-content">
+                            <span className="timer-label">Punch-out</span>
+                            <span className="timer-value">{`${formatTime(
+                              timer
+                            )}`}</span>
+                          </div>
                         </>
                       ) : (
                         <>
-                          <FaSignInAlt className="beat" />
-                          <span>Punch-in</span>
+                          <div className="timer-icon-container">
+                            <FaSignInAlt className="timer-icon beat" />
+                          </div>
+                          <div className="timer-content">
+                            <span className="timer-label">Punch-in</span>
+                          </div>
                         </>
                       )}
                     </Button>
