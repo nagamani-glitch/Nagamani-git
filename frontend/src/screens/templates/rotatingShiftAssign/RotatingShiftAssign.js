@@ -27,11 +27,12 @@ import {
   FormControlLabel,
   MenuItem,
   InputAdornment,
-  useTheme, alpha, CircularProgress, Alert
+  useTheme, alpha, CircularProgress, Alert, Autocomplete, Tooltip
 } from "@mui/material";
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
 
 const API_URL = "http://localhost:5000/api/rotating-shift";
+const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/registered";
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -108,8 +109,15 @@ const RotatingShiftAssign = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [shiftRequests, setShiftRequests] = useState([]);
   const [allocatedShifts, setAllocatedShifts] = useState([]);
+  
+  // New state for registered employees
+  const [registeredEmployees, setRegisteredEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  
   const [formData, setFormData] = useState({
     employee: "",
+    employeeCode: "",
     requestShift: "",
     requestedDate: "",
     requestedTill: "",
@@ -118,78 +126,119 @@ const RotatingShiftAssign = () => {
 
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-const [deleteType, setDeleteType] = useState(""); // "shift" or "bulk"
-const [itemToDelete, setItemToDelete] = useState(null);
-const [loading, setLoading] = useState(false);
+  const [deleteType, setDeleteType] = useState(""); // "shift" or "bulk"
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-// Replace the existing handleDelete function with this:
-const handleDeleteClick = (shift, e) => {
-  e.stopPropagation();
-  setDeleteType("shift");
-  setItemToDelete(shift);
-  setDeleteDialogOpen(true);
-};
+  // Add function to fetch registered employees
+  const fetchRegisteredEmployees = async () => {
+    try {
+      setLoadingEmployees(true);
+      const response = await axios.get(EMPLOYEES_API_URL);
 
-// Add a function for bulk delete confirmation
-const handleBulkDeleteClick = () => {
-  setDeleteType("bulk");
-  setItemToDelete({
-    count: selectedAllocations.length,
-    type: tabValue === 0 ? "requests" : "allocations",
-  });
-  setDeleteDialogOpen(true);
-  setAnchorEl(null);
-};
+      // Format the employee data for the dropdown
+      const formattedEmployees = response.data.map((emp) => ({
+        id: emp.Emp_ID,
+        name: `${emp.personalInfo?.firstName || ""} ${
+          emp.personalInfo?.lastName || ""
+        }`,
+        employeeCode: emp.Emp_ID,
+        department: emp.joiningDetails?.department || "Not Assigned",
+        currentShift: emp.joiningDetails?.shift || "Regular Shift",
+        // Add any other relevant fields from the employee data
+      }));
 
-// Add this function to close the delete dialog
-const handleCloseDeleteDialog = () => {
-  setDeleteDialogOpen(false);
-  setItemToDelete(null);
-};
-
-// Add this function to handle the confirmed deletion
-const handleConfirmDelete = async () => {
-  try {
-    setLoading(true);
-
-    if (deleteType === "shift" && itemToDelete) {
-      await axios.delete(`${API_URL}/shifts/${itemToDelete._id}`);
-      await loadRotatingShiftRequests();
-      showSnackbar("Shift request deleted successfully");
-    } else if (deleteType === "bulk" && selectedAllocations.length > 0) {
-      await Promise.all(
-        selectedAllocations.map((id) => axios.delete(`${API_URL}/shifts/${id}`))
-      );
-      await loadRotatingShiftRequests();
-      setSelectedAllocations([]);
-      setShowSelectionButtons(false);
-      showSnackbar(
-        `${selectedAllocations.length} ${itemToDelete.type} deleted successfully`
-      );
+      setRegisteredEmployees(formattedEmployees);
+    } catch (error) {
+      console.error("Error fetching registered employees:", error);
+    } finally {
+      setLoadingEmployees(false);
     }
+  };
 
-    handleCloseDeleteDialog();
-  } catch (error) {
-    console.error(`Error deleting ${deleteType}:`, error);
-    showSnackbar(`Error deleting ${deleteType}`, "error");
-  } finally {
-    setLoading(false);
-  }
-};
+  // Handle employee selection
+  const handleEmployeeSelect = (event, employee) => {
+    setSelectedEmployee(employee);
+    if (employee) {
+      // Auto-fill form data with selected employee information
+      setFormData((prev) => ({
+        ...prev,
+        employee: employee.name,
+        employeeCode: employee.employeeCode,
+        currentShift: employee.currentShift || "Regular Shift",
+      }));
+    }
+  };
 
-// Add a showSnackbar function if it doesn't exist
-const showSnackbar = (message, severity = "success") => {
-  // Implement snackbar functionality here if needed
-  console.log(`${severity}: ${message}`);
-};
+  // Replace the existing handleDelete function with this:
+  const handleDeleteClick = (shift, e) => {
+    e.stopPropagation();
+    setDeleteType("shift");
+    setItemToDelete(shift);
+    setDeleteDialogOpen(true);
+  };
 
-// Update the handleBulkDelete function to use the new confirmation dialog
-const handleBulkDelete = () => {
-  handleBulkDeleteClick();
-};
+  // Add a function for bulk delete confirmation
+  const handleBulkDeleteClick = () => {
+    setDeleteType("bulk");
+    setItemToDelete({
+      count: selectedAllocations.length,
+      type: tabValue === 0 ? "requests" : "allocations",
+    });
+    setDeleteDialogOpen(true);
+    setAnchorEl(null);
+  };
+
+  // Add this function to close the delete dialog
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+  };
+
+  // Add this function to handle the confirmed deletion
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true);
+
+      if (deleteType === "shift" && itemToDelete) {
+        await axios.delete(`${API_URL}/shifts/${itemToDelete._id}`);
+        await loadRotatingShiftRequests();
+        showSnackbar("Shift request deleted successfully");
+      } else if (deleteType === "bulk" && selectedAllocations.length > 0) {
+        await Promise.all(
+          selectedAllocations.map((id) => axios.delete(`${API_URL}/shifts/${id}`))
+        );
+        await loadRotatingShiftRequests();
+        setSelectedAllocations([]);
+        setShowSelectionButtons(false);
+        showSnackbar(
+          `${selectedAllocations.length} ${itemToDelete.type} deleted successfully`
+        );
+      }
+
+      handleCloseDeleteDialog();
+    } catch (error) {
+      console.error(`Error deleting ${deleteType}:`, error);
+      showSnackbar(`Error deleting ${deleteType}`, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add a showSnackbar function if it doesn't exist
+  const showSnackbar = (message, severity = "success") => {
+    // Implement snackbar functionality here if needed
+    console.log(`${severity}: ${message}`);
+  };
+
+  // Update the handleBulkDelete function to use the new confirmation dialog
+  const handleBulkDelete = () => {
+    handleBulkDeleteClick();
+  };
 
   useEffect(() => {
     loadRotatingShiftRequests();
+    fetchRegisteredEmployees(); // Fetch employees when component mounts
   }, [tabValue]);
 
   const loadRotatingShiftRequests = async () => {
@@ -298,16 +347,16 @@ const handleBulkDelete = () => {
 
   const handleCreateShift = async () => {
     try {
-      const selectedEmployee = employees.find(
-        (emp) => emp.name === formData.employee
-      );
+      // Use the selected employee data if available, otherwise fall back to the form data
+      const employeeData =
+        selectedEmployee ||
+        employees.find((emp) => emp.name === formData.employee);
+
       const shiftData = {
         name: formData.employee,
-        employeeCode:
-          selectedEmployee?.employeeCode ||
-          `EMP${Math.floor(Math.random() * 1000)}`,
+        employeeCode: employeeData?.employeeCode || formData.employeeCode,
         requestedShift: formData.requestShift,
-        currentShift: "Regular Shift",
+        currentShift: employeeData?.currentShift || "Regular Shift",
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
         description: formData.description,
@@ -318,14 +367,7 @@ const handleBulkDelete = () => {
       await axios.post(`${API_URL}/shifts`, shiftData);
       await loadRotatingShiftRequests();
       setCreateDialogOpen(false);
-      setFormData({
-        employee: "",
-        requestShift: "",
-        requestedDate: "",
-        requestedTill: "",
-        description: "",
-      });
-      setIsPermanentRequest(false);
+      resetFormData();
     } catch (error) {
       console.error("Error creating shift:", error);
     }
@@ -336,9 +378,10 @@ const handleBulkDelete = () => {
     setEditingShift(shift);
     setFormData({
       employee: shift.name,
+      employeeCode: shift.employeeCode,
       requestShift: shift.requestedShift,
-      requestedDate: shift.requestedDate.split("T")[0],
-      requestedTill: shift.requestedTill.split("T")[0],
+      requestedDate: new Date(shift.requestedDate).toISOString().split("T")[0],
+      requestedTill: new Date(shift.requestedTill).toISOString().split("T")[0],
       description: shift.description,
     });
     setEditDialogOpen(true);
@@ -346,12 +389,9 @@ const handleBulkDelete = () => {
 
   const handleSaveEdit = async () => {
     try {
-      const selectedEmployee = employees.find(
-        (emp) => emp.name === formData.employee
-      );
       const updatedData = {
         name: formData.employee,
-        employeeCode: selectedEmployee?.employeeCode,
+        employeeCode: formData.employeeCode,
         requestedShift: formData.requestShift,
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
@@ -363,9 +403,23 @@ const handleBulkDelete = () => {
       await loadRotatingShiftRequests();
       setEditDialogOpen(false);
       setEditingShift(null);
+      resetFormData();
     } catch (error) {
       console.error("Error updating shift:", error);
     }
+  };
+
+  const resetFormData = () => {
+    setFormData({
+      employee: "",
+      employeeCode: "",
+      requestShift: "",
+      requestedDate: "",
+      requestedTill: "",
+      description: "",
+    });
+    setIsPermanentRequest(false);
+    setSelectedEmployee(null);
   };
 
   const handleDelete = async (id, e) => {
@@ -905,10 +959,10 @@ const handleBulkDelete = () => {
                 >
                   <Edit fontSize="small" />
                 </IconButton>
-                {/* <IconButton
+                <IconButton
                   size="small"
                   color="error"
-                  onClick={(e) => handleDelete(request._id, e)}
+                  onClick={(e) => handleDeleteClick(request, e)}
                   sx={{
                     backgroundColor: alpha(theme.palette.error.main, 0.1),
                     '&:hover': {
@@ -917,21 +971,7 @@ const handleBulkDelete = () => {
                   }}
                 >
                   <Delete fontSize="small" />
-                </IconButton> */}
-
-<IconButton
-  size="small"
-  color="error"
-  onClick={(e) => handleDeleteClick(request, e)}
-  sx={{
-    backgroundColor: alpha(theme.palette.error.main, 0.1),
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.error.main, 0.2),
-    }
-  }}
->
-  <Delete fontSize="small" />
-</IconButton>
+                </IconButton>
               </Box>
             </TableCell>
           </StyledTableRow>
@@ -1113,10 +1153,13 @@ const handleBulkDelete = () => {
       <Dialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
+        fullScreen={window.innerWidth < 600} // Full screen on mobile
         PaperProps={{
           sx: {
-            width: "600px",
-            borderRadius: "20px",
+            width: { xs: "100%", sm: "600px" },
+            maxWidth: "100%",
+            borderRadius: { xs: 0, sm: "20px" },
+            margin: { xs: 0, sm: 2 },
             overflow: "hidden",
           },
         }}
@@ -1137,33 +1180,143 @@ const handleBulkDelete = () => {
 
         <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <TextField
-              label="Employee"
-              name="employee"
-              fullWidth
-              select
-              value={formData.employee}
-              onChange={handleFormChange}
-              sx={{
-                mt: 2,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1976d2",
-                },
-              }}
-            >
-              {employees.map((emp) => (
-                <MenuItem key={emp.id} value={emp.name}>
-                  {emp.name} ({emp.employeeCode})
-                </MenuItem>
-              ))}
-            </TextField>
+            {/* New Autocomplete for selecting registered employees */}
+            <Autocomplete
+              options={registeredEmployees}
+              getOptionLabel={(option) =>
+                `${option.name} (${option.employeeCode})`
+              }
+              value={selectedEmployee}
+              onChange={handleEmployeeSelect}
+              loading={loadingEmployees}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Onboarded Employee"
+                  variant="outlined"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingEmployees ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              )}
+              renderOption={(props, option) => (
+                <li {...props}>
+                  <Box sx={{ display: "flex", flexDirection: "column" }}>
+                    <Typography variant="body1">{option.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.employeeCode} • {option.department}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+            />
+
+            {/* Display selected employee info if available */}
+            {selectedEmployee && (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                }}
+              >
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Selected Employee Details
+                </Typography>
+                <Box
+                  sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+                >
+                  <Typography variant="body2">
+                    <strong>Name:</strong> {selectedEmployee.name}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Employee Code:</strong>{" "}
+                    {selectedEmployee.employeeCode}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Department:</strong> {selectedEmployee.department}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Current Shift:</strong>{" "}
+                    {selectedEmployee.currentShift || "Regular Shift"}
+                  </Typography>
+                </Box>
+              </Paper>
+            )}
+
+            {/* Original employee selection field as fallback */}
+            {!selectedEmployee && (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Typography variant="subtitle2" color="primary.dark">
+                  Or Enter Employee Details Manually:
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 2,
+                  }}
+                >
+                  <TextField
+                    label="Employee Name"
+                    name="employee"
+                    fullWidth
+                    value={formData.employee}
+                    onChange={handleFormChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2",
+                      },
+                    }}
+                  />
+                  <TextField
+                    label="Employee ID"
+                    name="employeeCode"
+                    fullWidth
+                    value={formData.employeeCode || ""}
+                    onChange={handleFormChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2",
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+            )}
 
             <TextField
               label="Request Work Type"
@@ -1267,7 +1420,10 @@ const handleBulkDelete = () => {
           }}
         >
           <Button
-            onClick={() => setCreateDialogOpen(false)}
+            onClick={() => {
+              setCreateDialogOpen(false);
+              resetFormData();
+            }}
             sx={{
               border: "2px solid #1976d2",
               color: "#1976d2",
@@ -1289,7 +1445,7 @@ const handleBulkDelete = () => {
             variant="contained"
             onClick={handleCreateShift}
             disabled={
-              !formData.employee ||
+              (!selectedEmployee && !formData.employee) ||
               !formData.requestShift ||
               !formData.requestedDate
             }
@@ -1311,14 +1467,16 @@ const handleBulkDelete = () => {
       </Dialog>
 
       {/* Edit Dialog */}
-
       <Dialog
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
+        fullScreen={window.innerWidth < 600} // Full screen on mobile
         PaperProps={{
           sx: {
-            width: "600px",
-            borderRadius: "20px",
+            width: { xs: "100%", sm: "600px" },
+            maxWidth: "100%",
+            borderRadius: { xs: 0, sm: "20px" },
+            margin: { xs: 0, sm: 2 },
             overflow: "hidden",
           },
         }}
@@ -1339,33 +1497,143 @@ const handleBulkDelete = () => {
 
         <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <TextField
-              label="Employee"
-              name="employee"
-              fullWidth
-              select
-              value={formData.employee}
-              onChange={handleFormChange}
-              sx={{
-                mt: 2,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1976d2",
-                },
-              }}
-            >
-              {employees.map((emp) => (
-                <MenuItem key={emp.id} value={emp.name}>
-                  {emp.name} ({emp.employeeCode})
-                </MenuItem>
-              ))}
-            </TextField>
+            {/* New Autocomplete for selecting registered employees */}
+            <Autocomplete
+              options={registeredEmployees}
+              getOptionLabel={(option) =>
+                `${option.name} (${option.employeeCode})`
+              }
+              value={selectedEmployee}
+              onChange={handleEmployeeSelect}
+              loading={loadingEmployees}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Onboarded Employee"
+                  variant="outlined"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingEmployees ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              )}
+              renderOption={(props, option) => (
+                <li {...props}>
+                  <Box sx={{ display: "flex", flexDirection: "column" }}>
+                    <Typography variant="body1">{option.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.employeeCode} • {option.department}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+            />
+
+            {/* Display selected employee info if available */}
+            {selectedEmployee && (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                }}
+              >
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Selected Employee Details
+                </Typography>
+                <Box
+                  sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+                >
+                  <Typography variant="body2">
+                    <strong>Name:</strong> {selectedEmployee.name}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Employee Code:</strong>{" "}
+                    {selectedEmployee.employeeCode}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Department:</strong> {selectedEmployee.department}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Current Shift:</strong>{" "}
+                    {selectedEmployee.currentShift || "Regular Shift"}
+                  </Typography>
+                </Box>
+              </Paper>
+            )}
+
+            {/* Original employee selection field as fallback */}
+            {!selectedEmployee && (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Typography variant="subtitle2" color="primary.dark">
+                  Or Enter Employee Details Manually:
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 2,
+                  }}
+                >
+                  <TextField
+                    label="Employee Name"
+                    name="employee"
+                    fullWidth
+                    value={formData.employee}
+                    onChange={handleFormChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2",
+                      },
+                    }}
+                  />
+                  <TextField
+                    label="Employee ID"
+                    name="employeeCode"
+                    fullWidth
+                    value={formData.employeeCode || ""}
+                    onChange={handleFormChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2",
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+            )}
 
             <TextField
               label="Request Work Type"
@@ -1457,7 +1725,10 @@ const handleBulkDelete = () => {
           }}
         >
           <Button
-            onClick={() => setEditDialogOpen(false)}
+            onClick={() => {
+              setEditDialogOpen(false);
+              resetFormData();
+            }}
             sx={{
               border: "2px solid #1976d2",
               color: "#1976d2",
@@ -1479,7 +1750,7 @@ const handleBulkDelete = () => {
             onClick={handleSaveEdit}
             variant="contained"
             disabled={
-              !formData.employee ||
+              (!selectedEmployee && !formData.employee) ||
               !formData.requestShift ||
               !formData.requestedDate
             }
@@ -1504,3 +1775,4 @@ const handleBulkDelete = () => {
 };
 
 export default RotatingShiftAssign;
+

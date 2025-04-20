@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Container, Box, Typography, TextField, Button, 
-  LinearProgress, Alert, Paper, InputAdornment, IconButton,
+  LinearProgress, Alert, InputAdornment, IconButton,
   Dialog, DialogContent, CircularProgress
 } from '@mui/material';
 import { Visibility, VisibilityOff, CheckCircle } from '@mui/icons-material';

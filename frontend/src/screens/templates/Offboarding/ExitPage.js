@@ -1252,7 +1252,6 @@ const ExitPage = () => {
                                                 },
                                               }}
                                             />
-                                            />
                                           </Box>
                                           <Typography
                                             variant="caption"

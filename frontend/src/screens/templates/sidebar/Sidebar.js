@@ -300,9 +300,7 @@ function Sidebar() {
             >
               Dashboard
             </li>
-            <li onClick={() => handleNavigation("/Dashboards/asset-view")}>
-              Asset View
-            </li>
+           
             <li onClick={() => handleNavigation("/Dashboards/asset-batches")}>
               Asset Batches
             </li>

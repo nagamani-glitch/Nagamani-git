@@ -71,30 +71,16 @@ const styles = {
     letterSpacing: 0.5,
     fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
   },
-  // headerPaper: {
-  //   padding: { xs: 2, sm: 3 },
-  //   marginBottom: 3,
-  //   borderRadius: 2,
-  //   boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
-  // },
-  // Update the header paper style:
   headerPaper: {
-    padding: { xs: 1.5, sm: 3 }, // Reduce padding on mobile
+    padding: { xs: 1.5, sm: 3 },
     marginBottom: 3,
     borderRadius: 2,
     boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
+    position: { sm: "sticky" }, // Make it sticky on sm breakpoint and above
+    top: { sm: 0 }, // Position at the top
+    zIndex: 10, // Ensure it stays above other content
+    backgroundColor: "#fff", // Ensure it has a background to cover content below
   },
-
-  // searchField: {
-  //   width: { xs: "100%", sm: "280px" },
-  //   "& .MuiOutlinedInput-root": {
-  //     borderRadius: 2,
-  //     "&:hover fieldset": {
-  //       borderColor: "#1976d2",
-  //     },
-  //   },
-  // },
-  // Update the search field style:
   searchField: {
     width: { xs: "100%", sm: "280px" },
     "& .MuiOutlinedInput-root": {
@@ -128,28 +114,6 @@ const styles = {
       color: "#1976d2",
     },
   },
-  // actionButton: {
-  //   height: 40,
-  //   whiteSpace: "nowrap",
-  //   borderColor: "#1976d2",
-  //   color: "#1976d2",
-  //   fontSize: { xs: "0.8rem", sm: "0.875rem" },
-  //   padding: { xs: "6px 12px", sm: "6px 16px" },
-  // },
-  // addButton: {
-  //   height: 40,
-  //   background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
-  //   color: "white",
-  //   "&:hover": {
-  //     background: `linear-gradient(45deg, #1565c0 30%, #1976d2 90%)`,
-  //   },
-  //   whiteSpace: "nowrap",
-  //   fontSize: { xs: "0.8rem", sm: "0.875rem" },
-  //   padding: { xs: "6px 12px", sm: "6px 16px" },
-  // },
-
-  // Update these button styles in the styles object:
-
   actionButton: {
     height: 40,
     whiteSpace: "nowrap", // Prevent text wrapping
@@ -189,14 +153,14 @@ const styles = {
     fontSize: { xs: "1.25rem", sm: "1.5rem" },
   },
 
-  // Update card and content styles
+  // Updated card and content styles for better responsiveness
   card: {
     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     borderRadius: 2,
-    height: "100%",
+    height: "100%", // Maintain full height
     display: "flex",
     flexDirection: "column",
-    overflow: "hidden",
+    overflow: "visible", // Changed from hidden to visible to prevent content clipping
     backgroundColor: "white",
     "&:hover": {
       transform: "translateY(-4px)",
@@ -204,38 +168,29 @@ const styles = {
     },
   },
   cardContent: {
-    padding: { xs: "16px", sm: "20px", md: "20px", lg: "24px" },
+    padding: { xs: "12px", sm: "16px", md: "18px", lg: "20px" }, // Reduced padding for smaller screens
     display: "flex",
     flexDirection: "column",
     height: "100%",
     "&:last-child": {
-      paddingBottom: { xs: "16px", sm: "20px", md: "20px", lg: "24px" },
+      paddingBottom: { xs: "12px", sm: "16px", md: "18px", lg: "20px" }, // Match top padding
     },
   },
-  // cardHeader: {
-  //   display: "flex",
-  //   flexDirection: "row",
-  //   alignItems: "flex-start",
-  //   gap: { xs: 1.5, sm: 2, md: 2, lg: 2.5 },
-  //   width: "100%",
-  //   mb: { xs: 1.5, sm: 2, md: 2, lg: 2.5 },
-  // },
   cardHeader: {
     display: "flex",
     flexDirection: { xs: "column", sm: "row" }, // Stack vertically on mobile
     alignItems: { xs: "flex-start", sm: "flex-start" },
-    gap: { xs: 2, sm: 3 },
+    gap: { xs: 1.5, sm: 2 }, // Reduced gap for better spacing
     width: "100%",
-    mb: 2,
+    mb: 1.5, // Reduced margin bottom
     position: "relative", // Add position relative
   },
-
   avatar: {
     bgcolor: "#9e9e9e",
     color: "white",
-    width: { xs: 50, sm: 56, md: 60 },
-    height: { xs: 50, sm: 56, md: 60 },
-    fontSize: { xs: "1.1rem", sm: "1.2rem", md: "1.3rem" },
+    width: { xs: 45, sm: 50, md: 55 }, // Slightly smaller avatars
+    height: { xs: 45, sm: 50, md: 55 },
+    fontSize: { xs: "1rem", sm: "1.1rem", md: "1.2rem" },
     fontWeight: "bold",
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
     flexShrink: 0, // Prevent avatar from shrinking
@@ -245,66 +200,21 @@ const styles = {
     flexDirection: "column",
     width: "100%",
     flexGrow: 1,
+    minWidth: 0, // Important for text truncation to work properly
   },
-  // nameContainer: {
-  //   display: "flex",
-  //   justifyContent: "space-between",
-  //   alignItems: "flex-start",
-  //   width: "100%",
-  //   mb: { xs: 1.5, md: 2 },
-  //   position: "relative", // Add position relative for absolute positioning
-  // },
-
-  // nameContainer: {
-  //   display: "flex",
-  //   justifyContent: "space-between",
-  //   alignItems: "flex-start",
-  //   width: "100%",
-  //   mb: { xs: 1.5, md: 2 },
-  //   position: "relative", // Add position relative for absolute positioning
-  //   minHeight: "32px", // Ensure minimum height for the container
-  // },
   nameContainer: {
     display: "flex",
     width: "100%",
-    mb: { xs: 1.5, md: 2 },
+    mb: { xs: 1, md: 1.5 }, // Reduced margin
     position: "relative", // Keep position relative
+    minWidth: 0, // Important for text truncation
   },
-  // candidateName: {
-  //   fontWeight: 600,
-  //   color: "#1a2027",
-  //   fontSize: { xs: "0.95rem", sm: "1rem", md: "1.1rem", lg: "1.2rem" },
-  //   lineHeight: 1.3,
-  //   paddingRight: "36px", // Increased padding to make room for the action button
-  //   overflow: "hidden",
-  //   textOverflow: "ellipsis",
-  //   width: "100%", // Take full width
-  //   display: "-webkit-box",
-  //   WebkitLineClamp: 2, // Show max 2 lines
-  //   WebkitBoxOrient: "vertical",
-  //   whiteSpace: "normal", // Allow wrapping to 2 lines
-  // },
-
-  // candidateName: {
-  //   fontWeight: 600,
-  //   color: "#1a2027",
-  //   fontSize: { xs: "0.95rem", sm: "1rem", md: "1.1rem", lg: "1.2rem" },
-  //   lineHeight: 1.3,
-  //   paddingRight: "36px", // Increased padding to make room for the action button
-  //   overflow: "hidden",
-  //   textOverflow: "ellipsis",
-  //   width: "100%", // Take full width
-  //   display: "-webkit-box",
-  //   WebkitLineClamp: 2, // Show max 2 lines
-  //   WebkitBoxOrient: "vertical",
-  //   whiteSpace: "normal", // Allow wrapping to 2 lines
-  // },
   candidateName: {
     fontWeight: 600,
     color: "#1a2027",
-    fontSize: { xs: "0.95rem", sm: "1rem", md: "1.1rem", lg: "1.2rem" },
+    fontSize: { xs: "0.9rem", sm: "0.95rem", md: "1rem", lg: "1.1rem" }, // Slightly reduced font sizes
     lineHeight: 1.3,
-    paddingRight: "40px", // Increased padding even more
+    paddingRight: "40px", // Space for menu button
     overflow: "hidden",
     textOverflow: "ellipsis",
     width: "100%",
@@ -312,6 +222,7 @@ const styles = {
     WebkitLineClamp: 2,
     WebkitBoxOrient: "vertical",
     whiteSpace: "normal",
+    wordBreak: "break-word", // Added to handle long words
   },
   employeeIdContainer: {
     display: "flex",
@@ -322,30 +233,32 @@ const styles = {
   employeeId: {
     color: "#1976d2",
     backgroundColor: "#e3f2fd",
-    padding: "3px 8px",
+    padding: "2px 6px", // Reduced padding
     borderRadius: "4px",
-    fontSize: { xs: "0.7rem", md: "0.75rem" },
+    fontSize: { xs: "0.65rem", md: "0.7rem" }, // Smaller font size
     display: "inline-block",
     marginTop: 0.5,
   },
   candidateEmail: {
     color: "text.secondary",
-    mb: { xs: 1, sm: 1.5, md: 1.5, lg: 2 },
-    fontSize: { xs: "0.85rem", sm: "0.875rem", md: "0.875rem", lg: "0.9rem" },
+    mb: { xs: 0.75, sm: 1, md: 1.25 }, // Reduced margins
+    fontSize: { xs: "0.8rem", sm: "0.825rem", md: "0.85rem" }, // Smaller font sizes
     lineHeight: 1.4,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap", // Force single line with ellipsis
+    maxWidth: "100%", // Ensure text doesn't overflow container
   },
   candidatePosition: {
     color: "#64748b",
     fontWeight: 500,
-    mb: { xs: 1.5, sm: 2, md: 2, lg: 2.5 },
-    fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.8rem", lg: "0.85rem" },
+    mb: { xs: 1, sm: 1.25, md: 1.5 }, // Reduced margins
+    fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.8rem" }, // Smaller font sizes
     lineHeight: 1.4,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap", // Force single line with ellipsis
+    maxWidth: "100%", // Ensure text doesn't overflow container
   },
   statusChipContainer: {
     marginTop: "auto", // Push to bottom
@@ -354,37 +267,12 @@ const styles = {
   statusChip: {
     fontWeight: 600,
     borderRadius: "8px",
-    padding: "6px 12px",
+    padding: "4px 8px", // Reduced padding
     height: "auto",
-    minHeight: "28px",
-    fontSize: { xs: "0.75rem", md: "0.8rem" },
+    minHeight: "24px", // Reduced height
+    fontSize: { xs: "0.7rem", md: "0.75rem" }, // Smaller font size
     display: "inline-flex",
   },
-
-  // menuButton: {
-  //   color: "#64748b",
-  //   padding: 0.5,
-  //   position: "absolute", // Position absolutely
-  //   right: -8, // Align to right
-  //   top: -8, // Align to top
-  //   "&:hover": {
-  //     backgroundColor: "rgba(0,0,0,0.04)",
-  //   },
-  //   zIndex: 2, // Ensure it's above other content
-  // },
-  // menuButton: {
-  //   color: "#64748b",
-  //   padding: { xs: 1, sm: 0.5 }, // Larger touch target on mobile
-  //   position: "absolute", // Position absolutely
-  //   right: { xs: -12, sm: -8 }, // More space on mobile
-  //   top: { xs: -12, sm: -8 }, // More space on mobile
-  //   "&:hover": {
-  //     backgroundColor: "rgba(0,0,0,0.04)",
-  //   },
-  //   zIndex: 2, // Ensure it's above other content
-  //   width: { xs: "40px", sm: "32px" }, // Larger clickable area on mobile
-  //   height: { xs: "40px", sm: "32px" }, // Larger clickable area on mobile
-  // },
   menuButton: {
     color: "#64748b",
     padding: 0,
@@ -396,7 +284,7 @@ const styles = {
     minHeight: "36px", // Ensure minimum height
   },
   menuButtonIcon: {
-    fontSize: { xs: "1.3rem", sm: "1.1rem" }, // Larger icon on mobile
+    fontSize: { xs: "1.2rem", sm: "1.1rem" }, // Slightly smaller icon on mobile
     color: "#475569", // Darker color for better visibility
   },
 
@@ -488,6 +376,7 @@ const RecruitmentCandidate = () => {
 
   const [newCandidate, setNewCandidate] = useState({
     name: "",
+
     email: "",
     position: "",
     status: "Not-Hired",
@@ -709,7 +598,7 @@ const RecruitmentCandidate = () => {
               {/* Add button - hidden on xs screens */}
               <Button
                 variant="contained"
-                startIcon={<Add />}
+                // startIcon={<Add />}
                 onClick={() => setCreateDialogOpen(true)}
                 sx={{
                   ...styles.addButton,
@@ -719,6 +608,8 @@ const RecruitmentCandidate = () => {
                 Add Candidate
               </Button>
             </Box>
+
+            {/* Add button - visible on xs screens mobile view */}
             <Box
               sx={{
                 display: { xs: "flex", sm: "none" },
@@ -751,7 +642,7 @@ const RecruitmentCandidate = () => {
 
               <Button
                 variant="contained"
-                startIcon={<Add />}
+                //  startIcon={<Add />}
                 onClick={() => setCreateDialogOpen(true)}
                 sx={{
                   ...styles.addButton,
@@ -792,8 +683,8 @@ const RecruitmentCandidate = () => {
                     item
                     xs={12}
                     sm={view === "grid" ? 6 : 12}
-                    md={view === "grid" ? 6 : 12} // Change from 4 to 6 columns at md breakpoint
-                    lg={view === "grid" ? 4 : 12} // Use 4 columns only at lg and above
+                    md={view === "grid" ? 4 : 12} // Changed back to 4 columns at md breakpoint for better use of space
+                    lg={view === "grid" ? 3 : 12} // Changed to 3 columns at lg breakpoint for better distribution
                     xl={view === "grid" ? 3 : 12}
                     key={candidate._id}
                   >
@@ -843,7 +734,7 @@ const RecruitmentCandidate = () => {
 
                             {/* Employee ID if available */}
                             {candidate.employeeId && (
-                              <Box sx={{ mb: 1.5 }}>
+                              <Box sx={{ mb: 1 }}>
                                 <Typography
                                   component="span"
                                   variant="caption"
@@ -904,16 +795,14 @@ const RecruitmentCandidate = () => {
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
           TransitionComponent={Fade}
-          PaperProps={{ sx: styles.menuPaper }}
         >
           <MenuItem
             onClick={() => {
               setAnchorEl(null);
               setDeleteDialogOpen(true);
             }}
-            sx={styles.menuItem}
           >
-            <Delete sx={{ color: "#ef4444" }} />
+            <Delete sx={{ color: "#ef4444", mr: 1 }} />
             <Typography color="#ef4444">Delete</Typography>
           </MenuItem>
         </Menu>
@@ -965,6 +854,8 @@ const RecruitmentCandidate = () => {
             resetNewCandidate();
           }}
           sx={styles.dialog}
+          maxWidth="sm"
+          fullWidth
         >
           <DialogTitle sx={styles.dialogTitle}>Add New Candidate</DialogTitle>
           <DialogContent sx={styles.dialogContent}>
