@@ -22,7 +22,7 @@ export const createAssetsFromBatch = async (req, res) => {
         name,
         category: category || 'Hardware',
         status: 'Available',
-        batchId
+        batch: batch.batchNumber // Store the batch number, not the ID
       });
       await asset.save();
       assets.push(asset);

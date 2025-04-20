@@ -174,29 +174,38 @@ function AssetBatch() {
 
   const handleCreateAssetsFromBatch = async (batch) => {
     try {
-      const assetNames = [];
-      for (let i = 1; i <= batch.numberOfAssets; i++) {
-        assetNames.push(`${batch.batchNumber}-Asset-${i}`);
+      if (window.confirm(`Are you sure you want to create ${batch.numberOfAssets} assets from batch ${batch.batchNumber}?`)) {
+        setLoading(true);
+        
+        // Generate asset names based on batch number
+        const assetNames = [];
+        for (let i = 1; i <= batch.numberOfAssets; i++) {
+          assetNames.push(`${batch.batchNumber}-Asset-${i}`);
+        }
+        
+        await axios.post(`${API_URL}/api/assets/from-batch`, {
+          batchId: batch._id,
+          assetNames,
+          category: 'Hardware',
+          batch: batch.batchNumber // Make sure to include the batch number
+        });
+        
+        // Notify other components about the update
+        const timestamp = Date.now().toString();
+        localStorage.setItem('assetsUpdated', timestamp);
+        
+        const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
+        window.dispatchEvent(event);
+        
+        setLoading(false);
+        alert(`${batch.numberOfAssets} assets created successfully from batch ${batch.batchNumber}`);
       }
-      await axios.post(`${API_URL}/api/assets/from-batch`, {
-        batchId: batch._id,
-        assetNames,
-        category: 'Hardware'
-      });
-      
-      const timestamp = Date.now().toString();
-      localStorage.setItem('assetsUpdated', timestamp);
-      
-      const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
-      window.dispatchEvent(event);
-      
-      alert(`${batch.numberOfAssets} assets created successfully from batch ${batch.batchNumber}`);
-    } catch (err) {
-      console.error('Error creating assets from batch:', err.message);
+    } catch (error) {
+      console.error('Error creating assets from batch:', error);
       setError('Failed to create assets from batch. Please try again.');
+      setLoading(false);
     }
   };
-
   return (
     <Box
       sx={{
@@ -427,6 +436,7 @@ function AssetBatch() {
                     {batch.numberOfAssets}
                   </Box>
                 </TableCell>
+
                 <TableCell>
                   <Stack direction="row" spacing={1} justifyContent="center">
                     <IconButton 
@@ -455,10 +465,10 @@ function AssetBatch() {
                     >
                       <Delete fontSize="small" />
                     </IconButton>
-
-            
+                   
                   </Stack>
                 </TableCell>
+                
               </StyledTableRow>
             ))}
             {assetBatches.length === 0 && (
@@ -585,6 +595,7 @@ function AssetBatch() {
                 >
                   Cancel
                 </Button>
+             
                 <Button
                   type="submit"
                   sx={{
@@ -601,8 +612,7 @@ function AssetBatch() {
                 >
                   {isEditing ? 'Update' : 'Save'}
                 </Button>
-              </Stack>
-            </Stack>
+              </Stack>            </Stack>
           </form>
         </DialogContent>
       </Dialog>

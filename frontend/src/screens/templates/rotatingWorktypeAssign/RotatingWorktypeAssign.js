@@ -31,10 +31,13 @@ import {
   CircularProgress,
   alpha,
   useTheme,
+  Autocomplete,
+  Tooltip,
 } from "@mui/material";
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
 
 const API_URL = "http://localhost:5000/api/rotating-worktype/shifts";
+const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/registered";
 
 const employees = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
@@ -109,8 +112,15 @@ const RotatingWorktypeAssign = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [worktypeRequests, setWorktypeRequests] = useState([]);
   const [allocatedWorktypes, setAllocatedWorktypes] = useState([]);
+
+  // New state for registered employees
+  const [registeredEmployees, setRegisteredEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+
   const [formData, setFormData] = useState({
     employee: "",
+    employeeCode: "",
     requestWorktype: "",
     requestedDate: "",
     requestedTill: "",
@@ -123,8 +133,49 @@ const RotatingWorktypeAssign = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Add function to fetch registered employees
+  const fetchRegisteredEmployees = async () => {
+    try {
+      setLoadingEmployees(true);
+      const response = await axios.get(EMPLOYEES_API_URL);
+
+      // Format the employee data for the dropdown
+      const formattedEmployees = response.data.map((emp) => ({
+        id: emp.Emp_ID,
+        name: `${emp.personalInfo?.firstName || ""} ${
+          emp.personalInfo?.lastName || ""
+        }`,
+        employeeCode: emp.Emp_ID,
+        department: emp.joiningDetails?.department || "Not Assigned",
+        currentWorktype: emp.joiningDetails?.workType || "Regular",
+        // Add any other relevant fields from the employee data
+      }));
+
+      setRegisteredEmployees(formattedEmployees);
+    } catch (error) {
+      console.error("Error fetching registered employees:", error);
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
+  // Handle employee selection
+  const handleEmployeeSelect = (event, employee) => {
+    setSelectedEmployee(employee);
+    if (employee) {
+      // Auto-fill form data with selected employee information
+      setFormData((prev) => ({
+        ...prev,
+        employee: employee.name,
+        employeeCode: employee.employeeCode,
+        currentWorktype: employee.currentWorktype || "Regular",
+      }));
+    }
+  };
+
   useEffect(() => {
     loadWorktypeRequests();
+    fetchRegisteredEmployees(); // Fetch employees when component mounts
   }, [tabValue]);
 
   const loadWorktypeRequests = async () => {
@@ -291,14 +342,16 @@ const RotatingWorktypeAssign = () => {
 
   const handleCreateWorktype = async () => {
     try {
-      const selectedEmployee = employees.find(
-        (emp) => emp.name === formData.employee
-      );
+      // Use the selected employee data if available, otherwise fall back to the form data
+      const employeeData =
+        selectedEmployee ||
+        employees.find((emp) => emp.name === formData.employee);
+
       const worktypeData = {
         name: formData.employee,
-        employeeCode: selectedEmployee?.employeeCode,
+        employeeCode: employeeData?.employeeCode || formData.employeeCode,
         requestedWorktype: formData.requestWorktype,
-        currentWorktype: "Regular",
+        currentWorktype: employeeData?.currentWorktype || "Regular",
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
         description: formData.description,
@@ -320,6 +373,7 @@ const RotatingWorktypeAssign = () => {
     setEditingWorktype(worktype);
     setFormData({
       employee: worktype.name,
+      employeeCode: worktype.employeeCode,
       requestWorktype: worktype.requestedWorktype,
       requestedDate: new Date(worktype.requestedDate)
         .toISOString()
@@ -334,12 +388,9 @@ const RotatingWorktypeAssign = () => {
 
   const handleSaveEdit = async () => {
     try {
-      const selectedEmployee = employees.find(
-        (emp) => emp.name === formData.employee
-      );
       const updatedData = {
         name: formData.employee,
-        employeeCode: selectedEmployee?.employeeCode,
+        employeeCode: formData.employeeCode,
         requestedWorktype: formData.requestWorktype,
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
@@ -370,13 +421,16 @@ const RotatingWorktypeAssign = () => {
   const resetFormData = () => {
     setFormData({
       employee: "",
+      employeeCode: "",
       requestWorktype: "",
       requestedDate: "",
       requestedTill: "",
       description: "",
     });
     setIsPermanentRequest(false);
+    setSelectedEmployee(null);
   };
+
   return (
     <Box
       sx={{
@@ -396,9 +450,7 @@ const RotatingWorktypeAssign = () => {
             fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
           }}
         >
-          {tabValue === 0
-            ? "Rotating Work Type Requests"
-            : "Allocated Work Types"}
+          {tabValue === 0 ? "Work Type Requests" : "Allocated Work Types"}
         </Typography>
 
         <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
@@ -443,7 +495,7 @@ const RotatingWorktypeAssign = () => {
                 startIcon={<Add />}
                 onClick={() => setCreateDialogOpen(true)}
                 sx={{
-                  height: { xs: "auto", sm: 40 },
+                  height: { xs: "auto", sm: 50 },
                   padding: { xs: "8px 16px", sm: "6px 16px" },
                   width: { xs: "100%", sm: "auto" },
                   background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
@@ -508,66 +560,17 @@ const RotatingWorktypeAssign = () => {
         </Box>
       </Box>
 
-      {/* Actions Menu */}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={() => setAnchorEl(null)}
-        PaperProps={{
-          elevation: 3,
-          sx: {
-            overflow: "visible",
-            filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.15))",
-            mt: 1.5,
-            borderRadius: 2,
-            minWidth: 180,
-            "& .MuiMenuItem-root": {
-              px: 2,
-              py: 1,
-              my: 0.5,
-              borderRadius: 1,
-              mx: 1,
-            },
-          },
-        }}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <MenuItem
-          onClick={handleBulkApprove}
-          sx={{
-            color: theme.palette.success.main,
-            "&:hover": {
-              backgroundColor: alpha(theme.palette.success.main, 0.1),
-            },
-          }}
-        >
-          <Typography variant="body2">Approve Selected</Typography>
-        </MenuItem>
-        <MenuItem
-          onClick={handleBulkReject}
-          sx={{
-            color: theme.palette.error.main,
-            "&:hover": {
-              backgroundColor: alpha(theme.palette.error.main, 0.1),
-            },
-          }}
-        >
-          <Typography variant="body2">Reject Selected</Typography>
-        </MenuItem>
-        <MenuItem
-          onClick={handleBulkDelete}
-          sx={{
-            color: theme.palette.error.dark,
-            "&:hover": {
-              backgroundColor: alpha(theme.palette.error.dark, 0.1),
-            },
-          }}
-        >
-          <Typography variant="body2">Delete Selected</Typography>
-        </MenuItem>
+        <MenuItem onClick={handleBulkApprove}>Approve Selected</MenuItem>
+        <MenuItem onClick={handleBulkReject}>Reject Selected</MenuItem>
+        <MenuItem onClick={handleBulkDeleteClick}>Delete Selected</MenuItem>
       </Menu>
 
+      {/* Status Filter Buttons */}
       <Box
         sx={{
           display: "flex",
@@ -648,14 +651,13 @@ const RotatingWorktypeAssign = () => {
 
       <Divider sx={{ mb: 2 }} />
 
-      {/* Table */}
       <TableContainer
         component={Paper}
         sx={{
           maxHeight: { xs: 350, sm: 400, md: 450 },
           overflowY: "auto",
           overflowX: "auto",
-          mx: { xs: 0, sm: 0 },
+          mx: { xs: 0, sm: 4 },
           borderRadius: 2,
           boxShadow:
             "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
@@ -717,7 +719,7 @@ const RotatingWorktypeAssign = () => {
               <StyledTableCell>Status</StyledTableCell>
               <StyledTableCell>Description</StyledTableCell>
               <StyledTableCell align="center">Confirmation</StyledTableCell>
-              <StyledTableCell align="center">Actions</StyledTableCell>
+              <StyledTableCell align="center">Action</StyledTableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -990,31 +992,36 @@ const RotatingWorktypeAssign = () => {
                   </TableCell>
                 </StyledTableRow>
               ))}
-            {(tabValue === 0 ? worktypeRequests : allocatedWorktypes).length ===
-              0 && (
+
+            {/* Empty state message when no records match filters */}
+            {(tabValue === 0 ? worktypeRequests : allocatedWorktypes).filter(
+              (request) => {
+                const employeeName = request?.name || "";
+                return (
+                  employeeName
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase()) &&
+                  (filterStatus === "all" || request.status === filterStatus)
+                );
+              }
+            ).length === 0 && (
               <TableRow>
                 <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: 1,
+                  <Typography variant="body1" color="text.secondary">
+                    No {tabValue === 0 ? "requests" : "allocations"} found
+                    matching your filters.
+                  </Typography>
+                  <Button
+                    variant="text"
+                    color="primary"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setFilterStatus("all");
                     }}
+                    sx={{ mt: 1 }}
                   >
-                    <Typography variant="h6" color="text.secondary">
-                      No records found
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {searchTerm
-                        ? "Try adjusting your search or filters"
-                        : filterStatus !== "all"
-                        ? `No ${filterStatus.toLowerCase()} requests found`
-                        : tabValue === 0
-                        ? "No worktype requests available"
-                        : "No allocated worktypes available"}
-                    </Typography>
-                  </Box>
+                    Clear filters
+                  </Button>
                 </TableCell>
               </TableRow>
             )}
@@ -1061,7 +1068,7 @@ const RotatingWorktypeAssign = () => {
           <Alert severity="warning" sx={{ mb: 2 }}>
             {deleteType === "bulk"
               ? `Are you sure you want to delete ${selectedAllocations.length} selected ${itemToDelete?.type}?`
-              : "Are you sure you want to delete this worktype request?"}
+              : "Are you sure you want to delete this work type request?"}
           </Alert>
           {itemToDelete && (
             <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
@@ -1082,7 +1089,7 @@ const RotatingWorktypeAssign = () => {
               ) : (
                 <>
                   <Typography variant="body1" fontWeight={600} color="#2c3e50">
-                    Worktype Request Details:
+                    Work Type Request Details:
                   </Typography>
                   <Typography
                     variant="body2"
@@ -1096,7 +1103,7 @@ const RotatingWorktypeAssign = () => {
                   >
                     <strong>Employee:</strong> {itemToDelete.name} (
                     {itemToDelete.employeeCode})<br />
-                    <strong>Requested Worktype:</strong>{" "}
+                    <strong>Requested Work Type:</strong>{" "}
                     {itemToDelete.requestedWorktype}
                     <br />
                     <strong>Date Range:</strong>{" "}
@@ -1166,15 +1173,14 @@ const RotatingWorktypeAssign = () => {
       {/* Create Dialog */}
       <Dialog
         open={createDialogOpen}
-        onClose={() => {
-          setCreateDialogOpen(false);
-          resetFormData();
-        }}
+        onClose={() => setCreateDialogOpen(false)}
+        fullScreen={window.innerWidth < 600} // Full screen on mobile
         PaperProps={{
           sx: {
-            width: { xs: "95%", sm: "600px" },
-            maxWidth: "600px",
-            borderRadius: "20px",
+            width: { xs: "100%", sm: "600px" },
+            maxWidth: "100%",
+            borderRadius: { xs: 0, sm: "20px" },
+            margin: { xs: 0, sm: 2 },
             overflow: "hidden",
           },
         }}
@@ -1188,59 +1194,158 @@ const RotatingWorktypeAssign = () => {
             padding: "24px 32px",
           }}
         >
-          Create {tabValue === 0 ? "Work Type Request" : "Work Type Allocation"}
+          {tabValue === 0
+            ? "Create Work Type Request"
+            : "Create Allocated Work Type"}
         </DialogTitle>
 
-        <DialogContent
-          sx={{
-            padding: "32px",
-            backgroundColor: "#f8fafc",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 3,
-            }}
-          >
-            <TextField
-              select
-              label="Employee"
-              name="employee"
-              value={formData.employee}
-              onChange={handleFormChange}
-              fullWidth
-              required
-              sx={{
-                mt: 2,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1976d2",
-                },
-              }}
-            >
-              {employees.map((emp) => (
-                <MenuItem key={emp.id} value={emp.name}>
-                  {emp.name} ({emp.employeeCode})
-                </MenuItem>
-              ))}
-            </TextField>
+        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* New Autocomplete for selecting registered employees */}
+            <Autocomplete
+              options={registeredEmployees}
+              getOptionLabel={(option) =>
+                `${option.name} (${option.employeeCode})`
+              }
+              value={selectedEmployee}
+              onChange={handleEmployeeSelect}
+              loading={loadingEmployees}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Onboarded Employee"
+                  variant="outlined"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingEmployees ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              )}
+              renderOption={(props, option) => (
+                <li {...props}>
+                  <Box sx={{ display: "flex", flexDirection: "column" }}>
+                    <Typography variant="body1">{option.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.employeeCode} • {option.department}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+            />
+
+            {/* Display selected employee info if available */}
+            {selectedEmployee && (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                }}
+              >
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Selected Employee Details
+                </Typography>
+                <Box
+                  sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+                >
+                  <Typography variant="body2">
+                    <strong>Name:</strong> {selectedEmployee.name}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Employee Code:</strong>{" "}
+                    {selectedEmployee.employeeCode}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Department:</strong> {selectedEmployee.department}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Current Work Type:</strong>{" "}
+                    {selectedEmployee.currentWorktype || "Regular"}
+                  </Typography>
+                </Box>
+              </Paper>
+            )}
+
+            {/* Original employee selection field as fallback */}
+            {!selectedEmployee && (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Typography variant="subtitle2" color="primary.dark">
+                  Or Enter Employee Details Manually:
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 2,
+                  }}
+                >
+                  <TextField
+                    label="Employee Name"
+                    name="employee"
+                    fullWidth
+                    value={formData.employee}
+                    onChange={handleFormChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2",
+                      },
+                    }}
+                  />
+                  <TextField
+                    label="Employee ID"
+                    name="employeeCode"
+                    fullWidth
+                    value={formData.employeeCode || ""}
+                    onChange={handleFormChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2",
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+            )}
 
             <TextField
-              select
-              label="Requested Work Type"
+              label="Request Work Type"
               name="requestWorktype"
               value={formData.requestWorktype}
               onChange={handleFormChange}
               fullWidth
-              required
+              select
               sx={{
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "white",
@@ -1253,8 +1358,9 @@ const RotatingWorktypeAssign = () => {
             >
               <MenuItem value="Full Time">Full Time</MenuItem>
               <MenuItem value="Part Time">Part Time</MenuItem>
+              <MenuItem value="Contract">Contract</MenuItem>
+              <MenuItem value="Freelance">Freelance</MenuItem>
               <MenuItem value="Remote">Remote</MenuItem>
-              <MenuItem value="Hybrid">Hybrid</MenuItem>
             </TextField>
 
             <TextField
@@ -1264,7 +1370,6 @@ const RotatingWorktypeAssign = () => {
               value={formData.requestedDate}
               onChange={handleFormChange}
               fullWidth
-              required
               InputLabelProps={{ shrink: true }}
               sx={{
                 "& .MuiOutlinedInput-root": {
@@ -1284,7 +1389,6 @@ const RotatingWorktypeAssign = () => {
               value={formData.requestedTill}
               onChange={handleFormChange}
               fullWidth
-              required
               InputLabelProps={{ shrink: true }}
               sx={{
                 "& .MuiOutlinedInput-root": {
@@ -1304,7 +1408,7 @@ const RotatingWorktypeAssign = () => {
               onChange={handleFormChange}
               fullWidth
               multiline
-              rows={3}
+              rows={4}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "white",
@@ -1316,17 +1420,17 @@ const RotatingWorktypeAssign = () => {
               }}
             />
 
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={isPermanentRequest}
-                  onChange={(e) => setIsPermanentRequest(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label="Permanent Request"
-              sx={{ mt: 1 }}
-            />
+            {tabValue === 0 && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isPermanentRequest}
+                    onChange={(e) => setIsPermanentRequest(e.target.checked)}
+                  />
+                }
+                label="Permanent Request"
+              />
+            )}
           </Box>
         </DialogContent>
 
@@ -1361,8 +1465,13 @@ const RotatingWorktypeAssign = () => {
           </Button>
 
           <Button
-            onClick={handleCreateWorktype}
             variant="contained"
+            onClick={handleCreateWorktype}
+            disabled={
+              (!selectedEmployee && !formData.employee) ||
+              !formData.requestWorktype ||
+              !formData.requestedDate
+            }
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
               fontSize: "0.95rem",
@@ -1370,30 +1479,28 @@ const RotatingWorktypeAssign = () => {
               padding: "8px 32px",
               borderRadius: "10px",
               boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              color: "white",
               "&:hover": {
                 background: "linear-gradient(45deg, #1565c0, #42a5f5)",
               },
             }}
           >
-            Create
+            Save
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit Dialog */}
-
       <Dialog
         open={editDialogOpen}
-        onClose={() => {
-          setEditDialogOpen(false);
-          setEditingWorktype(null);
-          resetFormData();
-        }}
+        onClose={() => setEditDialogOpen(false)}
+        fullScreen={window.innerWidth < 600} // Full screen on mobile
         PaperProps={{
           sx: {
-            width: { xs: "95%", sm: "600px" },
-            maxWidth: "600px",
-            borderRadius: "20px",
+            width: { xs: "100%", sm: "600px" },
+            maxWidth: "100%",
+            borderRadius: { xs: 0, sm: "20px" },
+            margin: { xs: 0, sm: 2 },
             overflow: "hidden",
           },
         }}
@@ -1407,59 +1514,158 @@ const RotatingWorktypeAssign = () => {
             padding: "24px 32px",
           }}
         >
-          Edit {tabValue === 0 ? "Work Type Request" : "Work Type Allocation"}
+          {tabValue === 0
+            ? "Edit Work Type Request"
+            : "Edit Allocated Work Type"}
         </DialogTitle>
 
-        <DialogContent
-          sx={{
-            padding: "32px",
-            backgroundColor: "#f8fafc",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 3,
-            }}
-          >
-            <TextField
-              select
-              label="Employee"
-              name="employee"
-              value={formData.employee}
-              onChange={handleFormChange}
-              fullWidth
-              required
-              sx={{
-                mt: 2,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1976d2",
-                },
-              }}
-            >
-              {employees.map((emp) => (
-                <MenuItem key={emp.id} value={emp.name}>
-                  {emp.name} ({emp.employeeCode})
-                </MenuItem>
-              ))}
-            </TextField>
+        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* New Autocomplete for selecting registered employees */}
+            <Autocomplete
+              options={registeredEmployees}
+              getOptionLabel={(option) =>
+                `${option.name} (${option.employeeCode})`
+              }
+              value={selectedEmployee}
+              onChange={handleEmployeeSelect}
+              loading={loadingEmployees}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Onboarded Employee"
+                  variant="outlined"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingEmployees ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              )}
+              renderOption={(props, option) => (
+                <li {...props}>
+                  <Box sx={{ display: "flex", flexDirection: "column" }}>
+                    <Typography variant="body1">{option.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.employeeCode} • {option.department}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+            />
+
+            {/* Display selected employee info if available */}
+            {selectedEmployee && (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                }}
+              >
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Selected Employee Details
+                </Typography>
+                <Box
+                  sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+                >
+                  <Typography variant="body2">
+                    <strong>Name:</strong> {selectedEmployee.name}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Employee Code:</strong>{" "}
+                    {selectedEmployee.employeeCode}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Department:</strong> {selectedEmployee.department}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Current Work Type:</strong>{" "}
+                    {selectedEmployee.currentWorktype || "Regular"}
+                  </Typography>
+                </Box>
+              </Paper>
+            )}
+
+            {/* Original employee selection field as fallback */}
+            {!selectedEmployee && (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Typography variant="subtitle2" color="primary.dark">
+                  Or Enter Employee Details Manually:
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 2,
+                  }}
+                >
+                  <TextField
+                    label="Employee Name"
+                    name="employee"
+                    fullWidth
+                    value={formData.employee}
+                    onChange={handleFormChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2",
+                      },
+                    }}
+                  />
+                  <TextField
+                    label="Employee ID"
+                    name="employeeCode"
+                    fullWidth
+                    value={formData.employeeCode || ""}
+                    onChange={handleFormChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2",
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+            )}
 
             <TextField
-              select
-              label="Requested Work Type"
+              label="Request Work Type"
               name="requestWorktype"
               value={formData.requestWorktype}
               onChange={handleFormChange}
               fullWidth
-              required
+              select
               sx={{
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "white",
@@ -1472,8 +1678,9 @@ const RotatingWorktypeAssign = () => {
             >
               <MenuItem value="Full Time">Full Time</MenuItem>
               <MenuItem value="Part Time">Part Time</MenuItem>
+              <MenuItem value="Contract">Contract</MenuItem>
+              <MenuItem value="Freelance">Freelance</MenuItem>
               <MenuItem value="Remote">Remote</MenuItem>
-              <MenuItem value="Hybrid">Hybrid</MenuItem>
             </TextField>
 
             <TextField
@@ -1483,7 +1690,6 @@ const RotatingWorktypeAssign = () => {
               value={formData.requestedDate}
               onChange={handleFormChange}
               fullWidth
-              required
               InputLabelProps={{ shrink: true }}
               sx={{
                 "& .MuiOutlinedInput-root": {
@@ -1503,7 +1709,6 @@ const RotatingWorktypeAssign = () => {
               value={formData.requestedTill}
               onChange={handleFormChange}
               fullWidth
-              required
               InputLabelProps={{ shrink: true }}
               sx={{
                 "& .MuiOutlinedInput-root": {
@@ -1523,7 +1728,7 @@ const RotatingWorktypeAssign = () => {
               onChange={handleFormChange}
               fullWidth
               multiline
-              rows={3}
+              rows={4}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "white",
@@ -1548,7 +1753,6 @@ const RotatingWorktypeAssign = () => {
           <Button
             onClick={() => {
               setEditDialogOpen(false);
-              setEditingWorktype(null);
               resetFormData();
             }}
             sx={{
@@ -1571,6 +1775,11 @@ const RotatingWorktypeAssign = () => {
           <Button
             onClick={handleSaveEdit}
             variant="contained"
+            disabled={
+              (!selectedEmployee && !formData.employee) ||
+              !formData.requestWorktype ||
+              !formData.requestedDate
+            }
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
               fontSize: "0.95rem",

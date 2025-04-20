@@ -167,20 +167,20 @@ const fetchBatches = async () => {
 
     useEffect(() => {
       fetchAssets();
-      fetchBatches(); // Fetch batches when component mounts
-    
-      // Listen for asset updates from AssetView
+      fetchBatches();
+      
+      // Listen for asset updates from AssetView or other components
       const handleAssetsUpdated = () => {
         console.log('Assets updated event received, refreshing assets list');
         fetchAssets();
       };
-    
+      
       // Listen for batch updates from AssetBatch
       const handleBatchesUpdated = () => {
         console.log('Batches updated event received, refreshing batches list');
         fetchBatches();
       };
-    
+      
       window.addEventListener('assetsUpdated', handleAssetsUpdated);
       window.addEventListener('batchesUpdated', handleBatchesUpdated);
       window.addEventListener('storage', (e) => {
@@ -191,13 +191,12 @@ const fetchBatches = async () => {
           fetchBatches();
         }
       });
-    
+      
       return () => {
         window.removeEventListener('assetsUpdated', handleAssetsUpdated);
         window.removeEventListener('batchesUpdated', handleBatchesUpdated);
       };
-    }, []);   
-    const handleDelete = async (id) => {
+    }, []);    const handleDelete = async (id) => {
       if (window.confirm('Are you sure you want to delete this asset?')) {
         try {
           setLoading(true);
@@ -766,7 +765,8 @@ const fetchBatches = async () => {
                       No Batch
                     </Typography>
                   )}
-                </TableCell>                <TableCell>
+                </TableCell>
+                              <TableCell>
                   <Typography variant="body2" sx={{ color: "#2563eb" }}>
                     {toSentenceCase(asset.currentEmployee) || 'None'}
                   </Typography>
@@ -943,28 +943,29 @@ const fetchBatches = async () => {
                 </Select>
               </FormControl>
               <FormControl 
-                fullWidth 
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    backgroundColor: "white", 
-                    borderRadius: '8px' 
-                  } 
-                }}
-              >
-                <InputLabel>Batch</InputLabel>
-                <Select
-                  value={newAssetData.batch || ''}
-                  onChange={(e) => setNewAssetData({ ...newAssetData, batch: e.target.value })}
-                  label="Batch"
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {batches.map((batch) => (
-                    <MenuItem key={batch._id} value={batch.batchNumber}>
-                      {batch.batchNumber} - {batch.description}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+  fullWidth 
+  sx={{ 
+    '& .MuiOutlinedInput-root': { 
+      backgroundColor: "white", 
+      borderRadius: '8px' 
+    } 
+  }}
+>
+  <InputLabel>Batch</InputLabel>
+  <Select
+    value={newAssetData.batch || ''}
+    onChange={(e) => setNewAssetData({ ...newAssetData, batch: e.target.value })}
+    label="Batch"
+  >
+    <MenuItem value="">None</MenuItem>
+    {batches.map((batch) => (
+      <MenuItem key={batch._id} value={batch.batchNumber}>
+        {batch.batchNumber} - {batch.description}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
               
               <FormControl fullWidth>
                 <InputLabel>Status</InputLabel>
@@ -1132,24 +1133,29 @@ const fetchBatches = async () => {
         <DialogContent sx={{ padding: '32px', backgroundColor: "#f8fafc" }}>
           <form onSubmit={handleUpdate}>
             <Stack spacing={3} sx={{mt:2}}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
+              <FormControl 
+                fullWidth 
+                sx={{ 
+                  '& .MuiOutlinedInput-root': { 
+                    backgroundColor: "white", 
+                    borderRadius: '8px' 
+                  } 
+                }}
+              >
+                <InputLabel>Batch</InputLabel>
                 <Select
-                  value={editData.status}
-                  onChange={(e) => setEditData({ ...editData, status: e.target.value })}
-                  required
-                  sx={{ 
-                    borderRadius: '8px',
-                    backgroundColor: "white"
-                  }}
+                  value={editData.batch || ''}
+                  onChange={(e) => setEditData({ ...editData, batch: e.target.value })}
+                  label="Batch"
                 >
-                  <MenuItem value="Available">Available</MenuItem>
-                  <MenuItem value="In Use">In Use</MenuItem>
-                  <MenuItem value="Under Maintenance">Under Maintenance</MenuItem>
-                  <MenuItem value="Returned">Returned</MenuItem>
+                  <MenuItem value="">None</MenuItem>
+                  {batches.map((batch) => (
+                    <MenuItem key={batch._id} value={batch.batchNumber}>
+                      {batch.batchNumber} - {batch.description}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
-
               <TextField
                 label="Current Employee"
                 value={editData.currentEmployee}
