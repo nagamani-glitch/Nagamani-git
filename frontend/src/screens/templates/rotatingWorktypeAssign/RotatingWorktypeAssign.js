@@ -112,12 +112,12 @@ const RotatingWorktypeAssign = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [worktypeRequests, setWorktypeRequests] = useState([]);
   const [allocatedWorktypes, setAllocatedWorktypes] = useState([]);
-  
+
   // New state for registered employees
   const [registeredEmployees, setRegisteredEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     employee: "",
     employeeCode: "",
@@ -873,8 +873,12 @@ const RotatingWorktypeAssign = () => {
                         fontSize: "0.75rem",
                         fontWeight: "medium",
                         backgroundColor:
-                        //: alpha("#ff9800", 0.1),
-                       // color:
+                          request.status === "Approved"
+                            ? alpha("#4caf50", 0.1)
+                            : request.status === "Rejected"
+                            ? alpha("#f44336", 0.1)
+                            : alpha("#ff9800", 0.1),
+                        color:
                           request.status === "Approved"
                             ? "#2e7d32"
                             : request.status === "Rejected"
@@ -919,10 +923,7 @@ const RotatingWorktypeAssign = () => {
                           },
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: "bold" }}
-                        >
+                        <Typography variant="body2" sx={{ fontWeight: "bold" }}>
                           ✓
                         </Typography>
                       </IconButton>
@@ -941,10 +942,7 @@ const RotatingWorktypeAssign = () => {
                           },
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: "bold" }}
-                        >
+                        <Typography variant="body2" sx={{ fontWeight: "bold" }}>
                           ✕
                         </Typography>
                       </IconButton>
@@ -1803,5 +1801,3 @@ const RotatingWorktypeAssign = () => {
 };
 
 export default RotatingWorktypeAssign;
-        
-  

@@ -124,7 +124,7 @@ const WorkTypeRequest = () => {
   const [formData, setFormData] = useState({
     employee: "",
     employeeCode: "",
-    requestShift: "",
+    requestWorktype: "",
     requestedDate: "",
     requestedTill: "",
     description: "",
@@ -217,16 +217,18 @@ const WorkTypeRequest = () => {
     try {
       setLoadingEmployees(true);
       const response = await axios.get(EMPLOYEES_API_URL);
-      
+
       // Format the employee data for the dropdown
       const formattedEmployees = response.data.map((emp) => ({
         id: emp.Emp_ID,
-        name: `${emp.personalInfo?.firstName || ""} ${emp.personalInfo?.lastName || ""}`,
+        name: `${emp.personalInfo?.firstName || ""} ${
+          emp.personalInfo?.lastName || ""
+        }`,
         employeeCode: emp.Emp_ID,
         department: emp.joiningDetails?.department || "Not Assigned",
         currentShift: emp.joiningDetails?.shift || "Regular Shift",
       }));
-      
+
       setRegisteredEmployees(formattedEmployees);
     } catch (error) {
       console.error("Error fetching registered employees:", error);
@@ -333,7 +335,7 @@ const WorkTypeRequest = () => {
     setFormData({
       employee: "",
       employeeCode: "",
-      requestShift: "",
+      requestWorktype: "", 
       requestedDate: "",
       requestedTill: "",
       description: "",
@@ -342,35 +344,66 @@ const WorkTypeRequest = () => {
     setSelectedEmployee(null);
   };
 
-  const handleCreateShift = async () => {
-    try {
-      // Use the selected employee data if available, otherwise use the form data
-      const employeeData = selectedEmployee || {
-        name: formData.employee,
-        employeeCode: formData.employeeCode,
-        currentShift: "Regular Shift"
-      };
-      
-      const requestData = {
-        employee: formData.employee,
-        employeeCode: employeeData.employeeCode,
-        requestedShift: formData.requestShift,
-        currentShift: employeeData.currentShift || "Regular Shift",
-        requestedDate: formData.requestedDate,
-        requestedTill: formData.requestedTill,
-        description: formData.description,
-        isPermanentRequest,
-        status: "Pending",
-      };
+  // const handleCreateShift = async () => {
+  //   try {
+  //     // Use the selected employee data if available, otherwise use the form data
+  //     const employeeData = selectedEmployee || {
+  //       name: formData.employee,
+  //       employeeCode: formData.employeeCode,
+  //       currentShift: "Regular Shift",
+  //     };
 
-      const response = await createWorkTypeRequest(requestData);
-      setShiftRequests((prev) => [...prev, response.data]);
-      setCreateDialogOpen(false);
-      resetFormData();
-    } catch (error) {
-      console.error("Error creating work type request:", error);
-    }
-  };
+  //     const requestData = {
+  //       employee: formData.employee,
+  //       employeeCode: employeeData.employeeCode,
+  //       requestedShift: formData.requestShift,
+  //       currentShift: employeeData.currentShift || "Regular Shift",
+  //       requestedDate: formData.requestedDate,
+  //       requestedTill: formData.requestedTill,
+  //       description: formData.description,
+  //       isPermanentRequest,
+  //       status: "Pending",
+  //     };
+
+  //     const response = await createWorkTypeRequest(requestData);
+  //     setShiftRequests((prev) => [...prev, response.data]);
+  //     setCreateDialogOpen(false);
+  //     resetFormData();
+  //   } catch (error) {
+  //     console.error("Error creating work type request:", error);
+  //   }
+  // };
+
+  // Update the handleCreateShift function
+const handleCreateShift = async () => {
+  try {
+    // Use the selected employee data if available, otherwise use the form data
+    const employeeData = selectedEmployee || {
+      name: formData.employee,
+      employeeCode: formData.employeeCode,
+      currentShift: "Regular Shift",
+    };
+
+    const requestData = {
+      employee: formData.employee,
+      employeeCode: employeeData.employeeCode,
+      requestedShift: formData.requestWorktype,  // Use the correct field name
+      currentShift: employeeData.currentShift || "Regular Shift",
+      requestedDate: formData.requestedDate,
+      requestedTill: formData.requestedTill,
+      description: formData.description,
+      isPermanentRequest,
+      status: "Pending",
+    };
+
+    const response = await createWorkTypeRequest(requestData);
+    setShiftRequests((prev) => [...prev, response.data]);
+    setCreateDialogOpen(false);
+    resetFormData();
+  } catch (error) {
+    console.error("Error creating work type request:", error);
+  }
+};
 
   const handleEdit = (shift) => {
     setEditingShift(shift);
@@ -378,8 +411,12 @@ const WorkTypeRequest = () => {
       employee: shift.employee,
       employeeCode: shift.employeeCode || "",
       requestShift: shift.requestedShift,
-      requestedDate: shift.requestedDate ? new Date(shift.requestedDate).toISOString().split("T")[0] : "",
-      requestedTill: shift.requestedTill ? new Date(shift.requestedTill).toISOString().split("T")[0] : "",
+      requestedDate: shift.requestedDate
+        ? new Date(shift.requestedDate).toISOString().split("T")[0]
+        : "",
+      requestedTill: shift.requestedTill
+        ? new Date(shift.requestedTill).toISOString().split("T")[0]
+        : "",
       description: shift.description || "",
     });
     setEditDialogOpen(true);
@@ -396,7 +433,10 @@ const WorkTypeRequest = () => {
         description: formData.description,
       };
 
-      const response = await updateWorkTypeRequest(editingShift._id, updatedData);
+      const response = await updateWorkTypeRequest(
+        editingShift._id,
+        updatedData
+      );
       setShiftRequests((prevRequests) =>
         prevRequests.map((req) =>
           req._id === editingShift._id ? response.data : req
@@ -714,7 +754,9 @@ const WorkTypeRequest = () => {
                   key={request._id}
                   hover
                   onClick={() => {
-                    const newSelected = selectedAllocations.includes(request._id)
+                    const newSelected = selectedAllocations.includes(
+                      request._id
+                    )
                       ? selectedAllocations.filter((id) => id !== request._id)
                       : [...selectedAllocations, request._id];
                     setSelectedAllocations(newSelected);
@@ -1179,7 +1221,9 @@ const WorkTypeRequest = () => {
             {/* New Autocomplete for selecting registered employees */}
             <Autocomplete
               options={registeredEmployees}
-              getOptionLabel={(option) => `${option.name} (${option.employeeCode})`}
+              getOptionLabel={(option) =>
+                `${option.name} (${option.employeeCode})`
+              }
               value={selectedEmployee}
               onChange={handleEmployeeSelect}
               loading={loadingEmployees}
@@ -1192,7 +1236,9 @@ const WorkTypeRequest = () => {
                     ...params.InputProps,
                     endAdornment: (
                       <>
-                        {loadingEmployees ? <CircularProgress color="inherit" size={20} /> : null}
+                        {loadingEmployees ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
                         {params.InputProps.endAdornment}
                       </>
                     ),
@@ -1210,7 +1256,7 @@ const WorkTypeRequest = () => {
               )}
               renderOption={(props, option) => (
                 <li {...props}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ display: "flex", flexDirection: "column" }}>
                     <Typography variant="body1">{option.name}</Typography>
                     <Typography variant="caption" color="text.secondary">
                       {option.employeeCode} • {option.department}
@@ -1234,18 +1280,22 @@ const WorkTypeRequest = () => {
                 <Typography variant="subtitle2" color="primary" gutterBottom>
                   Selected Employee Details
                 </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Box
+                  sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+                >
                   <Typography variant="body2">
                     <strong>Name:</strong> {selectedEmployee.name}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Employee Code:</strong> {selectedEmployee.employeeCode}
+                    <strong>Employee Code:</strong>{" "}
+                    {selectedEmployee.employeeCode}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Department:</strong> {selectedEmployee.department}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Current Shift:</strong> {selectedEmployee.currentShift || 'Regular Shift'}
+                    <strong>Current Shift:</strong>{" "}
+                    {selectedEmployee.currentShift || "Regular Shift"}
                   </Typography>
                 </Box>
               </Paper>
@@ -1257,7 +1307,13 @@ const WorkTypeRequest = () => {
                 <Typography variant="subtitle2" color="primary.dark">
                   Or Enter Employee Details Manually:
                 </Typography>
-                <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 2,
+                  }}
+                >
                   <TextField
                     label="Employee Name"
                     name="employee"
@@ -1302,24 +1358,17 @@ const WorkTypeRequest = () => {
 
             <TextField
               label="Request Work Type"
-              name="requestShift"
-              value={formData.requestShift}
+              name="requestWorktype"
+              value={formData.requestWorktype}
               onChange={handleFormChange}
               fullWidth
               select
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-              }}
             >
-              <MenuItem value="Morning Shift">Morning Shift</MenuItem>
-              <MenuItem value="Evening Shift">Evening Shift</MenuItem>
-              <MenuItem value="Night Shift">Night Shift</MenuItem>
+              <MenuItem value="Full Time">Full Time</MenuItem>
+              <MenuItem value="Part Time">Part Time</MenuItem>
+              <MenuItem value="Contract">Contract</MenuItem>
+              <MenuItem value="Freelance">Freelance</MenuItem>
+              <MenuItem value="Remote">Remote</MenuItem>
             </TextField>
 
             <TextField
@@ -1426,7 +1475,7 @@ const WorkTypeRequest = () => {
             variant="contained"
             disabled={
               (!selectedEmployee && !formData.employee) ||
-              !formData.requestShift ||
+              !formData.requestWorktype ||
               !formData.requestedDate
             }
             sx={{
@@ -1474,7 +1523,13 @@ const WorkTypeRequest = () => {
 
         <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: 2,
+              }}
+            >
               <TextField
                 label="Employee Name"
                 name="employee"
@@ -1652,7 +1707,3 @@ const WorkTypeRequest = () => {
 };
 
 export default WorkTypeRequest;
-
-
-                        
-
