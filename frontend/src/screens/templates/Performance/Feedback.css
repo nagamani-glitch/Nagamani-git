@@ -688,3 +688,16 @@ a:focus {
   }
 }
 
+.mobile-menu-button {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-button {
+    display: block;
+  }
+  
+  .desktop-tabs {
+    display: none;
+  }
+}
