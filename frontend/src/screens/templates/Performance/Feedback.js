@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { styled } from "@mui/material/styles";
+
 import CreateFeedback from "./CreateFeedback";
 import {
   Box,
@@ -133,6 +135,28 @@ const Feedback = () => {
     anonymousFeedback: ["Not Started", "In Progress", "Completed", "Pending"],
   });
 
+
+
+  const StyledPaper = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(3),
+    marginBottom: theme.spacing(3),
+    borderRadius: theme.spacing(1),
+    boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+    [theme.breakpoints.down("sm")]: {
+      padding: theme.spacing(2),
+    },
+  }));
+  
+  const SearchTextField = styled(TextField)(({ theme }) => ({
+    "& .MuiOutlinedInput-root": {
+      borderRadius: theme.spacing(2),
+      "&:hover fieldset": {
+        borderColor: theme.palette.primary.main,
+      },
+    },
+  }));
+
+  
   // Filter handlers
   const handleFilterClick = (event) => {
     setFilterAnchorEl(event.currentTarget);
@@ -262,32 +286,7 @@ const Feedback = () => {
     setIsCreateModalOpen(true);
   };
 
-  // // Add these functions to your component
-  // const handleDeleteClick = (feedback) => {
-  //   console.log("Feedback object:", feedback); // Debug log
-  //   setItemToDelete(feedback);
-  //   setDeleteDialogOpen(true);
-  // };
 
-  // const handleConfirmDelete = async () => {
-  //   try {
-  //     setLoading(true);
-  //     await axios.delete(`http://localhost:5000/api/feedback/${itemToDelete._id || itemToDelete.id}`);
-  //     await fetchFeedbacks();
-  //     setDeleteDialogOpen(false);
-  //     setItemToDelete(null);
-  //   } catch (error) {
-  //     console.error("Error deleting feedback:", error);
-  //     setError("Failed to delete feedback");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // const handleCloseDeleteDialog = () => {
-  //   setDeleteDialogOpen(false);
-  //   setItemToDelete(null);
-  // };
   // Add these functions to your component
   const handleDeleteClick = (feedback) => {
     console.log("Feedback object:", feedback); // Debug log
@@ -778,6 +777,7 @@ const Feedback = () => {
             {new Date(item.dueDate).toLocaleDateString()}
           </Typography>
         </Box>
+        
       </CardContent>
     </Card>
   );
@@ -793,6 +793,8 @@ const Feedback = () => {
           sx: { width: "80%", maxWidth: "300px" },
         }}
       >
+
+
         <Box sx={{ p: 3 }}>
           <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
             Feedback Menu
@@ -1024,7 +1026,13 @@ const Feedback = () => {
             >
               Feedbacks
             </Typography>
+
+
           </Box>
+
+
+
+
 
           <Stack
             direction={{ xs: "column", sm: "row" }}
@@ -1216,11 +1224,158 @@ const Feedback = () => {
         anchorOrigin={{
           vertical: "bottom",
           horizontal: "right",
+        }}// Replace the existing Box component at the beginning of your return statement with this:
+<Box
+  sx={{
+    p: { xs: 2, sm: 3, md: 4 },
+    backgroundColor: "#f5f5f5",
+    minHeight: "100vh",
+  }}
+>
+  <Box>
+    <Typography
+      variant="h4"
+      sx={{
+        mb: { xs: 2, sm: 3, md: 4 },
+        color: theme.palette.primary.main,
+        fontWeight: 600,
+        letterSpacing: 0.5,
+        fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+      }}
+    >
+      {activeTab === "selfFeedback" 
+        ? "Self Feedback" 
+        : activeTab === "requestedFeedback" 
+          ? "Requested Feedback" 
+          : activeTab === "feedbackToReview" 
+            ? "Feedback to Review" 
+            : "Anonymous Feedback"}
+    </Typography>
+
+    <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+      <Box
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row" }}
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        gap={2}
+        sx={{
+          width: "100%",
+          justifyContent: "space-between",
         }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
+      >
+        <TextField
+          placeholder="Search"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          size="small"
+          sx={{
+            width: { xs: "100%", sm: "300px" },
+            marginRight: { xs: 0, sm: "auto" },
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "#f8fafc",
+              borderRadius: "8px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <Search sx={{ color: "action.active", mr: 1 }} />
+            ),
+          }}
+        />
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: 1, sm: 1 },
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleFilterClick}
+            startIcon={<FilterList />}
+            sx={{
+              height: { xs: "auto", sm: 40 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              borderColor: "#1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                borderColor: "#1565c0",
+                backgroundColor: "#e3f2fd",
+              },
+            }}
+          >
+            Filter
+          </Button>
+
+          <Button
+            onClick={fetchAnalytics}
+            startIcon={<BarChartIcon />}
+            sx={{
+              height: { xs: "auto", sm: 40 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              borderColor: "#1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                borderColor: "#1565c0",
+                backgroundColor: "#e3f2fd",
+              },
+            }}
+            variant="outlined"
+          >
+            Analytics
+          </Button>
+
+          <Button
+            onClick={(e) => setExportOptions(e.currentTarget)}
+            startIcon={<GetAppIcon />}
+            sx={{
+              height: { xs: "auto", sm: 40 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              borderColor: "#1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                borderColor: "#1565c0",
+                backgroundColor: "#e3f2fd",
+              },
+            }}
+            variant="outlined"
+          >
+            Export
+          </Button>
+
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            startIcon={<Add />}
+            sx={{
+              height: { xs: "auto", sm: 40 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+              color: "white",
+              "&:hover": {
+                background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+              },
+            }}
+            variant="contained"
+          >
+            Create Feedback
+          </Button>
+        </Box>
+      </Box>
+    </StyledPaper>
+  </Box>
+  transformOrigin={{
+    vertical: "top",
+    horizontal: "right",
+  }}
         PaperProps={{
           sx: {
             width: { xs: "95%", sm: "400px" },
