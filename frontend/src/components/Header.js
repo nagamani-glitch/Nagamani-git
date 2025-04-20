@@ -467,7 +467,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation , Link} from "react-router-dom";
 import {
   FaBars,
   FaBell,
@@ -820,9 +820,12 @@ const Header = () => {
                       <div className="dropdown-header d-flex align-items-center px-3 py-2">
                         <strong>{employeeId}</strong>
                       </div>
-                      <NavDropdown.Item onClick={() => handleDropdownItemClick(() => navigate("/profile"))}>
+                      <NavDropdown.Item as={Link} to="/profile">
                         My Profile
                       </NavDropdown.Item>
+                      {/* <NavDropdown.Item onClick={() => handleDropdownItemClick(() => navigate("/profile"))}>
+                        My Profile
+                      </NavDropdown.Item> */}
                       <NavDropdown.Item onClick={() => handleDropdownItemClick(() => navigate("/reset-password"))}>
                         Change Password
                       </NavDropdown.Item>

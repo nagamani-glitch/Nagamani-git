@@ -72,7 +72,7 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} style={{ maxWidth: '100%', overflowX: 'auto' }} >
       <Typography variant="h5" gutterBottom>
         FORM-5: EMPLOYEE FAMILY INFORMATION
       </Typography>
@@ -95,7 +95,7 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
             <TableBody>
               {formik.values.familyDetails.map((member, index) => (
                 <TableRow key={index}>
-                  <TableCell>
+  <TableCell style={{ padding: '8px 4px' }}>
   <TextField
     variant="outlined"
     size="small"
@@ -119,7 +119,7 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
   />
 </TableCell>
 
-                  <TableCell>
+                  <TableCell style={{ padding: '8px 4px' }}>
   <Select
     variant="outlined"
     size="small"
@@ -141,7 +141,7 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
   </Select>
 </TableCell>
 
-                  <TableCell>
+                  <TableCell style={{ padding: '8px 4px' }}>
                     <TextField
                       variant="outlined"
                       size="small"
@@ -154,7 +154,7 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
                       sx={formFieldStyles}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell style={{ padding: '8px 4px' }}>
   <FormControl sx={formFieldStyles}>
     <RadioGroup
       row
@@ -168,7 +168,7 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
   </FormControl>
 </TableCell>
 
-<TableCell>
+<TableCell style={{ padding: '8px 4px' }}>
   <Select 
     name="employed" 
     value={member.employed} 
@@ -181,7 +181,7 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
   </Select>
 </TableCell>
 
-<TableCell>
+<TableCell style={{ padding: '8px 4px' }}>
   <FormControl sx={formFieldStyles}>
     <RadioGroup
       row
@@ -202,7 +202,7 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
 
 {member.sameCompany ? (
   <>
-    <TableCell>
+    <TableCell style={{ padding: '8px 4px' }}>
       <TextField 
         variant="outlined" 
         size="small" 
@@ -212,7 +212,7 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
         sx={formFieldStyles}
       />
     </TableCell>
-    <TableCell>
+    <TableCell style={{ padding: '8px 4px' }}>
       <TextField 
         variant="outlined" 
         size="small" 
@@ -225,13 +225,13 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
   </>
 ) : (
   <>
-    <TableCell>-</TableCell>
-    <TableCell>-</TableCell>
+    <TableCell style={{ padding: '8px 4px' }}>-</TableCell>
+    <TableCell style={{ padding: '8px 4px' }}>-</TableCell>
   </>
 )}
 
 
-                  <TableCell>
+                  <TableCell style={{ padding: '8px 4px' }}>
                     <Button variant="contained" color="error" onClick={() => removeFamilyMember(index)}>Remove</Button>
                   </TableCell>
                 </TableRow>

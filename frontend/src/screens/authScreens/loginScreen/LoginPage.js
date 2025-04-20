@@ -47,6 +47,11 @@ const LoginPage = () => {
       );
 
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('userId', response.data.user.userId);
+      console.log('Token stored in localStorage:', response.data.token);
+      console.log('UserId stored in localStorage:', response.data.user.userId);
+
+      
       navigate('/Dashboards');
     } catch (error) {
       setError(error.response?.data?.message || 'Login failed. Please try again.');

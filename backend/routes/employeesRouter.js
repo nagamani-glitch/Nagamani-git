@@ -1,13 +1,20 @@
 
+
 import express from 'express';
 import Employee from '../models/employeeRegisterModel.js';
 import uploads from '../config/multerConfig.js';
 
 const router = express.Router();
 
+// Update the personal-info route handler to include userId validation
+
 router.post('/personal-info', uploads.single('employeeImage'), async (req, res) => {
   try {
-    const { personalInfo } = JSON.parse(req.body.formData);
+    // Make sure we're properly parsing the formData
+    const formData = JSON.parse(req.body.formData);
+    const { personalInfo, userId } = formData;
+    
+    console.log('Received userId:', userId); // Add this for debugging
     
     // Validate required fields
     if (!personalInfo.firstName || !personalInfo.lastName) {
@@ -17,19 +24,40 @@ router.post('/personal-info', uploads.single('employeeImage'), async (req, res) 
       });
     }
     
+    // Validate userId is provided
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User ID is required'
+      });
+    }
+    
     // Clean up empty fields to avoid unique constraint issues
     const cleanPersonalInfo = { ...personalInfo };
     if (!cleanPersonalInfo.aadharNumber) delete cleanPersonalInfo.aadharNumber;
     if (!cleanPersonalInfo.panNumber) delete cleanPersonalInfo.panNumber;
     if (!cleanPersonalInfo.email) delete cleanPersonalInfo.email;
     
-    // Create a new employee instance
-    const employee = new Employee({
-      personalInfo: {
+    // Check if employee with this userId already exists
+    let employee = await Employee.findOne({ userId });
+    
+    if (employee) {
+      // Update existing employee's personal info
+      employee.personalInfo = {
+        ...employee.personalInfo,
         ...cleanPersonalInfo,
-        employeeImage: req.file ? `/uploads/${req.file.filename}` : null
-      }
-    });
+        employeeImage: req.file ? `/uploads/${req.file.filename}` : employee.personalInfo.employeeImage
+      };
+    } else {
+      // Create a new employee instance
+      employee = new Employee({
+        userId, // Include the userId
+        personalInfo: {
+          ...cleanPersonalInfo,
+          employeeImage: req.file ? `/uploads/${req.file.filename}` : null
+        }
+      });
+    }
     
     // Generate an employee ID if not already set
     if (!employee.Emp_ID) {
@@ -373,6 +401,83 @@ router.put('/bank-info/:employeeId', async (req, res) => {
     res.status(500).json({ message: 'Error updating bank info' });
   }
 });
+
+router.put('/work-info/:employeeId', async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const { shiftType, workType } = req.body;
+    
+    console.log(`Updating work info for employee ${employeeId} with shiftType: ${shiftType}, workType: ${workType}`);
+    
+    // Use findOneAndUpdate with specific update operators
+    const result = await Employee.findOneAndUpdate(
+      { Emp_ID: employeeId },
+      { 
+        $set: { 
+          'joiningDetails.shiftType': shiftType,
+          'joiningDetails.workType': workType
+        }
+      },
+      { 
+        new: true,
+        runValidators: true,
+        context: 'query' // This ensures validation only runs on the updated fields
+      }
+    );
+    
+    if (!result) {
+      console.log(`Employee with ID ${employeeId} not found`);
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found'
+      });
+    }
+    
+    console.log(`Successfully updated work info for employee ${employeeId}`);
+    
+    res.json({
+      success: true,
+      message: 'Work information updated successfully',
+      data: result.joiningDetails
+    });
+  } catch (error) {
+    console.error('Error updating work information:', error);
+    res.status(500).json({
+      success: false,
+      message: `Server error: ${error.message}`
+    });
+  }
+});
+
+// Get employee profile by userId
+router.get('/by-user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Find employee record by userId
+    const employee = await Employee.findOne({ userId });
+    
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee profile not found for this user ID'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: employee
+    });
+  } catch (error) {
+    console.error('Error fetching employee by userId:', error);
+    res.status(500).json({
+      success: false,
+      message: `Server error: ${error.message}`
+    });
+  }
+});
+
+
 
 router.get('/report', async (req, res) => {
   try {

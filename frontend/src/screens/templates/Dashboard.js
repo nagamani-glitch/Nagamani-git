@@ -95,6 +95,10 @@ function Dashboard() {
           />
 
           {/* <Route path="/profile/:Id" element={<ProfilePage />} /> */}
+         
+          <Route path="/profile/:userId" element={<ProfilePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+
           <Route path="/employees" element={<EmployeeListing onNavigate={handleNavigation} />} />
           {/* <Route path="/document-request" element={<DocumentRequestPage />} /> */}
           <Route path="/work-type-request" element={<WorkTypeRequest />} />

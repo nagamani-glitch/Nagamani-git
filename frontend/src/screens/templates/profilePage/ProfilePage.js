@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Container, Row, Col, Card, ListGroup, Form, Button, Tab, Nav, Table, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -24,6 +24,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const ProfilePage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [tabKey, setTabKey] = useState('about');
   const [subTabKey, setSubTabKey] = useState('workInfo');
@@ -46,18 +47,145 @@ const ProfilePage = () => {
     status: ''
   });
 
+  const [editWorkInfoMode, setEditWorkInfoMode] = useState(false);
+
+// Add this function to handle work info updates
+const updateWorkInfo = async () => {
+  console.log('Updating work info for employee ID:', id);
+  try {
+    // Validate work info before submitting
+    if (editWorkInfoMode) {
+      // Create the data object with the values from your form
+      const workInfoData = {
+        shiftType: workInfo.shiftType,
+        workType: workInfo.workType
+      };
+      
+      console.log('Sending work info update:', workInfoData, 'to employee ID:', id);
+      
+      const response = await axios.put(
+        `http://localhost:5000/api/employees/work-info/${id}`,
+        workInfoData,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.status === 200) {
+        toast.success('Work information updated successfully');
+        setWorkInfo(response.data.data);
+        setEditWorkInfoMode(false);
+        
+        // Update the personalInfo state to reflect changes
+        setPersonalInfo(prev => ({
+          ...prev,
+          joiningDetails: {
+            ...prev.joiningDetails,
+            shiftType: workInfo.shiftType,
+            workType: workInfo.workType
+          }
+        }));
+      } else {
+        toast.error('Failed to update work information');
+      }
+    }
+  } catch (error) {
+    console.error('Error updating work info:', error);
+    
+    // Add more detailed error logging
+    if (error.response) {
+      console.error('Server error details:', error.response.data);
+      console.error('Status code:', error.response.status);
+    }
+    
+    toast.error('Error updating work information: ' + (error.response?.data?.message || error.message));
+  }
+};
+
+
+
   // Update the fetchProfileData function in ProfilePage.js
-const fetchProfileData = useCallback(async () => {
-  if (!id) return;
-  
+  const fetchProfileData = useCallback(async () => {
+    if (!id) return;
+    
+    setLoading(true);
+    try {
+      // Use the get-employee endpoint from employeesRouter.js
+      const response = await axios.get(`http://localhost:5000/api/employees/get-employee/${id}`);
+      
+      if (response.data.success) {
+        const employeeData = response.data.data;
+
+        setEmployeeId(employeeData.Emp_ID);
+        
+        // Set personal info from the employee data
+        setPersonalInfo({
+          employeeId: employeeData.Emp_ID,
+          name: `${employeeData.personalInfo?.firstName || ''} ${employeeData.personalInfo?.lastName || ''}`,
+          email: employeeData.personalInfo?.email || '',
+          phone: employeeData.personalInfo?.mobileNumber || '',
+          department: employeeData.joiningDetails?.department || '',
+          designation: employeeData.joiningDetails?.initialDesignation || '',
+          bloodGroup: employeeData.personalInfo?.bloodGroup || '',
+          gender: employeeData.personalInfo?.gender || '',
+          maritalStatus: employeeData.personalInfo?.maritalStatus || '',
+          panNumber: employeeData.personalInfo?.panNumber || '',
+          aadharNumber: employeeData.personalInfo?.aadharNumber || '',
+          // Include all other fields from personalInfo
+          ...employeeData.personalInfo,
+          // Include nested objects
+          addressInfo: employeeData.addressDetails || {},
+          joiningDetails: employeeData.joiningDetails || {},
+          educationDetails: employeeData.educationDetails || {},
+          trainingDetails: employeeData.trainingDetails || {},
+          familyDetails: employeeData.familyDetails || [],
+          serviceHistory: employeeData.serviceHistory || [],
+          nominationDetails: employeeData.nominationDetails || []
+        });
+        
+        // Set bank info
+        setBankInfo(employeeData.bankInfo || {});
+        
+        // Set work info
+        setWorkInfo({
+          department: employeeData.joiningDetails?.department || '',
+          designation: employeeData.joiningDetails?.initialDesignation || '',
+          employeeType: employeeData.joiningDetails?.employeeType || '',
+          dateOfJoining: employeeData.joiningDetails?.dateOfJoining || '',
+          dateOfAppointment: employeeData.joiningDetails?.dateOfAppointment || '',
+          modeOfRecruitment: employeeData.joiningDetails?.modeOfRecruitment || '',
+          shiftType: employeeData.joiningDetails?.shiftType || '',
+          workType: employeeData.joiningDetails?.workType || ''
+        });
+
+        // Set profile image
+        const imageUrl = employeeData.personalInfo?.employeeImage 
+          ? `http://localhost:5000${employeeData.personalInfo.employeeImage}` 
+          : null;
+        setProfileImage(imageUrl);
+        
+        console.log('Fetched employee data:', employeeData);
+      } else {
+        console.error('Failed to fetch employee data');
+      }
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  // Add this function to your ProfilePage component
+const fetchProfileByUserId = async (userId) => {
   setLoading(true);
   try {
-    // Use the get-employee endpoint from employeesRouter.js
-    const response = await axios.get(`http://localhost:5000/api/employees/get-employee/${id}`);
+    const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
     
     if (response.data.success) {
       const employeeData = response.data.data;
-
+      
       setEmployeeId(employeeData.Emp_ID);
       
       // Set personal info from the employee data
@@ -66,23 +194,14 @@ const fetchProfileData = useCallback(async () => {
         name: `${employeeData.personalInfo?.firstName || ''} ${employeeData.personalInfo?.lastName || ''}`,
         email: employeeData.personalInfo?.email || '',
         phone: employeeData.personalInfo?.mobileNumber || '',
-        department: employeeData.joiningDetails?.department || '',
-        designation: employeeData.joiningDetails?.initialDesignation || '',
-        bloodGroup: employeeData.personalInfo?.bloodGroup || '',
+        dob: employeeData.personalInfo?.dob ? new Date(employeeData.personalInfo.dob).toLocaleDateString() : '',
         gender: employeeData.personalInfo?.gender || '',
+        bloodGroup: employeeData.personalInfo?.bloodGroup || '',
         maritalStatus: employeeData.personalInfo?.maritalStatus || '',
-        panNumber: employeeData.personalInfo?.panNumber || '',
+        nationality: employeeData.personalInfo?.nationality || '',
         aadharNumber: employeeData.personalInfo?.aadharNumber || '',
-        // Include all other fields from personalInfo
-        ...employeeData.personalInfo,
-        // Include nested objects
-        addressInfo: employeeData.addressDetails || {},
-        joiningDetails: employeeData.joiningDetails || {},
-        educationDetails: employeeData.educationDetails || {},
-        trainingDetails: employeeData.trainingDetails || {},
-        familyDetails: employeeData.familyDetails || [],
-        serviceHistory: employeeData.serviceHistory || [],
-        nominationDetails: employeeData.nominationDetails || []
+        panNumber: employeeData.personalInfo?.panNumber || '',
+        joiningDetails: employeeData.joiningDetails || {}
       });
       
       // Set bank info
@@ -95,29 +214,74 @@ const fetchProfileData = useCallback(async () => {
         employeeType: employeeData.joiningDetails?.employeeType || '',
         dateOfJoining: employeeData.joiningDetails?.dateOfJoining || '',
         dateOfAppointment: employeeData.joiningDetails?.dateOfAppointment || '',
-        modeOfRecruitment: employeeData.joiningDetails?.modeOfRecruitment || ''
+        modeOfRecruitment: employeeData.joiningDetails?.modeOfRecruitment || '',
+        shiftType: employeeData.joiningDetails?.shiftType || '',
+        workType: employeeData.joiningDetails?.workType || ''
       });
-      
+
       // Set profile image
       const imageUrl = employeeData.personalInfo?.employeeImage 
         ? `http://localhost:5000${employeeData.personalInfo.employeeImage}` 
         : null;
       setProfileImage(imageUrl);
       
-      console.log('Fetched employee data:', employeeData);
+      console.log('Fetched employee data by userId:', employeeData);
+      return true;
     } else {
-      console.error('Failed to fetch employee data');
+      console.error('Failed to fetch employee data by userId');
+      return false;
     }
   } catch (error) {
-    console.error('Error fetching profile data:', error);
+    console.error('Error fetching profile data by userId:', error);
+    return false;
   } finally {
     setLoading(false);
   }
-}, [id]);
+};
 
+// New function to fetch current user's profile
+const fetchCurrentUserProfile = async () => {
+  try {
+    // Get the current user's ID from localStorage
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    
+    if (!token || !userId) {
+      toast.error('You must be logged in to view your profile');
+      navigate('/login');
+      return false;
+    }
+    
+    // Fetch the profile using the user ID
+    return await fetchProfileByUserId(userId);
+  } catch (error) {
+    console.error('Error fetching current user profile:', error);
+    toast.error('Failed to load your profile');
+    return false;
+  }
+};
 
+useEffect(() => {
+  const loadProfile = async () => {
+    // If userId is provided in the URL, use it
+    if (id) {
+      // First try to fetch by userId
+      const userIdSuccess = await fetchProfileByUserId(id);
+      
+      // If that fails, try fetching by employee ID (assuming userId might be an employee ID)
+      if (!userIdSuccess) {
+        await fetchProfileData(id);
+      }
+    } else {
+      // If no userId is provided, fetch the current user's profile
+      await fetchCurrentUserProfile();
+    }
+  };
+  
+  loadProfile();
+}, [id, fetchProfileData]);
 
-  const fetchContracts = useCallback(async () => {
+const fetchContracts = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -312,7 +476,8 @@ const updateBankInfo = async () => {
             <Nav.Item>
               <Nav.Link eventKey="about">About</Nav.Link>
             </Nav.Item>
-            <Nav.Item>
+  
+            {/* <Nav.Item>
               <Nav.Link eventKey="workTypeShift">Work Type & Shift</Nav.Link>
             </Nav.Item>
             <Nav.Item>
@@ -347,7 +512,7 @@ const updateBankInfo = async () => {
             </Nav.Item>
             <Nav.Item>
               <Nav.Link eventKey="resignation">Resignation</Nav.Link>
-            </Nav.Item>
+            </Nav.Item> */}
           </Nav>
  
           <Tab.Content>
@@ -513,7 +678,7 @@ const updateBankInfo = async () => {
         value={personalInfo.aadharNumber || ''}
         onChange={(e) => handleInputChange(e, 'personal')}
       />
-    ) : personalInfo.panNumber}
+    ) : personalInfo.aadharNumber}
   </ListGroup.Item>
 
 
@@ -605,40 +770,101 @@ const updateBankInfo = async () => {
   </Row>
 </Tab.Pane>
 
-                          {/* Work Information Tab */}
-                          <Tab.Pane eventKey="workInfo">
+{/* Work Information Tab */}
+<Tab.Pane eventKey="workInfo">
   <Row>
     <Col md={12}>
-      <h6>Work Information</h6>
-      <ListGroup variant="flush">
-        <ListGroup.Item>
-          <strong>Date of Appointment:</strong> {personalInfo.joiningDetails?.dateOfAppointment && 
-            new Date(personalInfo.joiningDetails.dateOfAppointment).toLocaleDateString()}
-        </ListGroup.Item>
-        <ListGroup.Item>
-          <strong>Department:</strong> {personalInfo.joiningDetails?.department}
-        </ListGroup.Item>
-        <ListGroup.Item>
-          <strong>Date of Joining:</strong> {personalInfo.joiningDetails?.dateOfJoining && 
-            new Date(personalInfo.joiningDetails.dateOfJoining).toLocaleDateString()}
-        </ListGroup.Item>
-        <ListGroup.Item>
-          <strong>Initial Designation:</strong> {personalInfo.joiningDetails?.initialDesignation}
-        </ListGroup.Item>
-        <ListGroup.Item>
-          <strong>Mode of Recruitment:</strong> {personalInfo.joiningDetails?.modeOfRecruitment}
-        </ListGroup.Item>
-        <ListGroup.Item>
-          <strong>Employee Type:</strong> {personalInfo.joiningDetails?.employeeType}
-        </ListGroup.Item>
-      </ListGroup>
+      <Card>
+        <Card.Body>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h6>Work Information</h6>
+            <Button variant="primary" size="sm" onClick={() => setEditWorkInfoMode(!editWorkInfoMode)}>
+              {editWorkInfoMode ? 'Save' : 'Edit'}
+            </Button>
+          </div>
+          <ListGroup variant="flush">
+            <ListGroup.Item>
+              <strong>Date of Appointment:</strong> {personalInfo.joiningDetails?.dateOfAppointment && 
+                new Date(personalInfo.joiningDetails.dateOfAppointment).toLocaleDateString()}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Department:</strong> {personalInfo.joiningDetails?.department}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Date of Joining:</strong> {personalInfo.joiningDetails?.dateOfJoining && 
+                new Date(personalInfo.joiningDetails.dateOfJoining).toLocaleDateString()}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Initial Designation:</strong> {personalInfo.joiningDetails?.initialDesignation}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Mode of Recruitment:</strong> {personalInfo.joiningDetails?.modeOfRecruitment}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Employee Type:</strong> {personalInfo.joiningDetails?.employeeType}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Shift Type:</strong>
+              {editWorkInfoMode ? (
+                <Form.Select
+                  name="shiftType"
+                  value={workInfo.shiftType || personalInfo.joiningDetails?.shiftType || 'Day Shift'}
+                  onChange={(e) => handleInputChange(e, 'work')}
+                >
+                  <option value="Morning Shift">Morning Shift</option>
+                  <option value="Day Shift">Day Shift</option>
+                  <option value="Night Shift">Night Shift</option>
+                </Form.Select>
+              ) : (
+                personalInfo.joiningDetails?.shiftType || 'Day Shift'
+              )}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <strong>Work Type:</strong>
+              {editWorkInfoMode ? (
+                <Form.Select
+                  name="workType"
+                  value={workInfo.workType || personalInfo.joiningDetails?.workType || 'Full Time'}
+                  onChange={(e) => handleInputChange(e, 'work')}
+                >
+                  <option value="Full Time">Full Time</option>
+                  <option value="Part Time">Part Time</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Freelance">Freelance</option>
+                  <option value="Remote">Remote</option>
+                  <option value="Work From Home">Work From Home</option>
+                </Form.Select>
+              ) : (
+                personalInfo.joiningDetails?.workType || 'Full Time'
+              )}
+            </ListGroup.Item>
+          </ListGroup>
+          
+          {editWorkInfoMode && (
+            <div className="d-flex justify-content-end mt-3">
+              <Button 
+                variant="secondary" 
+                className="me-2" 
+                onClick={() => setEditWorkInfoMode(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={updateWorkInfo}
+              >
+                Save Changes
+              </Button>
+            </div>
+          )}
+        </Card.Body>
+      </Card>
     </Col>
   </Row>
 </Tab.Pane>
 
-                          {/* Bank Information Tab */}
+{/* Bank Information Tab */}
 
-                          
 <Tab.Pane eventKey="bankInfo">
   <Row>
     <Col md={12}>

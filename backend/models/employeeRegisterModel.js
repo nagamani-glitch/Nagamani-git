@@ -1,6 +1,13 @@
 import mongoose from 'mongoose';
 
 const onboardingFormSchema = new mongoose.Schema({
+
+  userId: {
+    type: String,
+    ref: 'User',
+    required: true,
+    unique: true
+  },
     Emp_ID: { 
     type: String,
     unique: true,
@@ -49,7 +56,20 @@ const onboardingFormSchema = new mongoose.Schema({
     department: String,
     initialDesignation: String,
     modeOfRecruitment: String,
-    employeeType: String
+    employeeType: String,
+    shiftType: String, 
+    workType: String
+    // shiftType: {
+    //   type: String,
+    //   enum: ['Morning Shift', 'Day Shift', 'Night Shift'],
+    //   default: 'Day Shift'
+    // },
+    // workType: {
+    //   type: String,
+    //   enum: ['Full Time', 'Part Time', 'Contract', 'Freelance', 'Remote', 'Work From Home'],
+    //   default: 'Full Time'
+    // }
+  
   },
   educationDetails: {
     basic: [{
