@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { styled } from "@mui/material/styles";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -30,6 +31,8 @@ import {
   alpha,
   CircularProgress,
   Alert,
+  Autocomplete,
+  Tooltip,
 } from "@mui/material";
 
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
@@ -101,6 +104,10 @@ const employees = Array.from({ length: 20 }, (_, i) => ({
   description: "Request for shift adjustment",
   comment: "Needs urgent consideration",
 }));
+
+// Add this constant for the API URL
+const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/registered";
+
 const WorkTypeRequest = () => {
   const theme = useTheme();
   const [tabValue, setTabValue] = useState(0);
@@ -116,11 +123,17 @@ const WorkTypeRequest = () => {
   const [editingShift, setEditingShift] = useState(null);
   const [formData, setFormData] = useState({
     employee: "",
+    employeeCode: "",
     requestShift: "",
     requestedDate: "",
     requestedTill: "",
     description: "",
   });
+
+  // Add these state variables for employee selection
+  const [registeredEmployees, setRegisteredEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
 
   // Add these state variables at the top of the component with other state declarations
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -199,8 +212,46 @@ const WorkTypeRequest = () => {
     console.log(`${severity}: ${message}`);
   };
 
+  // Add function to fetch registered employees
+  const fetchRegisteredEmployees = async () => {
+    try {
+      setLoadingEmployees(true);
+      const response = await axios.get(EMPLOYEES_API_URL);
+      
+      // Format the employee data for the dropdown
+      const formattedEmployees = response.data.map((emp) => ({
+        id: emp.Emp_ID,
+        name: `${emp.personalInfo?.firstName || ""} ${emp.personalInfo?.lastName || ""}`,
+        employeeCode: emp.Emp_ID,
+        department: emp.joiningDetails?.department || "Not Assigned",
+        currentShift: emp.joiningDetails?.shift || "Regular Shift",
+      }));
+      
+      setRegisteredEmployees(formattedEmployees);
+    } catch (error) {
+      console.error("Error fetching registered employees:", error);
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
+  // Handle employee selection
+  const handleEmployeeSelect = (event, employee) => {
+    setSelectedEmployee(employee);
+    if (employee) {
+      // Auto-fill form data with selected employee information
+      setFormData((prev) => ({
+        ...prev,
+        employee: employee.name,
+        employeeCode: employee.employeeCode,
+        currentShift: employee.currentShift || "Regular Shift",
+      }));
+    }
+  };
+
   useEffect(() => {
     loadWorkTypeRequests();
+    fetchRegisteredEmployees(); // Add this line to fetch employees when component mounts
   }, []);
 
   const loadWorkTypeRequests = async () => {
@@ -245,8 +296,6 @@ const WorkTypeRequest = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  
-
   const handleSelectAll = () => {
     const allIds = shiftRequests.map((req) => req._id);
     setSelectedAllocations(allIds);
@@ -280,12 +329,33 @@ const WorkTypeRequest = () => {
     }
   };
 
+  const resetFormData = () => {
+    setFormData({
+      employee: "",
+      employeeCode: "",
+      requestShift: "",
+      requestedDate: "",
+      requestedTill: "",
+      description: "",
+    });
+    setIsPermanentRequest(false);
+    setSelectedEmployee(null);
+  };
+
   const handleCreateShift = async () => {
     try {
+      // Use the selected employee data if available, otherwise use the form data
+      const employeeData = selectedEmployee || {
+        name: formData.employee,
+        employeeCode: formData.employeeCode,
+        currentShift: "Regular Shift"
+      };
+      
       const requestData = {
         employee: formData.employee,
+        employeeCode: employeeData.employeeCode,
         requestedShift: formData.requestShift,
-        currentShift: "Regular Shift",
+        currentShift: employeeData.currentShift || "Regular Shift",
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
         description: formData.description,
@@ -296,13 +366,7 @@ const WorkTypeRequest = () => {
       const response = await createWorkTypeRequest(requestData);
       setShiftRequests((prev) => [...prev, response.data]);
       setCreateDialogOpen(false);
-      setFormData({
-        employee: "",
-        requestShift: "",
-        requestedDate: "",
-        requestedTill: "",
-        description: "",
-      });
+      resetFormData();
     } catch (error) {
       console.error("Error creating work type request:", error);
     }
@@ -312,17 +376,27 @@ const WorkTypeRequest = () => {
     setEditingShift(shift);
     setFormData({
       employee: shift.employee,
+      employeeCode: shift.employeeCode || "",
       requestShift: shift.requestedShift,
-      requestedDate: shift.requestedDate,
-      requestedTill: shift.requestedTill,
-      description: shift.description,
+      requestedDate: shift.requestedDate ? new Date(shift.requestedDate).toISOString().split("T")[0] : "",
+      requestedTill: shift.requestedTill ? new Date(shift.requestedTill).toISOString().split("T")[0] : "",
+      description: shift.description || "",
     });
     setEditDialogOpen(true);
   };
 
   const handleSaveEdit = async () => {
     try {
-      const response = await updateWorkTypeRequest(editingShift._id, formData);
+      const updatedData = {
+        employee: formData.employee,
+        employeeCode: formData.employeeCode,
+        requestedShift: formData.requestShift,
+        requestedDate: formData.requestedDate,
+        requestedTill: formData.requestedTill,
+        description: formData.description,
+      };
+
+      const response = await updateWorkTypeRequest(editingShift._id, updatedData);
       setShiftRequests((prevRequests) =>
         prevRequests.map((req) =>
           req._id === editingShift._id ? response.data : req
@@ -330,11 +404,11 @@ const WorkTypeRequest = () => {
       );
       setEditDialogOpen(false);
       setEditingShift(null);
+      resetFormData();
     } catch (error) {
       console.error("Error updating work type request:", error);
     }
   };
-
 
   return (
     <Box
@@ -395,8 +469,6 @@ const WorkTypeRequest = () => {
                 width: { xs: "100%", sm: "auto" },
               }}
             >
-            
-
               <Button
                 variant="contained"
                 startIcon={<Add />}
@@ -417,56 +489,55 @@ const WorkTypeRequest = () => {
             </Box>
           </Box>
         </StyledPaper>
+      </Box>
 
-       
-
-        {/* Selection Buttons with responsive layout */}
-        <Box
+      {/* Selection Buttons */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 2,
+          mb: 2,
+          mt: { xs: 2, sm: 2 },
+        }}
+      >
+        <Button
+          variant="outlined"
           sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: 2,
-            mb: 2,
-            mt: { xs: 2, sm: 2 },
+            color: "green",
+            borderColor: "green",
+            width: { xs: "100%", sm: "auto" },
           }}
+          onClick={handleSelectAll}
         >
-          <Button
-            variant="outlined"
-            sx={{
-              color: "green",
-              borderColor: "green",
-              width: { xs: "100%", sm: "auto" },
-            }}
-            onClick={handleSelectAll}
-          >
-            Select All Shifts
-          </Button>
-          {showSelectionButtons && (
-            <>
-              <Button
-                variant="outlined"
-                sx={{
-                  color: "grey.500",
-                  borderColor: "grey.500",
-                  width: { xs: "100%", sm: "auto" },
-                }}
-                onClick={handleUnselectAll}
-              >
-                Unselect All
-              </Button>
-              <Button
-                variant="outlined"
-                sx={{
-                  color: "maroon",
-                  borderColor: "maroon",
-                  width: { xs: "100%", sm: "auto" },
-                }}
-              >
-                {selectedAllocations.length} Selected
-              </Button>
-            </>
-          )}
-        </Box>
+          Select All Requests
+        </Button>
+        {showSelectionButtons && (
+          <>
+            <Button
+              variant="outlined"
+              sx={{
+                color: "grey.500",
+                borderColor: "grey.500",
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={handleUnselectAll}
+            >
+              Unselect All
+            </Button>
+            <Button
+              variant="outlined"
+              sx={{
+                color: "maroon",
+                borderColor: "maroon",
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={(e) => setAnchorEl(e.currentTarget)}
+            >
+              {selectedAllocations.length} Selected
+            </Button>
+          </>
+        )}
       </Box>
 
       {/* Actions Menu */}
@@ -488,13 +559,12 @@ const WorkTypeRequest = () => {
         <MenuItem onClick={handleBulkReject} sx={{ py: 1.5 }}>
           Reject Selected
         </MenuItem>
-        
         <MenuItem onClick={handleBulkDeleteClick} sx={{ py: 1.5 }}>
           Delete Selected
         </MenuItem>
       </Menu>
 
-      {/* Status Filter Buttons with responsive layout */}
+      {/* Status Filter Buttons */}
       <Box
         sx={{
           display: "flex",
@@ -545,30 +615,9 @@ const WorkTypeRequest = () => {
         </Button>
       </Box>
 
-      {/* Tabs with responsive styling */}
-      <Tabs
-        value={tabValue}
-        onChange={(e, newValue) => setTabValue(newValue)}
-        textColor="primary"
-        indicatorColor="primary"
-        sx={{
-          mb: 2,
-          "& .MuiTabs-flexContainer": {
-            flexDirection: { xs: "column", sm: "row" },
-          },
-          "& .MuiTab-root": {
-            width: { xs: "100%", sm: "auto" },
-            fontSize: { xs: "0.875rem", sm: "0.875rem", md: "1rem" },
-          },
-        }}
-        variant="scrollable"
-        scrollButtons="auto"
-      >
-        <Tab label="Work Type Requests" />
-      </Tabs>
-
       <Divider sx={{ mb: 2 }} />
 
+      {/* Main Table */}
       <TableContainer
         component={Paper}
         sx={{
@@ -626,10 +675,10 @@ const WorkTypeRequest = () => {
               </StyledTableCell>
               <StyledTableCell sx={{ minWidth: 180 }}>Employee</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 150 }}>
-                Requested Work Type
+                Requested Shift
               </StyledTableCell>
               <StyledTableCell sx={{ minWidth: 150 }}>
-                Current Work Type
+                Current Shift
               </StyledTableCell>
               <StyledTableCell sx={{ minWidth: 130 }}>
                 Requested Date
@@ -651,36 +700,30 @@ const WorkTypeRequest = () => {
           </TableHead>
           <TableBody>
             {shiftRequests
-              .filter((req) => {
-                const employeeName = req?.employee || "";
+              .filter((request) => {
+                const employeeName = request?.employee || "";
                 return (
                   employeeName
                     .toLowerCase()
                     .includes(searchTerm.toLowerCase()) &&
-                  (filterStatus === "all" || req.status === filterStatus)
+                  (filterStatus === "all" || request.status === filterStatus)
                 );
               })
-              .map((emp) => (
+              .map((request) => (
                 <StyledTableRow
-                  key={emp._id}
+                  key={request._id}
                   hover
                   onClick={() => {
-                    if (selectedAllocations.includes(emp._id)) {
-                      setSelectedAllocations((prev) =>
-                        prev.filter((id) => id !== emp._id)
-                      );
-                      if (selectedAllocations.length <= 1) {
-                        setShowSelectionButtons(false);
-                      }
-                    } else {
-                      setSelectedAllocations((prev) => [...prev, emp._id]);
-                      setShowSelectionButtons(true);
-                    }
+                    const newSelected = selectedAllocations.includes(request._id)
+                      ? selectedAllocations.filter((id) => id !== request._id)
+                      : [...selectedAllocations, request._id];
+                    setSelectedAllocations(newSelected);
+                    setShowSelectionButtons(newSelected.length > 0);
                   }}
-                  selected={selectedAllocations.includes(emp._id)}
+                  selected={selectedAllocations.includes(request._id)}
                   sx={{
                     cursor: "pointer",
-                    ...(selectedAllocations.includes(emp._id) && {
+                    ...(selectedAllocations.includes(request._id) && {
                       backgroundColor: alpha(theme.palette.primary.light, 0.15),
                       "&:hover": {
                         backgroundColor: alpha(
@@ -696,9 +739,9 @@ const WorkTypeRequest = () => {
                     sx={{
                       position: "sticky",
                       left: 0,
-                      backgroundColor: selectedAllocations.includes(emp._id)
+                      backgroundColor: selectedAllocations.includes(request._id)
                         ? alpha(theme.palette.primary.light, 0.15)
-                        : emp._id % 2 === 0
+                        : request._id % 2 === 0
                         ? alpha(theme.palette.primary.light, 0.05)
                         : "inherit",
                       "&:hover": {
@@ -710,20 +753,17 @@ const WorkTypeRequest = () => {
                     }}
                   >
                     <Checkbox
-                      checked={selectedAllocations.includes(emp._id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        if (e.target.checked) {
-                          setSelectedAllocations((prev) => [...prev, emp._id]);
-                          setShowSelectionButtons(true);
-                        } else {
-                          setSelectedAllocations((prev) =>
-                            prev.filter((id) => id !== emp._id)
-                          );
-                          if (selectedAllocations.length <= 1) {
-                            setShowSelectionButtons(false);
-                          }
-                        }
+                      checked={selectedAllocations.includes(request._id)}
+                      onChange={() => {
+                        const newSelected = selectedAllocations.includes(
+                          request._id
+                        )
+                          ? selectedAllocations.filter(
+                              (id) => id !== request._id
+                            )
+                          : [...selectedAllocations, request._id];
+                        setSelectedAllocations(newSelected);
+                        setShowSelectionButtons(newSelected.length > 0);
                       }}
                       sx={{
                         "&.Mui-checked": {
@@ -732,7 +772,6 @@ const WorkTypeRequest = () => {
                       }}
                     />
                   </TableCell>
-
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={1}>
                       <Box
@@ -741,7 +780,7 @@ const WorkTypeRequest = () => {
                           height: 32,
                           borderRadius: "50%",
                           bgcolor:
-                            emp._id % 2 === 0
+                            request._id % 2 === 0
                               ? alpha(theme.palette.primary.main, 0.8)
                               : alpha(theme.palette.secondary.main, 0.8),
                           color: "white",
@@ -753,59 +792,52 @@ const WorkTypeRequest = () => {
                           flexShrink: 0,
                         }}
                       >
-                        {emp.employee?.[0] || "U"}
+                        {request.employee?.[0] || "U"}
                       </Box>
                       <Box sx={{ display: "flex", flexDirection: "column" }}>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {emp.employee}
+                          {request.employee}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {emp.employeeCode || "N/A"}
+                          {request.employeeCode}
                         </Typography>
                       </Box>
                     </Box>
                   </TableCell>
-
                   <TableCell>
                     <Typography variant="body2">
-                      {emp.requestedShift}
+                      {request.requestedShift}
                     </Typography>
                   </TableCell>
-
-                  <TableCell>
-                    <Typography variant="body2">{emp.currentShift}</Typography>
-                  </TableCell>
-
                   <TableCell>
                     <Typography variant="body2">
-                      {emp.requestedDate
-                        ? new Date(emp.requestedDate).toLocaleDateString(
-                            undefined,
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )
-                        : "N/A"}
+                      {request.currentShift}
                     </Typography>
                   </TableCell>
-
                   <TableCell>
                     <Typography variant="body2">
-                      {emp.requestedTill
-                        ? new Date(emp.requestedTill).toLocaleDateString(
-                            undefined,
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )
-                        : "N/A"}
+                      {new Date(request.requestedDate).toLocaleDateString(
+                        undefined,
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
                     </Typography>
                   </TableCell>
-
+                  <TableCell>
+                    <Typography variant="body2">
+                      {new Date(request.requestedTill).toLocaleDateString(
+                        undefined,
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
+                    </Typography>
+                  </TableCell>
                   <TableCell>
                     <Box
                       sx={{
@@ -816,23 +848,22 @@ const WorkTypeRequest = () => {
                         fontSize: "0.75rem",
                         fontWeight: "medium",
                         backgroundColor:
-                          emp.status === "Approved"
+                          request.status === "Approved"
                             ? alpha("#4caf50", 0.1)
-                            : emp.status === "Rejected"
+                            : request.status === "Rejected"
                             ? alpha("#f44336", 0.1)
                             : alpha("#ff9800", 0.1),
                         color:
-                          emp.status === "Approved"
+                          request.status === "Approved"
                             ? "#2e7d32"
-                            : emp.status === "Rejected"
+                            : request.status === "Rejected"
                             ? "#d32f2f"
                             : "#e65100",
                       }}
                     >
-                      {emp.status}
+                      {request.status}
                     </Box>
                   </TableCell>
-
                   <TableCell>
                     <Typography
                       variant="body2"
@@ -843,10 +874,9 @@ const WorkTypeRequest = () => {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {emp.description}
+                      {request.description}
                     </Typography>
                   </TableCell>
-
                   <TableCell align="center">
                     <Box
                       sx={{ display: "flex", justifyContent: "center", gap: 1 }}
@@ -856,9 +886,9 @@ const WorkTypeRequest = () => {
                         color="success"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleApprove(emp._id);
+                          handleApprove(request._id);
                         }}
-                        disabled={emp.status === "Approved"}
+                        disabled={request.status === "Approved"}
                         sx={{
                           backgroundColor: alpha("#4caf50", 0.1),
                           "&:hover": {
@@ -878,9 +908,9 @@ const WorkTypeRequest = () => {
                         color="error"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleReject(emp._id);
+                          handleReject(request._id);
                         }}
-                        disabled={emp.status === "Rejected"}
+                        disabled={request.status === "Rejected"}
                         sx={{
                           backgroundColor: alpha("#f44336", 0.1),
                           "&:hover": {
@@ -897,7 +927,6 @@ const WorkTypeRequest = () => {
                       </IconButton>
                     </Box>
                   </TableCell>
-
                   <TableCell align="center">
                     <Box
                       sx={{ display: "flex", justifyContent: "center", gap: 1 }}
@@ -907,7 +936,7 @@ const WorkTypeRequest = () => {
                         color="primary"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleEdit(emp);
+                          handleEdit(request);
                         }}
                         sx={{
                           backgroundColor: alpha(
@@ -924,12 +953,13 @@ const WorkTypeRequest = () => {
                       >
                         <Edit fontSize="small" />
                       </IconButton>
-                     
-
                       <IconButton
                         size="small"
                         color="error"
-                        onClick={(e) => handleDeleteClick(emp, e)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(request);
+                        }}
                         sx={{
                           backgroundColor: alpha(theme.palette.error.main, 0.1),
                           "&:hover": {
@@ -946,13 +976,11 @@ const WorkTypeRequest = () => {
                   </TableCell>
                 </StyledTableRow>
               ))}
-
-            {/* Empty state message when no records match filters */}
-            {shiftRequests.filter((req) => {
-              const employeeName = req?.employee || "";
+            {shiftRequests.filter((request) => {
+              const employeeName = request?.employee || "";
               return (
                 employeeName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-                (filterStatus === "all" || req.status === filterStatus)
+                (filterStatus === "all" || request.status === filterStatus)
               );
             }).length === 0 && (
               <TableRow>
@@ -978,7 +1006,7 @@ const WorkTypeRequest = () => {
         </Table>
       </TableContainer>
 
-{/* Delete Confirmation Dialog */}
+      {/* Delete confirmation dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleCloseDeleteDialog}
@@ -1004,7 +1032,7 @@ const WorkTypeRequest = () => {
             gap: 1,
           }}
         >
-          <Delete color="inherit" />
+          <Delete />
           Confirm Deletion
         </DialogTitle>
         <DialogContent
@@ -1031,8 +1059,8 @@ const WorkTypeRequest = () => {
                     color="text.secondary"
                     sx={{ mt: 1 }}
                   >
-                    You are about to delete {itemToDelete.count} work type
-                    requests. This action cannot be undone.
+                    You are about to delete {itemToDelete.count} requests. This
+                    action cannot be undone.
                   </Typography>
                 </>
               ) : (
@@ -1050,22 +1078,15 @@ const WorkTypeRequest = () => {
                       border: "1px solid #e2e8f0",
                     }}
                   >
-                    <strong>Employee:</strong> {itemToDelete.employee}
-                    <br />
-                    <strong>Requested Work Type:</strong>{" "}
+                    <strong>Employee:</strong> {itemToDelete.employee} (
+                    {itemToDelete.employeeCode})<br />
+                    <strong>Requested Shift:</strong>{" "}
                     {itemToDelete.requestedShift}
                     <br />
-                    <strong>Current Work Type:</strong>{" "}
-                    {itemToDelete.currentShift}
-                    <br />
                     <strong>Date Range:</strong>{" "}
-                    {itemToDelete.requestedDate &&
-                      new Date(
-                        itemToDelete.requestedDate
-                      ).toLocaleDateString()}{" "}
+                    {new Date(itemToDelete.requestedDate).toLocaleDateString()}{" "}
                     -{" "}
-                    {itemToDelete.requestedTill &&
-                      new Date(itemToDelete.requestedTill).toLocaleDateString()}
+                    {new Date(itemToDelete.requestedTill).toLocaleDateString()}
                     <br />
                     <strong>Status:</strong> {itemToDelete.status}
                   </Typography>
@@ -1130,7 +1151,7 @@ const WorkTypeRequest = () => {
       <Dialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        fullScreen={window.innerWidth < 600} // Full screen on mobile
+        fullScreen={window.innerWidth < 600}
         PaperProps={{
           sx: {
             width: { xs: "100%", sm: "600px" },
@@ -1155,33 +1176,129 @@ const WorkTypeRequest = () => {
 
         <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <TextField
-              label="Employee"
-              name="employee"
-              fullWidth
-              select
-              value={formData.employee}
-              onChange={handleFormChange}
-              sx={{
-                mt: 2,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1976d2",
-                },
-              }}
-            >
-              {employees.map((emp) => (
-                <MenuItem key={emp.id} value={emp.name}>
-                  {emp.name}
-                </MenuItem>
-              ))}
-            </TextField>
+            {/* New Autocomplete for selecting registered employees */}
+            <Autocomplete
+              options={registeredEmployees}
+              getOptionLabel={(option) => `${option.name} (${option.employeeCode})`}
+              value={selectedEmployee}
+              onChange={handleEmployeeSelect}
+              loading={loadingEmployees}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Onboarded Employee"
+                  variant="outlined"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingEmployees ? <CircularProgress color="inherit" size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      "&:hover fieldset": {
+                        borderColor: "#1976d2",
+                      },
+                    },
+                  }}
+                />
+              )}
+              renderOption={(props, option) => (
+                <li {...props}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <Typography variant="body1">{option.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.employeeCode} • {option.department}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+            />
+
+            {/* Display selected employee info if available */}
+            {selectedEmployee && (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                }}
+              >
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Selected Employee Details
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography variant="body2">
+                    <strong>Name:</strong> {selectedEmployee.name}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Employee Code:</strong> {selectedEmployee.employeeCode}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Department:</strong> {selectedEmployee.department}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Current Shift:</strong> {selectedEmployee.currentShift || 'Regular Shift'}
+                  </Typography>
+                </Box>
+              </Paper>
+            )}
+
+            {/* Manual employee input fields if no employee is selected */}
+            {!selectedEmployee && (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Typography variant="subtitle2" color="primary.dark">
+                  Or Enter Employee Details Manually:
+                </Typography>
+                <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2 }}>
+                  <TextField
+                    label="Employee Name"
+                    name="employee"
+                    fullWidth
+                    value={formData.employee}
+                    onChange={handleFormChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2",
+                      },
+                    }}
+                  />
+                  <TextField
+                    label="Employee ID"
+                    name="employeeCode"
+                    fullWidth
+                    value={formData.employeeCode || ""}
+                    onChange={handleFormChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: "12px",
+                        "&:hover fieldset": {
+                          borderColor: "#1976d2",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2",
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+            )}
 
             <TextField
               label="Request Work Type"
@@ -1283,7 +1400,10 @@ const WorkTypeRequest = () => {
           }}
         >
           <Button
-            onClick={() => setCreateDialogOpen(false)}
+            onClick={() => {
+              setCreateDialogOpen(false);
+              resetFormData();
+            }}
             sx={{
               border: "2px solid #1976d2",
               color: "#1976d2",
@@ -1304,6 +1424,11 @@ const WorkTypeRequest = () => {
           <Button
             onClick={handleCreateShift}
             variant="contained"
+            disabled={
+              (!selectedEmployee && !formData.employee) ||
+              !formData.requestShift ||
+              !formData.requestedDate
+            }
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
               fontSize: "0.95rem",
@@ -1349,33 +1474,46 @@ const WorkTypeRequest = () => {
 
         <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <TextField
-              label="Employee"
-              name="employee"
-              fullWidth
-              select
-              value={formData.employee}
-              onChange={handleFormChange}
-              sx={{
-                mt: 2,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  "&:hover fieldset": {
-                    borderColor: "#1976d2",
+            <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2 }}>
+              <TextField
+                label="Employee Name"
+                name="employee"
+                fullWidth
+                value={formData.employee}
+                onChange={handleFormChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
                   },
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1976d2",
-                },
-              }}
-            >
-              {employees.map((emp) => (
-                <MenuItem key={emp.id} value={emp.name}>
-                  {emp.name}
-                </MenuItem>
-              ))}
-            </TextField>
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1976d2",
+                  },
+                }}
+              />
+              <TextField
+                label="Employee ID"
+                name="employeeCode"
+                fullWidth
+                value={formData.employeeCode || ""}
+                onChange={handleFormChange}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "12px",
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1976d2",
+                  },
+                }}
+              />
+            </Box>
 
             <TextField
               label="Request Work Type"
@@ -1488,6 +1626,11 @@ const WorkTypeRequest = () => {
           <Button
             onClick={handleSaveEdit}
             variant="contained"
+            disabled={
+              !formData.employee ||
+              !formData.requestShift ||
+              !formData.requestedDate
+            }
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
               fontSize: "0.95rem",
@@ -1509,3 +1652,7 @@ const WorkTypeRequest = () => {
 };
 
 export default WorkTypeRequest;
+
+
+                        
+
