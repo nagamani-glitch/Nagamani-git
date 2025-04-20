@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import {styled} from "@mui/material/styles";
 import {
   Container,
   Paper,
@@ -24,6 +25,7 @@ import {
   DialogActions,
   CircularProgress,
   Snackbar,
+  InputAdornment, Divider, QuestionAnswer
 } from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
@@ -50,6 +52,16 @@ const modalStyle = {
   p: 4,
 };
 
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
+
 export default function FaqCategory() {
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
@@ -71,10 +83,9 @@ export default function FaqCategory() {
     severity: "success",
   });
 
-  // Add responsive hooks
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   useEffect(() => {
     fetchCategories();
@@ -220,15 +231,14 @@ export default function FaqCategory() {
         }}
       >
         <Box
-          sx={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-            padding: isMobile ? "16px" : isTablet ? "20px 24px" : "24px 32px",
-            marginBottom: "24px",
-          }}
+sx={{
+          p: { xs: 2, sm: 3, md: 4 },
+          backgroundColor: "#f5f5f5",
+         // minHeight: "100vh",
+         }}
         >
-          <Stack
+
+          {/* <Stack
             direction={isMobile ? "column" : "row"}
             justifyContent="space-between"
             alignItems={isMobile ? "flex-start" : "center"}
@@ -244,7 +254,7 @@ export default function FaqCategory() {
                 mb: isMobile ? 1 : 0,
               }}
             >
-              FAQ Categories
+              FAQ Categories  
             </Typography>
 
             <Stack
@@ -301,7 +311,96 @@ export default function FaqCategory() {
                 Create Category
               </Button>
             </Stack>
-          </Stack>
+          </Stack> */}
+<Box>
+    <Typography
+      variant="h4"
+      sx={{
+        mb: { xs: 2, sm: 3, md: 4 },
+        color: theme.palette.primary.main,
+        fontWeight: 600,
+        letterSpacing: 0.5,
+        fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+      }}
+    >
+      FAQ Categories
+    </Typography>
+
+    <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+      <Box
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row" }}
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        gap={2}
+        sx={{
+          width: "100%",
+          justifyContent: "space-between",
+        }}
+      >
+        <TextField
+          placeholder="Search categories..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          size="small"
+          sx={{
+            width: { xs: "100%", sm: "300px" },
+            marginRight: { xs: 0, sm: "auto" },
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "#f8fafc",
+              borderRadius: "8px",
+              "&:hover fieldset": {
+                borderColor: "#1976d2",
+              },
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: "action.active", mr: 1 }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: 1, sm: 1 },
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
+          <Button
+            onClick={() => {
+              setEditingCategoryId(null);
+              setIsAddModalOpen(true);
+              setFormData({ title: "", description: "" });
+              setErrorMessage(null);
+            }}
+            startIcon={<Add />}
+            sx={{
+              height: { xs: "auto", sm: 40 },
+              padding: { xs: "8px 16px", sm: "6px 16px" },
+              width: { xs: "100%", sm: "auto" },
+              background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+              color: "white",
+              "&:hover": {
+                background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
+              fontWeight: 500,
+            }}
+            variant="contained"
+          >
+            Create Category
+          </Button>
+        </Box>
+      </Box>
+    </StyledPaper>
+  </Box>
+
         </Box>
 
         <Grid container spacing={isMobile ? 2 : 3}>

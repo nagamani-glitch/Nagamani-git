@@ -776,9 +776,9 @@ const Header = () => {
                       className={`timer-button ${isTimerRunning ? "active" : ""}`}
                       onClick={handleTimerClick}
                       title={
-                        isTimerRunning ? "Click to log-out" : "Click to log-in"
+                        isTimerRunning ? "Click to Punch-out" : "Click to Punch-in"
                       }
-                      aria-label={isTimerRunning ? "Log out" : "Log in"}
+                      aria-label={isTimerRunning ? "Punch out" : "Punch in"}
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -791,7 +791,7 @@ const Header = () => {
                       ) : (
                         <>
                           <FaSignInAlt className="me-2 beat" />
-                          <span>Log-in</span>
+                          <span>Punch-in</span>
                         </>
                       )}
                     </Button>
