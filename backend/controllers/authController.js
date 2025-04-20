@@ -175,32 +175,45 @@ export const forgotPassword = async (req, res) => {
 };
 
 // Reset Password
+// Add this to your authController.js file or wherever your reset password route is handled
+
 export const resetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
-    const { password } = req.body;
-    
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({
-      _id: decoded.id,
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
+      const { token } = req.params;
+      const { password } = req.body;
 
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired token' });
-    }
+      // Find user with this reset token and check if it's still valid
+      const user = await User.findOne({
+          resetPasswordToken: token,
+          resetPasswordExpires: { $gt: Date.now() }
+      });
 
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-    await user.save();
+      if (!user) {
+          return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+      }
 
-    res.status(200).json({ message: 'Password reset successful' });
+      // Check if new password is the same as the old one
+      const isSamePassword = await bcrypt.compare(password, user.password);
+      if (isSamePassword) {
+          return res.status(400).json({ 
+              message: 'New password cannot be the same as your old password. Please choose a different password.' 
+          });
+      }
+
+      // Hash the new password
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+      
+      // Clear reset token fields
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+
+      await user.save();
+
+      res.status(200).json({ message: 'Password has been reset successfully. You can now log in with your new password.' });
   } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(400).json({ message: 'Invalid or expired token' });
+      console.error('Reset password error:', error);
+      res.status(500).json({ message: 'Server error during password reset.' });
   }
 };
 

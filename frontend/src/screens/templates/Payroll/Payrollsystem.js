@@ -93,6 +93,16 @@ const PayrollSystem = () => {
   });
 
   // Add these state variables near your other state declarations
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+
+  // Add these state variables near your other state declarations
+  const [deleteAllowanceDialogOpen, setDeleteAllowanceDialogOpen] =
+    useState(false);
+  const [employeeToDeleteAllowances, setEmployeeToDeleteAllowances] =
+    useState(null);
+
+  // Add these state variables near your other state declarations
   const [selectedAllowances, setSelectedAllowances] = useState([]);
   const [bulkEmployeeId, setBulkEmployeeId] = useState("");
   const [allowancePercentages, setAllowancePercentages] = useState({});
@@ -304,6 +314,43 @@ const PayrollSystem = () => {
       showAlert(
         error.response?.data?.message ||
           "Error saving allowances and deductions",
+        "error"
+      );
+    }
+  };
+
+  const confirmDeleteAllowancesAndDeductions = async () => {
+    try {
+      if (!employeeToDeleteAllowances) return;
+
+      // First delete all allowances for this employee
+      const employeeAllowances = allowanceData.filter(
+        (a) => a.empId === employeeToDeleteAllowances.empId
+      );
+
+      for (const allowance of employeeAllowances) {
+        const id = `${allowance.empId}_${allowance.name}`;
+        await axios.delete(`${API_URL}/allowances/${id}`);
+      }
+
+      // Then delete all deductions for this employee
+      const employeeDeductions = deductions.filter(
+        (d) => d.empId === employeeToDeleteAllowances.empId
+      );
+
+      for (const deduction of employeeDeductions) {
+        const id = `${deduction.empId}_${deduction.name}`;
+        await axios.delete(`${API_URL}/deductions/${id}`);
+      }
+
+      showAlert("Allowances and deductions deleted successfully");
+      await Promise.all([fetchAllowances(), fetchDeductions()]);
+      setDeleteAllowanceDialogOpen(false);
+      setEmployeeToDeleteAllowances(null);
+    } catch (error) {
+      showAlert(
+        error.response?.data?.message ||
+          "Error deleting allowances and deductions",
         "error"
       );
     }
@@ -653,6 +700,27 @@ const PayrollSystem = () => {
     }
   };
 
+  const confirmDeleteEmployee = async () => {
+    try {
+      if (!employeeToDelete) return;
+
+      await axios.delete(`${API_URL}/employees/${employeeToDelete.empId}`);
+      showAlert("Employee deleted successfully");
+      await Promise.all([
+        fetchEmployees(),
+        fetchAllowances(),
+        fetchDeductions(),
+      ]);
+      setDeleteDialogOpen(false);
+      setEmployeeToDelete(null);
+    } catch (error) {
+      showAlert(
+        error.response?.data?.message || "Error deleting employee",
+        "error"
+      );
+    }
+  };
+
   const handleDeleteEmployee = async (empId) => {
     try {
       await axios.delete(`${API_URL}/employees/${empId}`);
@@ -981,7 +1049,6 @@ const PayrollSystem = () => {
         </AppBar>
 
         {/* Employees Tab */}
-        {/* Employees Tab */}
         <TabPanel value={tabIndex} index={0}>
           <Box className="header-container employee-header">
             <Box className="title-wrapper">
@@ -1051,43 +1118,25 @@ const PayrollSystem = () => {
 
           <TableContainer
             component={Paper}
-            className="table-container employee-table-container"
+            className="table-container employee-table-container mobile-scroll-table"
             sx={{ overflowX: "auto" }}
           >
-            <Table className="responsive-table employee-table">
+            <Table
+              className="responsive-table employee-table non-responsive-mobile"
+              sx={{ minWidth: 650 }}
+            >
               <TableHead>
                 <TableRow className="table-header">
-                  <TableCell className="table-cell" data-priority="1">
-                    Emp ID
-                  </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    Name
-                  </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    Department
-                  </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    Designation
-                  </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    Basic Pay
-                  </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    Bank Details
-                  </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    PF/UAN
-                  </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    Payable Days
-                  </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    LOP Days
-                  </TableCell>
-                  <TableCell
-                    className="table-cell action-column"
-                    data-priority="1"
-                  >
+                  <TableCell className="table-cell">Emp ID</TableCell>
+                  <TableCell className="table-cell">Name</TableCell>
+                  <TableCell className="table-cell">Department</TableCell>
+                  <TableCell className="table-cell">Designation</TableCell>
+                  <TableCell className="table-cell">Basic Pay</TableCell>
+                  <TableCell className="table-cell">Bank Details</TableCell>
+                  <TableCell className="table-cell">PF/UAN</TableCell>
+                  <TableCell className="table-cell">Payable Days</TableCell>
+                  <TableCell className="table-cell">LOP Days</TableCell>
+                  <TableCell className="table-cell action-column">
                     Actions
                   </TableCell>
                 </TableRow>
@@ -1096,46 +1145,34 @@ const PayrollSystem = () => {
               <TableBody>
                 {employeeData.map((item) => (
                   <TableRow key={item.empId} className="table-row employee-row">
-                    <TableCell className="table-cell" data-label="Emp ID">
-                      {item.empId}
-                    </TableCell>
-                    <TableCell className="table-cell" data-label="Name">
-                      {item.empName}
-                    </TableCell>
-                    <TableCell className="table-cell" data-label="Department">
+                    <TableCell className="table-cell">{item.empId}</TableCell>
+                    <TableCell className="table-cell">{item.empName}</TableCell>
+                    <TableCell className="table-cell">
                       {item.department}
                     </TableCell>
-                    <TableCell className="table-cell" data-label="Designation">
+                    <TableCell className="table-cell">
                       {item.designation}
                     </TableCell>
-                    <TableCell
-                      className="table-cell amount-cell"
-                      data-label="Basic Pay"
-                    >
+                    <TableCell className="table-cell amount-cell">
                       Rs. {parseFloat(item.basicPay).toFixed(2)}
                     </TableCell>
-                    <TableCell className="table-cell" data-label="Bank Details">
+                    <TableCell className="table-cell">
                       <Typography variant="body2">{item.bankName}</Typography>
                       <Typography variant="caption">
                         {item.bankAccountNo}
                       </Typography>
                     </TableCell>
-                    <TableCell className="table-cell" data-label="PF/UAN">
+                    <TableCell className="table-cell">
                       <Typography variant="body2">PF: {item.pfNo}</Typography>
                       <Typography variant="caption">
                         UAN: {item.uanNo}
                       </Typography>
                     </TableCell>
-                    <TableCell className="table-cell" data-label="Payable Days">
+                    <TableCell className="table-cell">
                       {item.payableDays}
                     </TableCell>
-                    <TableCell className="table-cell" data-label="LOP Days">
-                      {item.lop}
-                    </TableCell>
-                    <TableCell
-                      className="table-cell action-cell"
-                      data-label="Actions"
-                    >
+                    <TableCell className="table-cell">{item.lop}</TableCell>
+                    <TableCell className="table-cell action-cell">
                       <Tooltip title="Preview">
                         <IconButton
                           className="preview-button"
@@ -1157,10 +1194,21 @@ const PayrollSystem = () => {
                           <EditIcon className="action-icon edit-icon" />
                         </IconButton>
                       </Tooltip>
+                      {/* <Tooltip title="Delete">
+              <IconButton
+                className="delete-button"
+                onClick={() => handleDeleteEmployee(item.empId)}
+              >
+                <DeleteIcon className="action-icon delete-icon" />
+              </IconButton>
+            </Tooltip> */}
                       <Tooltip title="Delete">
                         <IconButton
                           className="delete-button"
-                          onClick={() => handleDeleteEmployee(item.empId)}
+                          onClick={() => {
+                            setEmployeeToDelete(item);
+                            setDeleteDialogOpen(true);
+                          }}
                         >
                           <DeleteIcon className="action-icon delete-icon" />
                         </IconButton>
@@ -1402,10 +1450,30 @@ const PayrollSystem = () => {
                           </IconButton>
                         </Tooltip>
 
-                        <Tooltip title="Delete">
+                        {/* <Tooltip title="Delete">
                           <IconButton
                             className="delete-button"
                             onClick={() => handleDeleteEmployee(employee.empId)}
+                          >
+                            <DeleteIcon
+                              sx={{
+                                color: "#d32f2f",
+                                transition: "all 0.3s ease",
+                                "&:hover": {
+                                  color: "#ff1744",
+                                  transform: "scale(1.1)",
+                                },
+                              }}
+                            />
+                          </IconButton>
+                        </Tooltip> */}
+                        <Tooltip title="Delete">
+                          <IconButton
+                            className="delete-button"
+                            onClick={() => {
+                              setEmployeeToDeleteAllowances(employee);
+                              setDeleteAllowanceDialogOpen(true);
+                            }}
                           >
                             <DeleteIcon
                               sx={{
@@ -3371,6 +3439,157 @@ const PayrollSystem = () => {
           </DialogActions>
         </Dialog>
       </Paper>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 0, sm: "16px" },
+            width: { xs: "100%", sm: "450px" },
+            maxWidth: "100%",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            color: "white",
+            fontWeight: 600,
+            padding: "16px 24px",
+          }}
+        >
+          Delete Employee
+        </DialogTitle>
+        <DialogContent sx={{ padding: "24px", paddingTop: "24px" }}>
+          <Typography variant="body1">
+            Are you sure you want to delete{" "}
+            <strong>{employeeToDelete?.empName}</strong>? This action cannot be
+            undone and will also remove all associated allowances and
+            deductions.
+          </Typography>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: "16px 24px",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              padding: "6px 16px",
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDeleteEmployee}
+            variant="contained"
+            color="error"
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 24px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Allowances & Deductions Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteAllowanceDialogOpen}
+        onClose={() => setDeleteAllowanceDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 0, sm: "16px" },
+            width: { xs: "100%", sm: "450px" },
+            maxWidth: "100%",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            color: "white",
+            fontWeight: 600,
+            padding: "16px 24px",
+          }}
+        >
+          Delete Allowances & Deductions
+        </DialogTitle>
+        <DialogContent sx={{ padding: "24px", paddingTop: "24px" }}>
+          <Typography variant="body1">
+            Are you sure you want to delete all allowances and deductions for{" "}
+            <strong>{employeeToDeleteAllowances?.empName}</strong>? This action
+            cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            padding: "16px 24px",
+            borderTop: "1px solid #e0e0e0",
+            gap: 2,
+          }}
+        >
+          <Button
+            onClick={() => setDeleteAllowanceDialogOpen(false)}
+            sx={{
+              border: "2px solid #1976d2",
+              color: "#1976d2",
+              "&:hover": {
+                border: "2px solid #64b5f6",
+                backgroundColor: "#e3f2fd",
+                color: "#1976d2",
+              },
+              textTransform: "none",
+              borderRadius: "8px",
+              padding: "6px 16px",
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDeleteAllowancesAndDeductions}
+            variant="contained"
+            color="error"
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #ff7961)",
+              fontSize: "0.95rem",
+              textTransform: "none",
+              padding: "8px 24px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(45deg, #d32f2f, #f44336)",
+              },
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
