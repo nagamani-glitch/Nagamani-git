@@ -150,11 +150,35 @@ const ShiftRequest = () => {
   const [loading, setLoading] = useState(false);
 
   // Add function to fetch registered employees
+  // const fetchRegisteredEmployees = async () => {
+  //   try {
+  //     setLoadingEmployees(true);
+  //     const response = await axios.get(EMPLOYEES_API_URL);
+
+  //     // Format the employee data for the dropdown
+  //     const formattedEmployees = response.data.map((emp) => ({
+  //       id: emp.Emp_ID,
+  //       name: `${emp.personalInfo?.firstName || ""} ${
+  //         emp.personalInfo?.lastName || ""
+  //       }`,
+  //       employeeCode: emp.Emp_ID,
+  //       department: emp.joiningDetails?.department || "Not Assigned",
+  //       currentShift: emp.joiningDetails?.shift || "Regular Shift",
+  //       // Add any other relevant fields from the employee data
+  //     }));
+
+  //     setRegisteredEmployees(formattedEmployees);
+  //   } catch (error) {
+  //     console.error("Error fetching registered employees:", error);
+  //   } finally {
+  //     setLoadingEmployees(false);
+  //   }
+  // };
   const fetchRegisteredEmployees = async () => {
     try {
       setLoadingEmployees(true);
       const response = await axios.get(EMPLOYEES_API_URL);
-
+  
       // Format the employee data for the dropdown
       const formattedEmployees = response.data.map((emp) => ({
         id: emp.Emp_ID,
@@ -163,10 +187,11 @@ const ShiftRequest = () => {
         }`,
         employeeCode: emp.Emp_ID,
         department: emp.joiningDetails?.department || "Not Assigned",
-        currentShift: emp.joiningDetails?.shift || "Regular Shift",
+        // Use the actual shiftType from joiningDetails instead of defaulting to "Regular Shift"
+        currentShift: emp.joiningDetails?.shiftType || "Not Assigned",
         // Add any other relevant fields from the employee data
       }));
-
+  
       setRegisteredEmployees(formattedEmployees);
     } catch (error) {
       console.error("Error fetching registered employees:", error);
@@ -175,7 +200,19 @@ const ShiftRequest = () => {
     }
   };
 
-  // Handle employee selection
+  // // Handle employee selection
+  // const handleEmployeeSelect = (event, employee) => {
+  //   setSelectedEmployee(employee);
+  //   if (employee) {
+  //     // Auto-fill form data with selected employee information
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       employee: employee.name,
+  //       employeeCode: employee.employeeCode,
+  //       currentShift: employee.currentShift || "Regular Shift",
+  //     }));
+  //   }
+  // };
   const handleEmployeeSelect = (event, employee) => {
     setSelectedEmployee(employee);
     if (employee) {
@@ -184,7 +221,8 @@ const ShiftRequest = () => {
         ...prev,
         employee: employee.name,
         employeeCode: employee.employeeCode,
-        currentShift: employee.currentShift || "Regular Shift",
+        // Use the employee's actual shift type instead of defaulting
+        currentShift: employee.currentShift || "Not Assigned",
       }));
     }
   };
@@ -345,25 +383,54 @@ const ShiftRequest = () => {
     }
   };
 
+  // const handleCreateShift = async () => {
+  //   try {
+  //     // Use the selected employee data if available, otherwise fall back to the form data
+  //     const employeeData =
+  //       selectedEmployee ||
+  //       employees.find((emp) => emp.name === formData.employee);
+
+  //     const shiftData = {
+  //       name: formData.employee,
+  //       employeeCode: employeeData?.employeeCode || formData.employeeCode,
+  //       requestedShift: formData.requestShift,
+  //       currentShift: employeeData?.currentShift || "Regular Shift",
+  //       requestedDate: formData.requestedDate,
+  //       requestedTill: formData.requestedTill,
+  //       description: formData.description,
+  //       isPermanentRequest,
+  //       isAllocated: tabValue === 1,
+  //     };
+
+  //     await axios.post(API_URL, shiftData);
+  //     await loadShiftRequests();
+  //     setCreateDialogOpen(false);
+  //     resetFormData();
+  //   } catch (error) {
+  //     console.error("Error creating shift:", error);
+  //   }
+  // };
+
   const handleCreateShift = async () => {
     try {
       // Use the selected employee data if available, otherwise fall back to the form data
       const employeeData =
         selectedEmployee ||
         employees.find((emp) => emp.name === formData.employee);
-
+  
       const shiftData = {
         name: formData.employee,
         employeeCode: employeeData?.employeeCode || formData.employeeCode,
         requestedShift: formData.requestShift,
-        currentShift: employeeData?.currentShift || "Regular Shift",
+        // Use the employee's actual shift type instead of defaulting
+        currentShift: employeeData?.currentShift || "Not Assigned",
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
         description: formData.description,
         isPermanentRequest,
         isAllocated: tabValue === 1,
       };
-
+  
       await axios.post(API_URL, shiftData);
       await loadShiftRequests();
       setCreateDialogOpen(false);
@@ -372,7 +439,7 @@ const ShiftRequest = () => {
       console.error("Error creating shift:", error);
     }
   };
-
+  
   const handleEdit = (shift, e) => {
     e.stopPropagation();
     setEditingShift(shift);
