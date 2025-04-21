@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import {
   Container,
   Navbar,
@@ -42,7 +43,7 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem("token");
-  const employeeId = localStorage.getItem("employeeId") || "EMP123";
+  
   const [timer, setTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
@@ -53,6 +54,67 @@ const Header = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   // Add this state to track if the navbar is expanded
   const [navExpanded, setNavExpanded] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const employeeId = profileData?.Emp_ID || localStorage.getItem("employeeId") || "EMP123";
+  const userId = localStorage.getItem("userId");
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
+      
+      if (!token || !userId) {
+        return; // Don't fetch if not logged in
+      }
+      
+      try {
+        setProfileLoading(true);
+        // Use the by-user endpoint from employeesRouter.js
+        const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
+        
+        if (response.data.success) {
+          setProfileData(response.data.data);
+          
+          // Store employee ID in localStorage if not already there
+          if (response.data.data.Emp_ID) {
+            localStorage.setItem("employeeId", response.data.data.Emp_ID);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+  
+    fetchUserProfile();
+  }, []);
+
+  // Get profile image URL
+const getProfileImageUrl = () => {
+  if (profileData?.personalInfo?.employeeImage) {
+    const imagePath = profileData.personalInfo.employeeImage;
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    } else {
+      return `http://localhost:5000${imagePath}`;
+    }
+  }
+  return null;
+};
+
+// Get user display name
+const getUserDisplayName = () => {
+  if (profileData?.personalInfo) {
+    const { firstName, lastName } = profileData.personalInfo;
+    return `${firstName || ''} ${lastName || ''}`.trim() || employeeId;
+  }
+  return employeeId;
+};
+
+  
+
 
   // Add this useEffect to handle window resize
   useEffect(() => {
@@ -243,11 +305,14 @@ const Header = () => {
 
   const handleLogout = () => {
     cleanupTimesheet();
+    setProfileData(null); // Clear profile data
     localStorage.removeItem("token");
     localStorage.removeItem("employeeId");
+    localStorage.removeItem("userId");
     localStorage.removeItem("checkInTime");
     navigate("/login");
   };
+  
 
   const getPathIndicator = () => {
     const path = location.pathname.split("/").filter(Boolean);
@@ -423,25 +488,48 @@ const Header = () => {
                     {windowWidth <= 1024 ? (
                       <>
                         <div
-                          className="profile-dropdown-toggle"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowProfileMenu(!showProfileMenu);
-                          }}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <FaUserCircle size={28} color="white" />
-                        </div>
+        className="profile-dropdown-toggle"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowProfileMenu(!showProfileMenu);
+        }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          cursor: "pointer",
+        }}
+      >
+        {profileLoading ? (
+          <Spinner animation="border" size="sm" variant="light" />
+        ) : getProfileImageUrl() ? (
+          <img
+            src={getProfileImageUrl()}
+            alt="Profile"
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "1px solid white",
+            }}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = `${process.env.PUBLIC_URL}/default-avatar.png`;
+            }}
+          />
+        ) : (
+          <FaUserCircle size={28} color="white" />
+        )}
+      </div>
 
-                        {showProfileMenu && (
-                          <div className="custom-dropdown-menu">
-                            <div className="dropdown-header d-flex align-items-center px-3 py-2">
-                              <strong>{employeeId}</strong>
-                            </div>
+      {showProfileMenu && (
+        <div className="custom-dropdown-menu">
+          <div className="dropdown-header d-flex align-items-center px-3 py-2">
+            <strong>{getUserDisplayName()}</strong>
+            {profileData?.Emp_ID && (
+              <small className="ms-2 text-muted">({profileData.Emp_ID})</small>
+            )}
+          </div>
                             <div
                               className="dropdown-item"
                               onClick={() => {
@@ -547,18 +635,43 @@ const Header = () => {
                     ) : (
                       // Use Bootstrap NavDropdown for desktop
                       <NavDropdown
-                        title={<FaUserCircle size={28} color="white" />}
-                        id="profile-dropdown"
-                        show={showProfileMenu}
-                        onClick={handleProfileToggle}
-                        ref={profileMenuRef}
-                        align="end"
-                        className="profile-dropdown ms-3"
-                        menuVariant="dark"
-                      >
-                        <div className="dropdown-header d-flex align-items-center px-3 py-2">
-                          <strong>{employeeId}</strong>
-                        </div>
+      title={
+        profileLoading ? (
+          <Spinner animation="border" size="sm" variant="light" />
+        ) : getProfileImageUrl() ? (
+          <img
+            src={getProfileImageUrl()}
+            alt="Profile"
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "1px solid white",
+            }}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = `${process.env.PUBLIC_URL}/default-avatar.png`;
+            }}
+          />
+        ) : (
+          <FaUserCircle size={28} color="white" />
+        )
+      }
+      id="profile-dropdown"
+      show={showProfileMenu}
+      onClick={handleProfileToggle}
+      ref={profileMenuRef}
+      align="end"
+      className="profile-dropdown ms-3"
+      menuVariant="dark"
+    >
+      <div className="dropdown-header d-flex align-items-center px-3 py-2">
+        <strong>{getUserDisplayName()}</strong>
+        {profileData?.Emp_ID && (
+          <small className="ms-2 text-muted">({profileData.Emp_ID})</small>
+        )}
+      </div>
                         <NavDropdown.Item
                           onClick={() =>
                             handleDropdownItemClick(() => navigate("/Dashboards/profile"))
