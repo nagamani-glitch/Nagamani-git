@@ -34,6 +34,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     transition: "background-color 0.2s ease",
   },
   // Hide last border
+  // Hide last border
   "&:last-child td, &:last-child th": {
     borderBottom: 0,
   },

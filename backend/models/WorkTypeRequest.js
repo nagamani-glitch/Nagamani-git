@@ -3,15 +3,15 @@ import mongoose from "mongoose";
 const workTypeRequestSchema = new mongoose.Schema(
   {
     employee: { type: String, required: true },
-    employeeCode: { type: String, required: true }, // Add this field
+    employeeCode: { type: String, required: true },
     requestedShift: {
       type: String,
       required: true,
       enum: ["Full Time", "Part Time", "Contract", "Freelance", "Remote"],
     },
-    currentShift: {
+    currentWorktype: {  // Rename from currentShift to currentWorktype
       type: String,
-      default: "Regular Shift",
+      default: "Full Time",  // Change default from "Regular Shift" to "Full Time"
     },
     requestedDate: { type: Date, required: true },
     requestedTill: { type: Date, required: true },

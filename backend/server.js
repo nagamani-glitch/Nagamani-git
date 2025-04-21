@@ -15,10 +15,11 @@ import employeeRoutes from './routes/employeeRoutes.js'
 import interviewRoutes from './routes/interviewRoutes.js'
 import skillZoneRoutes from './routes/skillZoneRoutes.js'
 import surveyRoutes from './routes/surveyRoutes.js'
-import assetRoutes from './routes/assets.js';
+// import assetRoutes from './routes/assets.js';
 import assetDashboardRoutes from './routes/assetDashboardRoutes.js';
 import assetBatchRoutes from './routes/assetBatchRoutes.js';
-import assetHistoryRoutes from './routes/assetHistory.js';
+// import assetHistoryRoutes from './routes/assetHistory.js';
+import assetRoutes from './routes/assetHistory.js';
 import faqCategoryRoutes from './routes/faqCategoryRoutes.js';
 import faqRoutes from './routes/faqRoutes.js';
 import companyHolidaysRoute from './routes/companyHolidays.js';
@@ -111,10 +112,11 @@ app.use('/api/interviews', interviewRoutes);
 app.use( skillZoneRoutes);
 app.use('/api/employees',employeeRoutes);
 app.use('/api/onboarding', onboardingRoutes);
-app.use('/api/assets', assetRoutes);
+// app.use('/api/assets', assetRoutes);
 app.use('/api/dashboard', assetDashboardRoutes);
 app.use('/api/asset-batches', assetBatchRoutes);
-app.use('/api/assethistory', assetHistoryRoutes);
+// app.use('/api/assethistory', assetHistoryRoutes);
+app.use('/api/assets', assetRoutes);
 app.use('/api/holidays', holidayRoutes);
 app.use('/api/companyHolidays', companyHolidaysRoute);
 app.use('/api/restrictLeaves', restrictLeaveRoutes);

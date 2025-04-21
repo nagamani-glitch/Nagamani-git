@@ -133,7 +133,6 @@ const RotatingWorktypeAssign = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Add function to fetch registered employees
   const fetchRegisteredEmployees = async () => {
     try {
       setLoadingEmployees(true);
@@ -147,7 +146,7 @@ const RotatingWorktypeAssign = () => {
         }`,
         employeeCode: emp.Emp_ID,
         department: emp.joiningDetails?.department || "Not Assigned",
-        currentWorktype: emp.joiningDetails?.workType || "Regular",
+        currentWorktype: emp.joiningDetails?.workType || "", // Use workType from joiningDetails
         // Add any other relevant fields from the employee data
       }));
 
@@ -159,7 +158,7 @@ const RotatingWorktypeAssign = () => {
     }
   };
 
-  // Handle employee selection
+  // Update the handleEmployeeSelect function to use the correct worktype field
   const handleEmployeeSelect = (event, employee) => {
     setSelectedEmployee(employee);
     if (employee) {
@@ -168,7 +167,7 @@ const RotatingWorktypeAssign = () => {
         ...prev,
         employee: employee.name,
         employeeCode: employee.employeeCode,
-        currentWorktype: employee.currentWorktype || "Regular",
+        currentWorktype: employee.currentWorktype || "", // Don't use a default value
       }));
     }
   };
@@ -347,11 +346,17 @@ const RotatingWorktypeAssign = () => {
         selectedEmployee ||
         employees.find((emp) => emp.name === formData.employee);
 
+      // If no current worktype is available, use a fallback value
+      const currentWorktype =
+        employeeData?.currentWorktype ||
+        formData.currentWorktype ||
+        "Not Assigned";
+
       const worktypeData = {
         name: formData.employee,
         employeeCode: employeeData?.employeeCode || formData.employeeCode,
         requestedWorktype: formData.requestWorktype,
-        currentWorktype: employeeData?.currentWorktype || "Regular",
+        currentWorktype: currentWorktype, // Use the determined current worktype
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
         description: formData.description,
@@ -450,7 +455,7 @@ const RotatingWorktypeAssign = () => {
             fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
           }}
         >
-          {tabValue === 0 ? "Work Type Requests" : "Allocated Work Types"}
+          {tabValue === 0 ? "Rotating Work Type Assigns" : "Rotating Allocated Work Assigns"}
         </Typography>
 
         <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
@@ -1250,7 +1255,7 @@ const RotatingWorktypeAssign = () => {
             />
 
             {/* Display selected employee info if available */}
-            {selectedEmployee && (
+            {/* {selectedEmployee && (
               <Paper
                 elevation={0}
                 sx={{
@@ -1279,6 +1284,41 @@ const RotatingWorktypeAssign = () => {
                   <Typography variant="body2">
                     <strong>Current Work Type:</strong>{" "}
                     {selectedEmployee.currentWorktype || "Regular"}
+                  </Typography>
+                </Box>
+              </Paper>
+            )} */}
+
+            {/* Display selected employee info if available */}
+            {selectedEmployee && (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                }}
+              >
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Selected Employee Details
+                </Typography>
+                <Box
+                  sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+                >
+                  <Typography variant="body2">
+                    <strong>Name:</strong> {selectedEmployee.name}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Employee Code:</strong>{" "}
+                    {selectedEmployee.employeeCode}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Department:</strong> {selectedEmployee.department}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Current Work Type:</strong>{" "}
+                    {selectedEmployee.currentWorktype || "Not Assigned"}
                   </Typography>
                 </Box>
               </Paper>

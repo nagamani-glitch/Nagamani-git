@@ -46,6 +46,15 @@ import "./EmployeeReport.css";
 const { TabPane } = Tabs;
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
+const getInitials = (name) => {
+  if (!name) return "?";
+  return name
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
+}
 const EmployeeReport = () => {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState({
@@ -533,11 +542,36 @@ const EmployeeReport = () => {
       key: "name",
       render: (text, record) => (
         <div className="er-employee-name">
-          <img
-            src={record.avatar}
-            alt={text}
-            className="er-employee-avatar"
-          />
+          {record.avatar ? (
+            <img
+              src={record.avatar}
+              alt={text}
+              className="er-employee-avatar"
+              onError={(e) => {
+                // If image fails to load, replace with initials
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div 
+            className="er-employee-initials"
+            style={{
+              display: record.avatar ? 'none' : 'flex',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: `hsl(${text.length * 30}, 70%, 50%)`,
+              color: '#fff',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold',
+              marginRight: '8px',
+              fontSize: '14px'
+            }}
+          >
+            {getInitials(text)}
+          </div>
           <span>{text}</span>
         </div>
       ),
@@ -600,6 +634,41 @@ const EmployeeReport = () => {
       title: "Name",
       dataIndex: "employeeName",
       key: "employeeName",
+      render: (text, record) => (
+        <div className="er-employee-name">
+          {record.avatar ? (
+            <img
+              src={record.avatar}
+              alt={text}
+              className="er-employee-avatar"
+              onError={(e) => {
+                // If image fails to load, replace with initials
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div 
+            className="er-employee-initials"
+            style={{
+              display: record.avatar ? 'none' : 'flex',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: `hsl(${text.length * 30}, 70%, 50%)`,
+              color: '#fff',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold',
+              marginRight: '8px',
+              fontSize: '14px'
+            }}
+          >
+            {getInitials(text)}
+          </div>
+          <span>{text}</span>
+        </div>
+      ),
       sorter: (a, b) => a.employeeName.localeCompare(b.employeeName),
     },
     {
