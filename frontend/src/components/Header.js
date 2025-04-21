@@ -376,10 +376,10 @@ const Header = () => {
                       }}
                       title={
                         isTimerRunning
-                          ? "Click to Punch-out"
-                          : "Click to Punch-in"
+                          ? "Click to Check-out"
+                          : "Click to Check-in"
                       }
-                      aria-label={isTimerRunning ? "Punch out" : "Punch in"}
+                      aria-label={isTimerRunning ? "Check out" : "Check in"}
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -390,7 +390,7 @@ const Header = () => {
                             <FaSignOutAlt className="timer-icon rotate" />
                           </div>
                           <div className="timer-content">
-                            <span className="timer-label">Punch-out</span>
+                            <span className="timer-label">Check-out</span>
                             <span className="timer-value">{`${formatTime(
                               timer
                             )}`}</span>
@@ -402,7 +402,7 @@ const Header = () => {
                             <FaSignInAlt className="timer-icon beat" />
                           </div>
                           <div className="timer-content">
-                            <span className="timer-label">Punch-in</span>
+                            <span className="timer-label">Check-in</span>
                           </div>
                         </>
                       )}
