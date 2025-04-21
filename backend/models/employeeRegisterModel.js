@@ -11,10 +11,6 @@ const onboardingFormSchema = new mongoose.Schema({
     Emp_ID: { 
     type: String,
     unique: true,
-    // required: true,
-    // default: function() {
-    //   return this.constructor.generateEmployeeNumber();
-    // }
     },
   registrationComplete: { type: Boolean, default: false },
   personalInfo: {

@@ -212,7 +212,6 @@ const WorkTypeRequest = () => {
     console.log(`${severity}: ${message}`);
   };
 
-  // Add function to fetch registered employees
   const fetchRegisteredEmployees = async () => {
     try {
       setLoadingEmployees(true);
@@ -227,6 +226,7 @@ const WorkTypeRequest = () => {
         employeeCode: emp.Emp_ID,
         department: emp.joiningDetails?.department || "Not Assigned",
         currentShift: emp.joiningDetails?.shift || "Regular Shift",
+        currentWorkType: emp.joiningDetails?.workType || "Full Time", // Make sure this field exists in your API response
       }));
 
       setRegisteredEmployees(formattedEmployees);
@@ -237,7 +237,6 @@ const WorkTypeRequest = () => {
     }
   };
 
-  // Handle employee selection
   const handleEmployeeSelect = (event, employee) => {
     setSelectedEmployee(employee);
     if (employee) {
@@ -247,6 +246,7 @@ const WorkTypeRequest = () => {
         employee: employee.name,
         employeeCode: employee.employeeCode,
         currentShift: employee.currentShift || "Regular Shift",
+        currentWorkType: employee.currentWorkType || "Full Time", // Add this line
       }));
     }
   };
@@ -335,7 +335,7 @@ const WorkTypeRequest = () => {
     setFormData({
       employee: "",
       employeeCode: "",
-      requestWorktype: "", 
+      requestWorktype: "",
       requestedDate: "",
       requestedTill: "",
       description: "",
@@ -344,66 +344,35 @@ const WorkTypeRequest = () => {
     setSelectedEmployee(null);
   };
 
-  // const handleCreateShift = async () => {
-  //   try {
-  //     // Use the selected employee data if available, otherwise use the form data
-  //     const employeeData = selectedEmployee || {
-  //       name: formData.employee,
-  //       employeeCode: formData.employeeCode,
-  //       currentShift: "Regular Shift",
-  //     };
+  const handleCreateShift = async () => {
+    try {
+      // Use the selected employee data if available, otherwise use the form data
+      const employeeData = selectedEmployee || {
+        name: formData.employee,
+        employeeCode: formData.employeeCode,
+        currentWorkType: "Full Time",
+      };
 
-  //     const requestData = {
-  //       employee: formData.employee,
-  //       employeeCode: employeeData.employeeCode,
-  //       requestedShift: formData.requestShift,
-  //       currentShift: employeeData.currentShift || "Regular Shift",
-  //       requestedDate: formData.requestedDate,
-  //       requestedTill: formData.requestedTill,
-  //       description: formData.description,
-  //       isPermanentRequest,
-  //       status: "Pending",
-  //     };
+      const requestData = {
+        employee: formData.employee,
+        employeeCode: employeeData.employeeCode,
+        requestedShift: formData.requestWorktype,
+        currentWorktype: employeeData.currentWorkType || "Full Time", // This field is actually storing the work type
+        requestedDate: formData.requestedDate,
+        requestedTill: formData.requestedTill,
+        description: formData.description,
+        isPermanentRequest,
+        status: "Pending",
+      };
 
-  //     const response = await createWorkTypeRequest(requestData);
-  //     setShiftRequests((prev) => [...prev, response.data]);
-  //     setCreateDialogOpen(false);
-  //     resetFormData();
-  //   } catch (error) {
-  //     console.error("Error creating work type request:", error);
-  //   }
-  // };
-
-  // Update the handleCreateShift function
-const handleCreateShift = async () => {
-  try {
-    // Use the selected employee data if available, otherwise use the form data
-    const employeeData = selectedEmployee || {
-      name: formData.employee,
-      employeeCode: formData.employeeCode,
-      currentShift: "Regular Shift",
-    };
-
-    const requestData = {
-      employee: formData.employee,
-      employeeCode: employeeData.employeeCode,
-      requestedShift: formData.requestWorktype,  // Use the correct field name
-      currentShift: employeeData.currentShift || "Regular Shift",
-      requestedDate: formData.requestedDate,
-      requestedTill: formData.requestedTill,
-      description: formData.description,
-      isPermanentRequest,
-      status: "Pending",
-    };
-
-    const response = await createWorkTypeRequest(requestData);
-    setShiftRequests((prev) => [...prev, response.data]);
-    setCreateDialogOpen(false);
-    resetFormData();
-  } catch (error) {
-    console.error("Error creating work type request:", error);
-  }
-};
+      const response = await createWorkTypeRequest(requestData);
+      setShiftRequests((prev) => [...prev, response.data]);
+      setCreateDialogOpen(false);
+      resetFormData();
+    } catch (error) {
+      console.error("Error creating work type request:", error);
+    }
+  };
 
   const handleEdit = (shift) => {
     setEditingShift(shift);
@@ -718,7 +687,7 @@ const handleCreateShift = async () => {
                 Requested Shift
               </StyledTableCell>
               <StyledTableCell sx={{ minWidth: 150 }}>
-                Current Shift
+                Current Work Type
               </StyledTableCell>
               <StyledTableCell sx={{ minWidth: 130 }}>
                 Requested Date
@@ -853,7 +822,9 @@ const handleCreateShift = async () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {request.currentShift}
+                      {request.currentWorktype ||
+                        request.currentShift ||
+                        "Full Time"}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -1294,8 +1265,8 @@ const handleCreateShift = async () => {
                     <strong>Department:</strong> {selectedEmployee.department}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Current Shift:</strong>{" "}
-                    {selectedEmployee.currentShift || "Regular Shift"}
+                    <strong>Current Work Type:</strong>{" "}
+                    {selectedEmployee.currentWorkType || "Full Time"}
                   </Typography>
                 </Box>
               </Paper>
