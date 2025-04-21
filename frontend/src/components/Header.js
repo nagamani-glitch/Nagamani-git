@@ -447,7 +447,7 @@ const Header = () => {
                               onClick={() => {
                                 setShowProfileMenu(false);
                                 closeNavbar();
-                                navigate("/profile");
+                                navigate("Dashboards/profile");
                               }}
                             >
                               <div
@@ -561,7 +561,7 @@ const Header = () => {
                         </div>
                         <NavDropdown.Item
                           onClick={() =>
-                            handleDropdownItemClick(() => navigate("/profile"))
+                            handleDropdownItemClick(() => navigate("/Dashboards/profile"))
                           }
                         >
                           My Profile
