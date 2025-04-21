@@ -140,6 +140,20 @@ const AssetHistory = () => {
     };  
     
     // In fetchAssets function
+// const fetchAssets = async () => {
+//   try {
+//     setLoading(true);
+//     const response = await axios.get(`${API_URL}/api/assets`);
+//     console.log('Fetched assets:', response.data);
+//     setAssets(response.data);
+//     setLoading(false);
+//   } catch (error) {
+//     console.error('Error fetching asset history:', error);
+//     setError('Failed to load assets');
+//     setLoading(false);
+//   }
+// };
+
 const fetchAssets = async () => {
   try {
     setLoading(true);
@@ -228,6 +242,51 @@ const fetchBatches = async () => {
       });
     };
    
+    // const handleAddAsset = async (e) => {
+    //   e.preventDefault();
+    //   try {
+    //     setLoading(true);
+    //     const formattedData = {
+    //       name: newAssetData.name,
+    //       category: newAssetData.category,
+    //       status: newAssetData.status,
+    //       currentEmployee: newAssetData.currentEmployee,
+    //       previousEmployees: newAssetData.previousEmployees || [],
+    //       batch: newAssetData.batch || '',
+    //       allottedDate: newAssetData.allottedDate ? new Date(newAssetData.allottedDate).toISOString() : null,
+    //       returnDate: newAssetData.returnDate ? new Date(newAssetData.returnDate).toISOString() : null
+    //     };
+        
+    //     console.log('Sending asset data:', formattedData);
+        
+    //     await axios.post(`${API_URL}/api/assets`, formattedData);
+    //     fetchAssets();
+    //     setNewAssetData({ 
+    //       name: '', 
+    //       category: '', 
+    //       status: '', 
+    //       returnDate: '', 
+    //       allottedDate: '',
+    //       currentEmployee: '',
+    //       previousEmployees: [],
+    //       batch: ''
+    //     });
+    //     setIsAddModalOpen(false);
+      
+    //     // Notify other components about the update
+    //     const timestamp = Date.now().toString();
+    //     localStorage.setItem('assetsUpdated', timestamp);
+      
+    //     const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
+    //     window.dispatchEvent(event);
+    //   } catch (error) {
+    //     console.error('Error adding new asset:', error);
+    //     setError('Failed to add asset: ' + error.message);
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+    
     const handleAddAsset = async (e) => {
       e.preventDefault();
       try {
@@ -238,15 +297,19 @@ const fetchBatches = async () => {
           status: newAssetData.status,
           currentEmployee: newAssetData.currentEmployee,
           previousEmployees: newAssetData.previousEmployees || [],
-          batch: newAssetData.batch || '',
+          batch: newAssetData.batch || '', // Make sure batch is included and properly formatted
           allottedDate: newAssetData.allottedDate ? new Date(newAssetData.allottedDate).toISOString() : null,
           returnDate: newAssetData.returnDate ? new Date(newAssetData.returnDate).toISOString() : null
         };
         
         console.log('Sending asset data:', formattedData);
         
-        await axios.post(`${API_URL}/api/assets`, formattedData);
-        fetchAssets();
+        const response = await axios.post(`${API_URL}/api/assets`, formattedData);
+        console.log('Response from server:', response.data); // Add this to debug the response
+        
+        // Immediately fetch the updated assets to ensure we have the latest data
+        await fetchAssets();
+        
         setNewAssetData({ 
           name: '', 
           category: '', 
@@ -273,6 +336,39 @@ const fetchBatches = async () => {
       }
     };
     
+    // const handleUpdate = async (e) => {
+    //   e.preventDefault();
+    //   try {
+    //     setLoading(true);
+    //     const updatedData = {
+    //       ...editData,
+    //       // Format the allottedDate properly if it exists
+    //       allottedDate: editData.allottedDate ? new Date(editData.allottedDate).toISOString() : null,
+    //       // Format the returnDate properly if it exists
+    //       returnDate: editData.returnDate ? new Date(editData.returnDate).toISOString() : null,
+    //       // Make sure batch is included
+    //       batch: editData.batch || ''
+    //     };
+        
+    //     console.log('Updating asset with data:', updatedData); // Add this line to debug
+        
+    //     await axios.put(`${API_URL}/api/assets/${editingAssetId}`, updatedData);
+    //     setEditingAssetId(null);
+    //     fetchAssets();
+      
+    //     // Notify other components about the update
+    //     const timestamp = Date.now().toString();
+    //     localStorage.setItem('assetsUpdated', timestamp);
+      
+    //     const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
+    //     window.dispatchEvent(event);
+    //   } catch (error) {
+    //     console.error('Error updating asset:', error);
+    //     setError('Failed to update asset: ' + error.message);
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
     
     const handleUpdate = async (e) => {
       e.preventDefault();
@@ -307,7 +403,7 @@ const fetchBatches = async () => {
         setLoading(false);
       }
     };
-    
+     
     const filteredAssets = assets.filter(asset =>
       (asset.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (asset.status?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -690,6 +786,7 @@ const fetchBatches = async () => {
               <StyledTableCell sx={{ minWidth: 180 }}>Asset Name</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 150 }}>Category</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 150 }}>Batch</StyledTableCell>
+              <StyledTableCell sx={{ minWidth: 180 }}>Previous Employees</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 180 }}>Current Employee</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 130 }}>Allotted Date</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 130 }}>Return Date</StyledTableCell>
@@ -742,30 +839,56 @@ const fetchBatches = async () => {
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  {asset.batch ? (
-                    <Chip
-                      label={asset.batch}
-                      size="small"
-                      onClick={() => handleAssetNameClick(asset)}
-                      sx={{
-                        backgroundColor: alpha(theme.palette.info.main, 0.1),
-                        color: theme.palette.info.dark,
-                        borderColor: theme.palette.info.main,
-                        borderWidth: 1,
-                        borderStyle: 'solid',
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        '&:hover': {
-                          backgroundColor: alpha(theme.palette.info.main, 0.2),
-                        }
-                      }}
-                    />
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      No Batch
-                    </Typography>
-                  )}
-                </TableCell>
+  {asset.batch ? (
+    <Chip
+      label={asset.batch}
+      size="small"
+      onClick={() => handleAssetNameClick(asset)}
+      sx={{
+        backgroundColor: alpha(theme.palette.info.main, 0.1),
+        color: theme.palette.info.dark,
+        borderColor: theme.palette.info.main,
+        borderWidth: 1,
+        borderStyle: 'solid',
+        fontWeight: 500,
+        cursor: 'pointer',
+        '&:hover': {
+          backgroundColor: alpha(theme.palette.info.main, 0.2),
+        }
+      }}
+    />
+  ) : (
+    <Typography variant="body2" color="text.secondary">
+      No Batch
+    </Typography>
+  )}
+</TableCell>
+<TableCell>
+      {asset.previousEmployees && asset.previousEmployees.length > 0 ? (
+        <Box sx={{ maxHeight: '60px', overflowY: 'auto' }}>
+          {asset.previousEmployees.map((employee, index) => (
+            <Chip
+              key={index}
+              label={toSentenceCase(employee)}
+              size="small"
+              sx={{
+                m: 0.3,
+                backgroundColor: alpha(theme.palette.secondary.light, 0.1),
+                color: theme.palette.secondary.dark,
+                borderRadius: '4px',
+                fontSize: '0.7rem'
+              }}
+            />
+          ))}
+        </Box>
+      ) : (
+        <Typography variant="body2" color="text.secondary">
+          None
+        </Typography>
+      )}
+    </TableCell>
+
+
                               <TableCell>
                   <Typography variant="body2" sx={{ color: "#2563eb" }}>
                     {toSentenceCase(asset.currentEmployee) || 'None'}
