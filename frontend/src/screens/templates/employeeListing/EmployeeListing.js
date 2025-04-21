@@ -384,7 +384,7 @@ const EmployeeListing = ({ onNavigate }) => {
           role: employee.joiningDetails?.initialDesignation || "Not Assigned",
           location:
             employee.addressDetails?.presentAddress?.city || "Not Specified",
-          // Use the same approach as in ProfilePage.js
+          // Use the correct field name (employeeImage instead of profileImage)
           profileImage: employee.personalInfo?.employeeImage
             ? `http://localhost:5000${employee.personalInfo.employeeImage}`
             : null,
