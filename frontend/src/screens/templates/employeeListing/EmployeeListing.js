@@ -287,22 +287,28 @@ const EmployeeListing = ({ onNavigate }) => {
   // useEffect(() => {
   //   const fetchEmployees = async () => {
   //     try {
-  //       const response = await axios.get('/api/employees/registered');
-  //       const employeeData = response.data.map(employee => ({
-  //         _id: employee.Emp_ID || '',
-  //         name: employee.personalInfo ?
-  //           `${employee.personalInfo.firstName || ''} ${employee.personalInfo.lastName || ''}`.trim() : '',
-  //         email: employee.personalInfo?.email || '',
-  //         phone: employee.personalInfo?.mobileNumber || '',
-  //         department: employee.joiningDetails?.department || 'Not Assigned',
-  //         role: employee.joiningDetails?.initialDesignation || 'Not Assigned',
-  //         location: employee.addressDetails?.presentAddress?.city || 'Not Specified'
+  //       const response = await axios.get("/api/employees/registered");
+  //       const employeeData = response.data.map((employee) => ({
+  //         _id: employee.Emp_ID || "",
+  //         name: employee.personalInfo
+  //           ? `${employee.personalInfo.firstName || ""} ${
+  //               employee.personalInfo.lastName || ""
+  //             }`.trim()
+  //           : "",
+  //         email: employee.personalInfo?.email || "",
+  //         phone: employee.personalInfo?.mobileNumber || "",
+  //         department: employee.joiningDetails?.department || "Not Assigned",
+  //         role: employee.joiningDetails?.initialDesignation || "Not Assigned",
+  //         location:
+  //           employee.addressDetails?.presentAddress?.city || "Not Specified",
+  //         // Add profile image URL - adjust the path based on your actual data structure
+  //         profileImage: employee.personalInfo?.profileImage || "",
   //       }));
 
   //       setProfiles(employeeData);
   //       setFilteredEmployeesList(employeeData);
   //     } catch (error) {
-  //       console.error('Error fetching employees:', error);
+  //       console.error("Error fetching employees:", error);
   //     }
   //   };
   //   fetchEmployees();
@@ -311,7 +317,51 @@ const EmployeeListing = ({ onNavigate }) => {
   //     y: -50,
   //     opacity: 0,
   //     duration: 1,
-  //     ease: "power3.out"
+  //     ease: "power3.out",
+  //   });
+  // }, []);
+  // In the useEffect where you fetch employees, make sure the profileImage path is complete
+  // useEffect(() => {
+  //   const fetchEmployees = async () => {
+  //     try {
+  //       const response = await axios.get("/api/employees/registered");
+  //       console.log("Employee data from API:", response.data); // Add this for debugging
+
+  //       const employeeData = response.data.map((employee) => ({
+  //         _id: employee.Emp_ID || "",
+  //         name: employee.personalInfo
+  //           ? `${employee.personalInfo.firstName || ""} ${
+  //               employee.personalInfo.lastName || ""
+  //             }`.trim()
+  //           : "",
+  //         email: employee.personalInfo?.email || "",
+  //         phone: employee.personalInfo?.mobileNumber || "",
+  //         department: employee.joiningDetails?.department || "Not Assigned",
+  //         role: employee.joiningDetails?.initialDesignation || "Not Assigned",
+  //         location:
+  //           employee.addressDetails?.presentAddress?.city || "Not Specified",
+  //         // Use the correct field name (employeeImage instead of profileImage)
+  //         profileImage: employee.personalInfo?.employeeImage
+  //           ? (employee.personalInfo.employeeImage.startsWith('http')
+  //               ? employee.personalInfo.employeeImage
+  //               : `/uploads/${employee.personalInfo.employeeImage}`) // Remove the /api prefix
+  //           : "",
+  //       }));
+
+  //       console.log("Processed employee data:", employeeData); // Add this for debugging
+  //       setProfiles(employeeData);
+  //       setFilteredEmployeesList(employeeData);
+  //     } catch (error) {
+  //       console.error("Error fetching employees:", error);
+  //     }
+  //   };
+  //   fetchEmployees();
+
+  //   gsap.from(".search-container", {
+  //     y: -50,
+  //     opacity: 0,
+  //     duration: 1,
+  //     ease: "power3.out",
   //   });
   // }, []);
 
@@ -319,6 +369,8 @@ const EmployeeListing = ({ onNavigate }) => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get("/api/employees/registered");
+        console.log("Employee data from API:", response.data); // Add this for debugging
+
         const employeeData = response.data.map((employee) => ({
           _id: employee.Emp_ID || "",
           name: employee.personalInfo
@@ -332,10 +384,13 @@ const EmployeeListing = ({ onNavigate }) => {
           role: employee.joiningDetails?.initialDesignation || "Not Assigned",
           location:
             employee.addressDetails?.presentAddress?.city || "Not Specified",
-          // Add profile image URL - adjust the path based on your actual data structure
-          profileImage: employee.personalInfo?.profileImage || "",
+          // Use the same approach as in ProfilePage.js
+          profileImage: employee.personalInfo?.employeeImage
+            ? `http://localhost:5000${employee.personalInfo.employeeImage}`
+            : null,
         }));
 
+        console.log("Processed employee data:", employeeData); // Add this for debugging
         setProfiles(employeeData);
         setFilteredEmployeesList(employeeData);
       } catch (error) {
@@ -452,13 +507,34 @@ const EmployeeListing = ({ onNavigate }) => {
                   >
                     {/* Profile Image with Fallback */}
                     {employee.profileImage ? (
+                      // <Box
+                      //   component="img"
+                      //   src={employee.profileImage}
+                      //   alt={employee.name || "Employee"}
+                      //   sx={{
+                      //     width: 50,
+                      //     height: 50,
+                      //     borderRadius: "50%",
+                      //     objectFit: "cover",
+                      //     mr: 2,
+                      //     border: `2px solid ${alpha(
+                      //       theme.palette.primary.main,
+                      //       0.3
+                      //     )}`,
+                      //   }}
+                      //   onError={(e) => {
+                      //     // Fallback to initials if image fails to load
+                      //     e.target.style.display = "none";
+                      //     e.target.nextSibling.style.display = "flex";
+                      //   }}
+                      // />
                       <Box
                         component="img"
                         src={employee.profileImage}
                         alt={employee.name || "Employee"}
                         sx={{
-                          width: 50,
-                          height: 50,
+                          width: 50, // or 40 for list view
+                          height: 50, // or 40 for list view
                           borderRadius: "50%",
                           objectFit: "cover",
                           mr: 2,
@@ -468,7 +544,12 @@ const EmployeeListing = ({ onNavigate }) => {
                           )}`,
                         }}
                         onError={(e) => {
-                          // Fallback to initials if image fails to load
+                          console.error(
+                            "Failed to load image:",
+                            employee.profileImage,
+                            "for employee:",
+                            employee.name
+                          );
                           e.target.style.display = "none";
                           e.target.nextSibling.style.display = "flex";
                         }}
