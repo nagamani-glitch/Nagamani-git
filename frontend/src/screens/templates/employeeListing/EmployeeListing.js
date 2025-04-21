@@ -2,10 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { styled } from '@mui/material/styles';
 import gsap from 'gsap';
-import { Card, Button, TextField, IconButton, MenuItem, Select, InputLabel, FormControl, Pagination, Grid, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip } from '@mui/material';
-import { Search, FilterList, ViewModule, ViewList, MoreVert } from '@mui/icons-material';
+import { useTheme,Card, Button, TextField, IconButton, MenuItem, Select, InputLabel, FormControl, Pagination, Grid, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip } from '@mui/material';
+import { Search, FilterList, ViewModule, ViewList, MoreVert, Add } from '@mui/icons-material';
 import axios from 'axios';
 
+
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
+
+const SearchTextField = styled(TextField)(({ theme }) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: theme.spacing(2),
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+}));
 
 
 const StyledContainer = styled(Box)(({ theme }) => ({
@@ -148,8 +168,11 @@ const EmployeeListing = ({ onNavigate }) => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [profiles, setProfiles] = useState([]);
   const [filteredEmployeesList, setFilteredEmployeesList] = useState([]);
-  const itemsPerPage = 10;
+  //const itemsPerPage = 10;
 
+  const [loading, setLoading] = useState(false);
+  const itemsPerPage = 10;
+  const theme = useTheme();
   // GSAP animations
 useEffect(() => {
   gsap.from(".search-container", {

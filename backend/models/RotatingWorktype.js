@@ -12,7 +12,7 @@ const rotatingWorktypeSchema = new mongoose.Schema({
   requestedWorktype: {
     type: String,
     required: true,
-    enum: ['Full Time', 'Part Time', 'Contract']
+    enum: ['Full Time', 'Part Time', 'Contract', 'Freelance', 'Remote']
   },
   currentWorktype: {
     type: String,
