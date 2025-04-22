@@ -3,7 +3,7 @@ import colors from 'colors';
 
 const userName = encodeURIComponent('rickyharish30');
 const password = encodeURIComponent('LBGUaMDLUuNs7NTb');
-const URL = `mongodb+srv://${userName}:${password}@hrms.e4ytt.mongodb.net/?retryWrites=true&w=majority&appName=HRMS` || process.env.MONGO_URI;
+const URL = `mongodb+srv://adineshsundar02:HRMS123@cluster0.egcee0k.mongodb.net/?retryWrites=true&w=majority&appName=HRMS_2204`;
 
 const connectDB = async () => {
     try {
