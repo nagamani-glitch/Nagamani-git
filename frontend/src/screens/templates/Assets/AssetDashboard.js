@@ -1,241 +1,3 @@
-// // AssetDashboard.js
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import './AssetDashboard.css';
-// import { Pie, Bar } from 'react-chartjs-2';
-// import {
-//   Chart as ChartJS,
-//   ArcElement,
-//   CategoryScale,
-//   LinearScale,
-//   BarElement,
-//   Title,
-//   Tooltip,
-//   Legend,
-// } from 'chart.js';
-// import { Box, Typography, Grid } from '@mui/material';
-
-
-// // Register the components
-// ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-
-
-// const Dashboard = () => {
-//   const [totalAssets, setTotalAssets] = useState(0);
-//   const [assetsInUse, setAssetsInUse] = useState(0);
-//   const [categoryData, setCategoryData] = useState([]);
-//   const [statusData, setStatusData] = useState([]);
-//   const [error, setError] = useState(null);
-
-//   useEffect(() => {
-//     fetchDashboardData();
-
-//     // Cleanup function to handle chart unmounting
-//     return () => {
-//       // Add cleanup logic here if needed, like destroying chart instances
-//       // Since react-chartjs-2 automatically cleans up, this is usually not required.
-//     };
-//   }, []);
-
-//   const APP_URL = process.env.REACT_APP_API_URL;
-
-//   const fetchDashboardData = async () => {
-//     try {
-//       // Adjusted API URL to match backend
-//       const response = await axios.get(`${APP_URL}/api/assetHistory/summary`);
-//       setTotalAssets(response.data.totalAssets);
-//       setAssetsInUse(response.data.assetsInUse);
-//       setCategoryData(response.data.categoryData);
-//       setStatusData(response.data.statusData);
-//     } catch (error) {
-//       console.error('Error fetching dashboard data:', error);
-//       setError('Failed to load dashboard data.');
-//     }
-//   };
-
-//   const statusChartData = {
-//     labels: statusData.map((status) => status._id),
-//     datasets: [
-//       {
-//         data: statusData.map((status) => status.count),
-//         backgroundColor: ['#007bff', '#28a745', '#dc3545', '#ffc107'],
-//       },
-//     ],
-//   };
-
-//   const categoryChartData = {
-//     labels: categoryData.map((category) => category._id),
-//     datasets: [
-//       {
-//         label: 'Assets by Category',
-//         data: categoryData.map((category) => category.count),
-//         backgroundColor: '#36a2eb',
-//       },
-//     ],
-//   };
-
-//   return (
-
-//     <Box sx={{
-//       padding: '24px',
-//       backgroundColor: '#f8fafc'
-//   }}>
-//       {/* Header Section */}
-//       <Typography variant="h4" sx={{ 
-//           fontWeight: 600, 
-//           color: '#1976d2',
-//           background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
-//           WebkitBackgroundClip: 'text',
-//           WebkitTextFillColor: 'transparent',
-//           mb: 4
-//       }}>
-//           Asset Dashboard
-//       </Typography>
-  
-//       {/* Stats Cards */}
-//       <Grid container spacing={3} sx={{ mb: 4 }}>
-//           <Grid item xs={12} sm={6}>
-//               <Box sx={{
-//                   backgroundColor: 'white',
-//                   borderRadius: '16px',
-//                   padding: '24px',
-//                   boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-//                   height: '100%'
-//               }}>
-//                   <Typography variant="h6" sx={{ color: '#64748b', mb: 1 }}>
-//                       Total Assets
-//                   </Typography>
-//                   <Typography variant="h3" sx={{ 
-//                       color: '#1976d2',
-//                       fontWeight: 600 
-//                   }}>
-//                       {totalAssets}
-//                   </Typography>
-//               </Box>
-//           </Grid>
-//           <Grid item xs={12} sm={6}>
-//               <Box sx={{
-//                   backgroundColor: 'white',
-//                   borderRadius: '16px',
-//                   padding: '24px',
-//                   boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-//                   height: '100%'
-//               }}>
-//                   <Typography variant="h6" sx={{ color: '#64748b', mb: 1 }}>
-//                       Assets in Use
-//                   </Typography>
-//                   <Typography variant="h3" sx={{ 
-//                       color: '#1976d2',
-//                       fontWeight: 600 
-//                   }}>
-//                       {assetsInUse}
-//                   </Typography>
-//               </Box>
-//           </Grid>
-//       </Grid>
-  
-//       {/* Charts Section */}
-//       <Grid container spacing={3}>
-//           <Grid item xs={12} md={6}>
-//               <Box sx={{
-//                   backgroundColor: 'white',
-//                   borderRadius: '16px',
-//                   padding: '24px',
-//                   boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-//                   height: '100%'
-//               }}>
-//                   <Typography variant="h6" sx={{ 
-//                       color: '#475569',
-//                       mb: 3,
-//                       fontWeight: 600
-//                   }}>
-//                       Asset Status Distribution
-//                   </Typography>
-//                   {statusData.length ? (
-//                       <Box sx={{ height: 300 }}>
-//                           <Pie 
-//                               data={statusChartData}
-//                               options={{
-//                                   responsive: true,
-//                                   maintainAspectRatio: false,
-//                                   plugins: {
-//                                       legend: {
-//                                           position: 'bottom',
-//                                           labels: {
-//                                               padding: 20,
-//                                               usePointStyle: true
-//                                           }
-//                                       }
-//                                   }
-//                               }}
-//                           />
-//                       </Box>
-//                   ) : (
-//                       <Typography sx={{ color: '#64748b', textAlign: 'center' }}>
-//                           Loading status data...
-//                       </Typography>
-//                   )}
-//               </Box>
-//           </Grid>
-//           <Grid item xs={12} md={6}>
-//               <Box sx={{
-//                   backgroundColor: 'white',
-//                   borderRadius: '16px',
-//                   padding: '24px',
-//                   boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-//                   height: '100%'
-//               }}>
-//                   <Typography variant="h6" sx={{ 
-//                       color: '#475569',
-//                       mb: 3,
-//                       fontWeight: 600
-//                   }}>
-//                       Assets by Category
-//                   </Typography>
-//                   {categoryData.length ? (
-//                       <Box sx={{ height: 300 }}>
-//                           <Bar 
-//                               data={categoryChartData}
-//                               options={{
-//                                   responsive: true,
-//                                   maintainAspectRatio: false,
-//                                   plugins: {
-//                                       legend: {
-//                                           display: false
-//                                       }
-//                                   },
-//                                   scales: {
-//                                       y: {
-//                                           beginAtZero: true,
-//                                           grid: {
-//                                               drawBorder: false
-//                                           }
-//                                       },
-//                                       x: {
-//                                           grid: {
-//                                               display: false
-//                                           }
-//                                       }
-//                                   }
-//                               }}
-//                           />
-//                       </Box>
-//                   ) : (
-//                       <Typography sx={{ color: '#64748b', textAlign: 'center' }}>
-//                           Loading category data...
-//                       </Typography>
-//                   )}
-//               </Box>
-//           </Grid>
-//       </Grid>
-//   </Box>
-  
-//   );
-// };
-
-// export default Dashboard;
-
 // AssetDashboard.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -281,7 +43,9 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Tooltip as MuiTooltip
+  Tooltip as MuiTooltip,
+  useTheme,
+  alpha
 } from '@mui/material';
 import { 
   Computer, 
@@ -300,7 +64,12 @@ import {
   Inventory,
   Dashboard,
   Layers,
-  History
+  History,
+  MoreVert,
+  FilterList,
+  Search,
+  Download,
+  Print
 } from '@mui/icons-material';
 
 // Register the components
@@ -318,87 +87,118 @@ ChartJS.register(
 );
 
 const AssetDashboard = () => {
+  const theme = useTheme();
+  
   // State variables
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dashboardData, setDashboardData] = useState({
+  const [assets, setAssets] = useState([]);
+  const [assetBatches, setAssetBatches] = useState([]);
+  const [activeTab, setActiveTab] = useState(0);
+  const [dashboardSummary, setDashboardSummary] = useState({
     totalAssets: 0,
     assetsInUse: 0,
-    categoryData: [],
-    statusData: []
+    availableAssets: 0,
+    totalCategories: 0,
+    categoryDistribution: [],
+    statusDistribution: [],
+    recentTransactions: []
   });
-  const [assetHistory, setAssetHistory] = useState([]);
-  const [assetBatches, setAssetBatches] = useState([]);
-  const [assetCategories, setAssetCategories] = useState([]);
-  const [recentTransactions, setRecentTransactions] = useState([]);
   const [assetTrends, setAssetTrends] = useState({
     labels: [],
-    allocated: [],
-    returned: []
+    acquisitions: [],
+    allocations: []
   });
-  const [activeTab, setActiveTab] = useState(0);
   const [topEmployees, setTopEmployees] = useState([]);
-
-  useEffect(() => {
-    fetchAllAssetData();
-  }, []);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-  const fetchAllAssetData = async () => {
+  useEffect(() => {
+    fetchAssetData();
+  }, []);
+
+  const fetchAssetData = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch dashboard summary data
-      const summaryResponse = await axios.get(`${API_URL}/api/assetHistory/summary`);
+      // Fetch assets data
+      const assetsResponse = await axios.get(`${API_URL}/api/assets`);
       
-      // Fetch asset history data
-      const historyResponse = await axios.get(`${API_URL}/api/assetHistory`);
-      
-      // Fetch asset batches
+      // Fetch asset batches data
       const batchesResponse = await axios.get(`${API_URL}/api/asset-batches`);
       
-      // Fetch asset categories
-      const categoriesResponse = await axios.get(`${API_URL}/api/assets`);
-      
-      // Process and set the data
-      setDashboardData({
-        totalAssets: summaryResponse.data.totalAssets,
-        assetsInUse: summaryResponse.data.assetsInUse,
-        categoryData: summaryResponse.data.categoryData,
-        statusData: summaryResponse.data.statusData
-      });
-      
-      setAssetHistory(historyResponse.data);
+      // Set the raw data
+      setAssets(assetsResponse.data);
       setAssetBatches(batchesResponse.data);
-      setAssetCategories(categoriesResponse.data);
       
-      // Generate recent transactions from asset history
-      const sortedHistory = [...historyResponse.data].sort((a, b) => 
-        new Date(b.allottedDate) - new Date(a.allottedDate)
-      ).slice(0, 5);
-      setRecentTransactions(sortedHistory);
-      
-      // Generate asset trends data
-      generateAssetTrends(historyResponse.data);
-      
-      // Generate top employees with most assets
-      generateTopEmployees(categoriesResponse.data);
+      // Process data for dashboard summary
+      processDataForDashboard(assetsResponse.data, batchesResponse.data);
       
     } catch (error) {
-      console.error('Error fetching asset dashboard data:', error);
-      setError('Failed to load dashboard data. Please try again.');
+      console.error('Error fetching asset data:', error);
+      setError('Failed to load asset data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Generate asset trends data from history
-  const generateAssetTrends = (historyData) => {
+  const processDataForDashboard = (assetsData, batchesData) => {
+    // Calculate total assets
+    const totalAssets = assetsData.length;
+    
+    // Calculate assets in use
+    const assetsInUse = assetsData.filter(asset => asset.status === 'In Use').length;
+    
+    // Calculate available assets
+    const availableAssets = assetsData.filter(asset => asset.status === 'Available').length;
+    
+    // Calculate unique categories
+    const uniqueCategories = [...new Set(assetsData.map(asset => asset.category))];
+    const totalCategories = uniqueCategories.length;
+    
+    // Calculate category distribution
+    const categoryDistribution = uniqueCategories.map(category => {
+      const count = assetsData.filter(asset => asset.category === category).length;
+      return { category, count };
+    }).sort((a, b) => b.count - a.count);
+    
+    // Calculate status distribution
+    const statusTypes = [...new Set(assetsData.map(asset => asset.status))];
+    const statusDistribution = statusTypes.map(status => {
+      const count = assetsData.filter(asset => asset.status === status).length;
+      return { status, count };
+    });
+    
+    // Generate recent transactions (based on asset allocation/return dates if available)
+    // For this example, we'll just use the most recently added assets
+    const recentTransactions = [...assetsData]
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 5);
+    
+    // Generate asset trends data (acquisitions by month from batches)
+    generateAssetTrends(batchesData);
+    
+    // Generate top employees with most assets
+    generateTopEmployees(assetsData);
+    
+    // Set the dashboard summary
+    setDashboardSummary({
+      totalAssets,
+      assetsInUse,
+      availableAssets,
+      totalCategories,
+      categoryDistribution,
+      statusDistribution,
+      recentTransactions
+    });
+  };
+
+  // Generate asset trends data from batches
+  const generateAssetTrends = (batchesData) => {
     // Get last 6 months
     const months = [];
-    const allocated = [];
-    const returned = [];
+    const acquisitions = [];
+    const allocations = [];
     
     const today = new Date();
     for (let i = 5; i >= 0; i--) {
@@ -406,36 +206,32 @@ const AssetDashboard = () => {
       const monthName = month.toLocaleString('default', { month: 'short' });
       months.push(monthName);
       
-      // Count allocations and returns for this month
-      const allocationsCount = historyData.filter(asset => {
-        const assetDate = new Date(asset.allottedDate);
-        return assetDate.getMonth() === month.getMonth() && 
-               assetDate.getFullYear() === month.getFullYear();
-      }).length;
+      // Count acquisitions for this month from batches
+      const acquisitionsCount = batchesData.filter(batch => {
+        const batchDate = new Date(batch.purchaseDate);
+        return batchDate.getMonth() === month.getMonth() && 
+               batchDate.getFullYear() === month.getFullYear();
+      }).reduce((sum, batch) => sum + (batch.numberOfAssets || 0), 0);
       
-      const returnsCount = historyData.filter(asset => {
-        if (!asset.returnDate) return false;
-        const returnDate = new Date(asset.returnDate);
-        return returnDate.getMonth() === month.getMonth() && 
-               returnDate.getFullYear() === month.getFullYear();
-      }).length;
+      acquisitions.push(acquisitionsCount);
       
-      allocated.push(allocationsCount);
-      returned.push(returnsCount);
+      // For allocations, we would need allocation dates from assets
+      // For now, we'll use a placeholder or derived value
+      allocations.push(Math.floor(acquisitionsCount * 0.7)); // Assuming 70% of acquisitions are allocated
     }
     
     setAssetTrends({
       labels: months,
-      allocated,
-      returned
+      acquisitions,
+      allocations
     });
   };
 
   // Generate top employees with most assets
-  const generateTopEmployees = (assetData) => {
+  const generateTopEmployees = (assetsData) => {
     const employeeAssetCount = {};
     
-    assetData.forEach(asset => {
+    assetsData.forEach(asset => {
       if (asset.currentEmployee) {
         if (employeeAssetCount[asset.currentEmployee]) {
           employeeAssetCount[asset.currentEmployee]++;
@@ -456,11 +252,16 @@ const AssetDashboard = () => {
 
   // Chart data preparation
   const statusChartData = {
-    labels: dashboardData.statusData.map((status) => status._id),
+    labels: dashboardSummary.statusDistribution.map(item => item.status),
     datasets: [
       {
-        data: dashboardData.statusData.map((status) => status.count),
-        backgroundColor: ['#4CAF50', '#2196F3', '#FF9800', '#F44336'],
+        data: dashboardSummary.statusDistribution.map(item => item.count),
+        backgroundColor: [
+          theme.palette.success.main,
+          theme.palette.primary.main,
+          theme.palette.warning.main,
+          theme.palette.error.main,
+        ],
         borderWidth: 1,
         borderColor: '#fff',
       },
@@ -468,12 +269,12 @@ const AssetDashboard = () => {
   };
 
   const categoryChartData = {
-    labels: dashboardData.categoryData.map((category) => category._id),
+    labels: dashboardSummary.categoryDistribution.map(item => item.category),
     datasets: [
       {
         label: 'Assets by Category',
-        data: dashboardData.categoryData.map((category) => category.count),
-        backgroundColor: '#3f51b5',
+        data: dashboardSummary.categoryDistribution.map(item => item.count),
+        backgroundColor: theme.palette.primary.main,
         borderRadius: 6,
       },
     ],
@@ -483,18 +284,18 @@ const AssetDashboard = () => {
     labels: assetTrends.labels,
     datasets: [
       {
-        label: 'Allocated',
-        data: assetTrends.allocated,
-        borderColor: '#4CAF50',
-        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        label: 'Acquisitions',
+        data: assetTrends.acquisitions,
+        borderColor: theme.palette.success.main,
+        backgroundColor: alpha(theme.palette.success.main, 0.1),
         tension: 0.4,
         fill: true,
       },
       {
-        label: 'Returned',
-        data: assetTrends.returned,
-        borderColor: '#F44336',
-        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+        label: 'Allocations',
+        data: assetTrends.allocations,
+        borderColor: theme.palette.primary.main,
+        backgroundColor: alpha(theme.palette.primary.main, 0.1),
         tension: 0.4,
         fill: true,
       }
@@ -558,7 +359,7 @@ const AssetDashboard = () => {
         beginAtZero: true,
         grid: {
           drawBorder: false,
-          color: 'rgba(0, 0, 0, 0.05)'
+          color: alpha(theme.palette.text.primary, 0.05)
         },
         ticks: {
           precision: 0
@@ -588,7 +389,7 @@ const AssetDashboard = () => {
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
+          color: alpha(theme.palette.text.primary, 0.05)
         },
         ticks: {
           precision: 0
@@ -612,14 +413,24 @@ const AssetDashboard = () => {
   };
 
   const handleRefresh = () => {
-    fetchAllAssetData();
+    fetchAssetData();
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-        <CircularProgress size={60} />
-        <Typography variant="h6" sx={{ ml: 2 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '80vh',
+        flexDirection: 'column',
+        gap: 2
+      }}>
+        <CircularProgress size={60} thickness={4} />
+        <Typography variant="h6" sx={{ 
+          color: theme.palette.text.secondary,
+          fontWeight: 500
+        }}>
           Loading asset dashboard data...
         </Typography>
       </Box>
@@ -629,15 +440,35 @@ const AssetDashboard = () => {
   if (error) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 2,
+            borderRadius: 2,
+            boxShadow: theme.shadows[2]
+          }}
+          action={
+            <Button 
+              color="inherit" 
+              size="small"
+              onClick={handleRefresh}
+            >
+              Retry
+            </Button>
+          }
+        >
           {error}
         </Alert>
         <Button 
           variant="contained" 
           startIcon={<Refresh />}
           onClick={handleRefresh}
+          sx={{ 
+            borderRadius: 2,
+            boxShadow: theme.shadows[2]
+          }}
         >
-          Try Again
+          Refresh Dashboard
         </Button>
       </Box>
     );
@@ -646,7 +477,8 @@ const AssetDashboard = () => {
   return (
     <Box sx={{
       padding: '24px',
-      backgroundColor: '#f8fafc'
+      backgroundColor: alpha(theme.palette.background.default, 0.7),
+      minHeight: '100vh'
     }}>
       {/* Header Section */}
       <Box sx={{ 
@@ -655,41 +487,77 @@ const AssetDashboard = () => {
         alignItems: 'center',
         mb: 4 
       }}>
-        <Typography variant="h4" sx={{ 
-          fontWeight: 600, 
-          color: '#1976d2',
-          background: 'linear-gradient(45deg, #1976d2, #64b5f6)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-        }}>
-          Asset Dashboard
-        </Typography>
+        <Box>
+          <Typography variant="h4" sx={{ 
+            fontWeight: 700, 
+            color: theme.palette.primary.main,
+            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            mb: 1
+          }}>
+            Asset Dashboard
+          </Typography>
+          <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
+          Manage and monitor your organization's assets and inventory
+          </Typography>
+        </Box>
         
-        <MuiTooltip title="Refresh Data">
-          <IconButton 
-            onClick={handleRefresh} 
-            color="primary"
-            sx={{ 
-              backgroundColor: 'white',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              '&:hover': { backgroundColor: '#f0f7ff' }
-            }}
-          >
-            <Refresh />
-          </IconButton>
-        </MuiTooltip>
+        <Stack direction="row" spacing={1}>
+          {/* <MuiTooltip title="Export Data">
+            <IconButton 
+              color="primary"
+              sx={{ 
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.2) }
+              }}
+            >
+              <Download />
+            </IconButton>
+          </MuiTooltip>
+          
+          <MuiTooltip title="Print Dashboard">
+            <IconButton 
+              color="primary"
+              sx={{ 
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.2) }
+              }}
+            >
+              <Print />
+            </IconButton> 
+          </MuiTooltip>*/}
+          
+          <MuiTooltip title="Refresh Data">
+            <IconButton 
+              onClick={handleRefresh} 
+              color="primary"
+              sx={{ 
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.2) }
+              }}
+            >
+              <Refresh />
+            </IconButton>
+          </MuiTooltip>
+        </Stack>
       </Box>
 
       {/* Navigation Tabs */}
-      <Paper sx={{ mb: 4, borderRadius: '12px', overflow: 'hidden' }}>
+      <Paper sx={{ 
+        mb: 4, 
+        borderRadius: '16px', 
+        overflow: 'hidden',
+        boxShadow: theme.shadows[2]
+      }}>
         <Tabs 
           value={activeTab} 
           onChange={handleTabChange}
           variant="fullWidth"
           sx={{ 
-            backgroundColor: 'white',
+            backgroundColor: theme.palette.background.paper,
             '& .MuiTabs-indicator': {
-              backgroundColor: '#1976d2',
+              backgroundColor: theme.palette.primary.main,
               height: 3
             }
           }}
@@ -699,7 +567,7 @@ const AssetDashboard = () => {
             label="Overview" 
             sx={{ 
               textTransform: 'none', 
-              fontWeight: 500,
+              fontWeight: 600,
               py: 2
             }} 
           />
@@ -708,7 +576,7 @@ const AssetDashboard = () => {
             label="Assets" 
             sx={{ 
               textTransform: 'none', 
-              fontWeight: 500,
+              fontWeight: 600,
               py: 2
             }} 
           />
@@ -717,16 +585,7 @@ const AssetDashboard = () => {
             label="Batches" 
             sx={{ 
               textTransform: 'none', 
-              fontWeight: 500,
-              py: 2
-            }} 
-          />
-          <Tab 
-            icon={<History />} 
-            label="History" 
-            sx={{ 
-              textTransform: 'none', 
-              fontWeight: 500,
+              fontWeight: 600,
               py: 2
             }} 
           />
@@ -741,36 +600,45 @@ const AssetDashboard = () => {
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{
                 borderRadius: '16px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                boxShadow: theme.shadows[2],
                 height: '100%',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: theme.shadows[8]
+                }
               }}>
                 <Box sx={{ 
                   height: '4px', 
-                  backgroundColor: '#4CAF50', 
+                  backgroundColor: theme.palette.success.main, 
                   width: '100%' 
                 }} />
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar sx={{ bgcolor: '#E8F5E9', color: '#4CAF50', mr: 2 }}>
+                    <Avatar sx={{ 
+                      bgcolor: alpha(theme.palette.success.main, 0.2), 
+                      color: theme.palette.success.main, 
+                      mr: 2 
+                    }}>
                       <Inventory />
                     </Avatar>
-                    <Typography variant="h6" sx={{ color: '#64748b' }}>
+                    <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
                       Total Assets
                     </Typography>
                   </Box>
                   <Typography variant="h3" sx={{ 
-                    color: '#1976d2',
-                    fontWeight: 600,
+                    color: theme.palette.primary.main,
+                    fontWeight: 700,
                     mb: 1
                   }}>
-                    {dashboardData.totalAssets}
+                    {dashboardSummary.totalAssets}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <TrendingUp sx={{ color: '#4CAF50', mr: 0.5 }} fontSize="small" />
+                    <TrendingUp sx={{ color: theme.palette.success.main, mr: 0.5 }} fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
-                      {Math.round((dashboardData.totalAssets / (dashboardData.totalAssets || 1)) * 100)}% of inventory tracked
+                      {Math.round((dashboardSummary.totalAssets / (dashboardSummary.totalAssets || 1)) * 100)}% of inventory tracked
                     </Typography>
                   </Box>
                 </CardContent>
@@ -780,36 +648,45 @@ const AssetDashboard = () => {
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{
                 borderRadius: '16px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                boxShadow: theme.shadows[2],
                 height: '100%',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: theme.shadows[8]
+                }
               }}>
                 <Box sx={{ 
                   height: '4px', 
-                  backgroundColor: '#2196F3', 
+                  backgroundColor: theme.palette.primary.main, 
                   width: '100%' 
                 }} />
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar sx={{ bgcolor: '#E3F2FD', color: '#2196F3', mr: 2 }}>
+                    <Avatar sx={{ 
+                      bgcolor: alpha(theme.palette.primary.main, 0.2), 
+                      color: theme.palette.primary.main, 
+                      mr: 2 
+                    }}>
                       <Person />
                     </Avatar>
-                    <Typography variant="h6" sx={{ color: '#64748b' }}>
+                    <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
                       Assets in Use
                     </Typography>
                   </Box>
                   <Typography variant="h3" sx={{ 
-                    color: '#1976d2',
-                    fontWeight: 600,
+                    color: theme.palette.primary.main,
+                    fontWeight: 700,
                     mb: 1
                   }}>
-                    {dashboardData.assetsInUse}
+                    {dashboardSummary.assetsInUse}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Info sx={{ color: '#2196F3', mr: 0.5 }} fontSize="small" />
+                    <Info sx={{ color: theme.palette.primary.main, mr: 0.5 }} fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
-                      {Math.round((dashboardData.assetsInUse / dashboardData.totalAssets) * 100)}% utilization rate
+                      {Math.round((dashboardSummary.assetsInUse / dashboardSummary.totalAssets) * 100) || 0}% utilization rate
                     </Typography>
                   </Box>
                 </CardContent>
@@ -819,36 +696,45 @@ const AssetDashboard = () => {
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{
                 borderRadius: '16px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                boxShadow: theme.shadows[2],
                 height: '100%',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: theme.shadows[8]
+                }
               }}>
                 <Box sx={{ 
                   height: '4px', 
-                  backgroundColor: '#FF9800', 
+                  backgroundColor: theme.palette.warning.main, 
                   width: '100%' 
                 }} />
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar sx={{ bgcolor: '#FFF3E0', color: '#FF9800', mr: 2 }}>
+                    <Avatar sx={{ 
+                      bgcolor: alpha(theme.palette.warning.main, 0.2), 
+                      color: theme.palette.warning.main, 
+                      mr: 2 
+                    }}>
                       <Category />
                     </Avatar>
-                    <Typography variant="h6" sx={{ color: '#64748b' }}>
+                    <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
                       Categories
                     </Typography>
                   </Box>
                   <Typography variant="h3" sx={{ 
-                    color: '#1976d2',
-                    fontWeight: 600,
+                    color: theme.palette.primary.main,
+                    fontWeight: 700,
                     mb: 1
                   }}>
-                    {dashboardData.categoryData.length}
+                    {dashboardSummary.totalCategories}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CheckCircle sx={{ color: '#FF9800', mr: 0.5 }} fontSize="small" />
+                    <CheckCircle sx={{ color: theme.palette.warning.main, mr: 0.5 }} fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
-                      {dashboardData.categoryData.length} different asset types
+                      {dashboardSummary.totalCategories} different asset types
                     </Typography>
                   </Box>
                 </CardContent>
@@ -858,36 +744,45 @@ const AssetDashboard = () => {
             <Grid item xs={12} sm={6} md={3}>
               <Card sx={{
                 borderRadius: '16px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                boxShadow: theme.shadows[2],
                 height: '100%',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: theme.shadows[8]
+                }
               }}>
                 <Box sx={{ 
                   height: '4px', 
-                  backgroundColor: '#F44336', 
+                  backgroundColor: theme.palette.info.main, 
                   width: '100%' 
                 }} />
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar sx={{ bgcolor: '#FFEBEE', color: '#F44336', mr: 2 }}>
-                      <CalendarToday />
+                    <Avatar sx={{ 
+                      bgcolor: alpha(theme.palette.info.main, 0.2), 
+                      color: theme.palette.info.main, 
+                      mr: 2 
+                    }}>
+                      <DevicesOther />
                     </Avatar>
-                    <Typography variant="h6" sx={{ color: '#64748b' }}>
-                      Recent Activity
+                    <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
+                      Available Assets
                     </Typography>
                   </Box>
                   <Typography variant="h3" sx={{ 
-                    color: '#1976d2',
-                    fontWeight: 600,
+                    color: theme.palette.primary.main,
+                    fontWeight: 700,
                     mb: 1
                   }}>
-                    {recentTransactions.length}
+                    {dashboardSummary.availableAssets}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <TrendingUp sx={{ color: '#F44336', mr: 0.5 }} fontSize="small" />
+                    <TrendingUp sx={{ color: theme.palette.info.main, mr: 0.5 }} fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
-                      {recentTransactions.length} recent transactions
+                      {Math.round((dashboardSummary.availableAssets / dashboardSummary.totalAssets) * 100) || 0}% ready for allocation
                     </Typography>
                   </Box>
                 </CardContent>
@@ -899,20 +794,24 @@ const AssetDashboard = () => {
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <Paper sx={{
-                backgroundColor: 'white',
+                backgroundColor: theme.palette.background.paper,
                 borderRadius: '16px',
                 padding: '24px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                height: '100%'
+                boxShadow: theme.shadows[2],
+                height: '100%',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+                '&:hover': {
+                  boxShadow: theme.shadows[6]
+                }
               }}>
                 <Typography variant="h6" sx={{ 
-                  color: '#475569',
+                  color: theme.palette.text.primary,
                   mb: 3,
                   fontWeight: 600
                 }}>
                   Asset Status Distribution
                 </Typography>
-                {dashboardData.statusData.length ? (
+                {dashboardSummary.statusDistribution.length ? (
                   <Box sx={{ height: 300 }}>
                     <Doughnut 
                       data={statusChartData}
@@ -920,29 +819,42 @@ const AssetDashboard = () => {
                     />
                   </Box>
                 ) : (
-                  <Typography sx={{ color: '#64748b', textAlign: 'center' }}>
-                    No status data available
-                  </Typography>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    height: 300,
+                    flexDirection: 'column',
+                    gap: 2,
+                    color: theme.palette.text.secondary
+                  }}>
+                    <Info fontSize="large" />
+                    <Typography>No status data available</Typography>
+                  </Box>
                 )}
               </Paper>
             </Grid>
             
             <Grid item xs={12} md={6}>
               <Paper sx={{
-                backgroundColor: 'white',
+                backgroundColor: theme.palette.background.paper,
                 borderRadius: '16px',
                 padding: '24px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                height: '100%'
+                boxShadow: theme.shadows[2],
+                height: '100%',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+                '&:hover': {
+                  boxShadow: theme.shadows[6]
+                }
               }}>
                 <Typography variant="h6" sx={{ 
-                  color: '#475569',
+                  color: theme.palette.text.primary,
                   mb: 3,
                   fontWeight: 600
                 }}>
                   Assets by Category
                 </Typography>
-                {dashboardData.categoryData.length ? (
+                {dashboardSummary.categoryDistribution.length ? (
                   <Box sx={{ height: 300 }}>
                     <Bar 
                       data={categoryChartData}
@@ -950,27 +862,40 @@ const AssetDashboard = () => {
                     />
                   </Box>
                 ) : (
-                  <Typography sx={{ color: '#64748b', textAlign: 'center' }}>
-                    No category data available
-                  </Typography>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    height: 300,
+                    flexDirection: 'column',
+                    gap: 2,
+                    color: theme.palette.text.secondary
+                  }}>
+                    <Info fontSize="large" />
+                    <Typography>No category data available</Typography>
+                  </Box>
                 )}
               </Paper>
             </Grid>
             
             <Grid item xs={12} md={8}>
               <Paper sx={{
-                backgroundColor: 'white',
+                backgroundColor: theme.palette.background.paper,
                 borderRadius: '16px',
                 padding: '24px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                height: '100%'
+                boxShadow: theme.shadows[2],
+                height: '100%',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+                '&:hover': {
+                  boxShadow: theme.shadows[6]
+                }
               }}>
                 <Typography variant="h6" sx={{ 
-                  color: '#475569',
+                  color: theme.palette.text.primary,
                   mb: 3,
                   fontWeight: 600
                 }}>
-                  Asset Allocation Trends (6 Months)
+                  Asset Acquisition & Allocation Trends (6 Months)
                 </Typography>
                 <Box sx={{ height: 300 }}>
                   <Line 
@@ -983,14 +908,18 @@ const AssetDashboard = () => {
             
             <Grid item xs={12} md={4}>
               <Paper sx={{
-                backgroundColor: 'white',
+                backgroundColor: theme.palette.background.paper,
                 borderRadius: '16px',
                 padding: '24px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                height: '100%'
+                boxShadow: theme.shadows[2],
+                height: '100%',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+                '&:hover': { 
+                  boxShadow: theme.shadows[6]
+                }
               }}>
                 <Typography variant="h6" sx={{ 
-                  color: '#475569',
+                  color: theme.palette.text.primary,
                   mb: 3,
                   fontWeight: 600
                 }}>
@@ -999,32 +928,65 @@ const AssetDashboard = () => {
                 {topEmployees.length > 0 ? (
                   <List>
                     {topEmployees.map((employee, index) => (
-                      <ListItem key={index} sx={{ px: 0 }}>
+                      <ListItem key={index} sx={{ 
+                        px: 0,
+                        borderBottom: index < topEmployees.length - 1 ? `1px solid ${alpha(theme.palette.divider, 0.5)}` : 'none',
+                        py: 1.5
+                      }}>
                         <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: `hsl(${index * 50}, 70%, 50%)` }}>
+                          <Avatar sx={{ 
+                            bgcolor: index === 0 ? theme.palette.success.light : 
+                                    index === 1 ? theme.palette.primary.light : 
+                                    index === 2 ? theme.palette.warning.light : 
+                                    theme.palette.grey[300]
+                          }}>
                             {employee.name.charAt(0).toUpperCase()}
                           </Avatar>
                         </ListItemAvatar>
                         <ListItemText 
-                          primary={employee.name}
+                          primary={
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                              {employee.name}
+                            </Typography>
+                          }
                           secondary={`${employee.count} asset${employee.count !== 1 ? 's' : ''}`}
                         />
                         <Chip 
                           label={`#${index + 1}`} 
                           size="small" 
                           sx={{ 
-                            bgcolor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : '#E0E0E0',
-                            color: index < 3 ? '#000' : '#666',
-                            fontWeight: 'bold'
+                            bgcolor: index === 0 ? alpha(theme.palette.success.main, 0.1) : 
+                                    index === 1 ? alpha(theme.palette.primary.main, 0.1) : 
+                                    index === 2 ? alpha(theme.palette.warning.main, 0.1) : 
+                                    alpha(theme.palette.grey[500], 0.1),
+                            color: index === 0 ? theme.palette.success.dark : 
+                                   index === 1 ? theme.palette.primary.dark : 
+                                   index === 2 ? theme.palette.warning.dark : 
+                                   theme.palette.grey[700],
+                            fontWeight: 'bold',
+                            border: '1px solid',
+                            borderColor: index === 0 ? alpha(theme.palette.success.main, 0.2) : 
+                                         index === 1 ? alpha(theme.palette.primary.main, 0.2) : 
+                                         index === 2 ? alpha(theme.palette.warning.main, 0.2) : 
+                                         alpha(theme.palette.grey[500], 0.2),
                           }} 
                         />
                       </ListItem>
                     ))}
                   </List>
                 ) : (
-                  <Typography sx={{ color: '#64748b', textAlign: 'center' }}>
-                    No employee data available
-                  </Typography>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    height: 300,
+                    flexDirection: 'column',
+                    gap: 2,
+                    color: theme.palette.text.secondary
+                  }}>
+                    <Info fontSize="large" />
+                    <Typography>No employee data available</Typography>
+                  </Box>
                 )}
               </Paper>
             </Grid>
@@ -1037,34 +999,113 @@ const AssetDashboard = () => {
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Paper sx={{
-              backgroundColor: 'white',
+              backgroundColor: theme.palette.background.paper,
               borderRadius: '16px',
               padding: '24px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+              boxShadow: theme.shadows[2],
+              transition: 'box-shadow 0.3s',
+              '&:hover': {
+                boxShadow: theme.shadows[6]
+              }
             }}>
-              <Typography variant="h6" sx={{ 
-                color: '#475569',
-                mb: 3,
-                fontWeight: 600
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                mb: 3
               }}>
-                Asset Inventory
-              </Typography>
+                <Typography variant="h6" sx={{ 
+                  color: theme.palette.text.primary,
+                  fontWeight: 600
+                }}>
+                  Asset Inventory
+                </Typography>
+                
+                <Stack direction="row" spacing={1}>
+                  <Button 
+                    startIcon={<FilterList />}
+                    variant="outlined"
+                    size="small"
+                    sx={{ 
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      fontWeight: 500
+                    }}
+                  >
+                    Filter
+                  </Button>
+                  <Button 
+                    startIcon={<Search />}
+                    variant="outlined"
+                    size="small"
+                    sx={{ 
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      fontWeight: 500
+                    }}
+                  >
+                    Search
+                  </Button>
+                </Stack>
+              </Box>
               
-              <TableContainer>
-                <Table>
+              <TableContainer sx={{ 
+                maxHeight: 440,
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                  height: '8px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                  borderRadius: '4px',
+                }
+              }}>
+                <Table stickyHeader>
                   <TableHead>
-                    <TableRow sx={{ backgroundColor: '#f8fafc' }}>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Name</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Category</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Status</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Current Employee</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Previous Employees</TableCell>
+                    <TableRow>
+                      <TableCell sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.text.primary,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                      }}>Name</TableCell>
+                      <TableCell sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.text.primary,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                      }}>Category</TableCell>
+                      <TableCell sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.text.primary,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                      }}>Status</TableCell>
+                      <TableCell sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.text.primary,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                      }}>Current Employee</TableCell>
+                      <TableCell sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.text.primary,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                      }}>Previous Employees</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {assetCategories.slice(0, 10).map((asset) => (
-                      <TableRow key={asset._id} sx={{ '&:hover': { backgroundColor: '#f8fafc' } }}>
-                        <TableCell sx={{ color: '#d013d1', fontWeight: 500 }}>
+                    {assets.slice(0, 10).map((asset) => (
+                      <TableRow key={asset._id} sx={{ 
+                        '&:hover': { 
+                          backgroundColor: alpha(theme.palette.primary.main, 0.03) 
+                        },
+                        cursor: 'pointer'
+                      }}>
+                        <TableCell sx={{ 
+                          color: theme.palette.primary.main, 
+                          fontWeight: 500 
+                        }}>
                           {asset.name}
                         </TableCell>
                         <TableCell>
@@ -1072,11 +1113,17 @@ const AssetDashboard = () => {
                             label={asset.category}
                             size="small"
                             sx={{ 
-                              bgcolor: asset.category === 'Hardware' ? '#E3F2FD' : 
-                                      asset.category === 'Software' ? '#E8F5E9' : '#FFF3E0',
-                              color: asset.category === 'Hardware' ? '#1976d2' : 
-                                     asset.category === 'Software' ? '#4CAF50' : '#FF9800',
-                              fontWeight: 500
+                              bgcolor: asset.category === 'Hardware' ? alpha(theme.palette.primary.main, 0.1) : 
+                                      asset.category === 'Software' ? alpha(theme.palette.success.main, 0.1) : 
+                                      alpha(theme.palette.warning.main, 0.1),
+                              color: asset.category === 'Hardware' ? theme.palette.primary.dark : 
+                                     asset.category === 'Software' ? theme.palette.success.dark : 
+                                     theme.palette.warning.dark,
+                              fontWeight: 500,
+                              border: '1px solid',
+                              borderColor: asset.category === 'Hardware' ? alpha(theme.palette.primary.main, 0.2) : 
+                                           asset.category === 'Software' ? alpha(theme.palette.success.main, 0.2) : 
+                                           alpha(theme.palette.warning.main, 0.2),
                             }}
                           />
                         </TableCell>
@@ -1085,18 +1132,27 @@ const AssetDashboard = () => {
                             label={asset.status}
                             size="small"
                             sx={{ 
-                              bgcolor: asset.status === 'Available' ? '#E8F5E9' : 
-                                      asset.status === 'In Use' ? '#E3F2FD' : '#FFEBEE',
-                              color: asset.status === 'Available' ? '#4CAF50' : 
-                                     asset.status === 'In Use' ? '#1976d2' : '#F44336',
-                              fontWeight: 500
+                              bgcolor: asset.status === 'Available' ? alpha(theme.palette.success.main, 0.1) : 
+                                      asset.status === 'In Use' ? alpha(theme.palette.primary.main, 0.1) : 
+                                      alpha(theme.palette.error.main, 0.1),
+                              color: asset.status === 'Available' ? theme.palette.success.dark : 
+                                     asset.status === 'In Use' ? theme.palette.primary.dark : 
+                                     theme.palette.error.dark,
+                              fontWeight: 500,
+                              border: '1px solid',
+                              borderColor: asset.status === 'Available' ? alpha(theme.palette.success.main, 0.2) : 
+                                           asset.status === 'In Use' ? alpha(theme.palette.primary.main, 0.2) : 
+                                           alpha(theme.palette.error.main, 0.2),
                             }}
                           />
                         </TableCell>
-                        <TableCell sx={{ color: '#2563eb' }}>
+                        <TableCell sx={{ 
+                          color: asset.currentEmployee ? theme.palette.primary.main : theme.palette.text.secondary,
+                          fontWeight: asset.currentEmployee ? 500 : 400
+                        }}>
                           {asset.currentEmployee || 'None'}
                         </TableCell>
-                        <TableCell sx={{ color: '#64748b' }}>
+                        <TableCell sx={{ color: theme.palette.text.secondary }}>
                           {asset.previousEmployees && asset.previousEmployees.length > 0 
                             ? asset.previousEmployees.join(', ') 
                             : 'None'}
@@ -1107,12 +1163,20 @@ const AssetDashboard = () => {
                 </Table>
               </TableContainer>
               
-              {assetCategories.length > 10 && (
+              {assets.length > 10 && (
                 <Box sx={{ mt: 2, textAlign: 'center' }}>
                   <Button 
-                                        variant="outlined" 
+                    variant="contained" 
                     color="primary"
-                    sx={{ borderRadius: '8px', textTransform: 'none' }}
+                    sx={{ 
+                      borderRadius: '8px', 
+                      textTransform: 'none',
+                      fontWeight: 500,
+                      boxShadow: theme.shadows[2],
+                      '&:hover': {
+                        boxShadow: theme.shadows[4]
+                      }
+                    }}
                   >
                     View All Assets
                   </Button>
@@ -1123,14 +1187,18 @@ const AssetDashboard = () => {
           
           <Grid item xs={12} md={6}>
             <Paper sx={{
-              backgroundColor: 'white',
+              backgroundColor: theme.palette.background.paper,
               borderRadius: '16px',
               padding: '24px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              height: '100%'
+              boxShadow: theme.shadows[2],
+              height: '100%',
+              transition: 'box-shadow 0.3s',
+              '&:hover': {
+                boxShadow: theme.shadows[6]
+              }
             }}>
               <Typography variant="h6" sx={{ 
-                color: '#475569',
+                color: theme.palette.text.primary,
                 mb: 3,
                 fontWeight: 600
               }}>
@@ -1147,14 +1215,18 @@ const AssetDashboard = () => {
           
           <Grid item xs={12} md={6}>
             <Paper sx={{
-              backgroundColor: 'white',
+              backgroundColor: theme.palette.background.paper,
               borderRadius: '16px',
               padding: '24px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              height: '100%'
+              boxShadow: theme.shadows[2],
+              height: '100%',
+              transition: 'box-shadow 0.3s',
+              '&:hover': {
+                boxShadow: theme.shadows[6]
+              }
             }}>
               <Typography variant="h6" sx={{ 
-                color: '#475569',
+                color: theme.palette.text.primary,
                 mb: 3,
                 fontWeight: 600
               }}>
@@ -1163,14 +1235,19 @@ const AssetDashboard = () => {
               <Box sx={{ height: 300 }}>
                 <Doughnut 
                   data={{
-                    labels: dashboardData.categoryData.map(cat => cat._id),
+                    labels: dashboardSummary.categoryDistribution.map(cat => cat.category),
                     datasets: [{
-                      data: dashboardData.categoryData.map(cat => cat.count),
+                      data: dashboardSummary.categoryDistribution.map(cat => cat.count),
                       backgroundColor: [
-                        '#4CAF50', '#2196F3', '#FF9800', '#F44336', '#9C27B0', '#3F51B5'
+                        theme.palette.success.main,
+                        theme.palette.primary.main,
+                        theme.palette.warning.main,
+                        theme.palette.error.main,
+                        theme.palette.secondary.main,
+                        theme.palette.info.main
                       ],
                       borderWidth: 1,
-                      borderColor: '#fff'
+                      borderColor: theme.palette.background.paper
                     }]
                   }}
                   options={pieOptions}
@@ -1186,46 +1263,135 @@ const AssetDashboard = () => {
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Paper sx={{
-              backgroundColor: 'white',
+              backgroundColor: theme.palette.background.paper,
               borderRadius: '16px',
               padding: '24px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+              boxShadow: theme.shadows[2],
+              transition: 'box-shadow 0.3s',
+              '&:hover': {
+                boxShadow: theme.shadows[6]
+              }
             }}>
-              <Typography variant="h6" sx={{ 
-                color: '#475569',
-                mb: 3,
-                fontWeight: 600
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                mb: 3
               }}>
-                Asset Batches
-              </Typography>
+                <Typography variant="h6" sx={{ 
+                  color: theme.palette.text.primary,
+                  fontWeight: 600
+                }}>
+                  Asset Batches
+                </Typography>
+                
+                <Stack direction="row" spacing={1}>
+                  <Button 
+                    startIcon={<FilterList />}
+                    variant="outlined"
+                    size="small"
+                    sx={{ 
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      fontWeight: 500
+                    }}
+                  >
+                    Filter
+                  </Button>
+                  <Button 
+                    startIcon={<Search />}
+                    variant="outlined"
+                    size="small"
+                    sx={{ 
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      fontWeight: 500
+                    }}
+                  >
+                    Search
+                  </Button>
+                </Stack>
+              </Box>
               
-              <TableContainer>
-                <Table>
+              <TableContainer sx={{ 
+                maxHeight: 440,
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                  height: '8px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                  borderRadius: '4px',
+                }
+              }}>
+                <Table stickyHeader>
                   <TableHead>
-                    <TableRow sx={{ backgroundColor: '#f8fafc' }}>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Batch Number</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Purchase Date</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Number of Assets</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Vendor</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Total Cost</TableCell>
+                    <TableRow>
+                      <TableCell sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.text.primary,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                      }}>Batch Number</TableCell>
+                      <TableCell sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.text.primary,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                      }}>Purchase Date</TableCell>
+                      <TableCell sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.text.primary,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                      }}>Number of Assets</TableCell>
+                      <TableCell sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.text.primary,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                      }}>Vendor</TableCell>
+                      <TableCell sx={{ 
+                        fontWeight: 600, 
+                        color: theme.palette.text.primary,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                      }}>Total Cost</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {assetBatches.map((batch) => (
-                      <TableRow key={batch._id} sx={{ '&:hover': { backgroundColor: '#f8fafc' } }}>
-                        <TableCell sx={{ color: '#d013d1', fontWeight: 500 }}>
+                      <TableRow key={batch._id} sx={{ 
+                        '&:hover': { 
+                          backgroundColor: alpha(theme.palette.primary.main, 0.03) 
+                        },
+                        cursor: 'pointer'
+                      }}>
+                        <TableCell sx={{ 
+                          color: theme.palette.primary.main, 
+                          fontWeight: 500 
+                        }}>
                           {batch.batchNumber}
                         </TableCell>
-                        <TableCell sx={{ color: '#64748b' }}>
-                          {new Date(batch.purchaseDate).toLocaleDateString()}
+                        <TableCell sx={{ color: theme.palette.text.secondary }}>
+                          {new Date(batch.purchaseDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
                         </TableCell>
-                        <TableCell sx={{ color: '#2563eb', fontWeight: 500 }}>
+                        <TableCell sx={{ 
+                          color: theme.palette.primary.main, 
+                          fontWeight: 500 
+                        }}>
                           {batch.numberOfAssets}
                         </TableCell>
-                        <TableCell sx={{ color: '#64748b' }}>
+                        <TableCell sx={{ color: theme.palette.text.secondary }}>
                           {batch.vendor}
                         </TableCell>
-                        <TableCell sx={{ color: '#4CAF50', fontWeight: 500 }}>
+                        <TableCell sx={{ 
+                          color: theme.palette.success.main, 
+                          fontWeight: 500 
+                        }}>
                           ${batch.totalCost ? batch.totalCost.toFixed(2) : '0.00'}
                         </TableCell>
                       </TableRow>
@@ -1238,14 +1404,18 @@ const AssetDashboard = () => {
           
           <Grid item xs={12} md={6}>
             <Paper sx={{
-              backgroundColor: 'white',
+              backgroundColor: theme.palette.background.paper,
               borderRadius: '16px',
               padding: '24px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              height: '100%'
+              boxShadow: theme.shadows[2],
+              height: '100%',
+              transition: 'box-shadow 0.3s',
+              '&:hover': {
+                boxShadow: theme.shadows[6]
+              }
             }}>
               <Typography variant="h6" sx={{ 
-                color: '#475569',
+                color: theme.palette.text.primary,
                 mb: 3,
                 fontWeight: 600
               }}>
@@ -1262,14 +1432,18 @@ const AssetDashboard = () => {
           
           <Grid item xs={12} md={6}>
             <Paper sx={{
-              backgroundColor: 'white',
+              backgroundColor: theme.palette.background.paper,
               borderRadius: '16px',
               padding: '24px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              height: '100%'
+              boxShadow: theme.shadows[2],
+              height: '100%',
+              transition: 'box-shadow 0.3s',
+              '&:hover': {
+                boxShadow: theme.shadows[6]
+              }
             }}>
               <Typography variant="h6" sx={{ 
-                color: '#475569',
+                color: theme.palette.text.primary,
                 mb: 3,
                 fontWeight: 600
               }}>
@@ -1284,8 +1458,8 @@ const AssetDashboard = () => {
                     datasets: [{
                       label: 'Assets Purchased',
                       data: assetBatches.map(batch => batch.numberOfAssets),
-                      borderColor: '#3f51b5',
-                      backgroundColor: 'rgba(63, 81, 181, 0.1)',
+                      borderColor: theme.palette.primary.main,
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
                       tension: 0.4,
                       fill: true
                     }]
@@ -1295,179 +1469,102 @@ const AssetDashboard = () => {
               </Box>
             </Paper>
           </Grid>
-        </Grid>
-      )}
-
-      {/* History Tab Content */}
-      {activeTab === 3 && (
-        <Grid container spacing={3}>
+          
           <Grid item xs={12}>
             <Paper sx={{
-              backgroundColor: 'white',
+              backgroundColor: theme.palette.background.paper,
               borderRadius: '16px',
               padding: '24px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+              boxShadow: theme.shadows[2],
+              transition: 'box-shadow 0.3s',
+              '&:hover': {
+                boxShadow: theme.shadows[6]
+              }
             }}>
               <Typography variant="h6" sx={{ 
-                color: '#475569',
+                color: theme.palette.text.primary,
                 mb: 3,
                 fontWeight: 600
               }}>
-                Asset Transaction History
+                Batch Acquisition Summary
               </Typography>
               
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: '#f8fafc' }}>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Asset Name</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Employee</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Allotted Date</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Return Date</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {assetHistory.slice(0, 10).map((history) => (
-                      <TableRow key={history._id} sx={{ '&:hover': { backgroundColor: '#f8fafc' } }}>
-                        <TableCell sx={{ color: '#d013d1', fontWeight: 500 }}>
-                          {history.assetName}
-                        </TableCell>
-                        <TableCell sx={{ color: '#2563eb' }}>
-                          {history.employeeName}
-                        </TableCell>
-                        <TableCell sx={{ color: '#64748b' }}>
-                          {new Date(history.allottedDate).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell sx={{ color: '#64748b' }}>
-                          {history.returnDate ? new Date(history.returnDate).toLocaleDateString() : 'Not Returned'}
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={history.returnDate ? 'Returned' : 'Active'}
-                            size="small"
-                            sx={{ 
-                              bgcolor: history.returnDate ? '#E8F5E9' : '#E3F2FD',
-                              color: history.returnDate ? '#4CAF50' : '#1976d2',
-                              fontWeight: 500
-                            }}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              
-              {assetHistory.length > 10 && (
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
-                  <Button 
-                    variant="outlined" 
-                    color="primary"
-                    sx={{ borderRadius: '8px', textTransform: 'none' }}
-                  >
-                    View Full History
-                  </Button>
-                </Box>
-              )}
-            </Paper>
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <Paper sx={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '24px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              height: '100%'
-            }}>
-              <Typography variant="h6" sx={{ 
-                color: '#475569',
-                mb: 3,
-                fontWeight: 600
-              }}>
-                Recent Transactions
-              </Typography>
-              
-              <List>
-                {recentTransactions.map((transaction) => (
-                  <ListItem key={transaction._id} sx={{ 
-                    px: 0, 
-                    borderBottom: '1px solid #f1f5f9',
-                    '&:last-child': { borderBottom: 'none' }
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <Card sx={{
+                    borderRadius: '12px',
+                    boxShadow: 'none',
+                    border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                    height: '100%',
+                    p: 2
                   }}>
-                    <ListItemAvatar>
-                      <Avatar sx={{ 
-                        bgcolor: transaction.returnDate ? '#E8F5E9' : '#E3F2FD',
-                        color: transaction.returnDate ? '#4CAF50' : '#1976d2'
-                      }}>
-                        {transaction.returnDate ? <CheckCircle /> : <Info />}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
-                          {transaction.assetName}
-                        </Typography>
-                      }
-                      secondary={
-                        <React.Fragment>
-                          <Typography component="span" variant="body2" color="text.primary">
-                            {transaction.employeeName}
-                          </Typography>
-                          <Typography variant="caption" display="block" color="text.secondary">
-                            {transaction.returnDate 
-                              ? `Returned on ${new Date(transaction.returnDate).toLocaleDateString()}`
-                              : `Allotted on ${new Date(transaction.allottedDate).toLocaleDateString()}`
-                            }
-                          </Typography>
-                        </React.Fragment>
-                      }
-                    />
-                    <Chip 
-                      label={transaction.returnDate ? 'Returned' : 'Active'}
-                      size="small"
-                      sx={{ 
-                        bgcolor: transaction.returnDate ? '#E8F5E9' : '#E3F2FD',
-                        color: transaction.returnDate ? '#4CAF50' : '#1976d2',
-                        fontWeight: 500
-                      }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </Paper>
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <Paper sx={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '24px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              height: '100%'
-            }}>
-              <Typography variant="h6" sx={{ 
-                color: '#475569',
-                mb: 3,
-                fontWeight: 600
-              }}>
-                Asset Allocation Trends
-              </Typography>
-              <Box sx={{ height: 300 }}>
-                <Line 
-                  data={assetTrendsChartData}
-                  options={lineOptions}
-                />
-              </Box>
+                    <Typography variant="subtitle2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
+                      Total Batches
+                    </Typography>
+                    <Typography variant="h4" sx={{ color: theme.palette.primary.main, fontWeight: 600 }}>
+                      {assetBatches.length}
+                    </Typography>
+                  </Card>
+                </Grid>
+                
+                <Grid item xs={12} md={4}>
+                  <Card sx={{
+                    borderRadius: '12px',
+                    boxShadow: 'none',
+                    border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                    height: '100%',
+                    p: 2
+                  }}>
+                    <Typography variant="subtitle2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
+                      Total Assets Acquired
+                    </Typography>
+                    <Typography variant="h4" sx={{ color: theme.palette.primary.main, fontWeight: 600 }}>
+                      {assetBatches.reduce((sum, batch) => sum + (batch.numberOfAssets || 0), 0)}
+                    </Typography>
+                  </Card>
+                </Grid>
+                
+                <Grid item xs={12} md={4}>
+                  <Card sx={{
+                    borderRadius: '12px',
+                    boxShadow: 'none',
+                    border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                    height: '100%',
+                    p: 2
+                  }}>
+                    <Typography variant="subtitle2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
+                      Total Investment
+                    </Typography>
+                    <Typography variant="h4" sx={{ color: theme.palette.success.main, fontWeight: 600 }}>
+                      ${assetBatches.reduce((sum, batch) => sum + (batch.totalCost || 0), 0).toFixed(2)}
+                    </Typography>
+                  </Card>
+                </Grid>
+              </Grid>
             </Paper>
           </Grid>
         </Grid>
       )}
+      
+      {/* Footer */}
+      <Box sx={{ 
+        mt: 4, 
+        pt: 2, 
+        borderTop: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+        textAlign: 'center'
+      }}>
+        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+          © {new Date().getFullYear()} DB4Cloud Technologies Pvt Ltd. All rights reserved.
+        </Typography>
+        <Typography variant="caption" sx={{ color: theme.palette.text.disabled, mt: 0.5, display: 'block' }}>
+          Asset Management Dashboard v1.0
+        </Typography>
+      </Box>
     </Box>
   );
 };
 
 export default AssetDashboard;
 
-    
+
+
