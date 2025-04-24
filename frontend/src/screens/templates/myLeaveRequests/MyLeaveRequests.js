@@ -93,13 +93,7 @@ const COLORS = [
 ];
 
 const API_URL = "http://localhost:5000/api/leave-requests";
-
-// Mock employee data - replace with actual authentication
-const EMPLOYEE = {
-  code: "EMP001",
-  name: "John Doe",
-  department: "Engineering",
-};
+const EMPLOYEE_API_URL = "http://localhost:5000/api/employees";
 
 const MyLeaveRequests = () => {
   const theme = useTheme();
@@ -112,6 +106,7 @@ const MyLeaveRequests = () => {
   const [statistics, setStatistics] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [employee, setEmployee] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -128,15 +123,56 @@ const MyLeaveRequests = () => {
   });
 
   useEffect(() => {
-    fetchLeaveRequests();
-    fetchLeaveBalance();
-    fetchLeaveStatistics();
+    // First fetch the employee data
+    fetchEmployeeData();
   }, []);
+
+  useEffect(() => {
+    // Only fetch leave data once we have employee data
+    if (employee) {
+      fetchLeaveRequests();
+      fetchLeaveBalance();
+      fetchLeaveStatistics();
+    }
+  }, [employee]);
+
+  const fetchEmployeeData = async () => {
+    try {
+      setLoading(true);
+      // Get the user ID from localStorage or your auth context
+      const userId = localStorage.getItem('userId'); // Adjust based on your auth implementation
+      
+      if (!userId) {
+        showSnackbar("User not authenticated", "error");
+        setLoading(false);
+        return;
+      }
+      
+      const response = await axios.get(`${EMPLOYEE_API_URL}/by-user/${userId}`);
+      
+      if (response.data.success && response.data.data) {
+        const employeeData = response.data.data;
+        setEmployee({
+          code: employeeData.Emp_ID,
+          name: `${employeeData.personalInfo?.firstName || ''} ${employeeData.personalInfo?.lastName || ''}`,
+          department: employeeData.joiningDetails?.department || 'Not Assigned'
+        });
+        console.log("Employee data fetched:", employeeData);
+      } else {
+        showSnackbar("Failed to fetch employee data", "error");
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching employee data:", error);
+      showSnackbar("Error fetching employee data", "error");
+      setLoading(false);
+    }
+  };
 
   const fetchLeaveRequests = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/employee/${EMPLOYEE.code}`);
+      const response = await axios.get(`${API_URL}/employee/${employee.code}`);
       setLeaveRequests(response.data);
       setLoading(false);
     } catch (error) {
@@ -148,7 +184,7 @@ const MyLeaveRequests = () => {
 
   const fetchLeaveBalance = async () => {
     try {
-      const response = await axios.get(`${API_URL}/balance/${EMPLOYEE.code}`);
+      const response = await axios.get(`${API_URL}/balance/${employee.code}`);
       setLeaveBalance(response.data);
       console.log("Leave balance fetched:", response.data);
     } catch (error) {
@@ -160,7 +196,7 @@ const MyLeaveRequests = () => {
   const fetchLeaveStatistics = async () => {
     try {
       const response = await axios.get(
-        `${API_URL}/statistics/${EMPLOYEE.code}`
+        `${API_URL}/statistics/${employee.code}`
       );
       setStatistics(response.data);
     } catch (error) {
@@ -276,8 +312,8 @@ const MyLeaveRequests = () => {
       };
 
       const leaveData = {
-        employeeCode: EMPLOYEE.code,
-        employeeName: EMPLOYEE.name,
+        employeeCode: employee.code,
+        employeeName: employee.name,
         leaveType: formData.leaveType,
         startDate: formatDateToString(formData.startDate),
         endDate: formatDateToString(formData.endDate),
@@ -350,7 +386,7 @@ const MyLeaveRequests = () => {
     try {
       setLoading(true);
       // Call the recalculate endpoint
-      await axios.post(`${API_URL}/recalculate-balance/${EMPLOYEE.code}`);
+      await axios.post(`${API_URL}/recalculate-balance/${employee.code}`);
       // Then fetch the updated balance
       await fetchLeaveBalance();
       await fetchLeaveStatistics();
@@ -615,6 +651,32 @@ const MyLeaveRequests = () => {
       </Card>
     );
   };
+
+  // Show loading state if employee data is not yet loaded
+  if (loading && !employee) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <CircularProgress />
+        <Typography variant="h6" sx={{ ml: 2 }}>
+          Loading employee data...
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Show message if no employee data is found
+  if (!loading && !employee) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", flexDirection: "column" }}>
+        <Typography variant="h6" color="error" sx={{ mb: 2 }}>
+          Employee profile not found
+        </Typography>
+        <Typography variant="body1">
+          Please complete your employee registration before accessing leave requests.
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
