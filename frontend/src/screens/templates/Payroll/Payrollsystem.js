@@ -35,6 +35,7 @@ import {
   Checkbox,
   FormHelperText,
   FormControlLabel,
+  CircularProgress,
 } from "@mui/material";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -92,6 +93,9 @@ const PayrollSystem = () => {
     severity: "success",
     transition: Fade,
   });
+
+  // Add the isLoading state variable here
+  const [isLoading, setIsLoading] = useState(false);
 
   // Add these state variables near your other state declarations
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -301,350 +305,115 @@ const PayrollSystem = () => {
   };
 
 
-  // const handleAddMultipleAllowances = async () => {
-  //   try {
-  //     if (!bulkEmployeeId || selectedAllowances.length === 0) {
-  //       showAlert(
-  //         "Please select an employee and at least one allowance",
-  //         "error"
-  //       );
-  //       return;
-  //     }
-  
-  //     // Check if BASIC PAY is included in the selected allowances
-  //     if (!selectedAllowances.includes("BASIC PAY")) {
-  //       showAlert(
-  //         "Basic Pay must be included in the allowance structure",
-  //         "error"
-  //       );
-  //       return;
-  //     }
-  
-  //     // Check if BASIC PAY has a reasonable percentage (e.g., at least 30%)
-  //     if ((allowancePercentages["BASIC PAY"] || 0) < 30) {
-  //       showAlert(
-  //         "Basic Pay should be at least 30% of the salary structure",
-  //         "warning"
-  //       );
-        
-  //       // Ask for confirmation if Basic Pay is less than 30%
-  //       if (!window.confirm("Basic Pay is less than 30% of the salary structure. Do you want to proceed anyway?")) {
-  //         return;
-  //       }
-  //     }
-  
-  //     const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
-  //     if (!employee) {
-  //       showAlert("Invalid employee selected", "error");
-  //       return;
-  //     }
-  
-  //     // Validate total allowance percentage
-  //     const totalAllowancePercentage = selectedAllowances.reduce(
-  //       (sum, name) => sum + (parseFloat(allowancePercentages[name]) || 0),
-  //       0
-  //     );
-  
-  //     if (Math.abs(totalAllowancePercentage - 100) > 0.5) {
-  //       showAlert(
-  //         `Total allowance allocation should be 100%. Current: ${totalAllowancePercentage.toFixed(
-  //           2
-  //         )}%`,
-  //         "warning"
-  //       );
-  
-  //       // Ask for confirmation if not exactly 100%
-  //       if (
-  //         !window.confirm(
-  //           "Allowance allocation is not 100%. Do you want to proceed anyway?"
-  //         )
-  //       ) {
-  //         return;
-  //       }
-  //     }
-  
-  //     // Calculate base after deductions
-  //     const totalPay = parseFloat(employee.basicPay);
-  //     let totalDeductionAmount = 0;
-  
-  //     // Process deductions first if employee is eligible
-  //     if (isEligibleForDeductions && selectedDeductions.length > 0) {
-  //       for (const deductionName of selectedDeductions) {
-  //         let amount, percentage;
-  
-  //         // Check if there's a manual amount for this deduction
-  //         if (
-  //           manualDeductionAmounts[deductionName] &&
-  //           parseFloat(manualDeductionAmounts[deductionName]) > 0
-  //         ) {
-  //           // Use manual amount
-  //           amount = parseFloat(
-  //             manualDeductionAmounts[deductionName]
-  //           ).toString();
-  //           percentage = 0; // Set percentage to 0 when using manual amount
-  //           totalDeductionAmount += parseFloat(amount);
-  //         } else {
-  //           // Calculate amount based on percentage of total pay
-  //           percentage = parseFloat(deductionPercentages[deductionName] || 0);
-  //           amount = (totalPay * (percentage / 100)).toString();
-  //           totalDeductionAmount += parseFloat(amount);
-  //         }
-  
-  //         await axios.post(`${API_URL}/deductions`, {
-  //           empId: bulkEmployeeId,
-  //           name: deductionName,
-  //           percentage,
-  //           amount,
-  //           category: "Tax",
-  //           status: "Active",
-  //           isRecurring: true,
-  //         });
-  //       }
-  //     }
-  
-  //     // Calculate base after deductions
-  //     const baseAfterDeductions = totalPay - totalDeductionAmount;
-  
-  //     // Process allowances based on the base after deductions
-  //     // Process Basic Pay first to ensure it's always included
-  //     if (selectedAllowances.includes("BASIC PAY")) {
-  //       const basicPayPercentage = parseFloat(allowancePercentages["BASIC PAY"] || 0);
-  //       const basicPayAmount = (baseAfterDeductions * (basicPayPercentage / 100)).toString();
-        
-  //       await axios.post(`${API_URL}/allowances`, {
-  //         empId: bulkEmployeeId,
-  //         name: "BASIC PAY",
-  //         percentage: basicPayPercentage,
-  //         amount: basicPayAmount,
-  //         category: "Regular",
-  //         status: "Active",
-  //         isRecurring: true,
-  //         baseAfterDeductions: baseAfterDeductions.toString(),
-  //         isBasicPay: true // Flag to identify this as the Basic Pay component
-  //       });
-  //     }
-  
-  //     // Process other allowances
-  //     for (const allowanceName of selectedAllowances) {
-  //       // Skip Basic Pay as we've already processed it
-  //       if (allowanceName === "BASIC PAY") continue;
-        
-  //       const percentage = parseFloat(allowancePercentages[allowanceName] || 0);
-  //       const amount = (baseAfterDeductions * (percentage / 100)).toString();
-  
-  //       await axios.post(`${API_URL}/allowances`, {
-  //         empId: bulkEmployeeId,
-  //         name: allowanceName,
-  //         percentage,
-  //         amount,
-  //         category: "Regular",
-  //         status: "Active",
-  //         isRecurring: true,
-  //         baseAfterDeductions: baseAfterDeductions.toString()
-  //       });
-  //     }
-  
-  //     showAlert(
-  //       `Successfully added allowances${
-  //         isEligibleForDeductions ? " and deductions" : ""
-  //       }`
-  //     );
-  //     await fetchAllowances();
-  //     await fetchDeductions();
-  //     handleCloseDialog();
-  //   } catch (error) {
-  //     showAlert(
-  //       error.response?.data?.message ||
-  //         "Error saving allowances and deductions",
-  //       "error"
-  //     );
-  //   }
-  // };
-  
   const handleAddMultipleAllowances = async () => {
     try {
+      setIsLoading(true);
+      
+      // Show loading indicator
+      setAlert({
+        open: true,
+        message: "Processing, please wait...",
+        severity: "info",
+        transition: Fade,
+      });
+  
       if (!bulkEmployeeId || selectedAllowances.length === 0) {
         showAlert(
           "Please select an employee and at least one allowance",
           "error"
         );
+        setIsLoading(false);
         return;
-      }
-  
-      // Check if BASIC PAY is included in the selected allowances
-      if (!selectedAllowances.includes("BASIC PAY")) {
-        showAlert(
-          "Basic Pay must be included in the allowance structure",
-          "error"
-        );
-        return;
-      }
-  
-      // Check if BASIC PAY has a reasonable percentage (e.g., at least 30%)
-      if ((allowancePercentages["BASIC PAY"] || 0) < 30) {
-        showAlert(
-          "Basic Pay should be at least 30% of the salary structure",
-          "warning"
-        );
-        
-        // Ask for confirmation if Basic Pay is less than 30%
-        if (!window.confirm("Basic Pay is less than 30% of the salary structure. Do you want to proceed anyway?")) {
-          return;
-        }
       }
   
       const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
       if (!employee) {
         showAlert("Invalid employee selected", "error");
+        setIsLoading(false);
         return;
       }
   
-      // Validate total allowance percentage
-      const totalAllowancePercentage = selectedAllowances.reduce(
-        (sum, name) => sum + (parseFloat(allowancePercentages[name]) || 0),
-        0
-      );
+      // Process allowances
+      for (const allowanceName of selectedAllowances) {
+        const percentage = parseFloat(allowancePercentages[allowanceName] || 0);
+        const amount = calculateAllowanceAmount(
+          employee.basicPay,
+          percentage
+        ).toString();
   
-      if (Math.abs(totalAllowancePercentage - 100) > 0.5) {
-        showAlert(
-          `Total allowance allocation should be 100%. Current: ${totalAllowancePercentage.toFixed(
-            2
-          )}%`,
-          "warning"
-        );
-  
-        // Ask for confirmation if not exactly 100%
-        if (
-          !window.confirm(
-            "Allowance allocation is not 100%. Do you want to proceed anyway?"
-          )
-        ) {
-          return;
+        try {
+          await axios.post(`${API_URL}/allowances`, {
+            empId: bulkEmployeeId,
+            name: allowanceName,
+            percentage,
+            amount,
+            category: "Regular",
+            status: "Active",
+            isRecurring: true,
+          });
+        } catch (error) {
+          console.error(`Error adding allowance ${allowanceName}:`, error);
+          showAlert(`Error adding allowance ${allowanceName}`, "error");
         }
       }
   
-      // Calculate base after deductions
-      const totalPay = parseFloat(employee.basicPay);
-      let totalDeductionAmount = 0;
-  
-      // First, delete existing allowances for this employee to avoid duplicates
-      // Get existing allowances for this employee
-      const existingAllowances = allowanceData.filter(
-        (a) => a.empId === bulkEmployeeId
-      );
-  
-      // Delete existing allowances
-      for (const allowance of existingAllowances) {
-        const id = `${allowance.empId}_${allowance.name}`;
-        await axios.delete(`${API_URL}/allowances/${id}`);
-      }
-  
-      // Process deductions first if employee is eligible
-      if (isEligibleForDeductions && selectedDeductions.length > 0) {
-        // First, delete existing deductions for this employee to avoid duplicates
-        const existingDeductions = deductions.filter(
-          (d) => d.empId === bulkEmployeeId
-        );
-  
-        // Delete existing deductions
-        for (const deduction of existingDeductions) {
-          const id = `${deduction.empId}_${deduction.name}`;
-          await axios.delete(`${API_URL}/deductions/${id}`);
-        }
-  
-        // Now add the new deductions
+      // Process deductions
+      if (selectedDeductions.length > 0) {
         for (const deductionName of selectedDeductions) {
-          let amount, percentage;
-  
+          let percentage, amount;
+          
           // Check if there's a manual amount for this deduction
           if (
             manualDeductionAmounts[deductionName] &&
             parseFloat(manualDeductionAmounts[deductionName]) > 0
           ) {
             // Use manual amount
-            amount = parseFloat(
-              manualDeductionAmounts[deductionName]
-            ).toString();
+            amount = parseFloat(manualDeductionAmounts[deductionName]).toString();
             percentage = 0; // Set percentage to 0 when using manual amount
-            totalDeductionAmount += parseFloat(amount);
           } else {
-            // Calculate amount based on percentage of total pay
+            // Calculate amount based on percentage
             percentage = parseFloat(deductionPercentages[deductionName] || 0);
-            amount = (totalPay * (percentage / 100)).toString();
-            totalDeductionAmount += parseFloat(amount);
+            amount = calculateDeductionAmount(
+              employee.basicPay,
+              percentage
+            ).toString();
           }
   
-          await axios.post(`${API_URL}/deductions`, {
-            empId: bulkEmployeeId,
-            name: deductionName,
-            percentage,
-            amount,
-            category: "Tax",
-            status: "Active",
-            isRecurring: true,
-            isFixedAmount: percentage === 0
-          });
+          try {
+            await axios.post(`${API_URL}/deductions`, {
+              empId: bulkEmployeeId,
+              name: deductionName,
+              percentage,
+              amount,
+              category: "Tax",
+              status: "Active",
+              isRecurring: true,
+              isFixedAmount: percentage === 0
+            });
+          } catch (error) {
+            console.error(`Error adding deduction ${deductionName}:`, error);
+            showAlert(`Error adding deduction ${deductionName}`, "error");
+          }
         }
       }
   
-      // Calculate base after deductions
-      const baseAfterDeductions = totalPay - totalDeductionAmount;
-  
-      // Process Basic Pay first to ensure it's always included
-      if (selectedAllowances.includes("BASIC PAY")) {
-        const basicPayPercentage = parseFloat(allowancePercentages["BASIC PAY"] || 0);
-        const basicPayAmount = (baseAfterDeductions * (basicPayPercentage / 100)).toString();
-        
-        await axios.post(`${API_URL}/allowances`, {
-          empId: bulkEmployeeId,
-          name: "BASIC PAY",
-          percentage: basicPayPercentage,
-          amount: basicPayAmount,
-          category: "Regular",
-          status: "Active",
-          isRecurring: true,
-          baseAfterDeductions: baseAfterDeductions.toString(),
-          isBasicPay: true // Flag to identify this as the Basic Pay component
-        });
-      }
-  
-      // Process other allowances
-      for (const allowanceName of selectedAllowances) {
-        // Skip Basic Pay as we've already processed it
-        if (allowanceName === "BASIC PAY") continue;
-        
-        const percentage = parseFloat(allowancePercentages[allowanceName] || 0);
-        const amount = (baseAfterDeductions * (percentage / 100)).toString();
-  
-        await axios.post(`${API_URL}/allowances`, {
-          empId: bulkEmployeeId,
-          name: allowanceName,
-          percentage,
-          amount,
-          category: "Regular",
-          status: "Active",
-          isRecurring: true,
-          baseAfterDeductions: baseAfterDeductions.toString()
-        });
-      }
-  
-      showAlert(
-        `Successfully added allowances${
-          isEligibleForDeductions ? " and deductions" : ""
-        }`
-      );
+      showAlert(`Successfully added allowances and deductions`);
       
       // Refresh the data after adding allowances and deductions
       await Promise.all([fetchAllowances(), fetchDeductions()]);
       handleCloseDialog();
+      setIsLoading(false);
     } catch (error) {
+      console.error("Error in handleAddMultipleAllowances:", error);
       showAlert(
         error.response?.data?.message ||
           "Error saving allowances and deductions",
         "error"
       );
+      setIsLoading(false);
     }
   };
+  
   
   const confirmDeleteAllowancesAndDeductions = async () => {
     try {
@@ -875,17 +644,25 @@ const PayrollSystem = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      await Promise.all([
-        fetchEmployees(),
-        fetchAllowances(),
-        fetchDeductions(),
-        fetchPayslips(),
-        fetchRegisteredEmployees(), // Added this line to fetch registered employees
-      ]);
+      setIsLoading(true);
+      try {
+        await Promise.all([
+          fetchEmployees(),
+          fetchAllowances(),
+          fetchDeductions(),
+          fetchPayslips(),
+          fetchRegisteredEmployees(),
+        ]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        showAlert("Error fetching data. Please try refreshing the page.", "error");
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchData();
-  }, []);
-
+  }, [tabIndex]); // Re-fetch when tab changes
+  
   // Helper functions for calculations
   const calculatePerDayPay = (basicPay, payableDays) => {
     const pay = parseFloat(basicPay) || 0;
@@ -924,6 +701,7 @@ const PayrollSystem = () => {
     // Return the base after deductions
     return totalPay - totalDeductions;
   };
+
 
   // Update the allowance amount calculation with attendance adjustment
   const calculateAllowanceAmount = (empId, percentage) => {
@@ -986,28 +764,29 @@ return Number(totalAllowances.toFixed(2));
       }, 0);
   };
 
-  const calculateNetSalary = (empId) => {
-    // For net salary, we start with the base after deductions
-    const baseAfterDeductions = calculateBaseAfterDeductions(empId);
 
-    // Apply attendance adjustment
-    const employee = employeeData.find((e) => e.empId === empId);
-    if (!employee) return 0;
+const calculateNetSalary = (empId) => {
+  // For net salary, we start with the base after deductions
+  const baseAfterDeductions = calculateBaseAfterDeductions(empId);
 
-    const attendanceRatio =
-      (employee.payableDays - employee.lop) / employee.payableDays;
-    const attendanceAdjustedBase = baseAfterDeductions * attendanceRatio;
+  // Apply attendance adjustment
+  const employee = employeeData.find((e) => e.empId === empId);
+  if (!employee) return 0;
 
-// Calculate total allowances only (don't add the base separately)
+  const attendanceRatio =
+    (employee.payableDays - employee.lop) / employee.payableDays;
+  const attendanceAdjustedBase = baseAfterDeductions * attendanceRatio;
+
+// Calculate total allowances with attendance adjustment
 const totalAllowances = allowanceData
 .filter((a) => a.empId === empId && a.status === "Active")
 .reduce((sum, item) => {
   return sum + calculateAllowanceAmount(empId, item.percentage);
 }, 0);
 
+// Net salary = Total Allowances (since deductions are already applied in calculateAllowanceAmount)
 return Number(totalAllowances.toFixed(2));
 };
-
 
   const handleLOPChange = (e) => {
     const value = parseFloat(e.target.value);
@@ -1056,29 +835,41 @@ return Number(totalAllowances.toFixed(2));
     }
   };
 
+
   const fetchAllowances = async () => {
     try {
+      console.log("Fetching allowances...");
       const response = await axios.get(`${API_URL}/allowances`);
+      console.log("Allowances fetched:", response.data.data.length);
       setAllowanceData(response.data.data);
+      return response.data.data;
     } catch (error) {
+      console.error("Error fetching allowances:", error);
       showAlert(
         error.response?.data?.message || "Error fetching allowances",
         "error"
       );
+      return [];
     }
   };
-
+  
   const fetchDeductions = async () => {
     try {
+      console.log("Fetching deductions...");
       const response = await axios.get(`${API_URL}/deductions`);
+      console.log("Deductions fetched:", response.data.data.length);
       setDeductions(response.data.data);
+      return response.data.data;
     } catch (error) {
+      console.error("Error fetching deductions:", error);
       showAlert(
         error.response?.data?.message || "Error fetching deductions",
         "error"
       );
+      return [];
     }
   };
+  
 
   const fetchPayslips = async () => {
     try {
@@ -1280,74 +1071,6 @@ return Number(totalAllowances.toFixed(2));
   };
 
   // Payslip Generation and Download
-  // const generatePayslip = async (empId) => {
-  //   try {
-  //     const employee = employeeData.find((e) => e.empId === empId);
-  //     if (!employee) {
-  //       showAlert("Employee not found", "error");
-  //       return null;
-  //     }
-
-  //     const payslipData = {
-  //       empId: employee.empId,
-  //       empName: employee.empName,
-  //       department: employee.department,
-  //       designation: employee.designation,
-  //       pfNo: employee.pfNo,
-  //       uanNo: employee.uanNo,
-  //       panNo: employee.panNo,
-  //       email: employee.email,
-  //       month: new Date().getMonth() + 1,
-  //       year: new Date().getFullYear(),
-  //       basicPay: employee.basicPay,
-  //       payableDays: employee.payableDays,
-  //       lopDays: employee.lop,
-  //       bankDetails: {
-  //         bankName: employee.bankName,
-  //         accountNo: employee.bankAccountNo,
-  //       },
-  //       allowances: allowanceData
-  //         .filter((a) => a.empId === empId && a.status === "Active")
-  //         .map((allowance) => ({
-  //           name: allowance.name,
-  //           amount: calculateAllowanceAmount(empId, allowance.percentage),
-  //           percentage: allowance.percentage,
-  //         })),
-  //       deductions: deductions
-  //         .filter((d) => d.empId === empId && d.status === "Active")
-  //         .map((deduction) => ({
-  //           name: deduction.name,
-  //           amount:
-  //             deduction.percentage === 0 && parseFloat(deduction.amount) > 0
-  //               ? parseFloat(deduction.amount)
-  //               : calculateDeductionAmount(
-  //                   employee.basicPay,
-  //                   deduction.percentage
-  //                 ),
-  //           percentage: deduction.percentage,
-  //         })),
-  //       baseAfterDeductions: calculateBaseAfterDeductions(empId),
-  //       grossSalary: calculateGrossSalary(empId),
-  //       totalDeductions: calculateTotalDeductions(empId),
-  //       netSalary: calculateNetSalary(empId),
-  //     };
-
-  //     const response = await axios.post(
-  //       `${API_URL}/payslips/generate`,
-  //       payslipData
-  //     );
-  //     showAlert("Payslip generated successfully");
-  //     await fetchPayslips();
-  //     return response.data.data;
-  //   } catch (error) {
-  //     showAlert(
-  //       error.response?.data?.message || "Error generating payslip",
-  //       "error"
-  //     );
-  //     return null;
-  //   }
-  // };
-
   const generatePayslip = async (empId) => {
     try {
       const employee = employeeData.find((e) => e.empId === empId);
@@ -2346,123 +2069,142 @@ return Number(totalAllowances.toFixed(2));
 
                   {/* Earnings & Deductions Section */}
                   <Box className="payslip-section">
-                    <Grid
-                      container
-                      spacing={2}
-                      className="payslip-calculations-grid"
-                    >
-                      {/* Earnings Column */}
-                      <Grid item xs={12} sm={6}>
-                        <Paper className="payslip-earnings-section">
-                          {/* Add this at the top of the Earnings section */}
-<Box sx={{ mb: 2, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
-  <Typography variant="body2" color="textSecondary">
-    <strong>Note:</strong> Total Pay is distributed across allowances according to the defined percentages.
-  </Typography>
-</Box>
+                  <Grid
+    container
+    spacing={2}
+    className="payslip-calculations-grid"
+  >
+    {/* Earnings Column */}
+    <Grid item xs={12} sm={6}>
+      <Paper className="payslip-earnings-section">
+        {/* Add this at the top of the Earnings section */}
+        <Box sx={{ mb: 2, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
+          <Typography variant="body2" color="textSecondary">
+            <strong>Note:</strong> Total Pay is distributed across allowances according to the defined percentages.
+          </Typography>
+        </Box>
 
-                          <Typography
-                            variant="h6"
-                            className="payslip-section-header"
-                          >
-                            Earnings
-                          </Typography>
+        <Typography
+          variant="h6"
+          className="payslip-section-header"
+        >
+          Earnings
+        </Typography>
 
-                          <Box className="payslip-amount-list">
-                            {/* <Box className="payslip-amount-row">
-                              <Typography
-                                variant="body1"
-                                className="payslip-amount-label"
-                              >
-                                Total Pay
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-amount-value"
-                              >
-                                Rs.{" "}
-                                {calculateAttendanceBasedPay(
-                                  emp.basicPay,
-                                  emp.payableDays,
-                                  emp.lop
-                                ).toFixed(2)}
-                              </Typography>
-                            </Box> */}
+        <Box className="payslip-amount-list">
+          {/* Add table headers for Actual and Earned columns */}
+          <Box className="payslip-amount-row" sx={{ borderBottom: '1px solid #eee', mb: 1, pb: 1 }}>
+            <Typography
+              variant="body2"
+              className="payslip-amount-label"
+              sx={{ fontWeight: 'bold', flex: 2 }}
+            >
+              Component
+            </Typography>
+            <Typography
+              variant="body2"
+              className="payslip-amount-value"
+              sx={{ fontWeight: 'bold', flex: 1, textAlign: 'right' }}
+            >
+              Actual
+            </Typography>
+            <Typography
+              variant="body2"
+              className="payslip-amount-value"
+              sx={{ fontWeight: 'bold', flex: 1, textAlign: 'right' }}
+            >
+              Earned
+            </Typography>
+          </Box>
 
-                            {allowanceData
-                              .filter(
-                                (a) =>
-                                  a.empId === emp.empId && a.status === "Active"
-                              )
-                              .map((allowance) => (
-                                <Box
-                                  key={
-                                    allowance._id ||
-                                    `${allowance.empId}_${allowance.name}`
-                                  }
-                                  className="payslip-amount-row"
-                                >
-                                  <Typography
-                                    variant="body1"
-                                    className="payslip-amount-label"
-                                  >
-                                    {allowance.name}
-                                  </Typography>
-                                  <Typography
-                                    variant="body1"
-                                    className="payslip-amount-value"
-                                  >
-                                    Rs.{" "}
-                                    {calculateAllowanceAmount(
-                                      emp.empId,
-                                      allowance.percentage
-                                    ).toFixed(2)}
-                                  </Typography>
-                                </Box>
-                              ))}
+          {allowanceData
+            .filter(
+              (a) =>
+                a.empId === emp.empId && a.status === "Active"
+            )
+            .map((allowance) => {
+              // Calculate the actual amount (without LOP adjustment)
+              const actualAmount = (parseFloat(emp.basicPay) * (parseFloat(allowance.percentage) / 100));
+              
+              // Calculate the earned amount (with LOP adjustment)
+              const earnedAmount = calculateAllowanceAmount(
+                emp.empId,
+                allowance.percentage
+              );
+              
+              return (
+                <Box
+                  key={
+                    allowance._id ||
+                    `${allowance.empId}_${allowance.name}`
+                  }
+                  className="payslip-amount-row"
+                  sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}
+                >
+                  <Typography
+                    variant="body1"
+                    className="payslip-amount-label"
+                    sx={{ flex: 2 }}
+                  >
+                    {allowance.name}
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    className="payslip-amount-value"
+                    sx={{ flex: 1, textAlign: 'right', color: '#555' }}
+                  >
+                    Rs. {actualAmount.toFixed(2)}
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    className="payslip-amount-value"
+                    sx={{ flex: 1, textAlign: 'right', fontWeight: 'bold' }}
+                  >
+                    Rs. {earnedAmount.toFixed(2)}
+                  </Typography>
+                </Box>
+              );
+            })}
 
-                            {allowanceData.filter(
-                              (a) =>
-                                a.empId === emp.empId && a.status === "Active"
-                            ).length === 0 && (
-                              <Box className="payslip-amount-row payslip-empty-row">
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                  align="center"
-                                  sx={{ width: "100%" }}
-                                >
-                                  No active allowances
-                                </Typography>
-                              </Box>
-                            )}
-
-                            {/* <Box className="payslip-amount-row payslip-total-row">
-                              <Typography
-                                variant="body1"
-                                className="payslip-total-label"
-                              >
-                                Total Earnings
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                className="payslip-total-value"
-                              >
-                                Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
-                              </Typography>
-                            </Box> */}
-                            <Box className="payslip-amount-row payslip-total-row">
-  <Typography variant="body1" className="payslip-total-label">
-    Total Earnings (All Allowances)
-  </Typography>
-  <Typography variant="body1" className="payslip-total-value">
-    Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
-  </Typography>
-</Box>
-
-                          </Box>
-                        </Paper>
-                      </Grid>
+          {allowanceData.filter(
+            (a) =>
+              a.empId === emp.empId && a.status === "Active"
+          ).length === 0 && (
+            <Box className="payslip-amount-row payslip-empty-row">
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                align="center"
+                sx={{ width: "100%" }}
+              >
+                No active allowances
+              </Typography>
+            </Box>
+          )}
+          
+          {/* Total row with both actual and earned totals */}
+          <Box className="payslip-amount-row payslip-total-row" sx={{ borderTop: '1px solid #eee', mt: 1, pt: 1 }}>
+            <Typography variant="body1" className="payslip-total-label" sx={{ flex: 2, fontWeight: 'bold' }}>
+              Total Earnings
+            </Typography>
+            
+            {/* Calculate actual total (without LOP adjustment) */}
+            <Typography variant="body1" className="payslip-total-value" sx={{ flex: 1, textAlign: 'right', color: '#555' }}>
+              Rs. {allowanceData
+                .filter((a) => a.empId === emp.empId && a.status === "Active")
+                .reduce((sum, item) => {
+                  return sum + (parseFloat(emp.basicPay) * (parseFloat(item.percentage) / 100));
+                }, 0).toFixed(2)}
+            </Typography>
+            
+            {/* Earned total (with LOP adjustment) */}
+            <Typography variant="body1" className="payslip-total-value" sx={{ flex: 1, textAlign: 'right', fontWeight: 'bold' }}>
+              Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
+    </Grid>
 
                       {/* Deductions Column */}
                       <Grid item xs={12} sm={6}>
@@ -3755,43 +3497,6 @@ return Number(totalAllowances.toFixed(2));
                             className="custom-percentage-input"
                             id="custom-percentage"
                           />
-                          {/* <Button
-                            size="small"
-                            variant="contained"
-                            className="custom-add-button"
-                            onClick={() => {
-                              const customName =
-                                document.getElementById(
-                                  "custom-allowance"
-                                ).value;
-                              const customPercentage =
-                                document.getElementById(
-                                  "custom-percentage"
-                                ).value;
-                              if (
-                                customName &&
-                                !selectedAllowances.includes(customName)
-                              ) {
-                                setSelectedAllowances([
-                                  ...selectedAllowances,
-                                  customName,
-                                ]);
-                                setAllowancePercentages({
-                                  ...allowancePercentages,
-                                  [customName]:
-                                    parseFloat(customPercentage) || 0,
-                                });
-                                document.getElementById(
-                                  "custom-allowance"
-                                ).value = "";
-                                document.getElementById(
-                                  "custom-percentage"
-                                ).value = "";
-                              }
-                            }}
-                          >
-                            Add
-                          </Button> */}
                           <Button
   size="small"
   variant="contained"
@@ -4214,38 +3919,45 @@ return Number(totalAllowances.toFixed(2));
             </Box>
           </DialogContent>
           <DialogActions className="dialog-actions">
-            <Button
-              onClick={handleCloseDialog}
-              color="error"
-              variant="outlined"
-              className="dialog-button cancel-button"
-            >
-              Cancel
-            </Button>
-            {editMode ? (
-              <Button
-                onClick={handleAddAllowance}
-                color="primary"
-                variant="contained"
-                className="dialog-button submit-button"
-              >
-                Update Allowance
-              </Button>
-            ) : (
-              <Button
-                onClick={handleAddMultipleAllowances}
-                color="primary"
-                variant="contained"
-                disabled={selectedAllowances.length === 0 || !bulkEmployeeId}
-                className="dialog-button submit-button"
-              >
-                Add {selectedAllowances.length} Allowance(s)
-                {isEligibleForDeductions &&
-                  selectedDeductions.length > 0 &&
-                  ` & ${selectedDeductions.length} Deduction(s)`}
-              </Button>
-            )}
-          </DialogActions>
+  <Button
+    onClick={handleCloseDialog}
+    color="error"
+    variant="outlined"
+    className="dialog-button cancel-button"
+    disabled={isLoading}
+  >
+    Cancel
+  </Button>
+  {editMode ? (
+    <Button
+      onClick={handleAddAllowance}
+      color="primary"
+      variant="contained"
+      className="dialog-button submit-button"
+      disabled={isLoading}
+    >
+      {isLoading ? <CircularProgress size={24} /> : "Update Allowance"}
+    </Button>
+  ) : (
+    <Button
+      onClick={handleAddMultipleAllowances}
+      color="primary"
+      variant="contained"
+      disabled={isLoading || selectedAllowances.length === 0 || !bulkEmployeeId}
+      className="dialog-button submit-button"
+    >
+      {isLoading ? (
+        <CircularProgress size={24} color="inherit" />
+      ) : (
+        `Add ${selectedAllowances.length} Allowance(s)
+        ${selectedDeductions.length > 0
+          ? ` & ${selectedDeductions.length} Deduction(s)`
+          : ""}`
+      )}
+    </Button>
+  )}
+</DialogActions>
+
         </Dialog>
       </Paper>
       {/* Delete Confirmation Dialog */}

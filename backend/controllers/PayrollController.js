@@ -1077,60 +1077,121 @@ export class PayrollController {
     }
   }
 
-  // Allowance Management
-  static async createAllowance(req, res) {
-    try {
-      const { empId, name, percentage, amount, category, status, isRecurring, isBasicPay } = req.body;
+  // // Allowance Management
+  // static async createAllowance(req, res) {
+  //   try {
+  //     const { empId, name, percentage, amount, category, status, isRecurring, isBasicPay } = req.body;
       
-      const employee = await UnifiedPayroll.findOne({ empId });
-      if (!employee) {
-        return res.status(404).json({
-          success: false,
-          message: "Employee not found",
-        });
-      }
+  //     const employee = await UnifiedPayroll.findOne({ empId });
+  //     if (!employee) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "Employee not found",
+  //       });
+  //     }
       
-      // Check if allowance already exists
-      const existingIndex = employee.allowances.findIndex(a => a.name === name);
+  //     // Check if allowance already exists
+  //     const existingIndex = employee.allowances.findIndex(a => a.name === name);
       
-      if (existingIndex >= 0) {
-        // Update existing allowance
-        employee.allowances[existingIndex] = {
-          name,
-          percentage,
-          amount,
-          category: category || 'Regular',
-          status: status || 'Active',
-          isRecurring: isRecurring !== undefined ? isRecurring : true,
-          isBasicPay: isBasicPay || name === "BASIC PAY" // Set isBasicPay flag
-        };
-      } else {
-        // Add new allowance
-        employee.allowances.push({
-          name,
-          percentage,
-          amount,
-          category: category || 'Regular',
-          status: status || 'Active',
-          isRecurring: isRecurring !== undefined ? isRecurring : true,
-          isBasicPay: isBasicPay || name === "BASIC PAY" // Set isBasicPay flag
-        });
-      }
+  //     if (existingIndex >= 0) {
+  //       // Update existing allowance
+  //       employee.allowances[existingIndex] = {
+  //         name,
+  //         percentage,
+  //         amount,
+  //         category: category || 'Regular',
+  //         status: status || 'Active',
+  //         isRecurring: isRecurring !== undefined ? isRecurring : true,
+  //         isBasicPay: isBasicPay || name === "BASIC PAY" // Set isBasicPay flag
+  //       };
+  //     } else {
+  //       // Add new allowance
+  //       employee.allowances.push({
+  //         name,
+  //         percentage,
+  //         amount,
+  //         category: category || 'Regular',
+  //         status: status || 'Active',
+  //         isRecurring: isRecurring !== undefined ? isRecurring : true,
+  //         isBasicPay: isBasicPay || name === "BASIC PAY" // Set isBasicPay flag
+  //       });
+  //     }
       
-      await employee.save();
+  //     await employee.save();
       
-      res.status(201).json({
-        success: true,
-        data: employee,
-        message: "Allowance added successfully",
-      });
-    } catch (error) {
-      res.status(400).json({
+  //     res.status(201).json({
+  //       success: true,
+  //       data: employee,
+  //       message: "Allowance added successfully",
+  //     });
+  //   } catch (error) {
+  //     res.status(400).json({
+  //       success: false,
+  //       message: error.message,
+  //     });
+  //   }
+  // }
+
+  // Update the createAllowance method to properly handle the request
+static async createAllowance(req, res) {
+  try {
+    console.log("Creating allowance:", req.body);
+    const { empId, name, percentage, amount, category, status, isRecurring, isBasicPay, baseAfterDeductions } = req.body;
+    
+    const employee = await UnifiedPayroll.findOne({ empId });
+    if (!employee) {
+      console.error("Employee not found:", empId);
+      return res.status(404).json({
         success: false,
-        message: error.message,
+        message: "Employee not found",
       });
     }
+    
+    // Check if allowance already exists
+    const existingIndex = employee.allowances.findIndex(a => a.name === name);
+    
+    if (existingIndex >= 0) {
+      console.log("Updating existing allowance:", name);
+      // Update existing allowance
+      employee.allowances[existingIndex] = {
+        name,
+        percentage: parseFloat(percentage),
+        amount: parseFloat(amount),
+        category: category || 'Regular',
+        status: status || 'Active',
+        isRecurring: isRecurring !== undefined ? isRecurring : true,
+        isBasicPay: isBasicPay || name === "BASIC PAY" // Set isBasicPay flag
+      };
+    } else {
+      console.log("Adding new allowance:", name);
+      // Add new allowance
+      employee.allowances.push({
+        name,
+        percentage: parseFloat(percentage),
+        amount: parseFloat(amount),
+        category: category || 'Regular',
+        status: status || 'Active',
+        isRecurring: isRecurring !== undefined ? isRecurring : true,
+        isBasicPay: isBasicPay || name === "BASIC PAY" // Set isBasicPay flag
+      });
+    }
+    
+    await employee.save();
+    console.log("Allowance saved successfully");
+    
+    res.status(201).json({
+      success: true,
+      data: employee,
+      message: "Allowance added successfully",
+    });
+  } catch (error) {
+    console.error("Error creating allowance:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
   }
+}
 
   static async getAllAllowances(req, res) {
     try {
@@ -1253,61 +1314,121 @@ export class PayrollController {
     }
   }
 
-  // Deduction Management
-  static async createDeduction(req, res) {
-    try {
-      const { empId, name, percentage, amount, category, status, isRecurring, isFixedAmount } = req.body;
+  // // Deduction Management
+  // static async createDeduction(req, res) {
+  //   try {
+  //     const { empId, name, percentage, amount, category, status, isRecurring, isFixedAmount } = req.body;
       
-      const employee = await UnifiedPayroll.findOne({ empId });
-      if (!employee) {
-        return res.status(404).json({
-          success: false,
-          message: "Employee not found",
-        });
-      }
+  //     const employee = await UnifiedPayroll.findOne({ empId });
+  //     if (!employee) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "Employee not found",
+  //       });
+  //     }
       
-      // Check if deduction already exists
-      const existingIndex = employee.deductions.findIndex(d => d.name === name);
+  //     // Check if deduction already exists
+  //     const existingIndex = employee.deductions.findIndex(d => d.name === name);
       
-      if (existingIndex >= 0) {
-        // Update existing deduction
-        employee.deductions[existingIndex] = {
-          name,
-          percentage,
-          amount,
-          category: category || 'Tax',
-          status: status || 'Active',
-          isRecurring: isRecurring !== undefined ? isRecurring : true,
-          isFixedAmount: isFixedAmount || percentage === 0 // Set isFixedAmount flag
-        };
-      } else {
-        // Add new deduction
-        employee.deductions.push({
-          name,
-          percentage,
-          amount,
-          category: category || 'Tax',
-          status: status || 'Active',
-          isRecurring: isRecurring !== undefined ? isRecurring : true,
-          isFixedAmount: isFixedAmount || percentage === 0 // Set isFixedAmount flag
-        });
-      }
+  //     if (existingIndex >= 0) {
+  //       // Update existing deduction
+  //       employee.deductions[existingIndex] = {
+  //         name,
+  //         percentage,
+  //         amount,
+  //         category: category || 'Tax',
+  //         status: status || 'Active',
+  //         isRecurring: isRecurring !== undefined ? isRecurring : true,
+  //         isFixedAmount: isFixedAmount || percentage === 0 // Set isFixedAmount flag
+  //       };
+  //     } else {
+  //       // Add new deduction
+  //       employee.deductions.push({
+  //         name,
+  //         percentage,
+  //         amount,
+  //         category: category || 'Tax',
+  //         status: status || 'Active',
+  //         isRecurring: isRecurring !== undefined ? isRecurring : true,
+  //         isFixedAmount: isFixedAmount || percentage === 0 // Set isFixedAmount flag
+  //       });
+  //     }
       
-      await employee.save();
+  //     await employee.save();
       
-      res.status(201).json({
-        success: true,
-        data: employee,
-        message: "Deduction added successfully",
-      });
-    } catch (error) {
-      res.status(400).json({
+  //     res.status(201).json({
+  //       success: true,
+  //       data: employee,
+  //       message: "Deduction added successfully",
+  //     });
+  //   } catch (error) {
+  //     res.status(400).json({
+  //       success: false,
+  //       message: error.message,
+  //     });
+  //   }
+  // }
+
+  // Update the createDeduction method to properly handle the request
+static async createDeduction(req, res) {
+  try {
+    console.log("Creating deduction:", req.body);
+    const { empId, name, percentage, amount, category, status, isRecurring, isFixedAmount } = req.body;
+    
+    const employee = await UnifiedPayroll.findOne({ empId });
+    if (!employee) {
+      console.error("Employee not found:", empId);
+      return res.status(404).json({
         success: false,
-        message: error.message,
+        message: "Employee not found",
       });
     }
+    
+    // Check if deduction already exists
+    const existingIndex = employee.deductions.findIndex(d => d.name === name);
+    
+    if (existingIndex >= 0) {
+      console.log("Updating existing deduction:", name);
+      // Update existing deduction
+      employee.deductions[existingIndex] = {
+        name,
+        percentage: parseFloat(percentage),
+        amount: parseFloat(amount),
+        category: category || 'Tax',
+        status: status || 'Active',
+        isRecurring: isRecurring !== undefined ? isRecurring : true,
+        isFixedAmount: isFixedAmount || parseFloat(percentage) === 0 // Set isFixedAmount flag
+      };
+    } else {
+      console.log("Adding new deduction:", name);
+      // Add new deduction
+      employee.deductions.push({
+        name,
+        percentage: parseFloat(percentage),
+        amount: parseFloat(amount),
+        category: category || 'Tax',
+        status: status || 'Active',
+        isRecurring: isRecurring !== undefined ? isRecurring : true,
+        isFixedAmount: isFixedAmount || parseFloat(percentage) === 0 // Set isFixedAmount flag
+      });
+    }
+    
+    await employee.save();
+    console.log("Deduction saved successfully");
+    
+    res.status(201).json({
+      success: true,
+      data: employee,
+      message: "Deduction added successfully",
+    });
+  } catch (error) {
+    console.error("Error creating deduction:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
   }
-
+}
   static async getAllDeductions(req, res) {
     try {
       const employees = await UnifiedPayroll.find();
