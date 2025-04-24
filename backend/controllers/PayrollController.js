@@ -13,6 +13,7 @@ export class PayrollController {
             ...employeeData,
             lop: parseFloat(employeeData.lop) || 0,
             payableDays: parseFloat(employeeData.payableDays) || 30,
+            joiningDate: employeeData.dateOfJoining ? new Date(employeeData.dateOfJoining) : null, // Convert dateOfJoining to joiningDate
             allowances: [],
             deductions: [],
             payslips: []
@@ -40,6 +41,7 @@ export class PayrollController {
         ...req.body,
         lop: parseFloat(req.body.lop) || 0,
         payableDays: parseFloat(req.body.payableDays) || 30,
+        joiningDate: req.body.dateOfJoining ? new Date(req.body.dateOfJoining) : null, // Convert dateOfJoining to joiningDate
         allowances: [],
         deductions: [],
         payslips: []
@@ -82,6 +84,7 @@ export class PayrollController {
         ...req.body,
         lop: Math.round(parseFloat(req.body.lop) * 2) / 2, // Rounds to nearest 0.5
         payableDays: parseFloat(req.body.payableDays),
+        joiningDate: req.body.dateOfJoining ? new Date(req.body.dateOfJoining) : undefined, // Convert dateOfJoining to joiningDate
       };
 
       const employee = await UnifiedPayroll.findOneAndUpdate(

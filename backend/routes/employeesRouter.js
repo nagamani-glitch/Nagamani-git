@@ -1,5 +1,3 @@
-
-
 import express from 'express';
 import Employee from '../models/employeeRegisterModel.js';
 import uploads from '../config/multerConfig.js';
