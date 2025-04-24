@@ -887,15 +887,6 @@ const PayrollSystem = () => {
       (employee.payableDays - employee.lop) / employee.payableDays;
     const attendanceAdjustedBase = baseAfterDeductions * attendanceRatio;
 
-//   // Calculate total allowances only (don't add the base separately)
-//   const totalAllowances = allowanceData
-//     .filter((a) => a.empId === empId && a.status === "Active")
-//     .reduce((sum, item) => {
-//       return sum + calculateAllowanceAmount(empId, item.percentage);
-//     }, 0);
-
-//   return Number(totalAllowances.toFixed(2));
-// };
 // Calculate total allowances only (don't add the base separately)
 const totalAllowances = allowanceData
 .filter((a) => a.empId === empId && a.status === "Active")
@@ -937,15 +928,6 @@ return Number(totalAllowances.toFixed(2));
       (employee.payableDays - employee.lop) / employee.payableDays;
     const attendanceAdjustedBase = baseAfterDeductions * attendanceRatio;
 
-//    // Calculate total allowances only (don't add the base separately)
-//    const totalAllowances = allowanceData
-//    .filter((a) => a.empId === empId && a.status === "Active")
-//    .reduce((sum, item) => {
-//      return sum + calculateAllowanceAmount(empId, item.percentage);
-//    }, 0);
-
-//  return Number(totalAllowances.toFixed(2));
-// };
 // Calculate total allowances only (don't add the base separately)
 const totalAllowances = allowanceData
 .filter((a) => a.empId === empId && a.status === "Active")
