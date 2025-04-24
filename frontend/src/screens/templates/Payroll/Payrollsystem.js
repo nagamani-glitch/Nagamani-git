@@ -300,6 +300,7 @@ const PayrollSystem = () => {
     return totalPay - totalDeductionAmount;
   };
 
+
   // const handleAddMultipleAllowances = async () => {
   //   try {
   //     if (!bulkEmployeeId || selectedAllowances.length === 0) {
@@ -309,19 +310,41 @@ const PayrollSystem = () => {
   //       );
   //       return;
   //     }
-
+  
+  //     // Check if BASIC PAY is included in the selected allowances
+  //     if (!selectedAllowances.includes("BASIC PAY")) {
+  //       showAlert(
+  //         "Basic Pay must be included in the allowance structure",
+  //         "error"
+  //       );
+  //       return;
+  //     }
+  
+  //     // Check if BASIC PAY has a reasonable percentage (e.g., at least 30%)
+  //     if ((allowancePercentages["BASIC PAY"] || 0) < 30) {
+  //       showAlert(
+  //         "Basic Pay should be at least 30% of the salary structure",
+  //         "warning"
+  //       );
+        
+  //       // Ask for confirmation if Basic Pay is less than 30%
+  //       if (!window.confirm("Basic Pay is less than 30% of the salary structure. Do you want to proceed anyway?")) {
+  //         return;
+  //       }
+  //     }
+  
   //     const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
   //     if (!employee) {
   //       showAlert("Invalid employee selected", "error");
   //       return;
   //     }
-
+  
   //     // Validate total allowance percentage
   //     const totalAllowancePercentage = selectedAllowances.reduce(
   //       (sum, name) => sum + (parseFloat(allowancePercentages[name]) || 0),
   //       0
   //     );
-
+  
   //     if (Math.abs(totalAllowancePercentage - 100) > 0.5) {
   //       showAlert(
   //         `Total allowance allocation should be 100%. Current: ${totalAllowancePercentage.toFixed(
@@ -329,7 +352,7 @@ const PayrollSystem = () => {
   //         )}%`,
   //         "warning"
   //       );
-
+  
   //       // Ask for confirmation if not exactly 100%
   //       if (
   //         !window.confirm(
@@ -339,16 +362,16 @@ const PayrollSystem = () => {
   //         return;
   //       }
   //     }
-
+  
   //     // Calculate base after deductions
   //     const totalPay = parseFloat(employee.basicPay);
   //     let totalDeductionAmount = 0;
-
+  
   //     // Process deductions first if employee is eligible
   //     if (isEligibleForDeductions && selectedDeductions.length > 0) {
   //       for (const deductionName of selectedDeductions) {
   //         let amount, percentage;
-
+  
   //         // Check if there's a manual amount for this deduction
   //         if (
   //           manualDeductionAmounts[deductionName] &&
@@ -366,7 +389,7 @@ const PayrollSystem = () => {
   //           amount = (totalPay * (percentage / 100)).toString();
   //           totalDeductionAmount += parseFloat(amount);
   //         }
-
+  
   //         await axios.post(`${API_URL}/deductions`, {
   //           empId: bulkEmployeeId,
   //           name: deductionName,
@@ -378,15 +401,37 @@ const PayrollSystem = () => {
   //         });
   //       }
   //     }
-
+  
   //     // Calculate base after deductions
   //     const baseAfterDeductions = totalPay - totalDeductionAmount;
-
+  
   //     // Process allowances based on the base after deductions
+  //     // Process Basic Pay first to ensure it's always included
+  //     if (selectedAllowances.includes("BASIC PAY")) {
+  //       const basicPayPercentage = parseFloat(allowancePercentages["BASIC PAY"] || 0);
+  //       const basicPayAmount = (baseAfterDeductions * (basicPayPercentage / 100)).toString();
+        
+  //       await axios.post(`${API_URL}/allowances`, {
+  //         empId: bulkEmployeeId,
+  //         name: "BASIC PAY",
+  //         percentage: basicPayPercentage,
+  //         amount: basicPayAmount,
+  //         category: "Regular",
+  //         status: "Active",
+  //         isRecurring: true,
+  //         baseAfterDeductions: baseAfterDeductions.toString(),
+  //         isBasicPay: true // Flag to identify this as the Basic Pay component
+  //       });
+  //     }
+  
+  //     // Process other allowances
   //     for (const allowanceName of selectedAllowances) {
+  //       // Skip Basic Pay as we've already processed it
+  //       if (allowanceName === "BASIC PAY") continue;
+        
   //       const percentage = parseFloat(allowancePercentages[allowanceName] || 0);
   //       const amount = (baseAfterDeductions * (percentage / 100)).toString();
-
+  
   //       await axios.post(`${API_URL}/allowances`, {
   //         empId: bulkEmployeeId,
   //         name: allowanceName,
@@ -395,10 +440,10 @@ const PayrollSystem = () => {
   //         category: "Regular",
   //         status: "Active",
   //         isRecurring: true,
-  //         baseAfterDeductions: baseAfterDeductions.toString(), // Store this for reference
+  //         baseAfterDeductions: baseAfterDeductions.toString()
   //       });
   //     }
-
+  
   //     showAlert(
   //       `Successfully added allowances${
   //         isEligibleForDeductions ? " and deductions" : ""
@@ -415,7 +460,7 @@ const PayrollSystem = () => {
   //     );
   //   }
   // };
-
+  
   const handleAddMultipleAllowances = async () => {
     try {
       if (!bulkEmployeeId || selectedAllowances.length === 0) {
@@ -482,8 +527,32 @@ const PayrollSystem = () => {
       const totalPay = parseFloat(employee.basicPay);
       let totalDeductionAmount = 0;
   
+      // First, delete existing allowances for this employee to avoid duplicates
+      // Get existing allowances for this employee
+      const existingAllowances = allowanceData.filter(
+        (a) => a.empId === bulkEmployeeId
+      );
+  
+      // Delete existing allowances
+      for (const allowance of existingAllowances) {
+        const id = `${allowance.empId}_${allowance.name}`;
+        await axios.delete(`${API_URL}/allowances/${id}`);
+      }
+  
       // Process deductions first if employee is eligible
       if (isEligibleForDeductions && selectedDeductions.length > 0) {
+        // First, delete existing deductions for this employee to avoid duplicates
+        const existingDeductions = deductions.filter(
+          (d) => d.empId === bulkEmployeeId
+        );
+  
+        // Delete existing deductions
+        for (const deduction of existingDeductions) {
+          const id = `${deduction.empId}_${deduction.name}`;
+          await axios.delete(`${API_URL}/deductions/${id}`);
+        }
+  
+        // Now add the new deductions
         for (const deductionName of selectedDeductions) {
           let amount, percentage;
   
@@ -513,6 +582,7 @@ const PayrollSystem = () => {
             category: "Tax",
             status: "Active",
             isRecurring: true,
+            isFixedAmount: percentage === 0
           });
         }
       }
@@ -520,7 +590,6 @@ const PayrollSystem = () => {
       // Calculate base after deductions
       const baseAfterDeductions = totalPay - totalDeductionAmount;
   
-      // Process allowances based on the base after deductions
       // Process Basic Pay first to ensure it's always included
       if (selectedAllowances.includes("BASIC PAY")) {
         const basicPayPercentage = parseFloat(allowancePercentages["BASIC PAY"] || 0);
@@ -564,8 +633,9 @@ const PayrollSystem = () => {
           isEligibleForDeductions ? " and deductions" : ""
         }`
       );
-      await fetchAllowances();
-      await fetchDeductions();
+      
+      // Refresh the data after adding allowances and deductions
+      await Promise.all([fetchAllowances(), fetchDeductions()]);
       handleCloseDialog();
     } catch (error) {
       showAlert(
