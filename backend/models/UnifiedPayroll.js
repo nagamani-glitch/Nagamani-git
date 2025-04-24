@@ -129,7 +129,7 @@ const unifiedPayrollSchema = new mongoose.Schema({
   payableDays: { type: Number, default: 30 },
   email: { type: String },
   status: { type: String, default: 'Active' },
-  joiningDate: { type: Date }, // Added joining date field
+  joiningDate: { type: Date, required: true }, // Added joining date field
   
   // Embedded collections
   allowances: [allowanceSchema],
