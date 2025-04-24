@@ -34,6 +34,7 @@ import {
   Fade,
   Checkbox,
   FormHelperText,
+  FormControlLabel,
 } from "@mui/material";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -110,7 +111,14 @@ const PayrollSystem = () => {
   // Add these state variables for deductions similar to allowances
   const [selectedDeductions, setSelectedDeductions] = useState([]);
   const [deductionPercentages, setDeductionPercentages] = useState({});
-  const [bulkDeductionEmployeeId, setBulkDeductionEmployeeId] = useState("");
+  //const [bulkDeductionEmployeeId, setBulkDeductionEmployeeId] = useState("");
+
+  // First, add a new state variable to track the LPA value
+  const [lpaValue, setLpaValue] = useState("");
+
+  // First, add state variables to track deduction eligibility
+  const [isEligibleForDeductions, setIsEligibleForDeductions] = useState(false);
+  const [manualDeductionAmounts, setManualDeductionAmounts] = useState({});
 
   // Add state for registered employees
   const [registeredEmployees, setRegisteredEmployees] = useState([]);
@@ -132,6 +140,13 @@ const PayrollSystem = () => {
       setSelectedDeductions(
         selectedDeductions.filter((item) => item !== deductionType)
       );
+
+      // Also clear any manual amounts
+      if (manualDeductionAmounts[deductionType]) {
+        const updatedAmounts = { ...manualDeductionAmounts };
+        delete updatedAmounts[deductionType];
+        setManualDeductionAmounts(updatedAmounts);
+      }
     }
   };
 
@@ -142,6 +157,13 @@ const PayrollSystem = () => {
       ...deductionPercentages,
       [deductionType]: percentage,
     });
+
+    // Clear any manual amount when percentage is set
+    if (percentage > 0 && manualDeductionAmounts[deductionType]) {
+      const updatedAmounts = { ...manualDeductionAmounts };
+      delete updatedAmounts[deductionType];
+      setManualDeductionAmounts(updatedAmounts);
+    }
   };
 
   // Separate state variables for employee preview and allowance/deduction preview
@@ -231,6 +253,9 @@ const PayrollSystem = () => {
 
     if (selectedEmp) {
       // Map the fields from registered employee to payroll employee
+      const basicPay = selectedEmp.joiningDetails?.salary || 0;
+      const lpa = (parseFloat(basicPay) * 12) / 100000;
+
       setNewEmployee({
         ...newEmployee,
         empId: selectedEmp.Emp_ID || "",
@@ -240,14 +265,157 @@ const PayrollSystem = () => {
         department: selectedEmp.joiningDetails?.department || "",
         designation: selectedEmp.joiningDetails?.initialDesignation || "",
         email: selectedEmp.personalInfo?.email || "",
+        basicPay: basicPay,
         // Keep other fields as they are since they might not have direct mappings
       });
+
+      setLpaValue(lpa.toFixed(2));
 
       showAlert("Employee data loaded successfully", "success");
     }
   };
 
-  // Update the handleAddMultipleAllowances function (if you have one)
+  // Helper function to calculate base after deductions for the dialog
+  const calculateDialogBaseAfterDeductions = () => {
+    const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
+    if (!employee) return 0;
+
+    const totalPay = parseFloat(employee.basicPay);
+    let totalDeductionAmount = 0;
+
+    if (isEligibleForDeductions) {
+      selectedDeductions.forEach((name) => {
+        if (
+          manualDeductionAmounts[name] &&
+          parseFloat(manualDeductionAmounts[name]) > 0
+        ) {
+          totalDeductionAmount += parseFloat(manualDeductionAmounts[name]);
+        } else {
+          totalDeductionAmount +=
+            totalPay * (parseFloat(deductionPercentages[name] || 0) / 100);
+        }
+      });
+    }
+
+    return totalPay - totalDeductionAmount;
+  };
+
+  // const handleAddMultipleAllowances = async () => {
+  //   try {
+  //     if (!bulkEmployeeId || selectedAllowances.length === 0) {
+  //       showAlert(
+  //         "Please select an employee and at least one allowance",
+  //         "error"
+  //       );
+  //       return;
+  //     }
+
+  //     const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
+  //     if (!employee) {
+  //       showAlert("Invalid employee selected", "error");
+  //       return;
+  //     }
+
+  //     // Validate total allowance percentage
+  //     const totalAllowancePercentage = selectedAllowances.reduce(
+  //       (sum, name) => sum + (parseFloat(allowancePercentages[name]) || 0),
+  //       0
+  //     );
+
+  //     if (Math.abs(totalAllowancePercentage - 100) > 0.5) {
+  //       showAlert(
+  //         `Total allowance allocation should be 100%. Current: ${totalAllowancePercentage.toFixed(
+  //           2
+  //         )}%`,
+  //         "warning"
+  //       );
+
+  //       // Ask for confirmation if not exactly 100%
+  //       if (
+  //         !window.confirm(
+  //           "Allowance allocation is not 100%. Do you want to proceed anyway?"
+  //         )
+  //       ) {
+  //         return;
+  //       }
+  //     }
+
+  //     // Calculate base after deductions
+  //     const totalPay = parseFloat(employee.basicPay);
+  //     let totalDeductionAmount = 0;
+
+  //     // Process deductions first if employee is eligible
+  //     if (isEligibleForDeductions && selectedDeductions.length > 0) {
+  //       for (const deductionName of selectedDeductions) {
+  //         let amount, percentage;
+
+  //         // Check if there's a manual amount for this deduction
+  //         if (
+  //           manualDeductionAmounts[deductionName] &&
+  //           parseFloat(manualDeductionAmounts[deductionName]) > 0
+  //         ) {
+  //           // Use manual amount
+  //           amount = parseFloat(
+  //             manualDeductionAmounts[deductionName]
+  //           ).toString();
+  //           percentage = 0; // Set percentage to 0 when using manual amount
+  //           totalDeductionAmount += parseFloat(amount);
+  //         } else {
+  //           // Calculate amount based on percentage of total pay
+  //           percentage = parseFloat(deductionPercentages[deductionName] || 0);
+  //           amount = (totalPay * (percentage / 100)).toString();
+  //           totalDeductionAmount += parseFloat(amount);
+  //         }
+
+  //         await axios.post(`${API_URL}/deductions`, {
+  //           empId: bulkEmployeeId,
+  //           name: deductionName,
+  //           percentage,
+  //           amount,
+  //           category: "Tax",
+  //           status: "Active",
+  //           isRecurring: true,
+  //         });
+  //       }
+  //     }
+
+  //     // Calculate base after deductions
+  //     const baseAfterDeductions = totalPay - totalDeductionAmount;
+
+  //     // Process allowances based on the base after deductions
+  //     for (const allowanceName of selectedAllowances) {
+  //       const percentage = parseFloat(allowancePercentages[allowanceName] || 0);
+  //       const amount = (baseAfterDeductions * (percentage / 100)).toString();
+
+  //       await axios.post(`${API_URL}/allowances`, {
+  //         empId: bulkEmployeeId,
+  //         name: allowanceName,
+  //         percentage,
+  //         amount,
+  //         category: "Regular",
+  //         status: "Active",
+  //         isRecurring: true,
+  //         baseAfterDeductions: baseAfterDeductions.toString(), // Store this for reference
+  //       });
+  //     }
+
+  //     showAlert(
+  //       `Successfully added allowances${
+  //         isEligibleForDeductions ? " and deductions" : ""
+  //       }`
+  //     );
+  //     await fetchAllowances();
+  //     await fetchDeductions();
+  //     handleCloseDialog();
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message ||
+  //         "Error saving allowances and deductions",
+  //       "error"
+  //     );
+  //   }
+  // };
+
   const handleAddMultipleAllowances = async () => {
     try {
       if (!bulkEmployeeId || selectedAllowances.length === 0) {
@@ -257,43 +425,86 @@ const PayrollSystem = () => {
         );
         return;
       }
-
+  
+      // Check if BASIC PAY is included in the selected allowances
+      if (!selectedAllowances.includes("BASIC PAY")) {
+        showAlert(
+          "Basic Pay must be included in the allowance structure",
+          "error"
+        );
+        return;
+      }
+  
+      // Check if BASIC PAY has a reasonable percentage (e.g., at least 30%)
+      if ((allowancePercentages["BASIC PAY"] || 0) < 30) {
+        showAlert(
+          "Basic Pay should be at least 30% of the salary structure",
+          "warning"
+        );
+        
+        // Ask for confirmation if Basic Pay is less than 30%
+        if (!window.confirm("Basic Pay is less than 30% of the salary structure. Do you want to proceed anyway?")) {
+          return;
+        }
+      }
+  
       const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
       if (!employee) {
         showAlert("Invalid employee selected", "error");
         return;
       }
-
-      // Process allowances
-      for (const allowanceName of selectedAllowances) {
-        const percentage = parseFloat(allowancePercentages[allowanceName] || 0);
-        const amount = calculateAllowanceAmount(
-          employee.basicPay,
-          percentage
-        ).toString();
-
-        await axios.post(`${API_URL}/allowances`, {
-          empId: bulkEmployeeId,
-          name: allowanceName,
-          percentage,
-          amount,
-          category: "Regular",
-          status: "Active",
-          isRecurring: true,
-        });
+  
+      // Validate total allowance percentage
+      const totalAllowancePercentage = selectedAllowances.reduce(
+        (sum, name) => sum + (parseFloat(allowancePercentages[name]) || 0),
+        0
+      );
+  
+      if (Math.abs(totalAllowancePercentage - 100) > 0.5) {
+        showAlert(
+          `Total allowance allocation should be 100%. Current: ${totalAllowancePercentage.toFixed(
+            2
+          )}%`,
+          "warning"
+        );
+  
+        // Ask for confirmation if not exactly 100%
+        if (
+          !window.confirm(
+            "Allowance allocation is not 100%. Do you want to proceed anyway?"
+          )
+        ) {
+          return;
+        }
       }
-
-      // Process deductions
-      if (selectedDeductions.length > 0) {
+  
+      // Calculate base after deductions
+      const totalPay = parseFloat(employee.basicPay);
+      let totalDeductionAmount = 0;
+  
+      // Process deductions first if employee is eligible
+      if (isEligibleForDeductions && selectedDeductions.length > 0) {
         for (const deductionName of selectedDeductions) {
-          const percentage = parseFloat(
-            deductionPercentages[deductionName] || 0
-          );
-          const amount = calculateDeductionAmount(
-            employee.basicPay,
-            percentage
-          ).toString();
-
+          let amount, percentage;
+  
+          // Check if there's a manual amount for this deduction
+          if (
+            manualDeductionAmounts[deductionName] &&
+            parseFloat(manualDeductionAmounts[deductionName]) > 0
+          ) {
+            // Use manual amount
+            amount = parseFloat(
+              manualDeductionAmounts[deductionName]
+            ).toString();
+            percentage = 0; // Set percentage to 0 when using manual amount
+            totalDeductionAmount += parseFloat(amount);
+          } else {
+            // Calculate amount based on percentage of total pay
+            percentage = parseFloat(deductionPercentages[deductionName] || 0);
+            amount = (totalPay * (percentage / 100)).toString();
+            totalDeductionAmount += parseFloat(amount);
+          }
+  
           await axios.post(`${API_URL}/deductions`, {
             empId: bulkEmployeeId,
             name: deductionName,
@@ -305,8 +516,54 @@ const PayrollSystem = () => {
           });
         }
       }
-
-      showAlert(`Successfully added allowances and deductions`);
+  
+      // Calculate base after deductions
+      const baseAfterDeductions = totalPay - totalDeductionAmount;
+  
+      // Process allowances based on the base after deductions
+      // Process Basic Pay first to ensure it's always included
+      if (selectedAllowances.includes("BASIC PAY")) {
+        const basicPayPercentage = parseFloat(allowancePercentages["BASIC PAY"] || 0);
+        const basicPayAmount = (baseAfterDeductions * (basicPayPercentage / 100)).toString();
+        
+        await axios.post(`${API_URL}/allowances`, {
+          empId: bulkEmployeeId,
+          name: "BASIC PAY",
+          percentage: basicPayPercentage,
+          amount: basicPayAmount,
+          category: "Regular",
+          status: "Active",
+          isRecurring: true,
+          baseAfterDeductions: baseAfterDeductions.toString(),
+          isBasicPay: true // Flag to identify this as the Basic Pay component
+        });
+      }
+  
+      // Process other allowances
+      for (const allowanceName of selectedAllowances) {
+        // Skip Basic Pay as we've already processed it
+        if (allowanceName === "BASIC PAY") continue;
+        
+        const percentage = parseFloat(allowancePercentages[allowanceName] || 0);
+        const amount = (baseAfterDeductions * (percentage / 100)).toString();
+  
+        await axios.post(`${API_URL}/allowances`, {
+          empId: bulkEmployeeId,
+          name: allowanceName,
+          percentage,
+          amount,
+          category: "Regular",
+          status: "Active",
+          isRecurring: true,
+          baseAfterDeductions: baseAfterDeductions.toString()
+        });
+      }
+  
+      showAlert(
+        `Successfully added allowances${
+          isEligibleForDeductions ? " and deductions" : ""
+        }`
+      );
       await fetchAllowances();
       await fetchDeductions();
       handleCloseDialog();
@@ -318,7 +575,7 @@ const PayrollSystem = () => {
       );
     }
   };
-
+  
   const confirmDeleteAllowancesAndDeductions = async () => {
     try {
       if (!employeeToDeleteAllowances) return;
@@ -358,21 +615,25 @@ const PayrollSystem = () => {
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
-      employeeData.map((emp) => ({
-        "Employee ID": emp.empId,
-        Name: emp.empName,
-        Department: emp.department,
-        Designation: emp.designation,
-        "Basic Pay": emp.basicPay,
-        "Bank Name": emp.bankName,
-        "Bank Account No": emp.bankAccountNo,
-        "PF Number": emp.pfNo,
-        "UAN Number": emp.uanNo,
-        "PAN Number": emp.panNo,
-        "Payable Days": emp.payableDays,
-        "LOP Days": emp.lop,
-        Status: emp.status,
-      }))
+      employeeData.map((emp) => {
+        const lpa = ((parseFloat(emp.basicPay) * 12) / 100000).toFixed(2);
+        return {
+          "Employee ID": emp.empId,
+          Name: emp.empName,
+          Department: emp.department,
+          Designation: emp.designation,
+          "Total Pay (Monthly)": parseFloat(emp.basicPay).toFixed(2), 
+          "Annual Salary (LPA)": lpa,
+          "Bank Name": emp.bankName,
+          "Bank Account No": emp.bankAccountNo,
+          "PF Number": emp.pfNo,
+          "UAN Number": emp.uanNo,
+          "PAN Number": emp.panNo,
+          "Payable Days": emp.payableDays,
+          "LOP Days": emp.lop,
+          Status: emp.status,
+        };
+      })
     );
 
     const workbook = XLSX.utils.book_new();
@@ -406,22 +667,34 @@ const PayrollSystem = () => {
 
           // Validate and format each row before sending to API
           const validEmployees = jsonData
-            .map((row) => ({
-              empId: String(row["Employee ID"] || "").trim(),
-              empName: String(row["Name"] || "").trim(),
-              department: String(row["Department"] || "").trim(),
-              designation: String(row["Designation"] || "").trim(),
-              basicPay: parseFloat(row["Basic Pay"]) || 0,
-              bankName: String(row["Bank Name"] || "").trim(),
-              bankAccountNo: String(row["Bank Account No"] || "").trim(),
-              pfNo: String(row["PF Number"] || "").trim(),
-              uanNo: String(row["UAN Number"] || "").trim(),
-              panNo: String(row["PAN Number"] || "").trim(),
-              payableDays: parseInt(row["Payable Days"]) || 30,
-              lop: parseFloat(row["LOP Days"]) || 0,
-              status: "Active",
-              email: row["Email"] || "", // Add email field if it exists in Excel
-            }))
+            .map((row) => {
+              // Check if we have LPA or monthly basic pay
+              let basicPay;
+              if (row["Annual Salary (LPA)"]) {
+                // Convert LPA to monthly
+                basicPay =
+                  (parseFloat(row["Annual Salary (LPA)"]) * 100000) / 12;
+              } else {
+                basicPay = parseFloat(row["Basic Pay (Monthly)"]) || 0;
+              }
+
+              return {
+                empId: String(row["Employee ID"] || "").trim(),
+                empName: String(row["Name"] || "").trim(),
+                department: String(row["Department"] || "").trim(),
+                designation: String(row["Designation"] || "").trim(),
+                basicPay: basicPay,
+                bankName: String(row["Bank Name"] || "").trim(),
+                bankAccountNo: String(row["Bank Account No"] || "").trim(),
+                pfNo: String(row["PF Number"] || "").trim(),
+                uanNo: String(row["UAN Number"] || "").trim(),
+                panNo: String(row["PAN Number"] || "").trim(),
+                payableDays: parseInt(row["Payable Days"]) || 30,
+                lop: parseFloat(row["LOP Days"]) || 0,
+                status: "Active",
+                email: row["Email"] || "",
+              };
+            })
             .filter((emp) => emp.empId && emp.empName && emp.basicPay > 0);
 
           if (validEmployees.length === 0) {
@@ -557,10 +830,43 @@ const PayrollSystem = () => {
     return Number((perDayPay * actualPayableDays).toFixed(2));
   };
 
-  const calculateAllowanceAmount = (basicPay, percentage) => {
-    const pay = parseFloat(basicPay) || 0;
-    const pct = parseFloat(percentage) || 0;
-    return Number(((pay * pct) / 100).toFixed(2));
+  // Calculate the base salary after deductions
+  const calculateBaseAfterDeductions = (empId) => {
+    const employee = employeeData.find((e) => e.empId === empId);
+    if (!employee) return 0;
+
+    // Start with the total pay
+    const totalPay = parseFloat(employee.basicPay);
+
+    // Calculate total deductions
+    const totalDeductions = deductions
+      .filter((d) => d.empId === empId && d.status === "Active")
+      .reduce((sum, item) => {
+        // Check if this is a fixed amount deduction
+        if (item.percentage === 0 && parseFloat(item.amount) > 0) {
+          return sum + parseFloat(item.amount);
+        } else {
+          // Calculate based on percentage of total pay
+          return sum + totalPay * (parseFloat(item.percentage) / 100);
+        }
+      }, 0);
+
+    // Return the base after deductions
+    return totalPay - totalDeductions;
+  };
+
+  // Update the allowance amount calculation with attendance adjustment
+  const calculateAllowanceAmount = (empId, percentage) => {
+    const employee = employeeData.find((e) => e.empId === empId);
+    if (!employee) return 0;
+
+    const baseAfterDeductions = calculateBaseAfterDeductions(empId);
+    const amount = baseAfterDeductions * (percentage / 100);
+
+    // Apply attendance adjustment
+    const attendanceRatio =
+      (employee.payableDays - employee.lop) / employee.payableDays;
+    return amount * attendanceRatio;
   };
 
   const calculateDeductionAmount = (basicPay, percentage) => {
@@ -573,26 +879,32 @@ const PayrollSystem = () => {
     const employee = employeeData.find((e) => e.empId === empId);
     if (!employee) return 0;
 
-    // Calculate attendance adjusted basic pay
-    const attendanceAdjustedBasicPay = calculateAttendanceBasedPay(
-      employee.basicPay,
-      employee.payableDays,
-      employee.lop
-    );
+    // Calculate base after deductions
+    const baseAfterDeductions = calculateBaseAfterDeductions(empId);
 
-    // Calculate allowances from full basic pay
-    const totalAllowances = allowanceData
-      .filter((a) => a.empId === empId && a.status === "Active")
-      .reduce((sum, item) => {
-        const allowanceAmount = calculateAllowanceAmount(
-          employee.basicPay,
-          item.percentage
-        );
-        return sum + allowanceAmount;
-      }, 0);
+    // Apply attendance adjustment to the base
+    const attendanceRatio =
+      (employee.payableDays - employee.lop) / employee.payableDays;
+    const attendanceAdjustedBase = baseAfterDeductions * attendanceRatio;
 
-    return Number((attendanceAdjustedBasicPay + totalAllowances).toFixed(2));
-  };
+//   // Calculate total allowances only (don't add the base separately)
+//   const totalAllowances = allowanceData
+//     .filter((a) => a.empId === empId && a.status === "Active")
+//     .reduce((sum, item) => {
+//       return sum + calculateAllowanceAmount(empId, item.percentage);
+//     }, 0);
+
+//   return Number(totalAllowances.toFixed(2));
+// };
+// Calculate total allowances only (don't add the base separately)
+const totalAllowances = allowanceData
+.filter((a) => a.empId === empId && a.status === "Active")
+.reduce((sum, item) => {
+  return sum + calculateAllowanceAmount(empId, item.percentage);
+}, 0);
+
+return Number(totalAllowances.toFixed(2));
+};
 
   const calculateTotalDeductions = (empId) => {
     const employee = employeeData.find((e) => e.empId === empId);
@@ -601,19 +913,49 @@ const PayrollSystem = () => {
     return deductions
       .filter((d) => d.empId === empId && d.status === "Active")
       .reduce((sum, item) => {
-        const deductionAmount = calculateDeductionAmount(
-          employee.basicPay,
-          item.percentage
-        );
-        return sum + deductionAmount;
+        // Check if this is a fixed amount deduction
+        if (item.percentage === 0 && parseFloat(item.amount) > 0) {
+          return sum + parseFloat(item.amount);
+        } else {
+          // Calculate based on percentage of total pay
+          return (
+            sum + calculateDeductionAmount(employee.basicPay, item.percentage)
+          );
+        }
       }, 0);
   };
 
   const calculateNetSalary = (empId) => {
-    const grossSalary = calculateGrossSalary(empId);
-    const totalDeductions = calculateTotalDeductions(empId);
-    return Number((grossSalary - totalDeductions).toFixed(2));
-  };
+    // For net salary, we start with the base after deductions
+    const baseAfterDeductions = calculateBaseAfterDeductions(empId);
+
+    // Apply attendance adjustment
+    const employee = employeeData.find((e) => e.empId === empId);
+    if (!employee) return 0;
+
+    const attendanceRatio =
+      (employee.payableDays - employee.lop) / employee.payableDays;
+    const attendanceAdjustedBase = baseAfterDeductions * attendanceRatio;
+
+//    // Calculate total allowances only (don't add the base separately)
+//    const totalAllowances = allowanceData
+//    .filter((a) => a.empId === empId && a.status === "Active")
+//    .reduce((sum, item) => {
+//      return sum + calculateAllowanceAmount(empId, item.percentage);
+//    }, 0);
+
+//  return Number(totalAllowances.toFixed(2));
+// };
+// Calculate total allowances only (don't add the base separately)
+const totalAllowances = allowanceData
+.filter((a) => a.empId === empId && a.status === "Active")
+.reduce((sum, item) => {
+  return sum + calculateAllowanceAmount(empId, item.percentage);
+}, 0);
+
+return Number(totalAllowances.toFixed(2));
+};
+
 
   const handleLOPChange = (e) => {
     const value = parseFloat(e.target.value);
@@ -624,6 +966,22 @@ const PayrollSystem = () => {
     const roundedValue = Math.round(value * 2) / 2;
     setNewEmployee({ ...newEmployee, lop: roundedValue });
   };
+
+  // Handle LPA input change
+  const handleLPAChange = (e) => {
+    const lpaValue = parseFloat(e.target.value);
+    setLpaValue(lpaValue);
+
+    // Convert LPA to monthly basic pay
+    if (!isNaN(lpaValue)) {
+      const monthlyPay = (lpaValue * 100000) / 12;
+      setNewEmployee({
+        ...newEmployee,
+        basicPay: monthlyPay.toFixed(2),
+      });
+    }
+  };
+
   // API Calls and CRUD Operations
   const showAlert = (message, severity = "success") => {
     setAlert({
@@ -788,7 +1146,7 @@ const PayrollSystem = () => {
 
       // Calculate the amount based on the percentage of basic pay
       const calculatedAmount = calculateAllowanceAmount(
-        employee.basicPay,
+        employee.empId,
         newAllowance.percentage
       );
 
@@ -827,6 +1185,7 @@ const PayrollSystem = () => {
     setEditMode(false);
     setSelectedItem(null);
     setSelectedRegisteredEmployee(""); // Reset the selected registered employee
+    setLpaValue(""); // Reset LPA value
     setNewEmployee({
       empId: "",
       empName: "",
@@ -854,6 +1213,8 @@ const PayrollSystem = () => {
     setBulkEmployeeId("");
     setSelectedDeductions([]); // Reset deduction selections
     setDeductionPercentages({}); // Reset deduction percentages
+    setManualDeductionAmounts({}); // Reset manual deduction amounts
+    setIsEligibleForDeductions(false); // Reset deduction eligibility
     setNewAllowance({
       empId: "",
       name: "",
@@ -867,6 +1228,74 @@ const PayrollSystem = () => {
   };
 
   // Payslip Generation and Download
+  // const generatePayslip = async (empId) => {
+  //   try {
+  //     const employee = employeeData.find((e) => e.empId === empId);
+  //     if (!employee) {
+  //       showAlert("Employee not found", "error");
+  //       return null;
+  //     }
+
+  //     const payslipData = {
+  //       empId: employee.empId,
+  //       empName: employee.empName,
+  //       department: employee.department,
+  //       designation: employee.designation,
+  //       pfNo: employee.pfNo,
+  //       uanNo: employee.uanNo,
+  //       panNo: employee.panNo,
+  //       email: employee.email,
+  //       month: new Date().getMonth() + 1,
+  //       year: new Date().getFullYear(),
+  //       basicPay: employee.basicPay,
+  //       payableDays: employee.payableDays,
+  //       lopDays: employee.lop,
+  //       bankDetails: {
+  //         bankName: employee.bankName,
+  //         accountNo: employee.bankAccountNo,
+  //       },
+  //       allowances: allowanceData
+  //         .filter((a) => a.empId === empId && a.status === "Active")
+  //         .map((allowance) => ({
+  //           name: allowance.name,
+  //           amount: calculateAllowanceAmount(empId, allowance.percentage),
+  //           percentage: allowance.percentage,
+  //         })),
+  //       deductions: deductions
+  //         .filter((d) => d.empId === empId && d.status === "Active")
+  //         .map((deduction) => ({
+  //           name: deduction.name,
+  //           amount:
+  //             deduction.percentage === 0 && parseFloat(deduction.amount) > 0
+  //               ? parseFloat(deduction.amount)
+  //               : calculateDeductionAmount(
+  //                   employee.basicPay,
+  //                   deduction.percentage
+  //                 ),
+  //           percentage: deduction.percentage,
+  //         })),
+  //       baseAfterDeductions: calculateBaseAfterDeductions(empId),
+  //       grossSalary: calculateGrossSalary(empId),
+  //       totalDeductions: calculateTotalDeductions(empId),
+  //       netSalary: calculateNetSalary(empId),
+  //     };
+
+  //     const response = await axios.post(
+  //       `${API_URL}/payslips/generate`,
+  //       payslipData
+  //     );
+  //     showAlert("Payslip generated successfully");
+  //     await fetchPayslips();
+  //     return response.data.data;
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message || "Error generating payslip",
+  //       "error"
+  //     );
+  //     return null;
+  //   }
+  // };
+
   const generatePayslip = async (empId) => {
     try {
       const employee = employeeData.find((e) => e.empId === empId);
@@ -874,7 +1303,46 @@ const PayrollSystem = () => {
         showAlert("Employee not found", "error");
         return null;
       }
-
+  
+      // Calculate attendance-adjusted pay
+      const attendanceAdjustedPay = calculateAttendanceBasedPay(
+        employee.basicPay,
+        employee.payableDays,
+        employee.lop
+      );
+  
+      // Calculate base after deductions
+      const baseAfterDeductions = calculateBaseAfterDeductions(empId);
+      
+      // Apply attendance adjustment to the base
+      const attendanceRatio = (employee.payableDays - employee.lop) / employee.payableDays;
+      const attendanceAdjustedBase = baseAfterDeductions * attendanceRatio;
+  
+      // Get all active allowances for this employee
+      const employeeAllowances = allowanceData
+        .filter((a) => a.empId === empId && a.status === "Active");
+      
+      // Get all active deductions for this employee
+      const employeeDeductions = deductions
+        .filter((d) => d.empId === empId && d.status === "Active");
+      
+      // Calculate total allowance amount directly
+      const totalAllowanceAmount = employeeAllowances.reduce((sum, allowance) => {
+        return sum + calculateAllowanceAmount(empId, allowance.percentage);
+      }, 0);
+      
+      // Calculate total deduction amount directly
+      const totalDeductionAmount = employeeDeductions.reduce((sum, deduction) => {
+        if (deduction.percentage === 0 && parseFloat(deduction.amount) > 0) {
+          return sum + parseFloat(deduction.amount);
+        } else {
+          return sum + calculateDeductionAmount(employee.basicPay, deduction.percentage);
+        }
+      }, 0);
+      
+      // Calculate net salary directly (this is the correct way)
+      const netSalary = totalAllowanceAmount;
+  
       const payslipData = {
         empId: employee.empId,
         empName: employee.empName,
@@ -893,31 +1361,46 @@ const PayrollSystem = () => {
           bankName: employee.bankName,
           accountNo: employee.bankAccountNo,
         },
-        allowances: allowanceData
-          .filter((a) => a.empId === empId && a.status === "Active")
-          .map((allowance) => ({
-            name: allowance.name,
-            amount: calculateAllowanceAmount(
-              employee.basicPay,
-              allowance.percentage
-            ),
-            percentage: allowance.percentage,
-          })),
-        deductions: deductions
-          .filter((d) => d.empId === empId && d.status === "Active")
-          .map((deduction) => ({
-            name: deduction.name,
-            amount: calculateDeductionAmount(
-              employee.basicPay,
-              deduction.percentage
-            ),
-            percentage: deduction.percentage,
-          })),
-        grossSalary: calculateGrossSalary(empId),
-        totalDeductions: calculateTotalDeductions(empId),
-        netSalary: calculateNetSalary(empId),
+        attendanceDetails: {
+          totalDays: employee.payableDays,
+          lopDays: employee.lop,
+          workingDays: employee.payableDays - employee.lop,
+          perDayPay: calculatePerDayPay(employee.basicPay, employee.payableDays),
+        },
+        totalPayBeforeDistribution: employee.basicPay,
+        attendanceAdjustedPay: attendanceAdjustedPay,
+        baseAfterDeductions: baseAfterDeductions,
+        attendanceAdjustedBase: attendanceAdjustedBase,
+        allowances: employeeAllowances.map((allowance) => ({
+          name: allowance.name,
+          amount: calculateAllowanceAmount(empId, allowance.percentage),
+          percentage: allowance.percentage,
+          isBasicPay: allowance.name === "BASIC PAY" ? true : false,
+        })),
+        deductions: employeeDeductions.map((deduction) => ({
+          name: deduction.name,
+          amount:
+            deduction.percentage === 0 && parseFloat(deduction.amount) > 0
+              ? parseFloat(deduction.amount)
+              : calculateDeductionAmount(employee.basicPay, deduction.percentage),
+          percentage: deduction.percentage,
+          isFixedAmount: deduction.percentage === 0 && parseFloat(deduction.amount) > 0,
+        })),
+        grossSalary: totalAllowanceAmount,
+        totalDeductions: totalDeductionAmount,
+        netSalary: netSalary,
+        generatedOn: new Date(),
+        paymentStatus: "Pending",
+        paymentMethod: "Bank Transfer",
+        paymentDate: null,
+        notes: `Payslip for ${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
+        lopImpact: {
+          totalPayBeforeLOP: employee.basicPay,
+          lopDeduction: employee.basicPay - attendanceAdjustedPay,
+          lopPercentage: (employee.lop / employee.payableDays) * 100,
+        }
       };
-
+  
       const response = await axios.post(
         `${API_URL}/payslips/generate`,
         payslipData
@@ -933,7 +1416,7 @@ const PayrollSystem = () => {
       return null;
     }
   };
-
+  
   const downloadPayslip = async (payslipId) => {
     try {
       const response = await axios.get(
@@ -969,23 +1452,43 @@ const PayrollSystem = () => {
     const totalAllowances = allowanceData
       .filter((a) => a.empId === empId && a.status === "Active")
       .reduce((sum, item) => {
-        return (
-          sum + calculateAllowanceAmount(employee.basicPay, item.percentage)
-        );
+        return sum + calculateAllowanceAmount(empId, item.percentage);
       }, 0);
 
     // Calculate total deductions
     const totalDeductions = deductions
       .filter((d) => d.empId === empId && d.status === "Active")
       .reduce((sum, item) => {
-        return (
-          sum + calculateDeductionAmount(employee.basicPay, item.percentage)
-        );
+        if (item.percentage === 0 && parseFloat(item.amount) > 0) {
+          return sum + parseFloat(item.amount);
+        } else {
+          return (
+            sum + calculateDeductionAmount(employee.basicPay, item.percentage)
+          );
+        }
       }, 0);
 
     // Return the net impact
     return totalAllowances - totalDeductions;
   };
+
+  // Handle manual deduction amount change
+  const handleManualDeductionAmountChange = (deductionType, value) => {
+    const amount = Math.max(0, Number(value));
+    setManualDeductionAmounts({
+      ...manualDeductionAmounts,
+      [deductionType]: amount,
+    });
+
+    // Clear percentage when manual amount is set
+    if (amount > 0 && deductionPercentages[deductionType]) {
+      setDeductionPercentages({
+        ...deductionPercentages,
+        [deductionType]: 0,
+      });
+    }
+  };
+
   return (
     <Container className="payroll-container">
       <Snackbar
@@ -1089,6 +1592,7 @@ const PayrollSystem = () => {
                 variant="contained"
                 onClick={() => {
                   setEditMode(false);
+                  setLpaValue("");
                   setNewEmployee({
                     empId: "",
                     empName: "",
@@ -1131,7 +1635,7 @@ const PayrollSystem = () => {
                   <TableCell className="table-cell">Name</TableCell>
                   <TableCell className="table-cell">Department</TableCell>
                   <TableCell className="table-cell">Designation</TableCell>
-                  <TableCell className="table-cell">Basic Pay</TableCell>
+                  <TableCell className="table-cell">Total Pay</TableCell>
                   <TableCell className="table-cell">Bank Details</TableCell>
                   <TableCell className="table-cell">PF/UAN</TableCell>
                   <TableCell className="table-cell">Payable Days</TableCell>
@@ -1155,6 +1659,14 @@ const PayrollSystem = () => {
                     </TableCell>
                     <TableCell className="table-cell amount-cell">
                       Rs. {parseFloat(item.basicPay).toFixed(2)}
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        color="textSecondary"
+                      >
+                        {((parseFloat(item.basicPay) * 12) / 100000).toFixed(2)}{" "}
+                        LPA
+                      </Typography>
                     </TableCell>
                     <TableCell className="table-cell">
                       <Typography variant="body2">{item.bankName}</Typography>
@@ -1187,6 +1699,12 @@ const PayrollSystem = () => {
                           onClick={() => {
                             setEditMode(true);
                             setSelectedItem(item);
+
+                            // Calculate LPA from monthly salary
+                            const lpa =
+                              (parseFloat(item.basicPay) * 12) / 100000;
+                            setLpaValue(lpa.toFixed(2));
+
                             setNewEmployee({ ...item });
                             setOpenEmployeeDialog(true);
                           }}
@@ -1194,14 +1712,6 @@ const PayrollSystem = () => {
                           <EditIcon className="action-icon edit-icon" />
                         </IconButton>
                       </Tooltip>
-                      {/* <Tooltip title="Delete">
-              <IconButton
-                className="delete-button"
-                onClick={() => handleDeleteEmployee(item.empId)}
-              >
-                <DeleteIcon className="action-icon delete-icon" />
-              </IconButton>
-            </Tooltip> */}
                       <Tooltip title="Delete">
                         <IconButton
                           className="delete-button"
@@ -1265,7 +1775,7 @@ const PayrollSystem = () => {
                     Department
                   </TableCell>
                   <TableCell className="table-cell" data-priority="1">
-                    Basic Pay
+                    Total Pay
                   </TableCell>
                   <TableCell className="table-cell" data-priority="1">
                     Net Impact
@@ -1306,7 +1816,7 @@ const PayrollSystem = () => {
                       return (
                         sum +
                         calculateAllowanceAmount(
-                          employee.basicPay,
+                          employee.empId,
                           item.percentage
                         )
                       );
@@ -1317,13 +1827,20 @@ const PayrollSystem = () => {
                   // Calculate total deduction amount
                   const totalDeductionAmount = employeeDeductions.reduce(
                     (sum, item) => {
-                      return (
-                        sum +
-                        calculateDeductionAmount(
-                          employee.basicPay,
-                          item.percentage
-                        )
-                      );
+                      if (
+                        item.percentage === 0 &&
+                        parseFloat(item.amount) > 0
+                      ) {
+                        return sum + parseFloat(item.amount);
+                      } else {
+                        return (
+                          sum +
+                          calculateDeductionAmount(
+                            employee.basicPay,
+                            item.percentage
+                          )
+                        );
+                      }
                     },
                     0
                   );
@@ -1344,6 +1861,17 @@ const PayrollSystem = () => {
                       <TableCell>{employee.department}</TableCell>
                       <TableCell>
                         Rs. {parseFloat(employee.basicPay).toFixed(2)}
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          color="textSecondary"
+                        >
+                          {(
+                            (parseFloat(employee.basicPay) * 12) /
+                            100000
+                          ).toFixed(2)}{" "}
+                          LPA
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography
@@ -1412,10 +1940,19 @@ const PayrollSystem = () => {
 
                                 // Pre-populate the selected deductions and their percentages
                                 const initialDeductionPercentages = {};
+                                const initialManualDeductionAmounts = {};
                                 const deductionNames = employeeDeductions.map(
                                   (d) => {
-                                    initialDeductionPercentages[d.name] =
-                                      d.percentage;
+                                    if (
+                                      d.percentage === 0 &&
+                                      parseFloat(d.amount) > 0
+                                    ) {
+                                      initialManualDeductionAmounts[d.name] =
+                                        parseFloat(d.amount);
+                                    } else {
+                                      initialDeductionPercentages[d.name] =
+                                        d.percentage;
+                                    }
                                     return d.name;
                                   }
                                 );
@@ -1429,6 +1966,12 @@ const PayrollSystem = () => {
                                 setSelectedDeductions(deductionNames);
                                 setDeductionPercentages(
                                   initialDeductionPercentages
+                                );
+                                setManualDeductionAmounts(
+                                  initialManualDeductionAmounts
+                                );
+                                setIsEligibleForDeductions(
+                                  deductionNames.length > 0
                                 );
 
                                 // Open the dialog in edit mode
@@ -1450,23 +1993,6 @@ const PayrollSystem = () => {
                           </IconButton>
                         </Tooltip>
 
-                        {/* <Tooltip title="Delete">
-                          <IconButton
-                            className="delete-button"
-                            onClick={() => handleDeleteEmployee(employee.empId)}
-                          >
-                            <DeleteIcon
-                              sx={{
-                                color: "#d32f2f",
-                                transition: "all 0.3s ease",
-                                "&:hover": {
-                                  color: "#ff1744",
-                                  transform: "scale(1.1)",
-                                },
-                              }}
-                            />
-                          </IconButton>
-                        </Tooltip> */}
                         <Tooltip title="Delete">
                           <IconButton
                             className="delete-button"
@@ -1776,6 +2302,13 @@ const PayrollSystem = () => {
                       {/* Earnings Column */}
                       <Grid item xs={12} sm={6}>
                         <Paper className="payslip-earnings-section">
+                          {/* Add this at the top of the Earnings section */}
+<Box sx={{ mb: 2, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
+  <Typography variant="body2" color="textSecondary">
+    <strong>Note:</strong> Total Pay is distributed across allowances according to the defined percentages.
+  </Typography>
+</Box>
+
                           <Typography
                             variant="h6"
                             className="payslip-section-header"
@@ -1784,12 +2317,12 @@ const PayrollSystem = () => {
                           </Typography>
 
                           <Box className="payslip-amount-list">
-                            <Box className="payslip-amount-row">
+                            {/* <Box className="payslip-amount-row">
                               <Typography
                                 variant="body1"
                                 className="payslip-amount-label"
                               >
-                                Basic Pay
+                                Total Pay
                               </Typography>
                               <Typography
                                 variant="body1"
@@ -1802,7 +2335,7 @@ const PayrollSystem = () => {
                                   emp.lop
                                 ).toFixed(2)}
                               </Typography>
-                            </Box>
+                            </Box> */}
 
                             {allowanceData
                               .filter(
@@ -1829,7 +2362,7 @@ const PayrollSystem = () => {
                                   >
                                     Rs.{" "}
                                     {calculateAllowanceAmount(
-                                      emp.basicPay,
+                                      emp.empId,
                                       allowance.percentage
                                     ).toFixed(2)}
                                   </Typography>
@@ -1852,7 +2385,7 @@ const PayrollSystem = () => {
                               </Box>
                             )}
 
-                            <Box className="payslip-amount-row payslip-total-row">
+                            {/* <Box className="payslip-amount-row payslip-total-row">
                               <Typography
                                 variant="body1"
                                 className="payslip-total-label"
@@ -1865,7 +2398,16 @@ const PayrollSystem = () => {
                               >
                                 Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
                               </Typography>
-                            </Box>
+                            </Box> */}
+                            <Box className="payslip-amount-row payslip-total-row">
+  <Typography variant="body1" className="payslip-total-label">
+    Total Earnings (All Allowances)
+  </Typography>
+  <Typography variant="body1" className="payslip-total-value">
+    Rs. {calculateGrossSalary(emp.empId).toFixed(2)}
+  </Typography>
+</Box>
+
                           </Box>
                         </Paper>
                       </Grid>
@@ -1905,10 +2447,13 @@ const PayrollSystem = () => {
                                     className="payslip-amount-value"
                                   >
                                     Rs.{" "}
-                                    {calculateDeductionAmount(
-                                      emp.basicPay,
-                                      deduction.percentage
-                                    ).toFixed(2)}
+                                    {deduction.percentage === 0 &&
+                                    parseFloat(deduction.amount) > 0
+                                      ? parseFloat(deduction.amount).toFixed(2)
+                                      : calculateDeductionAmount(
+                                          emp.basicPay,
+                                          deduction.percentage
+                                        ).toFixed(2)}
                                   </Typography>
                                 </Box>
                               ))}
@@ -2068,8 +2613,6 @@ const PayrollSystem = () => {
                       />
                     </Box>
 
-                    {/* <Grid container spacing={2}>
-                      <Grid item xs={12} md={4}> */}
                     <Grid container spacing={2}>
                       <Grid item xs={12} sm={6} md={4}>
                         <Typography variant="subtitle2" color="textSecondary">
@@ -2089,10 +2632,21 @@ const PayrollSystem = () => {
                       </Grid>
                       <Grid item xs={12} md={4}>
                         <Typography variant="subtitle2" color="textSecondary">
-                          Basic Pay
+                          Total Pay
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: "bold" }}>
                           Rs. {parseFloat(previewEmployee.basicPay).toFixed(2)}
+                          <Typography
+                            variant="caption"
+                            display="block"
+                            color="textSecondary"
+                          >
+                            {(
+                              (parseFloat(previewEmployee.basicPay) * 12) /
+                              100000
+                            ).toFixed(2)}{" "}
+                            LPA
+                          </Typography>
                         </Typography>
                       </Grid>
                     </Grid>
@@ -2243,6 +2797,12 @@ const PayrollSystem = () => {
                 handleCloseEmployeePreview();
                 setEditMode(true);
                 setSelectedItem(previewEmployee);
+
+                // Calculate LPA from monthly salary
+                const lpa =
+                  (parseFloat(previewEmployee.basicPay) * 12) / 100000;
+                setLpaValue(lpa.toFixed(2));
+
                 setNewEmployee({ ...previewEmployee });
                 setOpenEmployeeDialog(true);
               }}
@@ -2252,6 +2812,7 @@ const PayrollSystem = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
         {/* Allowances & Deductions Preview Dialog */}
         <Dialog
           open={allowancePreviewDialogOpen}
@@ -2348,7 +2909,7 @@ const PayrollSystem = () => {
                                   <TableCell align="right">
                                     Rs.{" "}
                                     {calculateAllowanceAmount(
-                                      previewEmployee.basicPay,
+                                      previewEmployee.empId,
                                       allowance.percentage
                                     ).toFixed(2)}
                                   </TableCell>
@@ -2376,7 +2937,7 @@ const PayrollSystem = () => {
                                     return (
                                       sum +
                                       calculateAllowanceAmount(
-                                        previewEmployee.basicPay,
+                                        previewEmployee.empId,
                                         item.percentage
                                       )
                                     );
@@ -2423,7 +2984,7 @@ const PayrollSystem = () => {
                           <TableHead>
                             <TableRow>
                               <TableCell>Name</TableCell>
-                              <TableCell>Percentage</TableCell>
+                              <TableCell>Type</TableCell>
                               <TableCell>Category</TableCell>
                               <TableCell align="right">Amount</TableCell>
                             </TableRow>
@@ -2443,7 +3004,12 @@ const PayrollSystem = () => {
                                   }
                                 >
                                   <TableCell>{deduction.name}</TableCell>
-                                  <TableCell>{deduction.percentage}%</TableCell>
+                                  <TableCell>
+                                    {deduction.percentage === 0 &&
+                                    parseFloat(deduction.amount) > 0
+                                      ? "Fixed Amount"
+                                      : `${deduction.percentage}% of Basic`}
+                                  </TableCell>
                                   <TableCell>
                                     <Chip
                                       label={deduction.category}
@@ -2460,10 +3026,13 @@ const PayrollSystem = () => {
                                   </TableCell>
                                   <TableCell align="right">
                                     Rs.{" "}
-                                    {calculateDeductionAmount(
-                                      previewEmployee.basicPay,
-                                      deduction.percentage
-                                    ).toFixed(2)}
+                                    {deduction.percentage === 0 &&
+                                    parseFloat(deduction.amount) > 0
+                                      ? parseFloat(deduction.amount).toFixed(2)
+                                      : calculateDeductionAmount(
+                                          previewEmployee.basicPay,
+                                          deduction.percentage
+                                        ).toFixed(2)}
                                   </TableCell>
                                 </TableRow>
                               ))}
@@ -2553,16 +3122,13 @@ const PayrollSystem = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
         {/* Create Employee Dialog */}
         <Dialog
           open={openEmployeeDialog}
           onClose={handleCloseEmployeeDialog}
           maxWidth="md"
           fullWidth
-          // PaperProps={{
-          //   elevation: 0,
-          //   className: "dialog-paper",
-          // }}
           PaperProps={{
             sx: {
               width: { xs: "100%", sm: "600px" },
@@ -2615,8 +3181,6 @@ const PayrollSystem = () => {
               </Box>
             )}
 
-            {/* <Grid container spacing={2}>
-              <Grid item xs={12} md={6}> */}
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField
@@ -2671,7 +3235,24 @@ const PayrollSystem = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <TextField
-                  label="Basic Pay"
+                  label="Annual Salary (LPA)"
+                  type="number"
+                  fullWidth
+                  value={lpaValue}
+                  onChange={handleLPAChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">₹</InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">LPA</InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Monthly Total Pay"
                   type="number"
                   fullWidth
                   value={newEmployee.basicPay}
@@ -2806,8 +3387,8 @@ const PayrollSystem = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
         {/* Create Allowance Dialog */}
-        {/* Create Allowance Dialog - Fixed for iPad View */}
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
@@ -2950,6 +3531,11 @@ const PayrollSystem = () => {
                       >
                         Select Allowances to Add
                       </Typography>
+                      <Box sx={{ mt: 1, mb: 2, p: 2, bgcolor: "#f8f9fa", borderRadius: 1 }}>
+  <Typography variant="body2" color="textSecondary">
+    <strong>Note:</strong> Basic Pay is a mandatory component of the salary structure and typically forms the base for various statutory calculations.
+  </Typography>
+</Box>
                       <TableContainer
                         component={Paper}
                         className="dialog-table-container"
@@ -2980,6 +3566,10 @@ const PayrollSystem = () => {
                           </TableHead>
                           <TableBody>
                             {[
+                              {
+                                name: "BASIC PAY",
+                                desc: "Base component of salary structure",
+                              },
                               {
                                 name: "TRAVEL ALLOWANCE",
                                 desc: "For travel-related expenses",
@@ -3113,7 +3703,7 @@ const PayrollSystem = () => {
                             className="custom-percentage-input"
                             id="custom-percentage"
                           />
-                          <Button
+                          {/* <Button
                             size="small"
                             variant="contained"
                             className="custom-add-button"
@@ -3149,7 +3739,35 @@ const PayrollSystem = () => {
                             }}
                           >
                             Add
-                          </Button>
+                          </Button> */}
+                          <Button
+  size="small"
+  variant="contained"
+  className="custom-add-button"
+  onClick={() => {
+    const customName = document.getElementById("custom-allowance").value;
+    const customPercentage = document.getElementById("custom-percentage").value;
+    
+    // Check if the custom name is a variation of "Basic Pay"
+    if (customName.toLowerCase().includes("basic pay")) {
+      showAlert("Basic Pay already exists as a standard allowance", "error");
+      return;
+    }
+    
+    if (customName && !selectedAllowances.includes(customName)) {
+      setSelectedAllowances([...selectedAllowances, customName]);
+      setAllowancePercentages({
+        ...allowancePercentages,
+        [customName]: parseFloat(customPercentage) || 0,
+      });
+      document.getElementById("custom-allowance").value = "";
+      document.getElementById("custom-percentage").value = "";
+    }
+  }}
+>
+  Add
+</Button>
+
                         </Box>
                       </Box>
                     </Grid>
@@ -3177,7 +3795,7 @@ const PayrollSystem = () => {
                                   );
                                   const estimatedAmount = employee
                                     ? calculateAllowanceAmount(
-                                        employee.basicPay,
+                                        employee.empId,
                                         allowancePercentages[name] || 0
                                       )
                                     : 0;
@@ -3217,189 +3835,327 @@ const PayrollSystem = () => {
 
                     {/* Deductions Section */}
                     <Grid item xs={12} className="deductions-section">
-                      <Typography
-                        variant="subtitle1"
-                        className="dialog-section-title deduction-title"
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 2 }}
                       >
-                        Add Deductions (Optional)
-                      </Typography>
-                      <TableContainer
-                        component={Paper}
-                        className="dialog-table-container"
-                      >
-                        <Table
-                          stickyHeader
-                          size="small"
-                          className="dialog-table"
+                        <Typography
+                          variant="subtitle1"
+                          className="dialog-section-title deduction-title"
                         >
-                          <TableHead>
-                            <TableRow>
-                              <TableCell
-                                padding="checkbox"
-                                className="dialog-table-cell"
-                              >
-                                Select
-                              </TableCell>
-                              <TableCell className="dialog-table-cell">
-                                Deduction Type
-                              </TableCell>
-                              <TableCell className="dialog-table-cell dialog-hide-sm">
-                                Description
-                              </TableCell>
-                              <TableCell className="dialog-table-cell">
-                                Percentage (%)
-                              </TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {[
-                              {
-                                name: "PROFESSIONAL TAX",
-                                desc: "State-mandated tax on employment",
-                              },
-                              {
-                                name: "INCOME TAX",
-                                desc: "Tax on employee income",
-                              },
-                              {
-                                name: "PROVIDENT FUND",
-                                desc: "Retirement savings contribution",
-                              },
-                              {
-                                name: "HEALTH INSURANCE",
-                                desc: "Medical insurance premium",
-                              },
-                            ].map((deduction) => (
-                              <TableRow
-                                key={deduction.name}
-                                className="dialog-table-row"
-                              >
+                          Add Deductions (Optional)
+                        </Typography>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={isEligibleForDeductions}
+                              onChange={(e) =>
+                                setIsEligibleForDeductions(e.target.checked)
+                              }
+                            />
+                          }
+                          label="Employee is eligible for deductions"
+                          sx={{ ml: 2 }}
+                        />
+                      </Box>
+
+                      {isEligibleForDeductions && (
+                        <TableContainer
+                          component={Paper}
+                          className="dialog-table-container"
+                        >
+                          <Table
+                            stickyHeader
+                            size="small"
+                            className="dialog-table"
+                          >
+                            <TableHead>
+                              <TableRow>
                                 <TableCell
                                   padding="checkbox"
                                   className="dialog-table-cell"
                                 >
-                                  <Checkbox
-                                    checked={selectedDeductions.includes(
-                                      deduction.name
-                                    )}
-                                    onChange={(e) =>
-                                      handleDeductionSelection(
-                                        deduction.name,
-                                        e.target.checked
-                                      )
-                                    }
-                                  />
+                                  Select
                                 </TableCell>
                                 <TableCell className="dialog-table-cell">
-                                  {deduction.name}
+                                  Deduction Type
                                 </TableCell>
                                 <TableCell className="dialog-table-cell dialog-hide-sm">
-                                  {deduction.desc}
+                                  Description
                                 </TableCell>
                                 <TableCell className="dialog-table-cell">
-                                  <TextField
-                                    type="number"
-                                    size="small"
-                                    value={
-                                      deductionPercentages[deduction.name] || 0
-                                    }
-                                    onChange={(e) =>
-                                      handleDeductionPercentageChange(
-                                        deduction.name,
-                                        e.target.value
-                                      )
-                                    }
-                                    disabled={
-                                      !selectedDeductions.includes(
-                                        deduction.name
-                                      )
-                                    }
-                                    InputProps={{
-                                      endAdornment: (
-                                        <InputAdornment position="end">
-                                          %
-                                        </InputAdornment>
-                                      ),
-                                      inputProps: {
-                                        min: 0,
-                                        max: 100,
-                                        step: 0.5,
-                                      },
-                                    }}
-                                    className="percentage-input"
-                                  />
+                                  Amount Type
+                                </TableCell>
+                                <TableCell className="dialog-table-cell">
+                                  Value
                                 </TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                              {[
+                                {
+                                  name: "PROFESSIONAL TAX",
+                                  desc: "State-mandated tax on employment",
+                                },
+                                {
+                                  name: "INCOME TAX",
+                                  desc: "Tax on employee income",
+                                },
+                                {
+                                  name: "PROVIDENT FUND",
+                                  desc: "Retirement savings contribution",
+                                },
+                                {
+                                  name: "HEALTH INSURANCE",
+                                  desc: "Medical insurance premium",
+                                },
+                              ].map((deduction) => (
+                                <TableRow
+                                  key={deduction.name}
+                                  className="dialog-table-row"
+                                >
+                                  <TableCell
+                                    padding="checkbox"
+                                    className="dialog-table-cell"
+                                  >
+                                    <Checkbox
+                                      checked={selectedDeductions.includes(
+                                        deduction.name
+                                      )}
+                                      onChange={(e) =>
+                                        handleDeductionSelection(
+                                          deduction.name,
+                                          e.target.checked
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                  <TableCell className="dialog-table-cell">
+                                    {deduction.name}
+                                  </TableCell>
+                                  <TableCell className="dialog-table-cell dialog-hide-sm">
+                                    {deduction.desc}
+                                  </TableCell>
+                                  <TableCell className="dialog-table-cell">
+                                    <Select
+                                      size="small"
+                                      value={
+                                        deductionPercentages[deduction.name] ===
+                                          0 &&
+                                        manualDeductionAmounts[deduction.name] >
+                                          0
+                                          ? "fixed"
+                                          : "percentage"
+                                      }
+                                      onChange={(e) => {
+                                        if (e.target.value === "fixed") {
+                                          // Switch to fixed amount
+                                          setDeductionPercentages({
+                                            ...deductionPercentages,
+                                            [deduction.name]: 0,
+                                          });
+                                          if (
+                                            !manualDeductionAmounts[
+                                              deduction.name
+                                            ]
+                                          ) {
+                                            setManualDeductionAmounts({
+                                              ...manualDeductionAmounts,
+                                              [deduction.name]: 0,
+                                            });
+                                          }
+                                        } else {
+                                          // Switch to percentage
+                                          setManualDeductionAmounts({
+                                            ...manualDeductionAmounts,
+                                            [deduction.name]: 0,
+                                          });
+                                          if (
+                                            !deductionPercentages[
+                                              deduction.name
+                                            ]
+                                          ) {
+                                            setDeductionPercentages({
+                                              ...deductionPercentages,
+                                              [deduction.name]: 0,
+                                            });
+                                          }
+                                        }
+                                      }}
+                                      disabled={
+                                        !selectedDeductions.includes(
+                                          deduction.name
+                                        )
+                                      }
+                                      sx={{ minWidth: 120 }}
+                                    >
+                                      <MenuItem value="percentage">
+                                        Percentage of Total
+                                      </MenuItem>
+                                      <MenuItem value="fixed">
+                                        Fixed Amount
+                                      </MenuItem>
+                                    </Select>
+                                  </TableCell>
+                                  <TableCell className="dialog-table-cell">
+                                    {deductionPercentages[deduction.name] ===
+                                      0 &&
+                                    manualDeductionAmounts[deduction.name] >
+                                      0 ? (
+                                      <TextField
+                                        type="number"
+                                        size="small"
+                                        value={
+                                          manualDeductionAmounts[
+                                            deduction.name
+                                          ] || 0
+                                        }
+                                        onChange={(e) =>
+                                          handleManualDeductionAmountChange(
+                                            deduction.name,
+                                            e.target.value
+                                          )
+                                        }
+                                        disabled={
+                                          !selectedDeductions.includes(
+                                            deduction.name
+                                          )
+                                        }
+                                        InputProps={{
+                                          startAdornment: (
+                                            <InputAdornment position="start">
+                                              Rs.
+                                            </InputAdornment>
+                                          ),
+                                          inputProps: {
+                                            min: 0,
+                                            step: 1,
+                                          },
+                                        }}
+                                        className="amount-input"
+                                      />
+                                    ) : (
+                                      <TextField
+                                        type="number"
+                                        size="small"
+                                        value={
+                                          deductionPercentages[
+                                            deduction.name
+                                          ] || 0
+                                        }
+                                        onChange={(e) =>
+                                          handleDeductionPercentageChange(
+                                            deduction.name,
+                                            e.target.value
+                                          )
+                                        }
+                                        disabled={
+                                          !selectedDeductions.includes(
+                                            deduction.name
+                                          )
+                                        }
+                                        InputProps={{
+                                          endAdornment: (
+                                            <InputAdornment position="end">
+                                              %
+                                            </InputAdornment>
+                                          ),
+                                          inputProps: {
+                                            min: 0,
+                                            max: 100,
+                                            step: 0.5,
+                                          },
+                                        }}
+                                        className="percentage-input"
+                                      />
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      )}
                     </Grid>
 
-                    {selectedDeductions.length > 0 && (
-                      <Grid item xs={12}>
-                        <Paper className="selected-items-preview deduction-preview">
-                          <Typography
-                            variant="subtitle2"
-                            gutterBottom
-                            className="deduction-preview-title"
-                          >
-                            Selected Deductions:
-                          </Typography>
-                          <TableContainer className="preview-table-container">
-                            <Table size="small" className="preview-table">
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell>Deduction Name</TableCell>
-                                  <TableCell>Percentage</TableCell>
-                                  <TableCell>Amount (Est.)</TableCell>
-                                  <TableCell>Action</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {selectedDeductions.map((name, index) => {
-                                  const employee = employeeData.find(
-                                    (e) => e.empId === bulkEmployeeId
-                                  );
-                                  const estimatedAmount = employee
-                                    ? calculateDeductionAmount(
-                                        employee.basicPay,
-                                        deductionPercentages[name] || 0
-                                      )
-                                    : 0;
+                    {isEligibleForDeductions &&
+                      selectedDeductions.length > 0 && (
+                        <Grid item xs={12}>
+                          <Paper className="selected-items-preview deduction-preview">
+                            <Typography
+                              variant="subtitle2"
+                              gutterBottom
+                              className="deduction-preview-title"
+                            >
+                              Selected Deductions:
+                            </Typography>
+                            <TableContainer className="preview-table-container">
+                              <Table size="small" className="preview-table">
+                                <TableHead>
+                                  <TableRow>
+                                    <TableCell>Deduction Name</TableCell>
+                                    <TableCell>Type</TableCell>
+                                    <TableCell>Amount (Est.)</TableCell>
+                                    <TableCell>Action</TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {selectedDeductions.map((name, index) => {
+                                    const employee = employeeData.find(
+                                      (e) => e.empId === bulkEmployeeId
+                                    );
 
-                                  return (
-                                    <TableRow key={index}>
-                                      <TableCell>{name}</TableCell>
-                                      <TableCell>
-                                        {deductionPercentages[name] || 0}%
-                                      </TableCell>
-                                      <TableCell>
-                                        Rs. {estimatedAmount.toFixed(2)}
-                                      </TableCell>
-                                      <TableCell>
-                                        <IconButton
-                                          size="small"
-                                          onClick={() =>
-                                            setSelectedDeductions(
-                                              selectedDeductions.filter(
-                                                (item) => item !== name
+                                    let estimatedAmount = 0;
+                                    let deductionType = "";
+
+                                    if (
+                                      deductionPercentages[name] === 0 &&
+                                      manualDeductionAmounts[name] > 0
+                                    ) {
+                                      estimatedAmount =
+                                        manualDeductionAmounts[name];
+                                      deductionType = "Fixed Amount";
+                                    } else {
+                                      estimatedAmount = employee
+                                        ? calculateDeductionAmount(
+                                            employee.basicPay,
+                                            deductionPercentages[name] || 0
+                                          )
+                                        : 0;
+                                      deductionType = `${
+                                        deductionPercentages[name] || 0
+                                      }% of Total Pay`;
+                                    }
+
+                                    return (
+                                      <TableRow key={index}>
+                                        <TableCell>{name}</TableCell>
+                                        <TableCell>{deductionType}</TableCell>
+                                        <TableCell>
+                                          Rs. {estimatedAmount.toFixed(2)}
+                                        </TableCell>
+                                        <TableCell>
+                                          <IconButton
+                                            size="small"
+                                            onClick={() =>
+                                              setSelectedDeductions(
+                                                selectedDeductions.filter(
+                                                  (item) => item !== name
+                                                )
                                               )
-                                            )
-                                          }
-                                        >
-                                          <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                      </TableCell>
-                                    </TableRow>
-                                  );
-                                })}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        </Paper>
-                      </Grid>
-                    )}
+                                            }
+                                          >
+                                            <DeleteIcon fontSize="small" />
+                                          </IconButton>
+                                        </TableCell>
+                                      </TableRow>
+                                    );
+                                  })}
+                                </TableBody>
+                              </Table>
+                            </TableContainer>
+                          </Paper>
+                        </Grid>
+                      )}
                   </>
                 )}
               </Grid>
@@ -3432,7 +4188,8 @@ const PayrollSystem = () => {
                 className="dialog-button submit-button"
               >
                 Add {selectedAllowances.length} Allowance(s)
-                {selectedDeductions.length > 0 &&
+                {isEligibleForDeductions &&
+                  selectedDeductions.length > 0 &&
                   ` & ${selectedDeductions.length} Deduction(s)`}
               </Button>
             )}
