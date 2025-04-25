@@ -95,6 +95,9 @@ const Objectives = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
+  // Add this near the top of your component with other state variables
+  const [currentUserId, setCurrentUserId] = useState(null);
+
   // New state variables for enhanced functionality
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -174,6 +177,16 @@ const Objectives = () => {
     }
   }, [objectives]);
 
+  useEffect(() => {
+    // Get the current user ID from localStorage or your auth system
+    const userId = localStorage.getItem('userId'); // Adjust this based on how you store user info
+    setCurrentUserId(userId);
+    
+    // Initial load of objectives
+    loadObjectives();
+    fetchEmployees();
+  }, []);
+
   // Fetch employees data
   const fetchEmployees = async () => {
     try {
@@ -198,32 +211,39 @@ const Objectives = () => {
     }
   };
 
-  // Load objectives from API
-  const loadObjectives = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = {
-        searchTerm,
-        objectiveType: selectedTab !== "all" ? selectedTab : undefined,
-        page,
-        limit: rowsPerPage,
-        sortBy: sortConfig.key,
-        sortDirection: sortConfig.direction,
-      };
-      const response = await axios.get(API_URL, { params });
-      setObjectives(response.data);
-      setTotalObjectives(
-        response.headers["x-total-count"] || response.data.length
-      );
-      setLoading(false);
-    } catch (error) {
-      console.error("Error loading objectives:", error);
-      setError("Failed to load objectives. Please try again.");
-      setLoading(false);
+// Modify the loadObjectives function to include userId for filtering
+const loadObjectives = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    let url = API_URL;
+    const params = {
+      searchTerm,
+      objectiveType: selectedTab !== "all" ? selectedTab : undefined,
+      archived: filter.archived || undefined,
+    };
+    
+    // If we're on the self tab, use the user-specific endpoint or add userId param
+    if (selectedTab === "self" && currentUserId) {
+      // Option 1: Use the dedicated endpoint
+      // url = `${API_URL}/user/${currentUserId}`;
+      
+      // Option 2: Add userId as a query parameter to the main endpoint
+      params.userId = currentUserId;
     }
-  };
-
+    
+    const response = await axios.get(url, { params });
+    setObjectives(response.data);
+    setTotalObjectives(
+      response.headers["x-total-count"] || response.data.length
+    );
+    setLoading(false);
+  } catch (error) {
+    console.error("Error loading objectives:", error);
+    setError("Failed to load objectives. Please try again.");
+    setLoading(false);
+  }
+};
   // Handle sorting
   const handleSort = (key) => {
     setSortConfig((prevConfig) => ({
@@ -235,28 +255,33 @@ const Objectives = () => {
     }));
   };
 
-  // Filter objectives based on criteria
-  const filteredObjectives = objectives.filter((obj) => {
-    return (
-      (selectedTab === "all" ? true : obj.objectiveType === selectedTab) &&
-      (searchTerm === "" ||
-        obj.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        obj.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (filter.managers === "" ||
-        (Array.isArray(obj.managers)
-          ? obj.managers.length.toString() === filter.managers
-          : obj.managers.toString() === filter.managers)) &&
-      (filter.assignees === "" ||
-        (Array.isArray(obj.assignees)
-          ? obj.assignees.length.toString() === filter.assignees
-          : obj.assignees.toString() === filter.assignees)) &&
-      (filter.keyResults === "" ||
-        obj.keyResults.toString() === filter.keyResults) &&
-      (filter.duration === "" || obj.duration.includes(filter.duration)) &&
-      (filter.archived === "" || obj.archived.toString() === filter.archived)
-    );
-  });
 
+// Update the filteredObjectives logic to handle self objectives filtering
+const filteredObjectives = objectives.filter((obj) => {
+  // For self tab, only show objectives created by the current user
+  if (selectedTab === "self" && obj.userId !== currentUserId) {
+    return false;
+  }
+  
+  return (
+    (selectedTab === "all" ? true : obj.objectiveType === selectedTab) &&
+    (searchTerm === "" ||
+      obj.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      obj.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (filter.managers === "" ||
+      (Array.isArray(obj.managers)
+        ? obj.managers.length.toString() === filter.managers
+        : obj.managers.toString() === filter.managers)) &&
+    (filter.assignees === "" ||
+      (Array.isArray(obj.assignees)
+        ? obj.assignees.length.toString() === filter.assignees
+        : obj.assignees.toString() === filter.assignees)) &&
+    (filter.keyResults === "" ||
+      obj.keyResults.toString() === filter.keyResults) &&
+    (filter.duration === "" || obj.duration.includes(filter.duration)) &&
+    (filter.archived === "" || obj.archived.toString() === filter.archived)
+  );
+});
   // Handle filter changes
   const handleFilterChange = (field, value) => {
     setFilter({ ...filter, [field]: value });
@@ -377,57 +402,60 @@ const Objectives = () => {
     setIsCreateModalOpen(true);
   };
 
-  // Handle create submit
-  const handleCreateSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      // Format the data according to the schema
-      const objectiveData = {
-        title: currentObjective.title,
-        managers: Array.isArray(currentObjective.managers)
-          ? currentObjective.managers
-          : [],
-        keyResults: Number(currentObjective.keyResults) || 0,
-        keyResultsData: Array.isArray(currentObjective.keyResultsData)
-          ? currentObjective.keyResultsData
-          : [],
-        assignees: Array.isArray(currentObjective.assignees)
-          ? currentObjective.assignees
-          : [],
-        duration: currentObjective.duration,
-        description: currentObjective.description,
-        objectiveType: currentObjective.objectiveType || "all",
-        archived: false,
-      };
+// Update the handleCreateSubmit function to include userId for new objectives
+const handleCreateSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    setLoading(true);
+    // Format the data according to the schema
+    const objectiveData = {
+      title: currentObjective.title,
+      managers: Array.isArray(currentObjective.managers)
+        ? currentObjective.managers
+        : [],
+      keyResults: Number(currentObjective.keyResults) || 0,
+      keyResultsData: Array.isArray(currentObjective.keyResultsData)
+        ? currentObjective.keyResultsData
+        : [],
+      assignees: Array.isArray(currentObjective.assignees)
+        ? currentObjective.assignees
+        : [],
+      duration: currentObjective.duration,
+      description: currentObjective.description,
+      objectiveType: currentObjective.objectiveType || "all",
+      archived: false,
+      userId: currentUserId, // Add the userId to associate with the creator
+    };
 
-      const response = await axios.post(API_URL, objectiveData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    const response = await axios.post(API_URL, objectiveData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-      setObjectives([...objectives, response.data]);
-      setIsCreateModalOpen(false);
-      setCurrentObjective(null);
-      setSelectedTab(response.data.objectiveType);
-      setNotification({
-        open: true,
-        message: "Objective created successfully",
-        severity: "success",
-      });
-      setLoading(false);
-    } catch (error) {
-      console.error("Error creating objective:", error);
-      setNotification({
-        open: true,
-        message: "Failed to create objective",
-        severity: "error",
-      });
-      setLoading(false);
-    }
-  };
-
+    setObjectives([...objectives, response.data]);
+    setIsCreateModalOpen(false);
+    setCurrentObjective(null);
+    setSelectedTab(response.data.objectiveType);
+    setNotification({
+      open: true,
+      message: "Objective created successfully",
+      severity: "success",
+    });
+    setLoading(false);
+    
+    // Reload objectives to ensure we have the latest data
+    loadObjectives();
+  } catch (error) {
+    console.error("Error creating objective:", error);
+    setNotification({
+      open: true,
+      message: "Failed to create objective",
+      severity: "error",
+    });
+    setLoading(false);
+  }
+};
   // Handle edit
   const handleEdit = (objective) => {
     setCurrentObjective({ ...objective });
@@ -476,11 +504,17 @@ const Objectives = () => {
     }));
   };
 
-  // Handle tab change
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-    setSelectedTab(newValue === 0 ? "all" : newValue === 1 ? "self" : "all");
-  };
+// Update the handleTabChange function to reload objectives when switching tabs
+const handleTabChange = (event, newValue) => {
+  setTabValue(newValue);
+  const newTab = newValue === 0 ? "all" : newValue === 1 ? "self" : "all";
+  setSelectedTab(newTab);
+  
+  // We need to reload objectives when tab changes
+  setTimeout(() => {
+    loadObjectives();
+  }, 0);
+};
 
   // Handle notification close
   const handleNotificationClose = () => {
@@ -498,19 +532,6 @@ const Objectives = () => {
     loadObjectives();
   };
 
-  
-
-  // Handle rows per page change
-  // const handleChangeRowsPerPage = (event) => {
-  //   setRowsPerPage(parseInt(event.target.value, 10));
-  //   setPage(1);
-  // };
-
-  // // Handle view mode change
-  // const handleViewModeChange = (mode) => {
-  //   setViewMode(mode);
-  // };
-
   // Calculate progress for an objective (mock function)
   const calculateProgress = (objective) => {
     // In a real application, this would be based on completed key results
@@ -521,15 +542,6 @@ const Objectives = () => {
   const formatDate = (dateString) => {
     return moment(dateString).format("MMM DD, YYYY");
   };
-
-  // // Handlers for managers and assignees
-  // const handleManagerInputChange = (e) => {
-  //   setManagerInput(e.target.value);
-  // };
-
-  // const handleAssigneeInputChange = (e) => {
-  //   setAssigneeInput(e.target.value);
-  // };
 
   const handleAddManager = () => {
     if (managerInput.trim() !== "") {
@@ -568,20 +580,6 @@ const Objectives = () => {
       assignees: prev.assignees.filter((_, i) => i !== index),
     }));
   };
-
-  // const handleManagerKeyDown = (e) => {
-  //   if (e.key === "Enter") {
-  //     e.preventDefault();
-  //     handleAddManager();
-  //   }
-  // };
-
-  // const handleAssigneeKeyDown = (e) => {
-  //   if (e.key === "Enter") {
-  //     e.preventDefault();
-  //     handleAddAssignee();
-  //   }
-  // };
 
   // Key Results handlers
   const handleKeyResultInputChange = (e) => {
@@ -1142,118 +1140,7 @@ const Objectives = () => {
                 fontSize: "14px",
               }}
             >
-              {/* <thead>
-                <tr
-                  style={{
-                    backgroundColor: "#f8fafc",
-                    borderBottom: "2px solid #e2e8f0",
-                  }}
-                >
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleSort("title")}
-                  >
-                    Title{" "}
-                    {sortConfig.key === "title" &&
-                      (sortConfig.direction === "asc" ? "↑" : "↓")}
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Managers
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Key Results
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Assignees
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleSort("duration")}
-                  >
-                    Duration{" "}
-                    {sortConfig.key === "duration" &&
-                      (sortConfig.direction === "asc" ? "↑" : "↓")}
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                      width: "150px",
-                    }}
-                  >
-                    Progress
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Type
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleSort("createdAt")}
-                  >
-                    Created{" "}
-                    {sortConfig.key === "createdAt" &&
-                      (sortConfig.direction === "asc" ? "↑" : "↓")}
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead> */}
+
               <thead>
                 <tr>
                   <th
