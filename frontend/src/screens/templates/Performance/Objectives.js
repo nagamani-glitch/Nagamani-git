@@ -182,10 +182,19 @@ const Objectives = () => {
     const userId = localStorage.getItem('userId'); // Adjust this based on how you store user info
     setCurrentUserId(userId);
     
-    // Initial load of objectives
-    loadObjectives();
+    // Only load objectives if we have a userId
+    if (userId) {
+      loadObjectives();
+    }
+    
     fetchEmployees();
   }, []);
+
+  useEffect(() => {
+    if (currentUserId) {
+      loadObjectives();
+    }
+  }, [currentUserId]);
 
   // Fetch employees data
   const fetchEmployees = async () => {
@@ -211,7 +220,7 @@ const Objectives = () => {
     }
   };
 
-// Modify the loadObjectives function to include userId for filtering
+// Update the loadObjectives function to handle the case when currentUserId is not yet available
 const loadObjectives = async () => {
   setLoading(true);
   setError(null);
@@ -219,24 +228,34 @@ const loadObjectives = async () => {
     let url = API_URL;
     const params = {
       searchTerm,
-      objectiveType: selectedTab !== "all" ? selectedTab : undefined,
       archived: filter.archived || undefined,
     };
     
-    // If we're on the self tab, use the user-specific endpoint or add userId param
+    // For self tab, only fetch the current user's objectives
     if (selectedTab === "self" && currentUserId) {
-      // Option 1: Use the dedicated endpoint
-      // url = `${API_URL}/user/${currentUserId}`;
-      
-      // Option 2: Add userId as a query parameter to the main endpoint
       params.userId = currentUserId;
+      params.objectiveType = "self"; // Only get self objectives
+    } else if (selectedTab === "all") {
+      // For all tab, we want all team objectives and the current user's self objectives
+      // If currentUserId is available, we'll filter on the client side
+      // If not, we'll just get all objectives and let the frontend handle it
     }
     
     const response = await axios.get(url, { params });
-    setObjectives(response.data);
-    setTotalObjectives(
-      response.headers["x-total-count"] || response.data.length
-    );
+    
+    // If we're in the "all" tab and have a currentUserId, filter out other users' self objectives
+    if (selectedTab === "all" && currentUserId) {
+      const filteredData = response.data.filter(obj => 
+        obj.objectiveType !== "self" || obj.userId === currentUserId
+      );
+      setObjectives(filteredData);
+      setTotalObjectives(filteredData.length);
+    } else {
+      // Otherwise, just use all the data
+      setObjectives(response.data);
+      setTotalObjectives(response.data.length);
+    }
+    
     setLoading(false);
   } catch (error) {
     console.error("Error loading objectives:", error);
@@ -244,6 +263,7 @@ const loadObjectives = async () => {
     setLoading(false);
   }
 };
+
   // Handle sorting
   const handleSort = (key) => {
     setSortConfig((prevConfig) => ({
@@ -255,16 +275,20 @@ const loadObjectives = async () => {
     }));
   };
 
-
-// Update the filteredObjectives logic to handle self objectives filtering
+// Update the filteredObjectives logic to handle the case when currentUserId is not yet available
 const filteredObjectives = objectives.filter((obj) => {
   // For self tab, only show objectives created by the current user
-  if (selectedTab === "self" && obj.userId !== currentUserId) {
+  if (selectedTab === "self") {
+    if (!currentUserId) return false; // If no userId yet, don't show anything in self tab
+    if (obj.userId !== currentUserId) return false;
+  }
+  
+  // For all tab, don't show other users' self objectives
+  if (selectedTab === "all" && obj.objectiveType === "self" && currentUserId && obj.userId !== currentUserId) {
     return false;
   }
   
   return (
-    (selectedTab === "all" ? true : obj.objectiveType === selectedTab) &&
     (searchTerm === "" ||
       obj.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       obj.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
@@ -282,6 +306,9 @@ const filteredObjectives = objectives.filter((obj) => {
     (filter.archived === "" || obj.archived.toString() === filter.archived)
   );
 });
+
+
+
   // Handle filter changes
   const handleFilterChange = (field, value) => {
     setFilter({ ...filter, [field]: value });
@@ -504,13 +531,41 @@ const handleCreateSubmit = async (e) => {
     }));
   };
 
-// Update the handleTabChange function to reload objectives when switching tabs
+// // Update the handleTabChange function to reload objectives when switching tabs
+// const handleTabChange = (event, newValue) => {
+//   setTabValue(newValue);
+//   const newTab = newValue === 0 ? "all" : newValue === 1 ? "self" : "all";
+//   setSelectedTab(newTab);
+  
+//   // We need to reload objectives when tab changes
+//   setTimeout(() => {
+//     loadObjectives();
+//   }, 0);
+// };
+
+
+// Update the handleTabChange function to immediately filter objectives
 const handleTabChange = (event, newValue) => {
   setTabValue(newValue);
   const newTab = newValue === 0 ? "all" : newValue === 1 ? "self" : "all";
+  
+  // First set the selected tab
   setSelectedTab(newTab);
   
-  // We need to reload objectives when tab changes
+  // Then immediately filter the existing objectives based on the new tab
+  // This prevents the flash of unfiltered content
+  if (newTab === "self" && currentUserId) {
+    // For self tab, only show the current user's self objectives
+    const filteredSelfObjectives = objectives.filter(
+      obj => obj.userId === currentUserId && obj.objectiveType === "self"
+    );
+    setObjectives(filteredSelfObjectives);
+  } else if (newTab === "all") {
+    // For all tab, show team objectives and only the current user's self objectives
+    // We'll reload from the server to get all team objectives
+  }
+  
+  // Finally, reload from the server to ensure we have the latest data
   setTimeout(() => {
     loadObjectives();
   }, 0);
