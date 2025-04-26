@@ -35,5 +35,15 @@ router.get('/user/:userId', getResignationsByUser);
 router.put('/:id', updateResignation);
 router.delete('/:id', deleteResignation);
 router.post('/email', sendEmail);
+// Add or update this route
+router.post('/email', async (req, res) => {
+  try {
+    const result = await sendResignationEmail(req.body);
+    res.status(200).json({ message: 'Email sent successfully', result });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ message: 'Failed to send email', error: error.message });
+  }
+});
 
 export default router;

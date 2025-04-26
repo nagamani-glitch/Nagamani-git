@@ -283,12 +283,57 @@ const ResignationReview = () => {
     setReviewNotes("");
   };
 
-  const handleReviewSubmit = async () => {
-    if (!selectedResignation) return;
+//   const handleReviewSubmit = async () => {
+//     if (!selectedResignation) return;
 
+//     try {
+//       setLoading(true);
+
+//       const response = await axios.put(
+//         `http://localhost:5000/api/resignations/${selectedResignation._id}`,
+//         {
+//           status: reviewStatus,
+//           reviewNotes: reviewNotes,
+//           reviewedBy: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
+//           reviewedAt: new Date(),
+//         }
+//       );
+
+//       // Update local state
+//       setResignations(
+//         resignations.map((item) =>
+//           item._id === selectedResignation._id ? response.data : item
+//         )
+//       );
+
+//       setSnackbar({
+//         open: true,
+//         message: `Resignation ${
+//           reviewStatus === "Approved" ? "approved" : "rejected"
+//         } successfully`,
+//         severity: "success",
+//       });
+
+//       handleCloseReview();
+//       fetchResignations(); // Refresh the list
+//     } catch (error) {
+//       console.error("Error updating resignation status:", error);
+//       setSnackbar({
+//         open: true,
+//         message: "Error updating resignation status",
+//         severity: "error",
+//       });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+const handleReviewSubmit = async () => {
+    if (!selectedResignation) return;
+  
     try {
       setLoading(true);
-
+  
       const response = await axios.put(
         `http://localhost:5000/api/resignations/${selectedResignation._id}`,
         {
@@ -298,14 +343,14 @@ const ResignationReview = () => {
           reviewedAt: new Date(),
         }
       );
-
+  
       // Update local state
       setResignations(
         resignations.map((item) =>
           item._id === selectedResignation._id ? response.data : item
         )
       );
-
+  
       setSnackbar({
         open: true,
         message: `Resignation ${
@@ -313,7 +358,10 @@ const ResignationReview = () => {
         } successfully`,
         severity: "success",
       });
-
+  
+      // Send notification email about the status update
+      await sendStatusNotification(response.data);
+  
       handleCloseReview();
       fetchResignations(); // Refresh the list
     } catch (error) {
@@ -327,8 +375,9 @@ const ResignationReview = () => {
       setLoading(false);
     }
   };
+  
 
-  const handleSendEmail = async (resignation) => {
+const handleSendEmail = async (resignation) => {
     try {
       setLoading(true);
       await axios.post("http://localhost:5000/api/resignations/email", {
@@ -339,7 +388,7 @@ const ResignationReview = () => {
         description: resignation.description,
         reviewNotes: resignation.reviewNotes,
       });
-
+  
       setSnackbar({
         open: true,
         message: `Notification email sent to ${resignation.name}`,
@@ -357,6 +406,36 @@ const ResignationReview = () => {
     }
   };
 
+  // Add this function to send notification after review
+const sendStatusNotification = async (resignation) => {
+    try {
+      await axios.post("http://localhost:5000/api/resignations/email", {
+        name: resignation.name,
+        email: resignation.email,
+        position: resignation.position,
+        status: resignation.status,
+        description: resignation.description,
+        reviewNotes: resignation.reviewNotes,
+        reviewedBy: resignation.reviewedBy,
+        reviewedAt: resignation.reviewedAt
+      });
+  
+      setSnackbar({
+        open: true,
+        message: `Status notification email sent to ${resignation.name}`,
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error sending status notification:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to send status notification email",
+        severity: "error",
+      });
+    }
+  };
+  
+  
   const getStatusColor = (status) => {
     switch (status) {
       case "Approved":
