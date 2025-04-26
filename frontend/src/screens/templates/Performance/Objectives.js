@@ -36,7 +36,6 @@ import {
   Autocomplete,
   useMediaQuery,
   useTheme,
-  
   Fade,
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";

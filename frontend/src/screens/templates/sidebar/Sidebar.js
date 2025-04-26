@@ -286,6 +286,11 @@ function Sidebar() {
             >
               Resignation Letters
             </li>
+            <li
+              onClick={() => handleNavigation("/Dashboards/resignation-review")}
+            >
+              Resignation Review
+            </li>
           </ul>
         )}
 

@@ -113,6 +113,12 @@ const ResignationPage = () => {
   const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
 
+  // Add these state variables near the top of your component
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserName, setCurrentUserName] = useState("");
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
+  const [currentUserPosition, setCurrentUserPosition] = useState("");
+
   const handleStatusMenuOpen = (event, item) => {
     setStatusMenuAnchorEl(event.currentTarget);
     setSelectedItem(item);
@@ -171,21 +177,79 @@ const ResignationPage = () => {
     }
   }, [isMobile]);
 
-  const fetchResignations = async () => {
+  // const fetchResignations = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(
+  //       "http://localhost:5000/api/resignations"
+  //     );
+  //     setData(response.data);
+  //     setError(null);
+  //   } catch (err) {
+  //     setError("Failed to fetch resignations");
+  //     console.error("Error:", err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Add this useEffect to fetch the current user's information
+// Modify the fetchResignations function to filter by userId
+const fetchResignations = async () => {
+  try {
+    setLoading(true);
+    
+    // If we have a userId, fetch only the user's resignations
+    let url = "http://localhost:5000/api/resignations";
+    if (currentUserId) {
+      url = `http://localhost:5000/api/resignations/user/${currentUserId}`;
+    }
+    
+    const response = await axios.get(url);
+    setData(response.data);
+    setError(null);
+  } catch (err) {
+    setError("Failed to fetch resignations");
+    console.error("Error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Add this useEffect to reload resignations when currentUserId changes
+useEffect(() => {
+  if (currentUserId) {
+    fetchResignations();
+  }
+}, [currentUserId]);
+
+
+  useEffect(() => {
+  const fetchCurrentUser = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(
-        "http://localhost:5000/api/resignations"
-      );
-      setData(response.data);
-      setError(null);
-    } catch (err) {
-      setError("Failed to fetch resignations");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        setCurrentUserId(userId);
+        
+        // Fetch user details
+        const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
+        const userData = response.data.data;
+        
+        if (userData) {
+          // Set user information
+          setCurrentUserName(`${userData.personalInfo?.firstName || ''} ${userData.personalInfo?.lastName || ''}`);
+          setCurrentUserEmail(userData.personalInfo?.email || '');
+          setCurrentUserPosition(userData.joiningDetails?.initialDesignation || '');
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching current user:", error);
     }
   };
+  
+  fetchCurrentUser();
+}, []);
+
 
   const [showCreatePopup, setShowCreatePopup] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -247,18 +311,30 @@ const ResignationPage = () => {
     setItemToDelete(null);
   };
 
-  const handleCreateClick = () => {
-    setShowCreatePopup(true);
-    setIsEditing(false);
-    setNewResignation({
-      name: "",
-      email: "",
-      title: "",
-      status: "Requested",
-      description: "",
-    });
-  };
+  // const handleCreateClick = () => {
+  //   setShowCreatePopup(true);
+  //   setIsEditing(false);
+  //   setNewResignation({
+  //     name: "",
+  //     email: "",
+  //     title: "",
+  //     status: "Requested",
+  //     description: "",
+  //   });
+  // };
 
+  // Modify the handleCreateClick function to pre-fill user information
+const handleCreateClick = () => {
+  setShowCreatePopup(true);
+  setIsEditing(false);
+  setNewResignation({
+    name: currentUserName || "",
+    email: currentUserEmail || "",
+    title: currentUserPosition || "",
+    status: "Requested",
+    description: "",
+  });
+};
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewResignation((prev) => ({ ...prev, [name]: value }));
@@ -393,55 +469,105 @@ const ResignationPage = () => {
       </Box>
     );
 
-  const handleSave = async () => {
-    if (isSaving) return;
+  // const handleSave = async () => {
+  //   if (isSaving) return;
 
-    try {
-      setIsSaving(true);
-      const resignationData = {
-        name: newResignation.name,
-        email: newResignation.email,
-        position: newResignation.title,
-        status: newResignation.status,
-        description: newResignation.description,
-      };
+  //   try {
+  //     setIsSaving(true);
+  //     const resignationData = {
+  //       name: newResignation.name,
+  //       email: newResignation.email,
+  //       position: newResignation.title,
+  //       status: newResignation.status,
+  //       description: newResignation.description,
+  //     };
 
-      if (isEditing) {
-        await axios.put(
-          `http://localhost:5000/api/resignations/${currentId}`,
-          resignationData
-        );
-        setSnackbar({
-          open: true,
-          message: "Resignation letter updated successfully",
-          severity: "success",
-        });
-      } else {
-        await axios.post(
-          "http://localhost:5000/api/resignations",
-          resignationData
-        );
-        setSnackbar({
-          open: true,
-          message: "Resignation letter created successfully",
-          severity: "success",
-        });
-      }
+  //     if (isEditing) {
+  //       await axios.put(
+  //         `http://localhost:5000/api/resignations/${currentId}`,
+  //         resignationData
+  //       );
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Resignation letter updated successfully",
+  //         severity: "success",
+  //       });
+  //     } else {
+  //       await axios.post(
+  //         "http://localhost:5000/api/resignations",
+  //         resignationData
+  //       );
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Resignation letter created successfully",
+  //         severity: "success",
+  //       });
+  //     }
 
-      await fetchResignations();
-      handleClosePopup();
-    } catch (error) {
-      console.error("Error saving resignation:", error);
+  //     await fetchResignations();
+  //     handleClosePopup();
+  //   } catch (error) {
+  //     console.error("Error saving resignation:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error saving resignation letter",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
+
+  // Modify the handleSave function to include userId
+const handleSave = async () => {
+  if (isSaving) return;
+
+  try {
+    setIsSaving(true);
+    const resignationData = {
+      name: newResignation.name,
+      email: newResignation.email,
+      position: newResignation.title,
+      status: newResignation.status,
+      description: newResignation.description,
+      userId: currentUserId, // Add userId to the resignation data
+    };
+
+    if (isEditing) {
+      await axios.put(
+        `http://localhost:5000/api/resignations/${currentId}`,
+        resignationData
+      );
       setSnackbar({
         open: true,
-        message: "Error saving resignation letter",
-        severity: "error",
+        message: "Resignation letter updated successfully",
+        severity: "success",
       });
-    } finally {
-      setIsSaving(false);
+    } else {
+      await axios.post(
+        "http://localhost:5000/api/resignations",
+        resignationData
+      );
+      setSnackbar({
+        open: true,
+        message: "Resignation letter created successfully",
+        severity: "success",
+      });
     }
-  };
 
+    await fetchResignations();
+    handleClosePopup();
+  } catch (error) {
+    console.error("Error saving resignation:", error);
+    setSnackbar({
+      open: true,
+      message: "Error saving resignation letter",
+      severity: "error",
+    });
+  } finally {
+    setIsSaving(false);
+  }
+};
   const toggleFilter = (event) => {
     setFilterAnchorEl(event.currentTarget);
     setFilterOpen(!filterOpen);
