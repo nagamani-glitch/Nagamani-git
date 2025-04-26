@@ -422,11 +422,6 @@ doc.fontSize(14).fillColor('#f70505').font('Helvetica-Bold')
           .text('** If you received this in error please destroy it along with any copies and notify the sender immediately **', 
                 40, disclaimerY + 30, { align: 'center' });
 
-        // Add a note about the calculation method
-        // const calculationNoteY = disclaimerY + 60;
-        // doc.fontSize(8).fillColor('#777777')
-        //   .text('Note: "Actual" shows full entitlement before attendance adjustment. "Earned" shows amount after attendance adjustment.', 
-        //         40, calculationNoteY, { align: 'center' });
 
         doc.end();
         stream.on('finish', () => resolve(filePath));

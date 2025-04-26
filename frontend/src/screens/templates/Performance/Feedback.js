@@ -102,6 +102,39 @@ const SearchTextField = styled(TextField)(({ theme }) => ({
   },
 }));
 
+
+
+// // Near the top of your component, add:
+// const [currentUser, setCurrentUser] = useState(null);
+
+// // Add this to your useEffect
+// useEffect(() => {
+//   fetchFeedbacks();
+//   fetchEmployees();
+//   fetchCurrentUser(); // Add this new function call
+// }, []);
+
+// // Add this function to fetch the current user
+// const fetchCurrentUser = async () => {
+//   try {
+//     // Get user ID from your auth system (localStorage, context, etc.)
+//     const userId = localStorage.getItem('userId'); // Adjust based on your auth implementation
+    
+//     if (!userId) {
+//       console.error("No user ID found in storage");
+//       return;
+//     }
+    
+//     const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
+//     if (response.data.success) {
+//       setCurrentUser(response.data.data);
+//     }
+//   } catch (error) {
+//     console.error("Error fetching current user:", error);
+//   }
+// };
+
+
 const Feedback = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -155,6 +188,40 @@ const Feedback = () => {
     feedbackToReview: ["Not Started", "In Progress", "Completed", "Pending"],
     anonymousFeedback: ["Not Started", "In Progress", "Completed", "Pending"],
   });
+
+
+
+  // Add the currentUser state here, inside the component
+  const [currentUser, setCurrentUser] = useState(null);
+  
+
+  // Add the fetchCurrentUser function inside the component
+  const fetchCurrentUser = async () => {
+    try {
+      // Get user ID from your auth system (localStorage, context, etc.)
+      const userId = localStorage.getItem('userId'); // Adjust based on your auth implementation
+      
+      if (!userId) {
+        console.error("No user ID found in storage");
+        return;
+      }
+      
+      const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
+      if (response.data.success) {
+        setCurrentUser(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+    }
+  };
+
+  // Modify your existing useEffect to include fetchCurrentUser
+  useEffect(() => {
+    fetchFeedbacks();
+    fetchEmployees();
+    fetchCurrentUser(); // Add this line to your existing useEffect
+  }, []);
+
 
   // Filter handlers
   const handleFilterClick = (event) => {
@@ -242,11 +309,43 @@ const Feedback = () => {
     }
   }, [feedbackData]);
 
+  // const fetchFeedbacks = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get("http://localhost:5000/api/feedback");
+  //     setFeedbackData(response.data);
+  //     setError(null);
+  //   } catch (err) {
+  //     setError("Failed to fetch feedbacks");
+  //     console.error("Error:", err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
   const fetchFeedbacks = async () => {
     try {
       setLoading(true);
       const response = await axios.get("http://localhost:5000/api/feedback");
-      setFeedbackData(response.data);
+      
+      // Get the current user's employee ID
+      const userId = localStorage.getItem('userId');
+      const currentUserResponse = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
+      const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
+      
+      // Filter self-feedback to only show the current user's feedback
+      const feedbackData = response.data;
+      
+      // Only filter selfFeedback, keep other tabs as they are
+      const filteredData = {
+        ...feedbackData,
+        selfFeedback: feedbackData.selfFeedback.filter(
+          feedback => feedback.employeeId === currentEmployeeId
+        )
+      };
+      
+      setFeedbackData(filteredData);
       setError(null);
     } catch (err) {
       setError("Failed to fetch feedbacks");
@@ -256,21 +355,61 @@ const Feedback = () => {
     }
   };
 
+  
+
+  // const handleAddFeedback = async (newFeedback, isEditing) => {
+  //   try {
+  //     const feedbackData = {
+  //       ...newFeedback,
+  //       feedbackType: activeTab,
+  //     };
+
+  //     if (isEditing) {
+  //       await axios.put(
+  //         `http://localhost:5000/api/feedback/${newFeedback._id}`,
+  //         feedbackData
+  //       );
+  //     } else {
+  //       await axios.post("http://localhost:5000/api/feedback", feedbackData);
+  //     }
+  //     await fetchFeedbacks();
+  //     setIsCreateModalOpen(false);
+  //     setEditingFeedback(null);
+  //   } catch (error) {
+  //     console.error("Error saving feedback:", error);
+  //     setError("Failed to save feedback");
+  //   }
+  // };
+
   const handleAddFeedback = async (newFeedback, isEditing) => {
     try {
+      // Get current user's employee ID
+      const userId = localStorage.getItem('userId');
+      const currentUserResponse = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
+      const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
+      
       const feedbackData = {
         ...newFeedback,
         feedbackType: activeTab,
+        employeeId: currentEmployeeId, // Add the employee ID
+        createdBy: currentEmployeeId,
       };
-
+      
       if (isEditing) {
         await axios.put(
           `http://localhost:5000/api/feedback/${newFeedback._id}`,
           feedbackData
         );
       } else {
+        // For new self-feedback, set a flag to indicate it should be reviewed
+        if (activeTab === 'selfFeedback') {
+          feedbackData.needsReview = true;
+          feedbackData.reviewStatus = 'Pending';
+        }
+        
         await axios.post("http://localhost:5000/api/feedback", feedbackData);
       }
+      
       await fetchFeedbacks();
       setIsCreateModalOpen(false);
       setEditingFeedback(null);
@@ -280,6 +419,7 @@ const Feedback = () => {
     }
   };
 
+  
   const handleEdit = (feedback) => {
     setEditingFeedback(feedback);
     setIsCreateModalOpen(true);
@@ -1541,7 +1681,7 @@ const Feedback = () => {
             },
           }}
         >
-          <CreateFeedback
+          {/* <CreateFeedback
             addFeedback={handleAddFeedback}
             editData={editingFeedback}
             onClose={() => {
@@ -1549,7 +1689,20 @@ const Feedback = () => {
               setEditingFeedback(null);
             }}
             statusOptions={statusOptions[activeTab]}
-          />
+          /> */}
+
+<CreateFeedback
+  addFeedback={handleAddFeedback}
+  editData={editingFeedback}
+  onClose={() => {
+    setIsCreateModalOpen(false);
+    setEditingFeedback(null);
+  }}
+  statusOptions={statusOptions[activeTab]}
+  feedbackType={activeTab}
+  currentUser={currentUser} // Add this line
+/>
+
         </DialogContent>
       </Dialog>
 

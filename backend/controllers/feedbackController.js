@@ -1,14 +1,82 @@
 import Feedback from '../models/Feedback.js';
+import Employee from '../models/employeeRegisterModel.js';
+// export const createFeedback = async (req, res) => {
+//   try {
+//     const feedback = new Feedback(req.body);
+    
+//     // Add initial history entry
+//     feedback.history = [{
+//       date: new Date(),
+//       action: 'Created',
+//       user: req.body.createdBy || 'System', // In a real app, this would come from auth
+//       details: 'Feedback created'
+//     }];
+    
+//     const savedFeedback = await feedback.save();
+//     res.status(201).json(savedFeedback);
+//   } catch (error) {
+//     res.status(400).json({ message: error.message });
+//   }
+// };
+
 
 export const createFeedback = async (req, res) => {
   try {
-    const feedback = new Feedback(req.body);
+    const feedbackData = req.body;
+    
+    // If it's self-feedback that needs review, handle the special workflow
+    if (feedbackData.feedbackType === 'selfFeedback' && feedbackData.needsReview) {
+      // Create the self-feedback
+      const selfFeedback = new Feedback({
+        ...feedbackData,
+        feedbackType: 'selfFeedback',
+        status: 'In Progress'
+      });
+      
+      // Add initial history entry
+      selfFeedback.history = [{
+        date: new Date(),
+        action: 'Created',
+        user: feedbackData.createdBy || 'System',
+        details: 'Self feedback created and sent for review'
+      }];
+      
+      await selfFeedback.save();
+      
+      // Create a copy in the feedbackToReview category
+      const reviewFeedback = new Feedback({
+        ...feedbackData,
+        feedbackType: 'feedbackToReview',
+        originalFeedbackId: selfFeedback._id,
+        status: 'Pending',
+        history: [{
+          date: new Date(),
+          action: 'Created',
+          user: feedbackData.createdBy || 'System',
+          details: 'Feedback submitted for review'
+        }]
+      });
+      
+      await reviewFeedback.save();
+      
+      return res.status(201).json({ 
+        success: true, 
+        message: 'Feedback created and sent for review',
+        data: {
+          selfFeedback,
+          reviewFeedback
+        }
+      });
+    }
+    
+    // Regular feedback creation (existing code)
+    const feedback = new Feedback(feedbackData);
     
     // Add initial history entry
     feedback.history = [{
       date: new Date(),
       action: 'Created',
-      user: req.body.createdBy || 'System', // In a real app, this would come from auth
+      user: feedbackData.createdBy || 'System',
       details: 'Feedback created'
     }];
     
@@ -18,6 +86,7 @@ export const createFeedback = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
 
 export const getAllFeedbacks = async (req, res) => {
   try {
@@ -99,6 +168,42 @@ export const getAllFeedbacks = async (req, res) => {
   }
 };
 
+// export const updateFeedback = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const updateData = req.body;
+    
+//     // Get the current feedback to track changes
+//     const currentFeedback = await Feedback.findById(id);
+//     if (!currentFeedback) {
+//       return res.status(404).json({ message: 'Feedback not found' });
+//     }
+    
+//     // Track history if status changed
+//     if (updateData.status && updateData.status !== currentFeedback.status) {
+//       const historyEntry = {
+//         date: new Date(),
+//         action: 'Updated',
+//         user: updateData.updatedBy || 'System', // In a real app, this would come from auth
+//         details: `Status changed from ${currentFeedback.status} to ${updateData.status}`
+//       };
+      
+//       updateData.history = [...currentFeedback.history, historyEntry];
+//     }
+    
+//     const updatedFeedback = await Feedback.findByIdAndUpdate(
+//       id,
+//       updateData,
+//       { new: true }
+//     );
+    
+//     res.status(200).json(updatedFeedback);
+//   } catch (error) {
+//     res.status(400).json({ message: error.message });
+//   }
+// };
+
+
 export const updateFeedback = async (req, res) => {
   try {
     const { id } = req.params;
@@ -128,11 +233,55 @@ export const updateFeedback = async (req, res) => {
       { new: true }
     );
     
+    // If this feedback has a linked feedback (original or review), update that too
+    if (currentFeedback.originalFeedbackId) {
+      // This is a review feedback, update the original
+      await Feedback.findByIdAndUpdate(
+        currentFeedback.originalFeedbackId,
+        { status: updateData.status },
+        { new: false }
+      );
+    } else {
+      // Check if this is an original feedback with reviews
+      const linkedReviews = await Feedback.find({ originalFeedbackId: id });
+      
+      if (linkedReviews.length > 0) {
+        // Update all linked reviews
+        await Promise.all(
+          linkedReviews.map(review => 
+            Feedback.findByIdAndUpdate(
+              review._id,
+              { status: updateData.status },
+              { new: false }
+            )
+          )
+        );
+      }
+    }
+    
     res.status(200).json(updatedFeedback);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
+
+
+// export const deleteFeedback = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const feedback = await Feedback.findById(id);
+    
+//     if (!feedback) {
+//       return res.status(404).json({ message: 'Feedback not found' });
+//     }
+    
+//     await Feedback.findByIdAndDelete(id);
+//     res.status(200).json({ message: 'Feedback deleted successfully' });
+//   } catch (error) {
+//     res.status(400).json({ message: error.message });
+//   }
+// };
+
 
 export const deleteFeedback = async (req, res) => {
   try {
@@ -143,12 +292,32 @@ export const deleteFeedback = async (req, res) => {
       return res.status(404).json({ message: 'Feedback not found' });
     }
     
+    // If this is an original feedback with reviews, delete those too
+    if (!feedback.originalFeedbackId) {
+      await Feedback.deleteMany({ originalFeedbackId: id });
+    }
+    // If this is a review feedback, update the original
+    else {
+      const originalFeedback = await Feedback.findById(feedback.originalFeedbackId);
+      if (originalFeedback) {
+        // Add a history entry about the review being deleted
+        originalFeedback.history.push({
+          date: new Date(),
+          action: 'Updated',
+          user: req.body.deletedBy || 'System',
+          details: 'Review feedback was deleted'
+        });
+        await originalFeedback.save();
+      }
+    }
+    
     await Feedback.findByIdAndDelete(id);
     res.status(200).json({ message: 'Feedback deleted successfully' });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
+
 
 export const getFeedbacksByType = async (req, res) => {
   try {
@@ -430,3 +599,343 @@ export const bulkDeleteFeedbacks = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+
+// Add this new function to get feedback by user ID
+export const getFeedbacksByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // First get the employee ID from the user ID
+    const employee = await Employee.findOne({ userId });
+    
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found for this user ID'
+      });
+    }
+    
+    const employeeId = employee.Emp_ID;
+    
+    // Get all feedbacks
+    const feedbacks = await Feedback.find();
+    
+    // Filter and organize by feedback type and employee ID
+    const organizedFeedbacks = {
+      selfFeedback: feedbacks.filter(f => 
+        f.feedbackType === 'selfFeedback' && 
+        (f.employeeId === employeeId || 
+         (typeof f.employee === 'object' && f.employee.id === employeeId) ||
+         (typeof f.employee === 'string' && f.employee.includes(employeeId)))
+      ),
+      requestedFeedback: feedbacks.filter(f => 
+        f.feedbackType === 'requestedFeedback' && 
+        (f.employeeId === employeeId || 
+         (typeof f.employee === 'object' && f.employee.id === employeeId) ||
+         (typeof f.employee === 'string' && f.employee.includes(employeeId)))
+      ),
+      feedbackToReview: feedbacks.filter(f => 
+        f.feedbackType === 'feedbackToReview'
+      ),
+      anonymousFeedback: feedbacks.filter(f => 
+        f.feedbackType === 'anonymousFeedback'
+      )
+    };
+    
+    res.status(200).json({
+      success: true,
+      data: organizedFeedbacks
+    });
+  } catch (error) {
+    console.error('Error fetching feedback by user ID:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+export const updateFeedbackReviewStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reviewStatus, reviewedBy, comments } = req.body;
+    
+    // Find the feedback to review
+    const reviewFeedback = await Feedback.findById(id);
+    
+    if (!reviewFeedback) {
+      return res.status(404).json({ message: 'Feedback not found' });
+    }
+    
+    // Update the review status
+    reviewFeedback.reviewStatus = reviewStatus;
+    
+    // Add to history
+    reviewFeedback.history.push({
+      date: new Date(),
+      action: 'Updated',
+      user: reviewedBy || 'System',
+      details: `Review status updated to ${reviewStatus}${comments ? ': ' + comments : ''}`
+    });
+    
+    await reviewFeedback.save();
+    
+    // If there's an original feedback, update it too
+    if (reviewFeedback.originalFeedbackId) {
+      const originalFeedback = await Feedback.findById(reviewFeedback.originalFeedbackId);
+      
+      if (originalFeedback) {
+        // Update the status based on review decision
+        if (reviewStatus === 'Approved') {
+          originalFeedback.status = 'Completed';
+        } else if (reviewStatus === 'Rejected') {
+          originalFeedback.status = 'Pending';
+        }
+        
+        // Add to history
+        originalFeedback.history.push({
+          date: new Date(),
+          action: 'Updated',
+          user: reviewedBy || 'System',
+          details: `Feedback review ${reviewStatus.toLowerCase()}${comments ? ': ' + comments : ''}`
+        });
+        
+        await originalFeedback.save();
+      }
+    }
+    
+    res.status(200).json({ 
+      message: 'Feedback review status updated successfully',
+      data: reviewFeedback
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+export const completeFeedbackReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approved, reviewedBy, comments } = req.body;
+    
+    // Find the feedback
+    const feedback = await Feedback.findById(id);
+    
+    if (!feedback) {
+      return res.status(404).json({ message: 'Feedback not found' });
+    }
+    
+    // Update the status based on approval
+    feedback.reviewStatus = approved ? 'Approved' : 'Rejected';
+    feedback.status = approved ? 'Completed' : 'Pending';
+    
+    // Add to history
+    feedback.history.push({
+      date: new Date(),
+      action: 'Updated',
+      user: reviewedBy || 'System',
+      details: `Feedback review ${approved ? 'approved' : 'rejected'}${comments ? ': ' + comments : ''}`
+    });
+    
+    await feedback.save();
+    
+    // If this is a review feedback, update the original
+    if (feedback.originalFeedbackId) {
+      const originalFeedback = await Feedback.findById(feedback.originalFeedbackId);
+      
+      if (originalFeedback) {
+        originalFeedback.status = approved ? 'Completed' : 'Pending';
+        originalFeedback.reviewStatus = approved ? 'Approved' : 'Rejected';
+        
+        // Add to history
+        originalFeedback.history.push({
+          date: new Date(),
+          action: 'Updated',
+          user: reviewedBy || 'System',
+          details: `Feedback review ${approved ? 'approved' : 'rejected'}${comments ? ': ' + comments : ''}`
+        });
+        
+        await originalFeedback.save();
+      }
+    }
+    
+    res.status(200).json({ 
+      message: `Feedback ${approved ? 'approved' : 'rejected'} successfully`,
+      data: feedback
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+export const getLinkedFeedback = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Find the feedback
+    const feedback = await Feedback.findById(id);
+    
+    if (!feedback) {
+      return res.status(404).json({ message: 'Feedback not found' });
+    }
+    
+    let linkedFeedback;
+    
+    // If this is an original feedback, find its reviews
+    if (!feedback.originalFeedbackId) {
+      linkedFeedback = await Feedback.find({ originalFeedbackId: id });
+    } 
+    // If this is a review feedback, find its original
+    else {
+      linkedFeedback = await Feedback.findById(feedback.originalFeedbackId);
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: linkedFeedback
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+export const getFeedbacksToReviewByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // First get the employee ID from the user ID
+    const employee = await Employee.findOne({ userId });
+    
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found for this user ID'
+      });
+    }
+    
+    const employeeId = employee.Emp_ID;
+    
+    // Find all feedback that this employee should review
+    // This could be based on their role, department, or specific assignment
+    const feedbackToReview = await Feedback.find({
+      feedbackType: 'feedbackToReview',
+      $or: [
+        { 'manager.id': employeeId },
+        { manager: employeeId },
+        { reviewAssignedTo: employeeId }
+      ]
+    });
+    
+    res.status(200).json({
+      success: true,
+      data: feedbackToReview
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+export const assignFeedbackForReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reviewerId, assignedBy, comments } = req.body;
+    
+    // Find the feedback
+    const feedback = await Feedback.findById(id);
+    
+    if (!feedback) {
+      return res.status(404).json({ message: 'Feedback not found' });
+    }
+    
+    // Update the reviewer
+    feedback.reviewAssignedTo = reviewerId;
+    
+    // Add to history
+    feedback.history.push({
+      date: new Date(),
+      action: 'Updated',
+      user: assignedBy || 'System',
+      details: `Assigned for review to ${reviewerId}${comments ? ': ' + comments : ''}`
+    });
+    
+    await feedback.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Feedback assigned for review successfully',
+      data: feedback
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+export const getFeedbackStatsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // First get the employee ID from the user ID
+    const employee = await Employee.findOne({ userId });
+    
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found for this user ID'
+      });
+    }
+    
+    const employeeId = employee.Emp_ID;
+    
+    // Get all feedback related to this employee
+    const allFeedback = await Feedback.find({
+      $or: [
+        { employeeId: employeeId },
+        { 'employee.id': employeeId },
+        { employee: employeeId },
+        { 'manager.id': employeeId },
+        { manager: employeeId },
+        { reviewAssignedTo: employeeId },
+        { createdBy: employeeId }
+      ]
+    });
+    
+    // Calculate statistics
+    const stats = {
+      total: allFeedback.length,
+      selfFeedback: allFeedback.filter(f => f.feedbackType === 'selfFeedback').length,
+      requestedFeedback: allFeedback.filter(f => f.feedbackType === 'requestedFeedback').length,
+      feedbackToReview: allFeedback.filter(f => f.feedbackType === 'feedbackToReview').length,
+      anonymousFeedback: allFeedback.filter(f => f.feedbackType === 'anonymousFeedback').length,
+      completed: allFeedback.filter(f => f.status === 'Completed').length,
+      inProgress: allFeedback.filter(f => f.status === 'In Progress').length,
+      notStarted: allFeedback.filter(f => f.status === 'Not Started').length,
+      pending: allFeedback.filter(f => f.status === 'Pending').length,
+      overdue: allFeedback.filter(f => 
+        new Date(f.dueDate) < new Date() && f.status !== 'Completed'
+      ).length,
+      completionRate: allFeedback.length > 0 
+        ? ((allFeedback.filter(f => f.status === 'Completed').length / allFeedback.length) * 100).toFixed(1)
+        : 0
+    };
+    
+    res.status(200).json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+
+
+
+

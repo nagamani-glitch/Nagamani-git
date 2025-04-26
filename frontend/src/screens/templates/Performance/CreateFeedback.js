@@ -3,7 +3,7 @@ import axios from 'axios';
 import './CreateFeedback.css';
 import { Autocomplete, TextField, Box, Avatar, Typography, CircularProgress } from '@mui/material';
 
-const CreateFeedback = ({ addFeedback, editData, onClose }) => {
+const CreateFeedback = ({ addFeedback, editData, onClose, feedbackType, currentUser }) => {
   const [formData, setFormData] = useState(editData || {
     title: '',
     employee: '',
@@ -51,6 +51,29 @@ const CreateFeedback = ({ addFeedback, editData, onClose }) => {
 
     fetchEmployees();
   }, []);
+
+
+  // In the CreateFeedback component, add:
+useEffect(() => {
+  // If it's self-feedback, pre-fill with current user's info
+//   if (props.feedbackType === 'selfFeedback' && props.currentUser) {
+//     setFormData(prev => ({
+//       ...prev,
+//       employee: `${props.currentUser.personalInfo.firstName} ${props.currentUser.personalInfo.lastName}`,
+//       employeeId: props.currentUser.Emp_ID
+//     }));
+//   }
+// }, [props.currentUser, props.feedbackType]);
+if (feedbackType === 'selfFeedback' && currentUser) {
+  setFormData(prev => ({
+    ...prev,
+    employee: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
+    employeeId: currentUser.Emp_ID
+  }));
+}
+}, [currentUser, feedbackType]);
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
