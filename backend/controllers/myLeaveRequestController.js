@@ -202,7 +202,7 @@ export const deleteLeaveRequest = async (req, res) => {
   }
 };
 
-// These functions will be used by the admin/HR in the LeaveRequests component
+// Update the approveLeaveRequest function
 export const approveLeaveRequest = async (req, res) => {
   try {
     const leaveRequest = await MyLeaveRequest.findById(req.params.id);
@@ -235,13 +235,19 @@ export const approveLeaveRequest = async (req, res) => {
     
     res.status(200).json(updatedLeaveRequest);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Error in approveLeaveRequest:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
+// Update the rejectLeaveRequest function
 export const rejectLeaveRequest = async (req, res) => {
   try {
     const { rejectionReason } = req.body;
+    
+    if (!rejectionReason) {
+      return res.status(400).json({ message: 'Rejection reason is required' });
+    }
     
     const leaveRequest = await MyLeaveRequest.findById(req.params.id);
     
@@ -274,9 +280,11 @@ export const rejectLeaveRequest = async (req, res) => {
     
     res.status(200).json(updatedLeaveRequest);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Error in rejectLeaveRequest:", error);
+    res.status(500).json({ message: error.message });
   }
 };
+
 
 // Get leave requests for a specific employee
 export const getEmployeeLeaveRequests = async (req, res) => {

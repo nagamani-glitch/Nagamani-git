@@ -47,9 +47,11 @@ import {
 import "./LeaveRequests.css";
 import Popover from "@mui/material/Popover";
 import { Stack } from "@mui/material";
+import { useNotifications } from '../../../context/NotificationContext';
 
 // Use the new API endpoint for leave requests
 const API_URL = "http://localhost:5000/api/leave-requests";
+
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -75,7 +77,7 @@ const LeaveRequests = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
-
+  const { addLeaveRequestNotification } = useNotifications();
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [leaveData, setLeaveData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -133,25 +135,84 @@ const LeaveRequests = () => {
       setLoading(false);
     }
   };
+// // Then in your handleApproveRequest function:
+// const handleApproveRequest = async (id) => {
+//   try {
+//     setLoading(true);
+//     const response = await axios.put(`${API_URL}/${id}/approve`);
 
-  const handleApproveRequest = async (id) => {
-    try {
-      setLoading(true);
-      const response = await axios.put(`${API_URL}/${id}/approve`);
+//     // Get the leave request data from the response
+//     const approvedLeave = response.data;
 
-      // Update the local state with the updated leave request
-      setLeaveData(
-        leaveData.map((leave) => (leave._id === id ? response.data : leave))
+//     // Update the local state with the updated leave request
+//     setLeaveData(
+//       leaveData.map((leave) => (leave._id === id ? approvedLeave : leave))
+//     );
+
+//     // Add notification logic here
+
+//     showSnackbar("Leave request approved successfully");
+//   } catch (error) {
+//     console.error("Error approving leave request:", error);
+//     if (error.response) {
+//       console.error("Error response data:", error.response.data);
+//       console.error("Error response status:", error.response.status);
+//     }
+//     showSnackbar("Error approving leave request", "error");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+
+// Update the handleApproveRequest function
+const handleApproveRequest = async (id) => {
+  try {
+    setLoading(true);
+    const response = await axios.put(`${API_URL}/${id}/approve`);
+
+    // Get the leave request data from the response
+    const approvedLeave = response.data;
+
+    // Update the local state with the updated leave request
+    setLeaveData(
+      leaveData.map((leave) => (leave._id === id ? approvedLeave : leave))
+    );
+
+    // Add a notification for the employee
+    // Make sure all these fields exist in your response data
+    if (approvedLeave) {
+      console.log("Adding notification for approved leave:", approvedLeave);
+      
+      // Get the employee name from the response
+      const employeeName = approvedLeave.employeeName || "Employee";
+      
+      // Get the leave type
+      const leaveType = approvedLeave.leaveType || "leave";
+      
+      // Get the dates
+      const startDate = approvedLeave.startDate;
+      const endDate = approvedLeave.endDate;
+      
+      // Add the notification
+      addLeaveRequestNotification(
+        employeeName,
+        "approved",
+        leaveType,
+        startDate,
+        endDate,
+        approvedLeave.employeeId 
       );
-
-      showSnackbar("Leave request approved successfully");
-      setLoading(false);
-    } catch (error) {
-      console.error("Error approving leave request:", error);
-      showSnackbar("Error approving leave request", "error");
-      setLoading(false);
     }
-  };
+
+    showSnackbar("Leave request approved successfully");
+  } catch (error) {
+    console.error("Error approving leave request:", error);
+    showSnackbar("Error approving leave request", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleOpenRejectDialog = (id) => {
     setSelectedLeaveId(id);
@@ -159,34 +220,101 @@ const LeaveRequests = () => {
     setIsRejectDialogOpen(true);
   };
 
-  const handleRejectRequest = async () => {
-    if (!rejectionReason.trim()) {
-      showSnackbar("Rejection reason is required", "error");
-      return;
-    }
+//  // And in your handleRejectRequest function:
+// const handleRejectRequest = async () => {
+//   if (!rejectionReason.trim()) {
+//     showSnackbar("Rejection reason is required", "error");
+//     return;
+//   }
 
-    try {
-      setLoading(true);
-      const response = await axios.put(`${API_URL}/${selectedLeaveId}/reject`, {
-        rejectionReason,
-      });
+//   try {
+//     setLoading(true);
+//     const response = await axios.put(`${API_URL}/${selectedLeaveId}/reject`, {
+//       rejectionReason,
+//     });
 
-      // Update the local state with the updated leave request
-      setLeaveData(
-        leaveData.map((leave) =>
-          leave._id === selectedLeaveId ? response.data : leave
-        )
+//     // Get the leave request data from the response
+//     const rejectedLeave = response.data;
+
+//     // Update the local state with the updated leave request
+//     setLeaveData(
+//       leaveData.map((leave) =>
+//         leave._id === selectedLeaveId ? rejectedLeave : leave
+//       )
+//     );
+
+//     // Add notification logic here
+
+//     setIsRejectDialogOpen(false);
+//     showSnackbar("Leave request rejected successfully");
+//   } catch (error) {
+//     console.error("Error rejecting leave request:", error);
+//     if (error.response) {
+//       console.error("Error response data:", error.response.data);
+//       console.error("Error response status:", error.response.status);
+//     }
+//     showSnackbar("Error rejecting leave request", "error");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+// Update the handleRejectRequest function
+const handleRejectRequest = async () => {
+  if (!rejectionReason.trim()) {
+    showSnackbar("Rejection reason is required", "error");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const response = await axios.put(`${API_URL}/${selectedLeaveId}/reject`, {
+      rejectionReason,
+    });
+
+    // Get the leave request data from the response
+    const rejectedLeave = response.data;
+
+    // Update the local state with the updated leave request
+    setLeaveData(
+      leaveData.map((leave) =>
+        leave._id === selectedLeaveId ? rejectedLeave : leave
+      )
+    );
+
+    // Add a notification for the employee
+    if (rejectedLeave) {
+      console.log("Adding notification for rejected leave:", rejectedLeave);
+      
+      // Get the employee name from the response
+      const employeeName = rejectedLeave.employeeName || "Employee";
+      
+      // Get the leave type
+      const leaveType = rejectedLeave.leaveType || "leave";
+      
+      // Get the dates
+      const startDate = rejectedLeave.startDate;
+      const endDate = rejectedLeave.endDate;
+      
+      // Add the notification
+      addLeaveRequestNotification(
+        employeeName,
+        "rejected",
+        leaveType,
+        startDate,
+        endDate
       );
-
-      setIsRejectDialogOpen(false);
-      showSnackbar("Leave request rejected successfully");
-      setLoading(false);
-    } catch (error) {
-      console.error("Error rejecting leave request:", error);
-      showSnackbar("Error rejecting leave request", "error");
-      setLoading(false);
     }
-  };
+
+    setIsRejectDialogOpen(false);
+    showSnackbar("Leave request rejected successfully");
+  } catch (error) {
+    console.error("Error rejecting leave request:", error);
+    showSnackbar("Error rejecting leave request", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleOpenCommentDialog = (leaveId) => {
     const leave = leaveData.find((l) => l._id === leaveId);
@@ -468,7 +596,8 @@ const LeaveRequests = () => {
   // );
 
   // Render mobile card view for each leave request
-const renderMobileCard = (leave) => (
+
+  const renderMobileCard = (leave) => (
   <Card
     key={leave._id}
     sx={{

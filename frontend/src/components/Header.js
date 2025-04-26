@@ -103,6 +103,12 @@ const getProfileImageUrl = () => {
   }
   return null;
 };
+ 
+// Add this function to toggle the notification sidebar
+ const toggleNotificationSidebar = () => {
+  setShowNotificationSidebar(!showNotificationSidebar);
+};
+
 
 // Get user display name
 const getUserDisplayName = () => {
@@ -391,15 +397,7 @@ const getUserDisplayName = () => {
         onClose={() => setShowNotificationSidebar(false)}
       />
       <header className="mb-5">
-        <Navbar
-          className="custom-navbar"
-          expand="lg"
-          variant="dark"
-          fixed="top"
-          expanded={navExpanded}
-          onToggle={handleNavToggle}
-          ref={navbarCollapseRef}
-        >
+      <Navbar className="custom-navbar" expand="lg" variant="dark" fixed="top" expanded={navExpanded} onToggle={handleNavToggle} ref={navbarCollapseRef}>
           <Container fluid>
             <Button variant="link" className="me-3" onClick={toggleSidebar}>
               <FaBars size={28} color="white" />
@@ -424,10 +422,7 @@ const getUserDisplayName = () => {
             <div className="path-indicator">{getPathIndicator()}</div>
 
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
-            <Navbar.Collapse
-              id="basic-navbar-nav"
-              className="navbar-collapse-container"
-            >
+            <Navbar.Collapse id="basic-navbar-nav" className="navbar-collapse-container">
               <Nav className="ms-auto align-items-center">
                 <div className="d-flex align-items-center">
                   <div className="check-in-out-box">
@@ -482,6 +477,28 @@ const getUserDisplayName = () => {
                     }}
                   >
                     <FaHome size={32} title="Home" />
+                  </Nav.Link>
+                  <Nav.Link
+                    className="icon-link ms-3 position-relative"
+                    onClick={toggleNotificationSidebar}
+                    title="Notifications"
+                  >
+                    <FaBell size={24} />
+                    {unreadCount > 0 && (
+                      <Badge
+                        pill
+                        bg="danger"
+                        className="position-absolute"
+                        style={{
+                          top: "-5px",
+                          right: "-5px",
+                          fontSize: "0.6rem",
+                          padding: "0.25em 0.4em",
+                        }}
+                      >
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </Badge>
+                    )}
                   </Nav.Link>
                   <div className="profile-dropdown-container">
                     {/* Use a custom implementation for mobile/tablet */}

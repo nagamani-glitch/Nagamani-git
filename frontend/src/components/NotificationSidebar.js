@@ -1,15 +1,18 @@
-import React, { useEffect, useRef } from "react";
-import { FaTimes, FaBell, FaTrash, FaCheck } from "react-icons/fa";
-import { Badge, Button } from "react-bootstrap";
+import React from 'react';
+import { Drawer, Box, Typography, IconButton, Divider, Badge } from '@mui/material';
+import { Close, Delete, CheckCircle } from '@mui/icons-material';
 import { useNotifications } from '../context/NotificationContext';
 
 const NotificationSidebar = ({ show, onClose }) => {
-  const sidebarRef = useRef(null);
-  const { notifications, setNotifications } = useNotifications();
+  const { notifications, markAsRead, deleteNotification, clearAll, markAllAsRead } = useNotifications();
+  
+  // Use all notifications without filtering by user
+  const userNotifications = notifications;
 
-  const getNotificationStyle = (type) => {
+  // Update the getNotificationStyle function to handle leave request statuses
+  const getNotificationStyle = (type, status) => {
     const styles = {
-      leave: "#e8f5e9",
+      leave: status === "approved" ? "#e8f5e9" : status === "rejected" ? "#ffebee" : "#e3f2fd",
       timesheet: "#e3f2fd",
       performance: "#fff3e0",
       onboarding: "#f3e5f5",
@@ -18,178 +21,126 @@ const NotificationSidebar = ({ show, onClose }) => {
     return styles[type] || styles.leave;
   };
 
-  const markAsRead = (id) => {
-    setNotifications(prevNotifications =>
-      prevNotifications.map(notification =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
-  };
-
-  const deleteNotification = (id) => {
-    setNotifications(prevNotifications =>
-      prevNotifications.filter(notification => notification.id !== id)
-    );
-  };
-
-  const clearAll = () => {
-    setNotifications([]);
-  };
-
-  const filterUnread = () => {
-    setNotifications(prevNotifications =>
-      prevNotifications.filter(notification => !notification.read)
-    );
-  };
-
-  useEffect(() => {
-    if (sidebarRef.current) {
-      sidebarRef.current.style.transform = show ? "translateX(0)" : "translateX(100%)";
+  // Update the formatTime function to handle ISO timestamps
+  const formatTime = (timestamp) => {
+    if (timestamp === "Just now") return timestamp;
+    
+    try {
+      const now = new Date();
+      const notificationTime = new Date(timestamp);
+      const diffInSeconds = Math.floor((now - notificationTime) / 1000);
+      
+      if (diffInSeconds < 60) return "Just now";
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+      return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    } catch (error) {
+      return timestamp; // Fallback to the original value if parsing fails
     }
-  }, [show]);
-
-  if (!show) return null;
+  };
 
   return (
-    <div
-      ref={sidebarRef}
-      className="notification-sidebar"
-      style={{
-        position: "fixed",
-        right: 0,
-        top: 0,
-        height: "100vh",
-        width: "400px",
-        backgroundColor: "#ffffff",
-        boxShadow: "-5px 0 15px rgba(0,0,0,0.1)",
-        zIndex: 1050,
-        transform: "translateX(100%)",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        padding: "0",
-        overflowY: "auto"
+    <Drawer
+      anchor="right"
+      open={show}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 400 },
+          padding: 2,
+          boxShadow: 3
+        }
       }}
     >
-      <div className="notification-header" style={{
-        padding: "20px",
-        borderBottom: "1px solid #eee",
-        position: "sticky",
-        top: 0,
-        backgroundColor: "#fff",
-        zIndex: 1
-      }}>
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <FaBell size={20} color="#666" />
-            <h5 style={{ margin: 0 }}>
-              HR Notifications
-              <Badge bg="danger" pill style={{ marginLeft: "10px" }}>
-                {notifications.filter(n => !n.read).length}
-              </Badge>
-            </h5>
-          </div>
-          <FaTimes
-            onClick={onClose}
-            style={{
-              cursor: "pointer",
-              fontSize: "20px",
-              padding: "5px",
-              borderRadius: "50%",
-              transition: "all 0.2s ease",
-            }}
-            onMouseOver={e => e.target.style.backgroundColor = "#f5f5f5"}
-            onMouseOut={e => e.target.style.backgroundColor = "transparent"}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6" component="div">
+          Notifications
+          <Badge 
+            badgeContent={userNotifications.filter(n => !n.read).length} 
+            color="error" 
+            sx={{ ml: 1 }}
           />
-        </div>
-        <div style={{ 
-          display: "flex", 
-          gap: "10px", 
-          marginTop: "10px" 
-        }}>
-          <Button 
-            variant="outline-primary" 
-            size="sm" 
-            onClick={filterUnread}
+        </Typography>
+        <Box>
+          <IconButton 
+            size="small" 
+            onClick={markAllAsRead} 
+            title="Mark all as read"
+            sx={{ mr: 1 }}
           >
-            Unread
-          </Button>
-          <Button 
-            variant="outline-secondary" 
-            size="sm" 
-            onClick={clearAll}
+            <CheckCircle fontSize="small" />
+          </IconButton>
+          <IconButton 
+            size="small" 
+            onClick={clearAll} 
+            title="Clear all notifications"
+            sx={{ mr: 1 }}
           >
-            Clear All
-          </Button>
-        </div>
-      </div>
-
-      <div className="notification-content" style={{ padding: "10px" }}>
-        {notifications.length > 0 ? (
+            <Delete fontSize="small" />
+          </IconButton>
+          <IconButton onClick={onClose} size="small">
+            <Close />
+          </IconButton>
+        </Box>
+      </Box>
+      
+      <Divider sx={{ mb: 2 }} />
+      
+      <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
+        {userNotifications.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {notifications.map((notification) => (
-              <div
+            {userNotifications.map((notification) => (
+              <Box
                 key={notification.id}
-                style={{
-                  padding: "15px",
-                  borderRadius: "8px",
-                  backgroundColor: notification.read ? "#fff" : getNotificationStyle(notification.type),
-                  border: "1px solid #eee",
-                  transition: "all 0.2s ease",
-                  position: "relative"
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: getNotificationStyle(notification.type, notification.status),
+                  opacity: notification.read ? 0.7 : 1,
+                  position: 'relative',
+                  '&:hover': {
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                  }
                 }}
               >
-                <div style={{ 
-                  display: "flex", 
-                  gap: "10px",
-                  alignItems: "center" 
-                }}>
-                  <span style={{ color: "#666" }}>{notification.icon}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ marginBottom: "5px" }}>
-                      {notification.message}
-                    </div>
-                    <div style={{ 
-                      fontSize: "12px", 
-                      color: "#666",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center"
-                    }}>
-                      <span>{notification.time}</span>
-                      <div style={{ display: "flex", gap: "10px" }}>
-                        <FaCheck
-                          onClick={() => markAsRead(notification.id)}
-                          style={{ 
-                            cursor: "pointer", 
-                            color: notification.read ? "#4CAF50" : "#999" 
-                          }}
-                        />
-                        <FaTrash
-                          onClick={() => deleteNotification(notification.id)}
-                          style={{ cursor: "pointer", color: "#f44336" }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {formatTime(notification.time)}
+                  </Typography>
+                  <Box>
+                    {!notification.read && (
+                      <IconButton 
+                        size="small" 
+                        onClick={() => markAsRead(notification.id)}
+                        title="Mark as read"
+                        sx={{ p: 0.5, mr: 0.5 }}
+                      >
+                        <CheckCircle fontSize="small" />
+                      </IconButton>
+                    )}
+                    <IconButton 
+                      size="small" 
+                      onClick={() => deleteNotification(notification.id)}
+                      title="Delete notification"
+                      sx={{ p: 0.5 }}
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
+                <Typography variant="body2">{notification.message}</Typography>
+              </Box>
             ))}
           </div>
         ) : (
-          <div style={{
-            textAlign: "center",
-            padding: "40px 20px",
-            color: "#666"
-          }}>
-            <FaBell size={40} style={{ marginBottom: "20px", opacity: 0.5 }} />
-            <p>No new HR notifications</p>
-          </div>
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body1" color="text.secondary">
+              No notifications yet
+            </Typography>
+          </Box>
         )}
-      </div>
-    </div>
+      </Box>
+    </Drawer>
   );
 };
 

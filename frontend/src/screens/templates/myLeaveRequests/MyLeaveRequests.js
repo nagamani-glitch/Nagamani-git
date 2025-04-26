@@ -71,6 +71,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { useNotifications } from '../../../context/NotificationContext';
 
 const LEAVE_TYPES = [
   { value: "annual", label: "Annual Leave" },
@@ -99,7 +100,7 @@ const MyLeaveRequests = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
-
+  const { notifications, markAsRead } = useNotifications();
   const [tabValue, setTabValue] = useState(0);
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [leaveBalance, setLeaveBalance] = useState(null);
@@ -135,6 +136,33 @@ const MyLeaveRequests = () => {
       fetchLeaveStatistics();
     }
   }, [employee]);
+
+  // Add this useEffect to check for notifications related to this user's leave requests
+  useEffect(() => {
+    if (employee && notifications.length > 0) {
+      // Find notifications related to this employee's leave requests
+      const userNotifications = notifications.filter(notification => 
+        notification.type === 'leave' && 
+        notification.message.includes(employee.name)
+      );
+      
+      // If there are unread notifications, show a snackbar
+      const unreadNotifications = userNotifications.filter(n => !n.read);
+      if (unreadNotifications.length > 0) {
+        showSnackbar(`You have ${unreadNotifications.length} new leave request update(s)`, "info");
+      }
+    }
+  }, [employee, notifications]);
+
+  // Add this useEffect to recalculate days when form data changes
+useEffect(() => {
+  // This will run whenever formData changes
+  console.log("Form data changed:", formData);
+  
+  // No need to do anything else as the render will show the updated days
+}, [formData]);
+
+
 
   const fetchEmployeeData = async () => {
     try {
@@ -239,45 +267,124 @@ const MyLeaveRequests = () => {
     setOpenDialog(false);
   };
 
-  const handleInputChange = (field, value) => {
-    if (field === "halfDay" && value === true) {
-      // If half day is selected, set end date equal to start date
-      setFormData({
-        ...formData,
-        [field]: value,
-        endDate: formData.startDate,
-      });
-    } else if (field === "startDate" && formData.halfDay) {
-      // If changing start date while half day is selected, update end date too
-      setFormData({
-        ...formData,
-        [field]: value,
-        endDate: value,
-      });
-    } else {
-      // Normal case
-      setFormData({
-        ...formData,
-        [field]: value,
-      });
-    }
-  };
+  // const handleInputChange = (field, value) => {
+  //   if (field === "halfDay" && value === true) {
+  //     // If half day is selected, set end date equal to start date
+  //     setFormData({
+  //       ...formData,
+  //       [field]: value,
+  //       endDate: formData.startDate,
+  //     });
+  //   } else if (field === "startDate" && formData.halfDay) {
+  //     // If changing start date while half day is selected, update end date too
+  //     setFormData({
+  //       ...formData,
+  //       [field]: value,
+  //       endDate: value,
+  //     });
+  //   } else {
+  //     // Normal case
+  //     setFormData({
+  //       ...formData,
+  //       [field]: value,
+  //     });
+  //   }
+  // };
+
+  // const calculateBusinessDays = (start, end, isHalfDay) => {
+  //   if (isHalfDay) return 0.5;
+
+  //   let count = 0;
+  //   let currentDate = new Date(start);
+
+  //   while (currentDate <= end) {
+  //     if (!isWeekend(currentDate)) {
+  //       count++;
+  //     }
+  //     currentDate = addDays(currentDate, 1);
+  //   }
+
+  //   return count;
+  // };
+
+  // Update the calculateBusinessDays function to ensure it handles date objects properly
+
+// Update the handleInputChange function to recalculate days when dates change
+const handleInputChange = (field, value) => {
+  let updatedFormData = { ...formData };
+  
+  if (field === "halfDay" && value === true) {
+    // If half day is selected, set end date equal to start date
+    updatedFormData = {
+      ...formData,
+      [field]: value,
+      endDate: formData.startDate,
+    };
+  } else if (field === "startDate" && formData.halfDay) {
+    // If changing start date while half day is selected, update end date too
+    updatedFormData = {
+      ...formData,
+      [field]: value,
+      endDate: value,
+    };
+  } else {
+    // Normal case
+    updatedFormData = {
+      ...formData,
+      [field]: value,
+    };
+  }
+  
+  // Update the form data
+  setFormData(updatedFormData);
+  
+  // Force a re-render to update the displayed number of days
+  // This is needed because the number of days might not update automatically
+  if (field === "startDate" || field === "endDate" || field === "halfDay") {
+    // Use setTimeout to ensure the state has been updated
+    setTimeout(() => {
+      const daysElement = document.getElementById('leave-days-count');
+      if (daysElement) {
+        daysElement.textContent = calculateBusinessDays(
+          updatedFormData.startDate,
+          updatedFormData.endDate,
+          updatedFormData.halfDay
+        );
+      }
+    }, 0);
+  }
+};
 
   const calculateBusinessDays = (start, end, isHalfDay) => {
-    if (isHalfDay) return 0.5;
+  if (isHalfDay) return 0.5;
 
-    let count = 0;
-    let currentDate = new Date(start);
+  // Make sure we're working with Date objects
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  
+  // Log the dates for debugging
+  console.log("Calculating business days between:", startDate, endDate);
+  
+  let count = 0;
+  let currentDate = new Date(startDate);
 
-    while (currentDate <= end) {
-      if (!isWeekend(currentDate)) {
-        count++;
-      }
-      currentDate = addDays(currentDate, 1);
+  // Ensure the dates are valid before proceeding
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    console.error("Invalid date objects:", { start, end });
+    return 0;
+  }
+
+  while (currentDate <= endDate) {
+    // Only count weekdays (Monday to Friday)
+    if (!isWeekend(currentDate)) {
+      count++;
     }
+    currentDate = addDays(currentDate, 1);
+  }
 
-    return count;
-  };
+  console.log("Calculated business days:", count);
+  return count;
+};
 
   const handleSubmit = async () => {
     try {
@@ -1501,7 +1608,7 @@ const MyLeaveRequests = () => {
                 multiline
                 rows={4}
               />
-              <Box sx={{ mt: 2 }}>
+              {/* <Box sx={{ mt: 2 }}>
                 <Typography variant="body2" color="textSecondary">
                   Number of days:{" "}
                   {calculateBusinessDays(
@@ -1510,7 +1617,18 @@ const MyLeaveRequests = () => {
                     formData.halfDay
                   )}
                 </Typography>
-              </Box>
+              </Box> */}
+              <Box sx={{ mt: 2 }}>
+  <Typography variant="body2" color="textSecondary" id="leave-days-count">
+    Number of days:{" "}
+    {calculateBusinessDays(
+      formData.startDate,
+      formData.endDate,
+      formData.halfDay
+    )}
+  </Typography>
+</Box>
+
             </Box>
           </DialogContent>
           <DialogActions sx={{ px: isMobile ? 2 : 3, pb: isMobile ? 3 : 2 }}>
