@@ -68,6 +68,7 @@ import {
 } from "@mui/icons-material";
 
 import { LoadingButton } from "@mui/lab";
+import { useNotifications } from "../../../context/NotificationContext";
 
 import "./ResignationPage.css";
 
@@ -91,6 +92,9 @@ const ResignationPage = () => {
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState(null);
+
+  // Inside the ResignationPage component, add:
+const { addResignationNotification } = useNotifications();
 
   // Add these state variables for delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -129,44 +133,96 @@ const ResignationPage = () => {
     setSelectedItem(null);
   };
 
-  const handleStatusChange = async (newStatus) => {
-    if (!selectedItem) return;
+  // const handleStatusChange = async (newStatus) => {
+  //   if (!selectedItem) return;
 
-    try {
-      setLoading(true);
-      await axios.put(
-        `http://localhost:5000/api/resignations/${selectedItem._id}`,
-        {
-          status: newStatus,
-        }
-      );
+  //   try {
+  //     setLoading(true);
+  //     await axios.put(
+  //       `http://localhost:5000/api/resignations/${selectedItem._id}`,
+  //       {
+  //         status: newStatus,
+  //       }
+  //     );
 
-      // Update the local state
-      setData(
-        data.map((item) =>
-          item._id === selectedItem._id ? { ...item, status: newStatus } : item
-        )
-      );
+  //     // Update the local state
+  //     setData(
+  //       data.map((item) =>
+  //         item._id === selectedItem._id ? { ...item, status: newStatus } : item
+  //       )
+  //     );
 
-      setSnackbar({
-        open: true,
-        message: `Status updated to ${newStatus}`,
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error updating status:", error);
-      setSnackbar({
-        open: true,
-        message: "Error updating status",
-        severity: "error",
-      });
-    } finally {
-      setLoading(false);
-      handleStatusMenuClose();
-    }
-  };
+  //     setSnackbar({
+  //       open: true,
+  //       message: `Status updated to ${newStatus}`,
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating status:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error updating status",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //     handleStatusMenuClose();
+  //   }
+  // };
 
   // Set view mode based on screen size when it changes
+ 
+  
+// Then modify the handleStatusChange function:
+const handleStatusChange = async (newStatus) => {
+  if (!selectedItem) return;
+
+  try {
+    setLoading(true);
+    await axios.put(
+      `http://localhost:5000/api/resignations/${selectedItem._id}`,
+      {
+        status: newStatus,
+      }
+    );
+
+    // Update the local state
+    setData(
+      data.map((item) =>
+        item._id === selectedItem._id ? { ...item, status: newStatus } : item
+      )
+    );
+
+    // Send notification to the user who submitted the resignation
+    if (selectedItem.userId && (newStatus === "Approved" || newStatus === "Rejected")) {
+      addResignationNotification(
+        selectedItem.name,
+        newStatus.toLowerCase(), // "approved" or "rejected"
+        selectedItem.userId
+      );
+      
+      console.log(`Sent ${newStatus.toLowerCase()} notification to user ${selectedItem.userId}`);
+    }
+
+    setSnackbar({
+      open: true,
+      message: `Status updated to ${newStatus}`,
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error updating status:", error);
+    setSnackbar({
+      open: true,
+      message: "Error updating status",
+      severity: "error",
+    });
+  } finally {
+    setLoading(false);
+    handleStatusMenuClose();
+  }
+};
+ 
+ 
   useEffect(() => {
     if (isMobile) {
       setViewMode("grid");

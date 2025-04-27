@@ -300,63 +300,6 @@ const ResignationReview = () => {
     setReviewNotes("");
   };
 
-  // const handleReviewSubmit = async () => {
-  //   if (!selectedResignation) return;
-
-  //   try {
-  //     setLoading(true);
-
-  //     const response = await axios.put(
-  //       `http://localhost:5000/api/resignations/${selectedResignation._id}`,
-  //       {
-  //         status: reviewStatus,
-  //         reviewNotes: reviewNotes,
-  //         reviewedBy: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
-  //         reviewedAt: new Date(),
-  //       }
-  //     );
-
-  //     // Update local state
-  //     setResignations(
-  //       resignations.map((item) =>
-  //         item._id === selectedResignation._id ? response.data : item
-  //       )
-  //     );
-
-  //     // Send notification to the user
-  //     if (selectedResignation.userId) {
-  //       addResignationNotification(
-  //         selectedResignation.name,
-  //         reviewStatus.toLowerCase(), // "approved" or "rejected"
-  //         selectedResignation.userId
-  //       );
-  //     }
-
-  //     setSnackbar({
-  //       open: true,
-  //       message: `Resignation ${
-  //         reviewStatus === "Approved" ? "approved" : "rejected"
-  //       } successfully`,
-  //       severity: "success",
-  //     });
-
-  //     // Send notification email about the status update
-  //     await sendStatusNotification(response.data);
-
-  //     handleCloseReview();
-  //     fetchResignations(); // Refresh the list
-  //   } catch (error) {
-  //     console.error("Error updating resignation status:", error);
-  //     setSnackbar({
-  //       open: true,
-  //       message: "Error updating resignation status",
-  //       severity: "error",
-  //     });
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
 
   const handleReviewSubmit = async () => {
     if (!selectedResignation) return;
@@ -389,6 +332,7 @@ const ResignationReview = () => {
           selectedResignation.userId
         );
       }
+      
 
       setSnackbar({
         open: true,
