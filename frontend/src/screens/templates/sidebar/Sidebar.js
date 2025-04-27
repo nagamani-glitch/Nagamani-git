@@ -210,6 +210,11 @@ function Sidebar() {
             >
               Time Off Requests
             </li>
+            <li
+              onClick={() => handleNavigation("/Dashboards/time-off-requests-admin")}
+            >
+              Time Off Requests Review
+          </li>
           </ul>
         )}
 

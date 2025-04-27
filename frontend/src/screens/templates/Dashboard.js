@@ -28,6 +28,7 @@ import RotatingWorktypeAssign from "./rotatingWorktypeAssign/RotatingWorktypeAss
 import AttendanceDashboard from '../dashboards/AttendanceDashboard';
 import AttendanceRecords from "./attendanceRecords/AttendanceRecords";
 import TimeOffRequests from "./timeOffRequests/TimeOffRequests";
+import TimeOffRequestsAdmin from './timeOffRequests/TimeOffRequestsAdmin';
 import ProfilePage from "./profilePage/ProfilePage";
 import MyLeaveRequests from "./myLeaveRequests/MyLeaveRequests";
 import LeaveRequests from "./leaveRequests/LeaveRequests";
@@ -111,6 +112,7 @@ function Dashboard() {
           <Route path="/attendance-dashboard" element={<AttendanceDashboard />} />
           <Route path="/attendance-records" element={<AttendanceRecords />} />
           <Route path="/time-off-requests" element={<TimeOffRequests />} />
+          <Route path="/time-off-requests-admin" element={<TimeOffRequestsAdmin />} />
           <Route path="/leave-requests" element={<LeaveRequests />} />
           <Route path="/my-leave-requests" element={<MyLeaveRequests />} />
           <Route path="/assets-dashboard" element={<AssetDashboard />} />
