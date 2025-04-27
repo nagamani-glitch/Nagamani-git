@@ -4,8 +4,8 @@ import { Close, Delete, CheckCircle } from '@mui/icons-material';
 import { useNotifications } from '../context/NotificationContext';
 
 const NotificationSidebar = ({ show, onClose }) => {
-  // const { notifications, markAsRead, deleteNotification, clearAll, markAllAsRead } = useNotifications();
-  const { notifications, markAsRead, deleteNotification, clearAll, markAllAsRead, getUserNotifications } = useNotifications();
+  
+  const { notifications, markAsRead, deleteNotification, clearAll, markAllAsRead, getUserNotifications, getUserUnreadCount } = useNotifications();
  
   // Get the current user ID from localStorage
   const userId = localStorage.getItem('userId');
@@ -15,7 +15,7 @@ const NotificationSidebar = ({ show, onClose }) => {
 
    // Filter notifications to only show those for the current user
    const userNotifications = getUserNotifications(userId);
-
+   const userUnreadCount = getUserUnreadCount(userId);
   // Update the getNotificationStyle function to handle leave request statuses
   const getNotificationStyle = (type, status) => {
     const styles = {
@@ -62,11 +62,17 @@ const NotificationSidebar = ({ show, onClose }) => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" component="div">
           Notifications
-          <Badge 
-            badgeContent={userNotifications.filter(n => !n.read).length} 
-            color="error" 
-            sx={{ ml: 1 }}
-          />
+          {/* <Badge 
+  badgeContent={userNotifications.filter(n => !n.read).length} 
+  color="error" 
+  sx={{ ml: 1 }}
+/> */}
+<Badge 
+  badgeContent={userUnreadCount} 
+  color="error" 
+  sx={{ ml: 1 }}
+/>
+
         </Typography>
         <Box>
           <IconButton 
