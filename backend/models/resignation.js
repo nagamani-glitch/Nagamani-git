@@ -6,10 +6,14 @@
 //   position: { type: String, required: true },
 //   status: { 
 //     type: String, 
-//     enum: ['Approved', 'Requested', 'Rejected'],
+//     enum: ['Approved', 'Requested', 'Rejected', 'Pending'],
 //     default: 'Requested'
 //   },
-//   description: { type: String, required: true }
+//   description: { type: String, required: true },
+//   userId: { type: String },
+//   reviewNotes: { type: String },
+//   reviewedBy: { type: String },
+//   reviewedAt: { type: Date }
 // }, { timestamps: true });
 
 // export default mongoose.model('Resignation', resignationSchema);
@@ -26,10 +30,13 @@ const resignationSchema = new mongoose.Schema({
     default: 'Requested'
   },
   description: { type: String, required: true },
-  userId: { type: String },
+  userId: { type: String, required: true }, // Make userId required
   reviewNotes: { type: String },
   reviewedBy: { type: String },
   reviewedAt: { type: Date }
 }, { timestamps: true });
+
+// Add an index on userId for faster queries
+resignationSchema.index({ userId: 1 });
 
 export default mongoose.model('Resignation', resignationSchema);
