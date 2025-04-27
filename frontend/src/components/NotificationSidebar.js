@@ -1,20 +1,35 @@
-// import React from 'react';
-// import { Drawer, Box, Typography, IconButton, Divider, Badge } from '@mui/material';
+// import React, { useEffect } from 'react';
+// import { Drawer, Box, Typography, IconButton, Divider, Badge, CircularProgress } from '@mui/material';
 // import { Close, Delete, CheckCircle } from '@mui/icons-material';
 // import { useNotifications } from '../context/NotificationContext';
 
 // const NotificationSidebar = ({ show, onClose }) => {
-  
-//   const { notifications, markAsRead, deleteNotification, clearAll, markAllAsRead, getUserNotifications, getUserUnreadCount } = useNotifications();
+//   const { 
+//     notifications, 
+//     loading, 
+//     fetchNotifications, 
+//     markAsRead, 
+//     deleteNotification, 
+//     clearAll, 
+//     markAllAsRead, 
+//     getUserNotifications, 
+//     getUserUnreadCount 
+//   } = useNotifications();
  
 //   // Get the current user ID from localStorage
 //   const userId = localStorage.getItem('userId');
 
-  
+//   // Fetch notifications when the sidebar is opened
+//   useEffect(() => {
+//     if (show && userId) {
+//       fetchNotifications(userId);
+//     }
+//   }, [show, userId, fetchNotifications]);
 
-//    // Filter notifications to only show those for the current user
-//    const userNotifications = getUserNotifications(userId);
-//    const userUnreadCount = getUserUnreadCount(userId);
+//   // Filter notifications to only show those for the current user
+//   const userNotifications = getUserNotifications(userId);
+//   const userUnreadCount = getUserUnreadCount(userId);
+
 //   // Update the getNotificationStyle function to handle leave request statuses
 //   const getNotificationStyle = (type, status) => {
 //     const styles = {
@@ -45,6 +60,18 @@
 //     }
 //   };
 
+//   const handleMarkAllAsRead = () => {
+//     if (userId) {
+//       markAllAsRead(userId);
+//     }
+//   };
+
+//   const handleClearAll = () => {
+//     if (userId) {
+//       clearAll(userId);
+//     }
+//   };
+
 //   return (
 //     <Drawer
 //       anchor="right"
@@ -59,22 +86,18 @@
 //       }}
 //     >
 //       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-//         <Typography variant="h6" component="div" 
-        
-//         >
+//         <Typography variant="h6" component="div">
 //           Notifications
-       
-// <Badge 
-//   badgeContent={userUnreadCount} 
-//   color="error" 
-//   sx={{ ml: 1, paddingRight: "5px" }}
-// />
-
+//           <Badge 
+//             badgeContent={userUnreadCount} 
+//             color="error" 
+//             sx={{ ml: 1, paddingRight: "5px" }}
+//           />
 //         </Typography>
 //         <Box>
 //           <IconButton 
 //             size="small" 
-//             onClick={markAllAsRead} 
+//             onClick={handleMarkAllAsRead} 
 //             title="Mark all as read"
 //             sx={{ mr: 1 }}
 //           >
@@ -82,7 +105,7 @@
 //           </IconButton>
 //           <IconButton 
 //             size="small" 
-//             onClick={clearAll} 
+//             onClick={handleClearAll} 
 //             title="Clear all notifications"
 //             sx={{ mr: 1 }}
 //           >
@@ -97,11 +120,15 @@
 //       <Divider sx={{ mb: 2 }} />
       
 //       <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
-//         {userNotifications.length > 0 ? (
+//         {loading ? (
+//           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+//             <CircularProgress size={40} />
+//           </Box>
+//         ) : userNotifications.length > 0 ? (
 //           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
 //             {userNotifications.map((notification) => (
 //               <Box
-//                 key={notification.id}
+//                 key={notification._id}
 //                 sx={{
 //                   p: 2,
 //                   borderRadius: 2,
@@ -121,7 +148,7 @@
 //                     {!notification.read && (
 //                       <IconButton 
 //                         size="small" 
-//                         onClick={() => markAsRead(notification.id)}
+//                         onClick={() => markAsRead(notification._id)}
 //                         title="Mark as read"
 //                         sx={{ p: 0.5, mr: 0.5 }}
 //                       >
@@ -130,7 +157,7 @@
 //                     )}
 //                     <IconButton 
 //                       size="small" 
-//                       onClick={() => deleteNotification(notification.id)}
+//                       onClick={() => deleteNotification(notification._id)}
 //                       title="Delete notification"
 //                       sx={{ p: 0.5 }}
 //                     >
@@ -156,7 +183,8 @@
 
 // export default NotificationSidebar;
 
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { Drawer, Box, Typography, IconButton, Divider, Badge, CircularProgress } from '@mui/material';
 import { Close, Delete, CheckCircle } from '@mui/icons-material';
 import { useNotifications } from '../context/NotificationContext';
@@ -173,15 +201,43 @@ const NotificationSidebar = ({ show, onClose }) => {
     getUserNotifications, 
     getUserUnreadCount 
   } = useNotifications();
- 
+  
+  // Add local loading state to better control the UI
+  const [localLoading, setLocalLoading] = useState(true);
+  
   // Get the current user ID from localStorage
   const userId = localStorage.getItem('userId');
 
   // Fetch notifications when the sidebar is opened
   useEffect(() => {
+    let isMounted = true;
+    
     if (show && userId) {
-      fetchNotifications(userId);
+      setLocalLoading(true);
+      
+      // Fetch notifications and handle loading state
+      fetchNotifications(userId)
+        .then(() => {
+          // Only update state if component is still mounted
+          if (isMounted) {
+            setTimeout(() => {
+              setLocalLoading(false);
+            }, 300);
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setLocalLoading(false);
+          }
+        });
+    } else {
+      setLocalLoading(false);
     }
+    
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMounted = false;
+    };
   }, [show, userId, fetchNotifications]);
 
   // Filter notifications to only show those for the current user
@@ -258,6 +314,7 @@ const NotificationSidebar = ({ show, onClose }) => {
             onClick={handleMarkAllAsRead} 
             title="Mark all as read"
             sx={{ mr: 1 }}
+            disabled={localLoading}
           >
             <CheckCircle fontSize="small" />
           </IconButton>
@@ -266,6 +323,7 @@ const NotificationSidebar = ({ show, onClose }) => {
             onClick={handleClearAll} 
             title="Clear all notifications"
             sx={{ mr: 1 }}
+            disabled={localLoading}
           >
             <Delete fontSize="small" />
           </IconButton>
@@ -278,11 +336,14 @@ const NotificationSidebar = ({ show, onClose }) => {
       <Divider sx={{ mb: 2 }} />
       
       <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        {localLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4, flexDirection: 'column' }}>
             <CircularProgress size={40} />
+            <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+              Loading notifications...
+            </Typography>
           </Box>
-        ) : userNotifications.length > 0 ? (
+        ) : userNotifications && userNotifications.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {userNotifications.map((notification) => (
               <Box
@@ -340,4 +401,3 @@ const NotificationSidebar = ({ show, onClose }) => {
 };
 
 export default NotificationSidebar;
-

@@ -100,6 +100,7 @@ io.on('connection', (socket) => {
   });
 });
 
+// console.log('Notification routes registered');
 
 
 

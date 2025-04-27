@@ -1,23 +1,49 @@
 import Notification from '../models/Notification.js';
 
-// Get notifications for a specific user
+// // Get notifications for a specific user
+// export const getUserNotifications = async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+    
+//     if (!userId) {
+//       return res.status(400).json({ message: 'User ID is required' });
+//     }
+    
+//     const notifications = await Notification.find({ 
+//       userId: userId 
+//     }).sort({ time: -1 });
+    
+//     res.json(notifications);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// Update the getUserNotifications function to include better error handling
 export const getUserNotifications = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
+    try {
+      const { userId } = req.params;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+      
+      // Add logging to debug
+      console.log(`Fetching notifications for user: ${userId}`);
+      
+      const notifications = await Notification.find({ 
+        userId: userId 
+      }).sort({ time: -1 });
+      
+      console.log(`Found ${notifications.length} notifications for user ${userId}`);
+      
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error in getUserNotifications:', error);
+      res.status(500).json({ message: error.message });
     }
-    
-    const notifications = await Notification.find({ 
-      userId: userId 
-    }).sort({ time: -1 });
-    
-    res.json(notifications);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+  };
+  
 
 // Create a new notification
 // export const createNotification = async (req, res) => {
