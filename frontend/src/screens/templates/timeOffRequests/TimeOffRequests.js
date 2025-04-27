@@ -35,7 +35,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import {
-  FilterList,
+  
   Search,
   Visibility,
   Close,
@@ -126,10 +126,10 @@ const TimeOffRequests = () => {
     }));
   };
 
-  const handleFilterChange = (e) => {
-    const value = e.target.value;
-    setFilterStatus(value);
-  };
+  // const handleFilterChange = (e) => {
+  //   const value = e.target.value;
+  //   setFilterStatus(value);
+  // };
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });

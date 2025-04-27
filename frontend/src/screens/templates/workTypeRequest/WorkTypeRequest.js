@@ -11,9 +11,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tabs,
+  
   Menu,
-  Tab,
+  
   Checkbox,
   Typography,
   Paper,
@@ -32,7 +32,7 @@ import {
   CircularProgress,
   Alert,
   Autocomplete,
-  Tooltip,
+  
 } from "@mui/material";
 
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
@@ -92,25 +92,25 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const employees = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  name: `Employee ${i + 1}`,
-  employeeCode: `#EMP${i + 1}`,
-  requestedShift: i % 2 === 0 ? "First Shift" : "Second Shift",
-  currentShift: "Regular Shift",
-  requestedDate: "Nov. 7, 2024",
-  requestedTill: "Nov. 9, 2024",
-  status: i % 2 === 0 ? "Approved" : "Rejected",
-  description: "Request for shift adjustment",
-  comment: "Needs urgent consideration",
-}));
+// const employees = Array.from({ length: 20 }, (_, i) => ({
+//   id: i + 1,
+//   name: `Employee ${i + 1}`,
+//   employeeCode: `#EMP${i + 1}`,
+//   requestedShift: i % 2 === 0 ? "First Shift" : "Second Shift",
+//   currentShift: "Regular Shift",
+//   requestedDate: "Nov. 7, 2024",
+//   requestedTill: "Nov. 9, 2024",
+//   status: i % 2 === 0 ? "Approved" : "Rejected",
+//   description: "Request for shift adjustment",
+//   comment: "Needs urgent consideration",
+// }));
 
 // Add this constant for the API URL
 const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/registered";
 
 const WorkTypeRequest = () => {
   const theme = useTheme();
-  const [tabValue, setTabValue] = useState(0);
+  //const [tabValue, setTabValue] = useState(0);
   const [selectedAllocations, setSelectedAllocations] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

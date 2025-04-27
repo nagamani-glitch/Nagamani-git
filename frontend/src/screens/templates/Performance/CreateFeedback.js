@@ -55,15 +55,6 @@ const CreateFeedback = ({ addFeedback, editData, onClose, feedbackType, currentU
 
   // In the CreateFeedback component, add:
 useEffect(() => {
-  // If it's self-feedback, pre-fill with current user's info
-//   if (props.feedbackType === 'selfFeedback' && props.currentUser) {
-//     setFormData(prev => ({
-//       ...prev,
-//       employee: `${props.currentUser.personalInfo.firstName} ${props.currentUser.personalInfo.lastName}`,
-//       employeeId: props.currentUser.Emp_ID
-//     }));
-//   }
-// }, [props.currentUser, props.feedbackType]);
 if (feedbackType === 'selfFeedback' && currentUser) {
   setFormData(prev => ({
     ...prev,

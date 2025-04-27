@@ -1,23 +1,6 @@
 import Feedback from '../models/Feedback.js';
 import Employee from '../models/employeeRegisterModel.js';
-// export const createFeedback = async (req, res) => {
-//   try {
-//     const feedback = new Feedback(req.body);
-    
-//     // Add initial history entry
-//     feedback.history = [{
-//       date: new Date(),
-//       action: 'Created',
-//       user: req.body.createdBy || 'System', // In a real app, this would come from auth
-//       details: 'Feedback created'
-//     }];
-    
-//     const savedFeedback = await feedback.save();
-//     res.status(201).json(savedFeedback);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
+
 
 
 export const createFeedback = async (req, res) => {
@@ -168,41 +151,6 @@ export const getAllFeedbacks = async (req, res) => {
   }
 };
 
-// export const updateFeedback = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const updateData = req.body;
-    
-//     // Get the current feedback to track changes
-//     const currentFeedback = await Feedback.findById(id);
-//     if (!currentFeedback) {
-//       return res.status(404).json({ message: 'Feedback not found' });
-//     }
-    
-//     // Track history if status changed
-//     if (updateData.status && updateData.status !== currentFeedback.status) {
-//       const historyEntry = {
-//         date: new Date(),
-//         action: 'Updated',
-//         user: updateData.updatedBy || 'System', // In a real app, this would come from auth
-//         details: `Status changed from ${currentFeedback.status} to ${updateData.status}`
-//       };
-      
-//       updateData.history = [...currentFeedback.history, historyEntry];
-//     }
-    
-//     const updatedFeedback = await Feedback.findByIdAndUpdate(
-//       id,
-//       updateData,
-//       { new: true }
-//     );
-    
-//     res.status(200).json(updatedFeedback);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
-
 
 export const updateFeedback = async (req, res) => {
   try {
@@ -265,22 +213,6 @@ export const updateFeedback = async (req, res) => {
   }
 };
 
-
-// export const deleteFeedback = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const feedback = await Feedback.findById(id);
-    
-//     if (!feedback) {
-//       return res.status(404).json({ message: 'Feedback not found' });
-//     }
-    
-//     await Feedback.findByIdAndDelete(id);
-//     res.status(200).json({ message: 'Feedback deleted successfully' });
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// };
 
 
 export const deleteFeedback = async (req, res) => {
