@@ -10,8 +10,7 @@ const NotificationSidebar = ({ show, onClose }) => {
   // Get the current user ID from localStorage
   const userId = localStorage.getItem('userId');
 
-  // Use all notifications without filtering by user
-  // const userNotifications = notifications;
+  
 
    // Filter notifications to only show those for the current user
    const userNotifications = getUserNotifications(userId);
@@ -60,17 +59,15 @@ const NotificationSidebar = ({ show, onClose }) => {
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" component="div">
+        <Typography variant="h6" component="div" 
+        
+        >
           Notifications
-          {/* <Badge 
-  badgeContent={userNotifications.filter(n => !n.read).length} 
-  color="error" 
-  sx={{ ml: 1 }}
-/> */}
+       
 <Badge 
   badgeContent={userUnreadCount} 
   color="error" 
-  sx={{ ml: 1 }}
+  sx={{ ml: 1, paddingRight: "5px" }}
 />
 
         </Typography>
