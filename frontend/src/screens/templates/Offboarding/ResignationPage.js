@@ -177,141 +177,147 @@ const ResignationPage = () => {
     }
   }, [isMobile]);
 
-// const fetchResignations = async () => {
-//   try {
-//     setLoading(true);
-    
-//     // Get the user's role from localStorage
-//     const userRole = localStorage.getItem('userRole');
-    
-//     // If the user is an admin or HR, fetch all resignations
-//     // Otherwise, fetch only the user's resignations
-//     let url = "http://localhost:5000/api/resignations";
-//     if (userRole && (userRole.includes('admin') || userRole.includes('hr'))) {
-//       // Admin or HR can see all resignations
-//       console.log("Fetching all resignations for admin/HR");
-//       url = "http://localhost:5000/api/resignations";
-//     } else if (currentUserId) {
-//       // Regular users can only see their own resignations
-//       console.log("Fetching resignations for user:", currentUserId);
-//       url = `http://localhost:5000/api/resignations/user/${currentUserId}`;
-//     }
-    
-//     const response = await axios.get(url);
-//     console.log("Fetched resignations:", response.data);
-//     setData(response.data);
-//     setError(null);
-//   } catch (err) {
-//     setError("Failed to fetch resignations");
-//     console.error("Error:", err);
-//   } finally {
-//     setLoading(false);
-//   }
-// };
+  // const fetchResignations = async () => {
+  //   try {
+  //     setLoading(true);
 
-// Modify the fetchResignations function to properly handle user roles
-const fetchResignations = async () => {
-  try {
-    setLoading(true);
-    
-    // Get the user's role and ID from localStorage
-    const userRole = localStorage.getItem('userRole');
-    const userId = localStorage.getItem('userId');
-    
-    if (!userId) {
-      console.error("No user ID found in localStorage");
-      setError("User not authenticated");
-      setLoading(false);
-      return;
-    }
-    
-    // Determine which API endpoint to use based on user role
-    let url;
-    if (userRole && (userRole.includes('admin') || userRole.includes('hr'))) {
-      // Admin or HR can see all resignations
-      console.log("Fetching all resignations for admin/HR");
-      url = "http://localhost:5000/api/resignations";
-    } else {
-      // Regular users can only see their own resignations
-      console.log("Fetching resignations for user:", userId);
-      url = `http://localhost:5000/api/resignations/user/${userId}`;
-    }
-    
-    const response = await axios.get(url);
-    console.log("Fetched resignations:", response.data);
-    setData(response.data);
-    setError(null);
-  } catch (err) {
-    setError("Failed to fetch resignations");
-    console.error("Error:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+  //     // Get the user's role from localStorage
+  //     const userRole = localStorage.getItem('userRole');
 
+  //     // If the user is an admin or HR, fetch all resignations
+  //     // Otherwise, fetch only the user's resignations
+  //     let url = "http://localhost:5000/api/resignations";
+  //     if (userRole && (userRole.includes('admin') || userRole.includes('hr'))) {
+  //       // Admin or HR can see all resignations
+  //       console.log("Fetching all resignations for admin/HR");
+  //       url = "http://localhost:5000/api/resignations";
+  //     } else if (currentUserId) {
+  //       // Regular users can only see their own resignations
+  //       console.log("Fetching resignations for user:", currentUserId);
+  //       url = `http://localhost:5000/api/resignations/user/${currentUserId}`;
+  //     }
 
-useEffect(() => {
-  if (currentUserId) {
-    fetchResignations();
-  }
-}, [currentUserId]);
+  //     const response = await axios.get(url);
+  //     console.log("Fetched resignations:", response.data);
+  //     setData(response.data);
+  //     setError(null);
+  //   } catch (err) {
+  //     setError("Failed to fetch resignations");
+  //     console.error("Error:", err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-
-//   useEffect(() => {
-//   const fetchCurrentUser = async () => {
-//     try {
-//       const userId = localStorage.getItem('userId');
-//       if (userId) {
-//         setCurrentUserId(userId);
-        
-//         // Fetch user details
-//         const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
-//         const userData = response.data.data;
-        
-//         if (userData) {
-//           // Set user information
-//           setCurrentUserName(`${userData.personalInfo?.firstName || ''} ${userData.personalInfo?.lastName || ''}`);
-//           setCurrentUserEmail(userData.personalInfo?.email || '');
-//           setCurrentUserPosition(userData.joiningDetails?.initialDesignation || '');
-//         }
-//       }
-//     } catch (error) {
-//       console.error("Error fetching current user:", error);
-//     }
-//   };
-  
-//   fetchCurrentUser();
-// }, []);
-
-// Modify the useEffect that fetches user data to also fetch resignations
-useEffect(() => {
-  const fetchCurrentUser = async () => {
+  // Modify the fetchResignations function to properly handle user roles
+  const fetchResignations = async () => {
     try {
-      const userId = localStorage.getItem('userId');
-      if (userId) {
-        setCurrentUserId(userId);
-        
-        // Fetch user details
-        const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
-        const userData = response.data.data;
-        
-        if (userData) {
-          // Set user information
-          setCurrentUserName(`${userData.personalInfo?.firstName || ''} ${userData.personalInfo?.lastName || ''}`);
-          setCurrentUserEmail(userData.personalInfo?.email || '');
-          setCurrentUserPosition(userData.joiningDetails?.initialDesignation || '');
-        }
-        
-        // Fetch resignations after user data is loaded
-        await fetchResignations();
+      setLoading(true);
+
+      // Get the user's role and ID from localStorage
+      const userRole = localStorage.getItem("userRole");
+      const userId = localStorage.getItem("userId");
+
+      if (!userId) {
+        console.error("No user ID found in localStorage");
+        setError("User not authenticated");
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching current user:", error);
+
+      // Determine which API endpoint to use based on user role
+      let url;
+      if (userRole && (userRole.includes("admin") || userRole.includes("hr"))) {
+        // Admin or HR can see all resignations
+        console.log("Fetching all resignations for admin/HR");
+        url = "http://localhost:5000/api/resignations";
+      } else {
+        // Regular users can only see their own resignations
+        console.log("Fetching resignations for user:", userId);
+        url = `http://localhost:5000/api/resignations/user/${userId}`;
+      }
+
+      const response = await axios.get(url);
+      console.log("Fetched resignations:", response.data);
+      setData(response.data);
+      setError(null);
+    } catch (err) {
+      setError("Failed to fetch resignations");
+      console.error("Error:", err);
+    } finally {
+      setLoading(false);
     }
   };
-  
-  fetchCurrentUser();
-}, []);
+
+  useEffect(() => {
+    if (currentUserId) {
+      fetchResignations();
+    }
+  }, [currentUserId]);
+
+  //   useEffect(() => {
+  //   const fetchCurrentUser = async () => {
+  //     try {
+  //       const userId = localStorage.getItem('userId');
+  //       if (userId) {
+  //         setCurrentUserId(userId);
+
+  //         // Fetch user details
+  //         const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
+  //         const userData = response.data.data;
+
+  //         if (userData) {
+  //           // Set user information
+  //           setCurrentUserName(`${userData.personalInfo?.firstName || ''} ${userData.personalInfo?.lastName || ''}`);
+  //           setCurrentUserEmail(userData.personalInfo?.email || '');
+  //           setCurrentUserPosition(userData.joiningDetails?.initialDesignation || '');
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching current user:", error);
+  //     }
+  //   };
+
+  //   fetchCurrentUser();
+  // }, []);
+
+  // Modify the useEffect that fetches user data to also fetch resignations
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+          setCurrentUserId(userId);
+
+          // Fetch user details
+          const response = await axios.get(
+            `http://localhost:5000/api/employees/by-user/${userId}`
+          );
+          const userData = response.data.data;
+
+          if (userData) {
+            // Set user information
+            setCurrentUserName(
+              `${userData.personalInfo?.firstName || ""} ${
+                userData.personalInfo?.lastName || ""
+              }`
+            );
+            setCurrentUserEmail(userData.personalInfo?.email || "");
+            setCurrentUserPosition(
+              userData.joiningDetails?.initialDesignation || ""
+            );
+          }
+
+          // Fetch resignations after user data is loaded
+          await fetchResignations();
+        }
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const [showCreatePopup, setShowCreatePopup] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -386,17 +392,17 @@ useEffect(() => {
   // };
 
   // Modify the handleCreateClick function to pre-fill user information
-const handleCreateClick = () => {
-  setShowCreatePopup(true);
-  setIsEditing(false);
-  setNewResignation({
-    name: currentUserName || "",
-    email: currentUserEmail || "",
-    title: currentUserPosition || "",
-    status: "Requested",
-    description: "",
-  });
-};
+  const handleCreateClick = () => {
+    setShowCreatePopup(true);
+    setIsEditing(false);
+    setNewResignation({
+      name: currentUserName || "",
+      email: currentUserEmail || "",
+      title: currentUserPosition || "",
+      status: "Requested",
+      description: "",
+    });
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewResignation((prev) => ({ ...prev, [name]: value }));
@@ -531,120 +537,118 @@ const handleCreateClick = () => {
       </Box>
     );
 
+  //   const handleSave = async () => {
+  //   if (isSaving) return;
 
-//   const handleSave = async () => {
-//   if (isSaving) return;
+  //   try {
+  //     setIsSaving(true);
+  //     const resignationData = {
+  //       name: newResignation.name,
+  //       email: newResignation.email,
+  //       position: newResignation.title,
+  //       status: newResignation.status,
+  //       description: newResignation.description,
+  //       userId: currentUserId, // Add userId to the resignation data
+  //     };
 
-//   try {
-//     setIsSaving(true);
-//     const resignationData = {
-//       name: newResignation.name,
-//       email: newResignation.email,
-//       position: newResignation.title,
-//       status: newResignation.status,
-//       description: newResignation.description,
-//       userId: currentUserId, // Add userId to the resignation data
-//     };
+  //     if (isEditing) {
+  //       await axios.put(
+  //         `http://localhost:5000/api/resignations/${currentId}`,
+  //         resignationData
+  //       );
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Resignation letter updated successfully",
+  //         severity: "success",
+  //       });
+  //     } else {
+  //       await axios.post(
+  //         "http://localhost:5000/api/resignations",
+  //         resignationData
+  //       );
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Resignation letter created successfully",
+  //         severity: "success",
+  //       });
+  //     }
 
-//     if (isEditing) {
-//       await axios.put(
-//         `http://localhost:5000/api/resignations/${currentId}`,
-//         resignationData
-//       );
-//       setSnackbar({
-//         open: true,
-//         message: "Resignation letter updated successfully",
-//         severity: "success",
-//       });
-//     } else {
-//       await axios.post(
-//         "http://localhost:5000/api/resignations",
-//         resignationData
-//       );
-//       setSnackbar({
-//         open: true,
-//         message: "Resignation letter created successfully",
-//         severity: "success",
-//       });
-//     }
+  //     await fetchResignations();
+  //     handleClosePopup();
+  //   } catch (error) {
+  //     console.error("Error saving resignation:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error saving resignation letter",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
 
-//     await fetchResignations();
-//     handleClosePopup();
-//   } catch (error) {
-//     console.error("Error saving resignation:", error);
-//     setSnackbar({
-//       open: true,
-//       message: "Error saving resignation letter",
-//       severity: "error",
-//     });
-//   } finally {
-//     setIsSaving(false);
-//   }
-// };
+  // Update the handleSave function to ensure userId is included
+  const handleSave = async () => {
+    if (isSaving) return;
 
+    try {
+      setIsSaving(true);
+      const userId = localStorage.getItem("userId");
 
-// Update the handleSave function to ensure userId is included
-const handleSave = async () => {
-  if (isSaving) return;
+      if (!userId) {
+        setSnackbar({
+          open: true,
+          message: "User not authenticated",
+          severity: "error",
+        });
+        setIsSaving(false);
+        return;
+      }
 
-  try {
-    setIsSaving(true);
-    const userId = localStorage.getItem('userId');
-    
-    if (!userId) {
+      const resignationData = {
+        name: newResignation.name,
+        email: newResignation.email,
+        position: newResignation.title,
+        status: newResignation.status,
+        description: newResignation.description,
+        userId: userId, // Ensure userId is included
+      };
+
+      if (isEditing) {
+        await axios.put(
+          `http://localhost:5000/api/resignations/${currentId}`,
+          resignationData
+        );
+        setSnackbar({
+          open: true,
+          message: "Resignation letter updated successfully",
+          severity: "success",
+        });
+      } else {
+        await axios.post(
+          "http://localhost:5000/api/resignations",
+          resignationData
+        );
+        setSnackbar({
+          open: true,
+          message: "Resignation letter created successfully",
+          severity: "success",
+        });
+      }
+
+      await fetchResignations();
+      handleClosePopup();
+    } catch (error) {
+      console.error("Error saving resignation:", error);
       setSnackbar({
         open: true,
-        message: "User not authenticated",
+        message: "Error saving resignation letter",
         severity: "error",
       });
+    } finally {
       setIsSaving(false);
-      return;
     }
-    
-    const resignationData = {
-      name: newResignation.name,
-      email: newResignation.email,
-      position: newResignation.title,
-      status: newResignation.status,
-      description: newResignation.description,
-      userId: userId, // Ensure userId is included
-    };
-
-    if (isEditing) {
-      await axios.put(
-        `http://localhost:5000/api/resignations/${currentId}`,
-        resignationData
-      );
-      setSnackbar({
-        open: true,
-        message: "Resignation letter updated successfully",
-        severity: "success",
-      });
-    } else {
-      await axios.post(
-        "http://localhost:5000/api/resignations",
-        resignationData
-      );
-      setSnackbar({
-        open: true,
-        message: "Resignation letter created successfully",
-        severity: "success",
-      });
-    }
-
-    await fetchResignations();
-    handleClosePopup();
-  } catch (error) {
-    console.error("Error saving resignation:", error);
-    setSnackbar({
-      open: true,
-      message: "Error saving resignation letter",
-      severity: "error",
-    });
-  } finally {
-    setIsSaving(false);
-  }
-};
+  };
 
   const toggleFilter = (event) => {
     setFilterAnchorEl(event.currentTarget);
@@ -1694,9 +1698,14 @@ const handleSave = async () => {
                       sx={{ color: "#64748b", mr: 1 }}
                     />
                     <Typography variant="body2" sx={{ color: "#334155" }}>
-                      {new Date(item.date).toLocaleDateString()}
+                      {item.date
+                        ? new Date(item.date).toLocaleDateString()
+                        : item.createdAt
+                        ? new Date(item.createdAt).toLocaleDateString()
+                        : "Date not available"}
                     </Typography>
                   </Box>
+
                   {item.reason && (
                     <Box sx={{ display: "flex", alignItems: "flex-start" }}>
                       <Info
