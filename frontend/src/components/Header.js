@@ -30,34 +30,72 @@ import NotificationSidebar from "./NotificationSidebar";
 import { useNotifications } from "../context/NotificationContext";
 
 const Header = () => {
-  const { unreadCount } = useNotifications();
-  const { toggleSidebar } = useSidebar();
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showCompanies, setShowCompanies] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [showNotificationSidebar, setShowNotificationSidebar] = useState(false);
-  const profileMenuRef = useRef(null);
-  const navbarCollapseRef = useRef(null);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const token = localStorage.getItem("token");
   
-  const [timer, setTimer] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [startTime, setStartTime] = useState(null);
-  const timerIntervalRef = useRef(null);
-  const timerStartTimeRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(false);
-  // Add this state to track window width
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  // Add this state to track if the navbar is expanded
-  const [navExpanded, setNavExpanded] = useState(false);
-  const [profileData, setProfileData] = useState(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const employeeId = profileData?.Emp_ID || localStorage.getItem("employeeId") || "EMP123";
-  const userId = localStorage.getItem("userId");
+  // const { getUserUnreadCount } = useNotifications();
+  // const userUnreadCount = getUserUnreadCount(userId);
+  // const { toggleSidebar } = useSidebar();
+  // const [showProfileMenu, setShowProfileMenu] = useState(false);
+  // const [showNotifications, setShowNotifications] = useState(false);
+  // const [showCompanies, setShowCompanies] = useState(false);
+  // const [showToast, setShowToast] = useState(false);
+  // const [toastMessage, setToastMessage] = useState("");
+  // const [showNotificationSidebar, setShowNotificationSidebar] = useState(false);
+  // const profileMenuRef = useRef(null);
+  // const navbarCollapseRef = useRef(null);
+  // const navigate = useNavigate();
+  // const location = useLocation();
+  // const token = localStorage.getItem("token");
+  
+  // const [timer, setTimer] = useState(0);
+  // const [isTimerRunning, setIsTimerRunning] = useState(false);
+  // const [startTime, setStartTime] = useState(null);
+  // const timerIntervalRef = useRef(null);
+  // const timerStartTimeRef = useRef(null);
+  // const [isLoading, setIsLoading] = useState(false);
+  // // Add this state to track window width
+  // const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  // // Add this state to track if the navbar is expanded
+  // const [navExpanded, setNavExpanded] = useState(false);
+  // const [profileData, setProfileData] = useState(null);
+  // const [profileLoading, setProfileLoading] = useState(false);
+  // const employeeId = profileData?.Emp_ID || localStorage.getItem("employeeId") || "EMP123";
+  // const userId = localStorage.getItem("userId");
+
+// First, get all the hooks and context values
+const { toggleSidebar } = useSidebar();
+const { getUserUnreadCount } = useNotifications();
+const navigate = useNavigate();
+const location = useLocation();
+
+// Then declare all your state variables
+const [showProfileMenu, setShowProfileMenu] = useState(false);
+const [showNotifications, setShowNotifications] = useState(false);
+const [showCompanies, setShowCompanies] = useState(false);
+const [showToast, setShowToast] = useState(false);
+const [toastMessage, setToastMessage] = useState("");
+const [showNotificationSidebar, setShowNotificationSidebar] = useState(false);
+const [timer, setTimer] = useState(0);
+const [isTimerRunning, setIsTimerRunning] = useState(false);
+const [startTime, setStartTime] = useState(null);
+const [isLoading, setIsLoading] = useState(false);
+const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+const [navExpanded, setNavExpanded] = useState(false);
+const [profileData, setProfileData] = useState(null);
+const [profileLoading, setProfileLoading] = useState(false);
+
+// Create refs
+const profileMenuRef = useRef(null);
+const navbarCollapseRef = useRef(null);
+const timerIntervalRef = useRef(null);
+const timerStartTimeRef = useRef(null);
+
+// Get data from localStorage
+const token = localStorage.getItem("token");
+const userId = localStorage.getItem("userId");
+const employeeId = profileData?.Emp_ID || localStorage.getItem("employeeId") || "EMP123";
+
+// Now you can safely use userId
+const userUnreadCount = getUserUnreadCount(userId);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -527,20 +565,21 @@ const getUserDisplayName = () => {
                     title="Notifications"
                   >
                     <FaBell size={24} />
-                    {unreadCount > 0 && (
-                      <Badge
-                        pill
-                        bg="danger"
-                        className="position-absolute"
-                        style={{
-                          top: "-5px",
-                          right: "-5px",
-                          fontSize: "0.6rem",
-                          padding: "0.25em 0.4em",
-                        }}
-                      >
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </Badge>
+                    {userUnreadCount > 0 && (
+  <Badge
+    pill
+    bg="danger"
+    className="position-absolute"
+    style={{
+      top: "-5px",
+      right: "-5px",
+      fontSize: "0.6rem",
+      padding: "0.25em 0.4em",
+    }}
+  >
+    {userUnreadCount > 99 ? "99+" : userUnreadCount}
+  </Badge>
+
                     )}
                   </Nav.Link>
                   <div className="profile-dropdown-container">
