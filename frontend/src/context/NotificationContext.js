@@ -15,8 +15,8 @@ export const NotificationProvider = ({ children }) => {
     return savedNotifications ? JSON.parse(savedNotifications) : [];
   });
 
-  // Calculate unread count
-  const unreadCount = notifications.filter(notification => !notification.read).length;
+// Calculate unread count
+const unreadCount = notifications.filter(notification => !notification.read).length;
 
   // Save notifications to localStorage whenever they change
   useEffect(() => {
@@ -191,11 +191,23 @@ const addResignationNotification = (employeeName, status, userId = null) => {
   return newNotification.id;
 };
 
+const getUserUnreadCount = (userId) => {
+  if (!userId) return unreadCount;
+  
+  const userUnreadCount = notifications.filter(notification => 
+    (!notification.userId || notification.userId === userId) && !notification.read
+  ).length;
+  
+  return userUnreadCount;
+};
+
+
   return (
     <NotificationContext.Provider value={{ 
       notifications, 
       setNotifications, 
       unreadCount,
+      getUserUnreadCount,
       addNotification,
       addLeaveRequestNotification,
       addResignationNotification,
