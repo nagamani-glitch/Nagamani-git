@@ -177,31 +177,45 @@ const ResignationPage = () => {
     }
   }, [isMobile]);
 
-  // const fetchResignations = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await axios.get(
-  //       "http://localhost:5000/api/resignations"
-  //     );
-  //     setData(response.data);
-  //     setError(null);
-  //   } catch (err) {
-  //     setError("Failed to fetch resignations");
-  //     console.error("Error:", err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+// const fetchResignations = async () => {
+//   try {
+//     setLoading(true);
+    
+//     // If we have a userId, fetch only the user's resignations
+//     let url = "http://localhost:5000/api/resignations";
+//     if (currentUserId) {
+//       url = `http://localhost:5000/api/resignations/user/${currentUserId}`;
+//     }
+    
+//     const response = await axios.get(url);
+//     setData(response.data);
+//     setError(null);
+//   } catch (err) {
+//     setError("Failed to fetch resignations");
+//     console.error("Error:", err);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
-  // Add this useEffect to fetch the current user's information
+// Add this useEffect to reload resignations when currentUserId changes
+
 // Modify the fetchResignations function to filter by userId
 const fetchResignations = async () => {
   try {
     setLoading(true);
     
-    // If we have a userId, fetch only the user's resignations
+    // Get the user's role from localStorage
+    const userRole = localStorage.getItem('userRole');
+    
+    // If the user is an admin or HR, fetch all resignations
+    // Otherwise, fetch only the user's resignations
     let url = "http://localhost:5000/api/resignations";
-    if (currentUserId) {
+    if (userRole && (userRole.includes('admin') || userRole.includes('hr'))) {
+      // Admin or HR can see all resignations
+      url = "http://localhost:5000/api/resignations";
+    } else if (currentUserId) {
+      // Regular users can only see their own resignations
       url = `http://localhost:5000/api/resignations/user/${currentUserId}`;
     }
     
