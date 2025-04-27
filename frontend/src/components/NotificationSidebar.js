@@ -4,10 +4,17 @@ import { Close, Delete, CheckCircle } from '@mui/icons-material';
 import { useNotifications } from '../context/NotificationContext';
 
 const NotificationSidebar = ({ show, onClose }) => {
-  const { notifications, markAsRead, deleteNotification, clearAll, markAllAsRead } = useNotifications();
-  
+  // const { notifications, markAsRead, deleteNotification, clearAll, markAllAsRead } = useNotifications();
+  const { notifications, markAsRead, deleteNotification, clearAll, markAllAsRead, getUserNotifications } = useNotifications();
+ 
+  // Get the current user ID from localStorage
+  const userId = localStorage.getItem('userId');
+
   // Use all notifications without filtering by user
-  const userNotifications = notifications;
+  // const userNotifications = notifications;
+
+   // Filter notifications to only show those for the current user
+   const userNotifications = getUserNotifications(userId);
 
   // Update the getNotificationStyle function to handle leave request statuses
   const getNotificationStyle = (type, status) => {

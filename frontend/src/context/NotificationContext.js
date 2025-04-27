@@ -152,6 +152,45 @@ export const NotificationProvider = ({ children }) => {
     return userNotifications;
   };
 
+// Add this function to NotificationContext.js
+const addResignationNotification = (employeeName, status, userId = null) => {
+  const iconMap = {
+    leave: <FaCalendarAlt />,
+    timesheet: <FaClock />,
+    performance: <FaFileAlt />,
+    onboarding: <FaUserAlt />
+  };
+
+  // Log the parameters to make sure they're correct
+  console.log("Adding resignation notification with params:", {
+    employeeName, status, userId
+  });
+
+  const statusText = status === "approved" ? "approved" : "rejected";
+  const message = `Your resignation request has been ${statusText}`;
+  
+  const newNotification = {
+    id: Date.now(), // Use timestamp as unique ID
+    message,
+    time: new Date().toISOString(), // Store actual timestamp for proper time display
+    type: "leave", // Using leave type for styling
+    read: false,
+    icon: iconMap.leave,
+    status: status, // Store the status for styling purposes
+    userId: userId // Store the user ID if provided
+  };
+
+  console.log("Created new resignation notification:", newNotification);
+
+  setNotifications(prev => {
+    const updatedNotifications = [newNotification, ...prev];
+    console.log("Updated notifications with resignation notification:", updatedNotifications);
+    return updatedNotifications;
+  });
+  
+  return newNotification.id;
+};
+
   return (
     <NotificationContext.Provider value={{ 
       notifications, 
@@ -159,6 +198,7 @@ export const NotificationProvider = ({ children }) => {
       unreadCount,
       addNotification,
       addLeaveRequestNotification,
+      addResignationNotification,
       markAsRead,
       markAllAsRead,
       deleteNotification,
@@ -169,3 +209,5 @@ export const NotificationProvider = ({ children }) => {
     </NotificationContext.Provider>
   );
 };
+
+

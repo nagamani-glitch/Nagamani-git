@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNotifications } from "../../../context/NotificationContext";
 import axios from "axios";
 import {
   Box,
@@ -35,6 +36,9 @@ import {
   Select,
   MenuItem,
   InputAdornment,
+  Tooltip,
+  alpha,
+  useTheme,
 } from "@mui/material";
 import {
   Search,
@@ -61,7 +65,58 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   },
 }));
 
+// const StyledTableCell = styled(TableCell)(({ theme }) => ({
+//   backgroundColor: theme.palette.primary.main,
+//   color: theme.palette.common.white,
+//   fontSize: 14,
+//   fontWeight: "bold",
+//   padding: theme.spacing(2),
+//   whiteSpace: "normal",
+//   "&.MuiTableCell-body": {
+//     color: theme.palette.text.primary,
+//     fontSize: 14,
+//     borderBottom: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+//     padding: { xs: theme.spacing(1.5), sm: theme.spacing(2) },
+//   },
+// }));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.common.white,
+  fontSize: 14,
+  fontWeight: "bold",
+  padding: theme.spacing(2),
+  whiteSpace: "normal", // Allow text to wrap
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  "&.MuiTableCell-body": {
+    color: theme.palette.text.primary,
+    fontSize: 14,
+    borderBottom: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+    padding: { xs: theme.spacing(1.5), sm: theme.spacing(2) },
+    whiteSpace: "normal", // Allow text to wrap in body cells too
+    overflow: "visible", // Make sure content doesn't get cut off
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.05),
+  },
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.1),
+    transition: "background-color 0.2s ease",
+  },
+  // Hide last border
+  "&:last-child td, &:last-child th": {
+    borderBottom: 0,
+  },
+}));
+
 const ResignationReview = () => {
+  const theme = useTheme();
+  const { addNotification } = useNotifications();
+  const { addResignationNotification } = useNotifications();
   const [resignations, setResignations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -99,14 +154,6 @@ const ResignationReview = () => {
       );
       setCurrentUser(response.data.data);
 
-      //   // Check if user is HR (you might need to adjust this logic based on your system)
-      //   const isHRUser = response.data.data.joiningDetails?.department === 'HR' ||
-      //                   response.data.data.joiningDetails?.initialDesignation?.includes('HR');
-      //   setIsHR(isHRUser);
-
-      //   if (!isHRUser) {
-      //     setError("You don't have permission to access this page. Only HR personnel can review resignations.");
-      //   }
       setIsHR(true);
     } catch (error) {
       console.error("Error fetching current user:", error);
@@ -118,42 +165,12 @@ const ResignationReview = () => {
     }
   };
 
-  //   useEffect(() => {
-  //     if (isHR) {
-  //       fetchResignations();
-  //     }
-  //   }, [isHR, selectedTab]);
   useEffect(() => {
     // Remove the isHR condition for testing
     // if (isHR) {
     fetchResignations();
     // }
   }, [selectedTab]); // Keep the selectedTab dependency
-
-  //   const fetchResignations = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const response = await axios.get("http://localhost:5000/api/resignations");
-
-  //       // Filter based on tab
-  //       let filteredData = response.data;
-  //       if (selectedTab === 1) { // Pending
-  //         filteredData = response.data.filter(item => item.status === "Requested" || item.status === "Pending");
-  //       } else if (selectedTab === 2) { // Approved
-  //         filteredData = response.data.filter(item => item.status === "Approved");
-  //       } else if (selectedTab === 3) { // Rejected
-  //         filteredData = response.data.filter(item => item.status === "Rejected");
-  //       }
-
-  //       setResignations(filteredData);
-  //       setError(null);
-  //     } catch (err) {
-  //       setError("Failed to fetch resignations");
-  //       console.error("Error:", err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
 
   // First, let's modify the fetchResignations function to include employee data
   const fetchResignations = async () => {
@@ -283,57 +300,70 @@ const ResignationReview = () => {
     setReviewNotes("");
   };
 
-//   const handleReviewSubmit = async () => {
-//     if (!selectedResignation) return;
+  // const handleReviewSubmit = async () => {
+  //   if (!selectedResignation) return;
 
-//     try {
-//       setLoading(true);
+  //   try {
+  //     setLoading(true);
 
-//       const response = await axios.put(
-//         `http://localhost:5000/api/resignations/${selectedResignation._id}`,
-//         {
-//           status: reviewStatus,
-//           reviewNotes: reviewNotes,
-//           reviewedBy: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
-//           reviewedAt: new Date(),
-//         }
-//       );
+  //     const response = await axios.put(
+  //       `http://localhost:5000/api/resignations/${selectedResignation._id}`,
+  //       {
+  //         status: reviewStatus,
+  //         reviewNotes: reviewNotes,
+  //         reviewedBy: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
+  //         reviewedAt: new Date(),
+  //       }
+  //     );
 
-//       // Update local state
-//       setResignations(
-//         resignations.map((item) =>
-//           item._id === selectedResignation._id ? response.data : item
-//         )
-//       );
+  //     // Update local state
+  //     setResignations(
+  //       resignations.map((item) =>
+  //         item._id === selectedResignation._id ? response.data : item
+  //       )
+  //     );
 
-//       setSnackbar({
-//         open: true,
-//         message: `Resignation ${
-//           reviewStatus === "Approved" ? "approved" : "rejected"
-//         } successfully`,
-//         severity: "success",
-//       });
+  //     // Send notification to the user
+  //     if (selectedResignation.userId) {
+  //       addResignationNotification(
+  //         selectedResignation.name,
+  //         reviewStatus.toLowerCase(), // "approved" or "rejected"
+  //         selectedResignation.userId
+  //       );
+  //     }
 
-//       handleCloseReview();
-//       fetchResignations(); // Refresh the list
-//     } catch (error) {
-//       console.error("Error updating resignation status:", error);
-//       setSnackbar({
-//         open: true,
-//         message: "Error updating resignation status",
-//         severity: "error",
-//       });
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+  //     setSnackbar({
+  //       open: true,
+  //       message: `Resignation ${
+  //         reviewStatus === "Approved" ? "approved" : "rejected"
+  //       } successfully`,
+  //       severity: "success",
+  //     });
 
-const handleReviewSubmit = async () => {
+  //     // Send notification email about the status update
+  //     await sendStatusNotification(response.data);
+
+  //     handleCloseReview();
+  //     fetchResignations(); // Refresh the list
+  //   } catch (error) {
+  //     console.error("Error updating resignation status:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error updating resignation status",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+  const handleReviewSubmit = async () => {
     if (!selectedResignation) return;
-  
+
     try {
       setLoading(true);
-  
+
       const response = await axios.put(
         `http://localhost:5000/api/resignations/${selectedResignation._id}`,
         {
@@ -343,14 +373,23 @@ const handleReviewSubmit = async () => {
           reviewedAt: new Date(),
         }
       );
-  
+
       // Update local state
       setResignations(
         resignations.map((item) =>
           item._id === selectedResignation._id ? response.data : item
         )
       );
-  
+
+      // Send notification to the user
+      if (selectedResignation.userId) {
+        addResignationNotification(
+          selectedResignation.name,
+          reviewStatus.toLowerCase(), // "approved" or "rejected"
+          selectedResignation.userId
+        );
+      }
+
       setSnackbar({
         open: true,
         message: `Resignation ${
@@ -358,10 +397,10 @@ const handleReviewSubmit = async () => {
         } successfully`,
         severity: "success",
       });
-  
+
       // Send notification email about the status update
       await sendStatusNotification(response.data);
-  
+
       handleCloseReview();
       fetchResignations(); // Refresh the list
     } catch (error) {
@@ -376,8 +415,7 @@ const handleReviewSubmit = async () => {
     }
   };
   
-
-const handleSendEmail = async (resignation) => {
+  const handleSendEmail = async (resignation) => {
     try {
       setLoading(true);
       await axios.post("http://localhost:5000/api/resignations/email", {
@@ -388,7 +426,7 @@ const handleSendEmail = async (resignation) => {
         description: resignation.description,
         reviewNotes: resignation.reviewNotes,
       });
-  
+
       setSnackbar({
         open: true,
         message: `Notification email sent to ${resignation.name}`,
@@ -407,7 +445,7 @@ const handleSendEmail = async (resignation) => {
   };
 
   // Add this function to send notification after review
-const sendStatusNotification = async (resignation) => {
+  const sendStatusNotification = async (resignation) => {
     try {
       await axios.post("http://localhost:5000/api/resignations/email", {
         name: resignation.name,
@@ -417,9 +455,9 @@ const sendStatusNotification = async (resignation) => {
         description: resignation.description,
         reviewNotes: resignation.reviewNotes,
         reviewedBy: resignation.reviewedBy,
-        reviewedAt: resignation.reviewedAt
+        reviewedAt: resignation.reviewedAt,
       });
-  
+
       setSnackbar({
         open: true,
         message: `Status notification email sent to ${resignation.name}`,
@@ -434,8 +472,7 @@ const sendStatusNotification = async (resignation) => {
       });
     }
   };
-  
-  
+
   const getStatusColor = (status) => {
     switch (status) {
       case "Approved":
@@ -504,286 +541,480 @@ const sendStatusNotification = async (resignation) => {
   }
 
   return (
-    <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
-      <StyledPaper>
+    <Box
+      sx={{
+        p: { xs: 2, sm: 3, md: 4 },
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+      }}
+    >
+      <Box>
+        <Typography
+          variant="h4"
+          sx={{
+            mb: { xs: 2, sm: 3, md: 4 },
+            color: "#1976d2",
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+          }}
+        >
+          Resignation Review
+        </Typography>
+        <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            gap={2}
+            sx={{
+              width: "100%",
+              justifyContent: "space-between",
+            }}
+          >
+            <TextField
+              placeholder="Search..."
+              size="small"
+              value={searchTerm}
+              onChange={handleSearch}
+              sx={{
+                width: { xs: "100%", sm: "300px" },
+                marginRight: { xs: 0, sm: "auto" },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  backgroundColor: "white",
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 1, sm: 1 },
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
+              {/* You can add action buttons here if needed */}
+            </Box>
+          </Box>
+        </StyledPaper>
+      </Box>
+
+      <Tabs
+        value={selectedTab}
+        onChange={handleTabChange}
+        indicatorColor="primary"
+        textColor="primary"
+        variant="scrollable"
+        scrollButtons="auto"
+        sx={{
+          mb: 3,
+          mt: 3,
+          borderBottom: 1,
+          borderColor: "divider",
+          "& .MuiTabs-flexContainer": {
+            flexDirection: { xs: "column", sm: "row" },
+          },
+          "& .MuiTab-root": {
+            width: { xs: "100%", sm: "auto" },
+            fontSize: { xs: "0.875rem", sm: "0.875rem", md: "1rem" },
+          },
+        }}
+      >
+        <Tab
+          label={
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Box component="span" sx={{ mr: 1 }}>
+                All
+              </Box>
+              <Chip
+                label={resignations.length}
+                size="small"
+                sx={{ height: 20, fontSize: "0.75rem" }}
+              />
+            </Box>
+          }
+        />
+        <Tab
+          label={
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Box component="span" sx={{ mr: 1 }}>
+                Pending
+              </Box>
+              <Chip
+                label={
+                  resignations.filter(
+                    (r) => r.status === "Requested" || r.status === "Pending"
+                  ).length
+                }
+                size="small"
+                color="warning"
+                sx={{ height: 20, fontSize: "0.75rem" }}
+              />
+            </Box>
+          }
+        />
+        <Tab
+          label={
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Box component="span" sx={{ mr: 1 }}>
+                Approved
+              </Box>
+              <Chip
+                label={
+                  resignations.filter((r) => r.status === "Approved").length
+                }
+                size="small"
+                color="success"
+                sx={{ height: 20, fontSize: "0.75rem" }}
+              />
+            </Box>
+          }
+        />
+        <Tab
+          label={
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Box component="span" sx={{ mr: 1 }}>
+                Rejected
+              </Box>
+              <Chip
+                label={
+                  resignations.filter((r) => r.status === "Rejected").length
+                }
+                size="small"
+                color="error"
+                sx={{ height: 20, fontSize: "0.75rem" }}
+              />
+            </Box>
+          }
+        />
+      </Tabs>
+
+      <Divider sx={{ mb: 2 }} />
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {filteredResignations.length === 0 ? (
         <Box
           sx={{
             display: "flex",
-            justifyContent: "space-between",
+            flexDirection: "column",
             alignItems: "center",
-            flexWrap: "wrap",
-            gap: 2,
-            mb: 3,
+            justifyContent: "center",
+            py: 5,
+            backgroundColor: "#f5f5f5",
+            borderRadius: 2,
           }}
         >
-          <Typography variant="h5" sx={{ fontWeight: 600, color: "#1976d2" }}>
-            Resignation Review
+          <Typography variant="h6" color="textSecondary" gutterBottom>
+            No resignation letters found
           </Typography>
-
-          <TextField
-            placeholder="Search..."
-            size="small"
-            value={searchTerm}
-            onChange={handleSearch}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              width: { xs: "100%", sm: 300 },
-              backgroundColor: "#f5f5f5",
-              borderRadius: 1,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 1,
-              },
-            }}
-          />
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            align="center"
+            sx={{ mb: 3, maxWidth: 500 }}
+          >
+            {searchTerm
+              ? "No results match your search criteria. Try adjusting your search."
+              : "There are no resignation letters to review at this time."}
+          </Typography>
         </Box>
-
-        <Tabs
-          value={selectedTab}
-          onChange={handleTabChange}
-          indicatorColor="primary"
-          textColor="primary"
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
+      ) : (
+        <TableContainer
+          component={Paper}
+          sx={{
+            maxHeight: { xs: 450, sm: 500, md: 550 },
+            overflowY: "auto",
+            overflowX: "auto",
+            mx: 0,
+            borderRadius: 2,
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            mb: 4,
+            "& .MuiTableContainer-root": {
+              scrollbarWidth: "thin",
+              "&::-webkit-scrollbar": {
+                width: 8,
+                height: 8,
+              },
+              "&::-webkit-scrollbar-track": {
+                backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                borderRadius: 8,
+              },
+              "&::-webkit-scrollbar-thumb": {
+                backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                borderRadius: 8,
+                "&:hover": {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.3),
+                },
+              },
+            },
+          }}
         >
-          <Tab
-            label={
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Box component="span" sx={{ mr: 1 }}>
-                  All
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <StyledTableCell>Employee</StyledTableCell>
+                <StyledTableCell sx={{ minWidth: 150 }}>
+                  Position
+                </StyledTableCell>
+                <StyledTableCell sx={{ minWidth: 100 }}>Status</StyledTableCell>
+                <StyledTableCell sx={{ minWidth: 130 }}>
+                  Submitted On
+                </StyledTableCell>
+                <StyledTableCell sx={{ minWidth: 130 }}>
+                  Employee ID
+                </StyledTableCell>
+                <StyledTableCell sx={{ minWidth: 150 }}>
+                  Reviewed By
+                </StyledTableCell>
+                <StyledTableCell sx={{ minWidth: 120, textAlign: "center" }}>
+                  Actions
+                </StyledTableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredResignations.map((row) => (
+                <StyledTableRow
+                  key={row._id}
+                  hover
+                  onClick={() => handleOpenReview(row)}
+                  sx={{
+                    cursor: "pointer",
+                  }}
+                >
+                  {/* <TableCell>
+              <Box display="flex" alignItems="flex-start" gap={1}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    bgcolor: getStatusColor(row.status).color,
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: "bold",
+                    fontSize: "0.875rem",
+                    flexShrink: 0,
+                    mt: 0.5,
+                  }}
+                >
+                  {row.name?.[0] || "U"}
                 </Box>
-                <Chip
-                  label={resignations.length}
-                  size="small"
-                  sx={{ height: 20, fontSize: "0.75rem" }}
-                />
-              </Box>
-            }
-          />
-          <Tab
-            label={
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Box component="span" sx={{ mr: 1 }}>
-                  Pending
-                </Box>
-                <Chip
-                  label={
-                    resignations.filter(
-                      (r) => r.status === "Requested" || r.status === "Pending"
-                    ).length
-                  }
-                  size="small"
-                  color="warning"
-                  sx={{ height: 20, fontSize: "0.75rem" }}
-                />
-              </Box>
-            }
-          />
-          <Tab
-            label={
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Box component="span" sx={{ mr: 1 }}>
-                  Approved
-                </Box>
-                <Chip
-                  label={
-                    resignations.filter((r) => r.status === "Approved").length
-                  }
-                  size="small"
-                  color="success"
-                  sx={{ height: 20, fontSize: "0.75rem" }}
-                />
-              </Box>
-            }
-          />
-          <Tab
-            label={
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Box component="span" sx={{ mr: 1 }}>
-                  Rejected
-                </Box>
-                <Chip
-                  label={
-                    resignations.filter((r) => r.status === "Rejected").length
-                  }
-                  size="small"
-                  color="error"
-                  sx={{ height: 20, fontSize: "0.75rem" }}
-                />
-              </Box>
-            }
-          />
-        </Tabs>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
-        {filteredResignations.length === 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              py: 5,
-              backgroundColor: "#f5f5f5",
-              borderRadius: 2,
-            }}
-          >
-            <Typography variant="h6" color="textSecondary" gutterBottom>
-              No resignation letters found
-            </Typography>
-            <Typography
-              variant="body2"
-              color="textSecondary"
-              align="center"
-              sx={{ mb: 3, maxWidth: 500 }}
-            >
-              {searchTerm
-                ? "No results match your search criteria. Try adjusting your search."
-                : "There are no resignation letters to review at this time."}
-            </Typography>
-          </Box>
-        ) : (
-          <TableContainer
-            component={Paper}
-            elevation={0}
-            sx={{
-              borderRadius: 2,
-              border: "1px solid #e0e0e0",
-              overflow: "hidden",
-            }}
-          >
-            <Table sx={{ minWidth: 650 }}>
-              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold" }}>Employee</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Position</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>
-                    Submitted On
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Employee ID</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Reviewed By</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }} align="right">
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredResignations.map((row) => (
-                  <TableRow
-                    key={row._id}
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
+                  <Typography
+                    variant="body2"
                     sx={{
-                      "&:hover": { backgroundColor: "#f5f5f5" },
-                      cursor: "pointer",
+                      fontWeight: 600,
+                      wordBreak: "break-word",
+                      whiteSpace: "normal",
+                      lineHeight: 1.3,
                     }}
                   >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      onClick={() => handleOpenReview(row)}
-                    >
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Avatar
-                          sx={{
-                            bgcolor: "#1976d2",
-                            width: 36,
-                            height: 36,
-                            mr: 1.5,
-                          }}
-                        >
-                          {row.name.charAt(0)}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {row.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {row.email}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell onClick={() => handleOpenReview(row)}>
-                      {row.position}
-                    </TableCell>
-                    <TableCell onClick={() => handleOpenReview(row)}>
-                      <Chip
-                        icon={getStatusColor(row.status).icon}
-                        label={row.status}
-                        size="small"
+                    {row.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {row.email}
+                  </Typography>
+                </Box>
+              </Box>
+            </TableCell> */}
+
+                  <TableCell sx={{ wordBreak: "break-word" }}>
+                    <Box display="flex" alignItems="flex-start" gap={1}>
+                      <Box
                         sx={{
-                          backgroundColor: getStatusColor(row.status).bg,
-                          color: getStatusColor(row.status).color,
-                          fontWeight: 500,
-                          border: `1px solid ${
-                            getStatusColor(row.status).color
-                          }`,
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          bgcolor: getStatusColor(row.status).color,
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "bold",
+                          fontSize: "0.875rem",
+                          flexShrink: 0,
+                          mt: 0.5,
                         }}
-                      />
-                    </TableCell>
-                    <TableCell onClick={() => handleOpenReview(row)}>
-                      {new Date(row.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell onClick={() => handleOpenReview(row)}>
-                      {row.employeeId || "Not available"}
-                    </TableCell>
-                    <TableCell onClick={() => handleOpenReview(row)}>
-                      {row.reviewedBy || "Not reviewed yet"}
-                    </TableCell>
-                    <TableCell align="right">
+                      >
+                        {row.name?.[0] || "U"}
+                      </Box>
                       <Box
                         sx={{
                           display: "flex",
-                          justifyContent: "flex-end",
-                          flexWrap: "nowrap",
+                          flexDirection: "column",
+                          minWidth: 0,
                         }}
                       >
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => handleOpenReview(row)}
-                          sx={{ mr: 0.5 }}
-                          title="Review"
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 600,
+                            wordBreak: "break-word",
+                            whiteSpace: "normal",
+                            lineHeight: 1.3,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
                         >
-                          <Visibility fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="secondary"
-                          onClick={() => handleSendEmail(row)}
-                          sx={{ mr: 0.5 }}
-                          title="Notify"
+                          {row.name}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            display: "block",
+                          }}
                         >
-                          <Send fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDeleteClick(row)}
-                          title="Delete"
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
+                          {row.email}
+                        </Typography>
                       </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </StyledPaper>
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={{ wordBreak: "break-word" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        textOverflow: "ellipsis",
+                        whiteSpace: "normal",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {row.position}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box
+                      sx={{
+                        display: "inline-block",
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: "0.75rem",
+                        fontWeight: "medium",
+                        backgroundColor: getStatusColor(row.status).bg,
+                        color: getStatusColor(row.status).color,
+                        border: `1px solid ${
+                          getStatusColor(row.status).color
+                        }30`,
+                      }}
+                    >
+                      {row.status}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {new Date(row.createdAt).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {row.employeeId || "Not available"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {row.reviewedBy || "Not reviewed yet"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", gap: 1 }}
+                    >
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenReview(row);
+                        }}
+                        sx={{
+                          backgroundColor: alpha(
+                            theme.palette.primary.main,
+                            0.1
+                          ),
+                          "&:hover": {
+                            backgroundColor: alpha(
+                              theme.palette.primary.main,
+                              0.2
+                            ),
+                          },
+                        }}
+                      >
+                        <Visibility fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendEmail(row);
+                        }}
+                        sx={{
+                          backgroundColor: alpha(
+                            theme.palette.secondary.main,
+                            0.1
+                          ),
+                          "&:hover": {
+                            backgroundColor: alpha(
+                              theme.palette.secondary.main,
+                              0.2
+                            ),
+                          },
+                        }}
+                      >
+                        <Send fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(row);
+                        }}
+                        sx={{
+                          backgroundColor: alpha(theme.palette.error.main, 0.1),
+                          "&:hover": {
+                            backgroundColor: alpha(
+                              theme.palette.error.main,
+                              0.2
+                            ),
+                          },
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </StyledTableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       {/* Review Dialog */}
       <Dialog

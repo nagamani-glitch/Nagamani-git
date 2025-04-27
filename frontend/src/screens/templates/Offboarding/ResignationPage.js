@@ -166,48 +166,12 @@ const ResignationPage = () => {
     }
   };
 
-  // useEffect(() => {
-  //   fetchResignations();
-  // }, []);
-
   // Set view mode based on screen size when it changes
   useEffect(() => {
     if (isMobile) {
       setViewMode("grid");
     }
   }, [isMobile]);
-
-  // const fetchResignations = async () => {
-  //   try {
-  //     setLoading(true);
-
-  //     // Get the user's role from localStorage
-  //     const userRole = localStorage.getItem('userRole');
-
-  //     // If the user is an admin or HR, fetch all resignations
-  //     // Otherwise, fetch only the user's resignations
-  //     let url = "http://localhost:5000/api/resignations";
-  //     if (userRole && (userRole.includes('admin') || userRole.includes('hr'))) {
-  //       // Admin or HR can see all resignations
-  //       console.log("Fetching all resignations for admin/HR");
-  //       url = "http://localhost:5000/api/resignations";
-  //     } else if (currentUserId) {
-  //       // Regular users can only see their own resignations
-  //       console.log("Fetching resignations for user:", currentUserId);
-  //       url = `http://localhost:5000/api/resignations/user/${currentUserId}`;
-  //     }
-
-  //     const response = await axios.get(url);
-  //     console.log("Fetched resignations:", response.data);
-  //     setData(response.data);
-  //     setError(null);
-  //   } catch (err) {
-  //     setError("Failed to fetch resignations");
-  //     console.error("Error:", err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   // Modify the fetchResignations function to properly handle user roles
   const fetchResignations = async () => {
@@ -254,32 +218,6 @@ const ResignationPage = () => {
       fetchResignations();
     }
   }, [currentUserId]);
-
-  //   useEffect(() => {
-  //   const fetchCurrentUser = async () => {
-  //     try {
-  //       const userId = localStorage.getItem('userId');
-  //       if (userId) {
-  //         setCurrentUserId(userId);
-
-  //         // Fetch user details
-  //         const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
-  //         const userData = response.data.data;
-
-  //         if (userData) {
-  //           // Set user information
-  //           setCurrentUserName(`${userData.personalInfo?.firstName || ''} ${userData.personalInfo?.lastName || ''}`);
-  //           setCurrentUserEmail(userData.personalInfo?.email || '');
-  //           setCurrentUserPosition(userData.joiningDetails?.initialDesignation || '');
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching current user:", error);
-  //     }
-  //   };
-
-  //   fetchCurrentUser();
-  // }, []);
 
   // Modify the useEffect that fetches user data to also fetch resignations
   useEffect(() => {
@@ -378,18 +316,6 @@ const ResignationPage = () => {
     setDeleteDialogOpen(false);
     setItemToDelete(null);
   };
-
-  // const handleCreateClick = () => {
-  //   setShowCreatePopup(true);
-  //   setIsEditing(false);
-  //   setNewResignation({
-  //     name: "",
-  //     email: "",
-  //     title: "",
-  //     status: "Requested",
-  //     description: "",
-  //   });
-  // };
 
   // Modify the handleCreateClick function to pre-fill user information
   const handleCreateClick = () => {
@@ -537,57 +463,6 @@ const ResignationPage = () => {
       </Box>
     );
 
-  //   const handleSave = async () => {
-  //   if (isSaving) return;
-
-  //   try {
-  //     setIsSaving(true);
-  //     const resignationData = {
-  //       name: newResignation.name,
-  //       email: newResignation.email,
-  //       position: newResignation.title,
-  //       status: newResignation.status,
-  //       description: newResignation.description,
-  //       userId: currentUserId, // Add userId to the resignation data
-  //     };
-
-  //     if (isEditing) {
-  //       await axios.put(
-  //         `http://localhost:5000/api/resignations/${currentId}`,
-  //         resignationData
-  //       );
-  //       setSnackbar({
-  //         open: true,
-  //         message: "Resignation letter updated successfully",
-  //         severity: "success",
-  //       });
-  //     } else {
-  //       await axios.post(
-  //         "http://localhost:5000/api/resignations",
-  //         resignationData
-  //       );
-  //       setSnackbar({
-  //         open: true,
-  //         message: "Resignation letter created successfully",
-  //         severity: "success",
-  //       });
-  //     }
-
-  //     await fetchResignations();
-  //     handleClosePopup();
-  //   } catch (error) {
-  //     console.error("Error saving resignation:", error);
-  //     setSnackbar({
-  //       open: true,
-  //       message: "Error saving resignation letter",
-  //       severity: "error",
-  //     });
-  //   } finally {
-  //     setIsSaving(false);
-  //   }
-  // };
-
-  // Update the handleSave function to ensure userId is included
   const handleSave = async () => {
     if (isSaving) return;
 
@@ -1111,7 +986,14 @@ const ResignationPage = () => {
                             </Avatar>
                             <Typography
                               variant="body2"
-                              sx={{ fontWeight: 600 }}
+                              sx={{
+                                fontWeight: 600,
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                lineHeight: 1.3,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
                             >
                               {item.name}
                             </Typography>
@@ -1272,20 +1154,44 @@ const ResignationPage = () => {
                           <Box>
                             <Typography
                               variant="body1"
-                              sx={{ fontWeight: 600 }}
+                              sx={{
+                                fontWeight: 600,
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                lineHeight: 1.3,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
                             >
                               {item.name}
                             </Typography>
                             <Typography
                               variant="caption"
-                              sx={{ color: "#64748b" }}
+                              sx={{
+                                color: "#64748b",
+                                fontWeight: 600,
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                lineHeight: 1.3,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
                             >
                               {item.email}
                             </Typography>
                           </Box>
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ py: 2 }}>{item.position}</TableCell>
+                      <TableCell
+                        sx={{
+                          py: 2,
+                          textOverflow: "ellipsis",
+                          whiteSpace: "normal",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {item.position}
+                      </TableCell>
                       <TableCell sx={{ py: 2 }}>
                         <Chip
                           icon={getStatusColor(item.status).icon}
@@ -1468,14 +1374,29 @@ const ResignationPage = () => {
                           <Box>
                             <Typography
                               variant="body1"
-                              sx={{ fontWeight: 600 }}
+                              sx={{
+                                fontWeight: 600,
+                                whiteSpace: "normal",
+                                lineHeight: 1.3,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
                             >
                               {item.name}
                             </Typography>
                           </Box>
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ py: 2 }}>{item.position}</TableCell>
+                      <TableCell
+                        sx={{
+                          py: 2,
+                          textOverflow: "ellipsis",
+                          whiteSpace: "normal",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {item.position}
+                      </TableCell>
                       <TableCell sx={{ py: 2 }}>{item.email}</TableCell>
                       <TableCell sx={{ py: 2 }}>
                         <Chip
@@ -1985,66 +1906,6 @@ const ResignationPage = () => {
                 }}
               />
             </Grid>
-            {/* <Grid item xs={12} md={6}>
-              <FormControl fullWidth margin="normal" variant="outlined">
-                <InputLabel id="status-label">Status</InputLabel>
-                <Select
-                  labelId="status-label"
-                  name="status"
-                  value={newResignation.status}
-                  onChange={handleInputChange}
-                  label="Status"
-                  sx={{
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      "&:hover": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "#1976d2",
-                      borderWidth: "2px",
-                    },
-                  }}
-                >
-                  <MenuItem value="Requested">
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Email
-                        fontSize="small"
-                        sx={{ mr: 1, color: "#2f54eb" }}
-                      />
-                      Requested
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="Approved">
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <CheckCircle
-                        fontSize="small"
-                        sx={{ mr: 1, color: "#1890ff" }}
-                      />
-                      Approved
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="Rejected">
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Cancel
-                        fontSize="small"
-                        sx={{ mr: 1, color: "#ff4d4f" }}
-                      />
-                      Rejected
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="Pending">
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <AccessTime
-                        fontSize="small"
-                        sx={{ mr: 1, color: "#fa8c16" }}
-                      />
-                      Pending
-                    </Box>
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </Grid> */}
 
             {/* Status Change Menu */}
             <Menu
