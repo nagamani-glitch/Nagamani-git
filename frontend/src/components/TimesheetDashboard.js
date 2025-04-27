@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Table,
-  Spinner,
-} from "react-bootstrap";
+import { Container, Row, Col, Card, Table, Spinner } from "react-bootstrap";
 import { timesheetService } from "../services/timesheetService";
 import {
   FaClock,
@@ -152,8 +145,6 @@ const TimesheetDashboard = () => {
   //   });
   // };
 
-
-
   // const formatDuration = (seconds) => {
   //   const hours = Math.floor(seconds / 3600);
   //   const minutes = Math.floor((seconds % 3600) / 60);
@@ -170,7 +161,7 @@ const TimesheetDashboard = () => {
       );
       setTodayTimesheet(todayResponse.data?.timesheet || null);
       setTodayLoading(false);
-  
+
       setWeeklyLoading(true);
       const weeklyResponse = await timesheetService.getWeeklyTimesheets(
         employeeId
@@ -188,62 +179,60 @@ const TimesheetDashboard = () => {
       setWeeklyLoading(false);
     }
   };
-  
-
 
   const calculateWeeklyStats = (timesheets) => {
-  if (!timesheets || !timesheets.length) {
+    if (!timesheets || !timesheets.length) {
+      setWeeklyStats({
+        totalHours: "0h 0m",
+        averageDaily: "0h 0m",
+        onTimePercentage: 0,
+        overtime: "0h 0m",
+      });
+      return;
+    }
+
+    const totalSeconds = timesheets.reduce(
+      (acc, curr) => acc + (curr.duration || 0),
+      0
+    );
+    const daysWorked = timesheets.length || 1; // Prevent division by zero
+    const standardDaySeconds = 8 * 3600;
+
+    const onTimeCount = timesheets.filter((timesheet) => {
+      if (!timesheet.checkInTime) return false;
+      const checkInTime = new Date(timesheet.checkInTime);
+      return checkInTime.getHours() <= 9 && checkInTime.getMinutes() <= 15;
+    }).length;
+
+    const overtimeSeconds = timesheets.reduce((acc, curr) => {
+      return acc + Math.max(0, (curr.duration || 0) - standardDaySeconds);
+    }, 0);
+
     setWeeklyStats({
-      totalHours: "0h 0m",
-      averageDaily: "0h 0m",
-      onTimePercentage: 0,
-      overtime: "0h 0m",
+      totalHours: formatDuration(totalSeconds),
+      averageDaily: formatDuration(totalSeconds / daysWorked),
+      onTimePercentage:
+        daysWorked > 0 ? Math.round((onTimeCount / daysWorked) * 100) : 0,
+      overtime: formatDuration(overtimeSeconds),
     });
-    return;
-  }
+  };
 
-  const totalSeconds = timesheets.reduce(
-    (acc, curr) => acc + (curr.duration || 0),
-    0
-  );
-  const daysWorked = timesheets.length || 1; // Prevent division by zero
-  const standardDaySeconds = 8 * 3600;
+  // Improve the formatDuration function to handle edge cases
+  // const formatDuration = (seconds) => {
+  //   if (!seconds || isNaN(seconds)) return "0h 0m";
 
-  const onTimeCount = timesheets.filter((timesheet) => {
-    if (!timesheet.checkInTime) return false;
-    const checkInTime = new Date(timesheet.checkInTime);
-    return checkInTime.getHours() <= 9 && checkInTime.getMinutes() <= 15;
-  }).length;
+  //   const hours = Math.floor(seconds / 3600);
+  //   const minutes = Math.floor((seconds % 3600) / 60);
+  //   return `${hours}h ${minutes}m`;
+  // };
 
-  const overtimeSeconds = timesheets.reduce((acc, curr) => {
-    return acc + Math.max(0, (curr.duration || 0) - standardDaySeconds);
-  }, 0);
+  const formatDuration = (seconds) => {
+    if (!seconds || isNaN(seconds)) return "0h 0m";
 
-  setWeeklyStats({
-    totalHours: formatDuration(totalSeconds),
-    averageDaily: formatDuration(totalSeconds / daysWorked),
-    onTimePercentage: daysWorked > 0 ? Math.round((onTimeCount / daysWorked) * 100) : 0,
-    overtime: formatDuration(overtimeSeconds),
-  });
-};
-
-// Improve the formatDuration function to handle edge cases
-// const formatDuration = (seconds) => {
-//   if (!seconds || isNaN(seconds)) return "0h 0m";
-  
-//   const hours = Math.floor(seconds / 3600);
-//   const minutes = Math.floor((seconds % 3600) / 60);
-//   return `${hours}h ${minutes}m`;
-// };
-
-const formatDuration = (seconds) => {
-  if (!seconds || isNaN(seconds)) return "0h 0m";
-  
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${hours}h ${minutes}m`;
-};
-
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
 
   if (todayLoading && weeklyLoading) {
     return (
@@ -391,7 +380,7 @@ const formatDuration = (seconds) => {
 
             <Card.Body>
               <div className="table-responsive-mobile">
-                <Table hover className="custom-table">
+                {/* <Table hover className="custom-table">
                   <thead>
                     <tr>
                       <th>Date</th>
@@ -422,6 +411,59 @@ const formatDuration = (seconds) => {
                             }
                           )}
                         </td>
+                        <td>
+                          {new Date(timesheet.checkInTime).toLocaleTimeString()}
+                        </td>
+                        <td>
+                          {timesheet.checkOutTime
+                            ? new Date(
+                                timesheet.checkOutTime
+                              ).toLocaleTimeString()
+                            : "-"}
+                        </td>
+                        <td className="duration-cell">
+                          {formatDuration(timesheet.duration || 0)}
+                        </td>
+                        <td>
+                          <StatusBadge status={timesheet.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table> */}
+                <Table hover className="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Employee</th>
+                      <th>Check-in</th>
+                      <th>Check-out</th>
+                      <th>Duration</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {weeklyTimesheets.map((timesheet, index) => (
+                      <tr
+                        key={index}
+                        className={`timesheet-row ${
+                          timesheet.status === "active" ? "active-row" : ""
+                        }`}
+                        style={{
+                          animation: `fadeIn 0.5s ease-out ${index * 0.1}s`,
+                        }}
+                      >
+                        <td className="date-cell">
+                          {new Date(timesheet.checkInTime).toLocaleDateString(
+                            "en-US",
+                            {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                        </td>
+                        <td>{timesheet.employeeName || "-"}</td>
                         <td>
                           {new Date(timesheet.checkInTime).toLocaleTimeString()}
                         </td>

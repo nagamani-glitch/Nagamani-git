@@ -6,7 +6,6 @@ import {
   Button,
   TextField,
   Typography,
-  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -14,13 +13,7 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Fab,
-  Snackbar,
-  Alert,
+  Chip,
   useTheme,
   alpha,
   InputAdornment,
@@ -32,18 +25,40 @@ import {
   CardContent,
   Stack,
   Divider,
-  Chip,
   useMediaQuery,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  IconButton,
+  Tooltip,
+  TablePagination,
+  Autocomplete,
 } from "@mui/material";
 import {
   FilterList,
-  Add,
-  Visibility,
-  Cancel,
-  Edit,
   Search,
+  CalendarMonth,
+  Person,
+  AccessTime,
+  Refresh,
+  FileDownload,
+  DateRange,
+  ArrowUpward,
+  ArrowDownward,
 } from "@mui/icons-material";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  isWithinInterval,
+  parseISO,
+} from "date-fns";
+import * as XLSX from "xlsx";
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -79,101 +94,367 @@ const FilterMenu = styled(Menu)(({ theme }) => ({
   },
 }));
 
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.common.white,
+  fontSize: 14,
+  fontWeight: "bold",
+  padding: theme.spacing(2),
+  "&.MuiTableCell-body": {
+    color: theme.palette.text.primary,
+    fontSize: 14,
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.05),
+  },
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.1),
+    transition: "background-color 0.2s ease",
+  },
+}));
+
 const AttendanceRecords = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-  // Add these state variables for delete confirmation dialog
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
-
+  // State variables
   const [searchTerm, setSearchTerm] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [rows, setRows] = useState([]);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
-  // Add loading state
+  const [timesheets, setTimesheets] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const [editRecord, setEditRecord] = useState(null);
-  const [newRecord, setNewRecord] = useState({
-    name: "",
-    empId: "",
-    date: "",
-    checkIn: "",
-    checkOut: "",
-    shift: "",
-    workType: "",
-    minHour: "",
-    atWork: "",
-    overtime: "",
-    comment: "",
-  });
-
   const [anchorEl, setAnchorEl] = useState(null);
   const [filterValues, setFilterValues] = useState({
-    employee: "",
-    workType: "",
-    shift: "",
+    employee: null,
+    status: "",
+    dateRange: "month",
+    startDate: startOfMonth(new Date()),
+    endDate: endOfMonth(new Date()),
   });
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewData, setPreviewData] = useState(null);
+  const [employees, setEmployees] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [sortConfig, setSortConfig] = useState({
+    key: "checkInTime",
+    direction: "desc",
+  });
+  const [stats, setStats] = useState({
+    totalRecords: 0,
+    presentToday: 0,
+    lateToday: 0,
+    absentToday: 0,
+    averageWorkHours: 0,
+  });
 
-  const API_URL = "http://localhost:5000/api/attendance";
+  const API_URL = "http://localhost:5000/api/timesheet";
+  const EMPLOYEES_API_URL = "http://localhost:5000/api/employees";
 
-  const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.common.white,
-    fontSize: 14,
-    fontWeight: "bold",
-    padding: theme.spacing(2),
-    "&.MuiTableCell-body": {
-      color: theme.palette.text.primary,
-      fontSize: 14,
-    },
-  }));
-
-  const StyledTableRow = styled(TableRow)(({ theme }) => ({
-    "&:nth-of-type(odd)": {
-      backgroundColor: alpha(theme.palette.primary.light, 0.05),
-    },
-    "&:hover": {
-      backgroundColor: alpha(theme.palette.primary.light, 0.1),
-      transition: "background-color 0.2s ease",
-    },
-  }));
   useEffect(() => {
-    fetchAttendanceRecords();
+    const loadData = async () => {
+      await fetchEmployees(); // First fetch employees
+      await fetchTimesheets(); // Then fetch timesheets
+    };
+
+    loadData();
   }, []);
 
-  const showSnackbar = (message, severity = "success") => {
-    setSnackbar({ open: true, message, severity });
+  useEffect(() => {
+    if (timesheets.length > 0) {
+      calculateStats(timesheets);
+    }
+  }, [timesheets]);
+
+  // Add this function to map employee IDs to names
+  const getEmployeeNameById = (employeeId) => {
+    if (!employeeId || !employees || employees.length === 0) {
+      console.log("Missing employeeId or employees list:", {
+        employeeId,
+        employeesCount: employees?.length,
+      });
+      return "Unknown Employee";
+    }
+
+    // Log the employeeId we're looking for
+    console.log("Looking for employee with ID:", employeeId);
+
+    // Try to find the employee with the given ID
+    const employee = employees.find((emp) => {
+      const empId = emp._id || emp.id || emp.employeeId || emp.Emp_ID;
+      const match = empId === employeeId;
+      if (match) {
+        console.log("Found matching employee:", emp);
+      }
+      return match;
+    });
+
+    if (!employee) {
+      console.log("No matching employee found for ID:", employeeId);
+      return "Unknown Employee";
+    }
+
+    // Handle different employee data structures
+    if (employee.name) return employee.name;
+    if (employee.personalInfo) {
+      const firstName = employee.personalInfo.firstName || "";
+      const lastName = employee.personalInfo.lastName || "";
+      return `${firstName} ${lastName}`.trim();
+    }
+    if (employee.firstName && employee.lastName) {
+      return `${employee.firstName} ${employee.lastName}`;
+    }
+
+    console.log("Employee found but couldn't extract name:", employee);
+    return "Unknown Employee";
   };
 
-  const fetchAttendanceRecords = async () => {
+  const fetchEmployees = async () => {
     try {
-      const response = await axios.get(API_URL);
-      setRows(response.data);
+      const response = await axios.get(EMPLOYEES_API_URL);
+      console.log("Employee data fetched:", response.data);
+
+      // Handle different response structures
+      let employeeData;
+      if (Array.isArray(response.data)) {
+        employeeData = response.data;
+      } else if (response.data.employees) {
+        employeeData = response.data.employees;
+      } else if (response.data.data) {
+        employeeData = response.data.data;
+      } else {
+        employeeData = [];
+        console.error("Unexpected employee response format:", response.data);
+      }
+
+      setEmployees(employeeData);
     } catch (error) {
-      showSnackbar("Error fetching attendance records", "error");
+      console.error("Error fetching employees:", error);
+      setEmployees([]);
     }
   };
 
-  const handleSearch = async (e) => {
-    setSearchTerm(e.target.value);
+  // const fetchTimesheets = async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     // Build the query parameters based on filters
+  //     let queryParams = new URLSearchParams();
+
+  //     if (filterValues.employee) {
+  //       // Use the correct employee ID field based on your data structure
+  //       queryParams.append('employeeId', filterValues.employee._id || filterValues.employee.id || filterValues.employee.employeeId);
+  //     }
+
+  //     if (filterValues.status) {
+  //       queryParams.append('status', filterValues.status);
+  //     }
+
+  //     if (filterValues.dateRange !== 'all' && filterValues.startDate && filterValues.endDate) {
+  //       queryParams.append('startDate', filterValues.startDate.toISOString());
+  //       queryParams.append('endDate', filterValues.endDate.toISOString());
+  //     }
+
+  //     // First try to get all timesheets
+  //     let response;
+  //     try {
+  //       // Try the /all endpoint first
+  //       response = await axios.get(`${API_URL}/all?${queryParams.toString()}`);
+  //     } catch (error) {
+  //       console.log("Error fetching from /all endpoint, trying alternative endpoint");
+  //       // If /all endpoint fails, try the base endpoint
+  //       response = await axios.get(`${API_URL}?${queryParams.toString()}`);
+  //     }
+
+  //     console.log("Timesheet data fetched:", response.data);
+
+  //     // Handle different response structures
+  //     let timesheetData;
+  //     if (Array.isArray(response.data)) {
+  //       timesheetData = response.data;
+  //     } else if (response.data.timesheets) {
+  //       timesheetData = response.data.timesheets;
+  //     } else if (response.data.data) {
+  //       timesheetData = response.data.data;
+  //     } else {
+  //       timesheetData = [];
+  //       console.error("Unexpected response format:", response.data);
+  //     }
+
+  //     // Enhance timesheet data with employee names
+  //     const enhancedTimesheetData = timesheetData.map(timesheet => {
+  //       // Get the employee ID from the timesheet
+  //       const employeeId = timesheet.employeeId;
+
+  //       // Find the corresponding employee
+  //       const employeeName = getEmployeeNameById(employeeId);
+
+  //       // Return enhanced timesheet with employee name
+  //       return {
+  //         ...timesheet,
+  //         employeeName: employeeName
+  //       };
+  //     });
+
+  //     setTimesheets(enhancedTimesheetData);
+  //   } catch (error) {
+  //     console.error("Error fetching timesheets:", error);
+  //     setTimesheets([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const fetchTimesheets = async () => {
     try {
-      const response = await axios.get(
-        `${API_URL}/search?searchTerm=${e.target.value}`
+      setLoading(true);
+
+      // Build the query parameters based on filters
+      let queryParams = new URLSearchParams();
+
+      if (filterValues.employee) {
+        // Use the correct employee ID field based on your data structure
+        queryParams.append(
+          "employeeId",
+          filterValues.employee._id ||
+            filterValues.employee.id ||
+            filterValues.employee.employeeId
+        );
+      }
+
+      if (filterValues.status) {
+        queryParams.append("status", filterValues.status);
+      }
+
+      if (
+        filterValues.dateRange !== "all" &&
+        filterValues.startDate &&
+        filterValues.endDate
+      ) {
+        queryParams.append("startDate", filterValues.startDate.toISOString());
+        queryParams.append("endDate", filterValues.endDate.toISOString());
+      }
+
+      // First try to get all timesheets
+      let response;
+      try {
+        // Try the /all endpoint first
+        response = await axios.get(`${API_URL}/all?${queryParams.toString()}`);
+      } catch (error) {
+        console.log(
+          "Error fetching from /all endpoint, trying alternative endpoint"
+        );
+        // If /all endpoint fails, try the base endpoint
+        response = await axios.get(`${API_URL}?${queryParams.toString()}`);
+      }
+
+      console.log("Timesheet data fetched:", response.data);
+
+      // Handle different response structures
+      let timesheetData;
+      if (Array.isArray(response.data)) {
+        timesheetData = response.data;
+      } else if (response.data.timesheets) {
+        timesheetData = response.data.timesheets;
+      } else if (response.data.data) {
+        timesheetData = response.data.data;
+      } else {
+        timesheetData = [];
+        console.error("Unexpected response format:", response.data);
+      }
+
+      // Log the first timesheet to see its structure
+      if (timesheetData.length > 0) {
+        console.log("Sample timesheet:", timesheetData[0]);
+      }
+
+      // Enhance timesheet data with employee names if needed
+      const enhancedTimesheetData = timesheetData.map((timesheet) => {
+        // If the timesheet already has an employeeName, use it
+        if (
+          timesheet.employeeName &&
+          timesheet.employeeName !== "Unknown Employee"
+        ) {
+          return timesheet;
+        }
+
+        // Otherwise, try to find the employee name from the employees list
+        const employeeId = timesheet.employeeId;
+        const employeeName = getEmployeeNameById(employeeId);
+
+        return {
+          ...timesheet,
+          employeeName: employeeName,
+        };
+      });
+
+      setTimesheets(enhancedTimesheetData);
+    } catch (error) {
+      console.error("Error fetching timesheets:", error);
+      setTimesheets([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateStats = (data) => {
+    if (!data || data.length === 0) {
+      setStats({
+        totalRecords: 0,
+        presentToday: 0,
+        lateToday: 0,
+        absentToday: 0,
+        averageWorkHours: 0,
+      });
+      return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const todayRecords = data.filter(
+      (record) =>
+        new Date(record.checkInTime).toISOString().split("T")[0] === today
+    );
+
+    const presentToday = todayRecords.length;
+
+    const lateToday = todayRecords.filter((record) => {
+      const checkInTime = new Date(record.checkInTime);
+      if (!checkInTime) return false;
+
+      // Assuming late is after 9:15 AM
+      return (
+        checkInTime.getHours() > 9 ||
+        (checkInTime.getHours() === 9 && checkInTime.getMinutes() > 15)
       );
-      setRows(response.data);
-    } catch (error) {
-      showSnackbar("Error searching records", "error");
-    }
+    }).length;
+
+    // Calculate average work hours
+    const recordsWithDuration = data.filter(
+      (record) => record.duration && !isNaN(parseFloat(record.duration))
+    );
+    const totalHours = recordsWithDuration.reduce(
+      (sum, record) => sum + parseFloat(record.duration) / 3600,
+      0
+    );
+    const averageWorkHours =
+      recordsWithDuration.length > 0
+        ? (totalHours / recordsWithDuration.length).toFixed(2)
+        : 0;
+
+    // Estimate absent employees (this would need to be refined based on your business logic)
+    const absentToday = employees.length - presentToday;
+
+    setStats({
+      totalRecords: data.length,
+      presentToday,
+      lateToday,
+      absentToday: absentToday > 0 ? absentToday : 0,
+      averageWorkHours,
+    });
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
   };
 
   const handleFilterClick = (event) => {
@@ -184,121 +465,311 @@ const AttendanceRecords = () => {
     setAnchorEl(null);
   };
 
-  const handleFilterChange = async (name, value) => {
-    const newFilterValues = {
+  const handleEmployeeChange = (event, newValue) => {
+    setFilterValues({
+      ...filterValues,
+      employee: newValue,
+    });
+  };
+
+  const handleFilterChange = (name, value) => {
+    setFilterValues({
       ...filterValues,
       [name]: value,
-    };
-    setFilterValues(newFilterValues);
-
-    try {
-      const params = new URLSearchParams();
-      if (newFilterValues.employee)
-        params.append("employee", newFilterValues.employee);
-      if (newFilterValues.workType)
-        params.append("workType", newFilterValues.workType);
-      if (newFilterValues.shift) params.append("shift", newFilterValues.shift);
-
-      const response = await axios.get(
-        `${API_URL}/filter?${params.toString()}`
-      );
-      setRows(response.data);
-    } catch (error) {
-      showSnackbar("Error applying filters", "error");
-    }
-  };
-
-  const handleCreateRecord = async () => {
-    try {
-      const formattedData = {
-        ...newRecord,
-        date: new Date(newRecord.date).toISOString(),
-        minHour: Number(newRecord.minHour) || 0,
-      };
-
-      const response = await axios.post(API_URL, formattedData);
-      if (response.data) {
-        setCreateOpen(false);
-        fetchAttendanceRecords();
-        showSnackbar("Attendance record created successfully");
-        setNewRecord({
-          name: "",
-          empId: "",
-          date: "",
-          checkIn: "",
-          checkOut: "",
-          shift: "",
-          workType: "",
-          minHour: "",
-          atWork: "",
-          overtime: "",
-          comment: "",
-        });
-      }
-    } catch (error) {
-      showSnackbar("Error creating record", "error");
-    }
-  };
-
-  const handleEdit = (row) => {
-    setEditRecord({
-      ...row,
-      date: new Date(row.date).toISOString().split("T")[0],
     });
-    setEditOpen(true);
   };
 
-  const handleUpdateRecord = async () => {
-    try {
-      const formattedData = {
-        ...editRecord,
-        date: new Date(editRecord.date).toISOString(),
-        minHour: Number(editRecord.minHour) || 0,
+  const handleDateRangeChange = (range) => {
+    let startDate = null;
+    let endDate = null;
+    const today = new Date();
+
+    switch (range) {
+      case "today":
+        startDate = today;
+        endDate = today;
+        break;
+      case "week":
+        startDate = startOfWeek(today);
+        endDate = endOfWeek(today);
+        break;
+      case "month":
+        startDate = startOfMonth(today);
+        endDate = endOfMonth(today);
+        break;
+      case "custom":
+        // Keep existing custom dates
+        startDate = filterValues.startDate;
+        endDate = filterValues.endDate;
+        break;
+      default:
+        // 'all' - no date filtering
+        break;
+    }
+
+    setFilterValues({
+      ...filterValues,
+      dateRange: range,
+      startDate,
+      endDate,
+    });
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const handleApplyFilters = () => {
+    fetchTimesheets();
+    handleFilterClose();
+  };
+
+  const exportToExcel = () => {
+    if (filteredData.length === 0) return;
+
+    // Create worksheet data
+    const worksheetData = filteredData.map((row) => {
+      // Format dates properly
+      let checkInDate = "N/A";
+      let checkInTime = "N/A";
+      let checkOutTime = "N/A";
+
+      try {
+        if (row.checkInTime) {
+          const checkIn = new Date(row.checkInTime);
+          if (!isNaN(checkIn.getTime())) {
+            checkInDate = checkIn.toLocaleDateString();
+            checkInTime = checkIn.toLocaleTimeString();
+          }
+        }
+
+        if (row.checkOutTime) {
+          const checkOut = new Date(row.checkOutTime);
+          if (!isNaN(checkOut.getTime())) {
+            checkOutTime = checkOut.toLocaleTimeString();
+          }
+        }
+      } catch (error) {
+        console.error("Error formatting dates for Excel:", error);
+      }
+
+      // Calculate duration in hours
+      const durationHours = row.duration
+        ? (row.duration / 3600).toFixed(2)
+        : "N/A";
+
+      // Determine status
+      let status = "N/A";
+      if (row.checkInTime) {
+        try {
+          const checkIn = new Date(row.checkInTime);
+          if (!isNaN(checkIn.getTime())) {
+            if (
+              checkIn.getHours() > 9 ||
+              (checkIn.getHours() === 9 && checkIn.getMinutes() > 15)
+            ) {
+              status = "Late";
+            } else if (!row.checkOutTime) {
+              status = "Checked In";
+            } else {
+              status = "Present";
+            }
+          }
+        } catch (error) {
+          console.error("Error determining status for Excel:", error);
+        }
+      } else {
+        status = "Absent";
+      }
+
+      // Return a row object with named properties (this becomes a row in the Excel file)
+      return {
+        "Employee Name": row.employeeName || "Unknown Employee",
+        "Employee ID": row.employeeId || "N/A",
+        Date: checkInDate,
+        "Check In": checkInTime,
+        "Check Out": checkOutTime,
+        "Duration (hours)": durationHours,
+        Status: status,
       };
+    });
 
-      await axios.put(`${API_URL}/${editRecord._id}`, formattedData);
-      setEditOpen(false);
-      fetchAttendanceRecords();
-      showSnackbar("Record updated successfully");
-    } catch (error) {
-      showSnackbar("Error updating record", "error");
+    // Create a worksheet
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+
+    // Create a workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance Records");
+
+    // Generate Excel file
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    // Create a Blob from the buffer
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    // Create a download link and trigger the download
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `attendance_records_${
+      new Date().toISOString().split("T")[0]
+    }.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const getFilteredData = () => {
+    return timesheets.filter((timesheet) => {
+      // Search term filter (search by employee name or ID)
+      if (
+        searchTerm &&
+        !(
+          timesheet.employeeName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          timesheet.employeeId?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  const getSortedData = (data) => {
+    if (!sortConfig.key) return data;
+
+    return [...data].sort((a, b) => {
+      if (
+        sortConfig.key === "checkInTime" ||
+        sortConfig.key === "checkOutTime"
+      ) {
+        const dateA = new Date(a[sortConfig.key] || 0);
+        const dateB = new Date(b[sortConfig.key] || 0);
+        return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
+      }
+
+      if (sortConfig.key === "duration") {
+        const durationA = a[sortConfig.key] || 0;
+        const durationB = b[sortConfig.key] || 0;
+        return sortConfig.direction === "asc"
+          ? durationA - durationB
+          : durationB - durationA;
+      }
+
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+  };
+
+  const formatDuration = (seconds) => {
+    if (!seconds || isNaN(seconds)) return "0h 0m";
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
+
+  const getAttendanceStatus = (timesheet) => {
+    if (!timesheet.checkInTime) {
+      return (
+        <Chip
+          label="Absent"
+          size="small"
+          sx={{
+            backgroundColor: "#ffebee",
+            color: "#d32f2f",
+            fontWeight: 500,
+          }}
+        />
+      );
     }
-  };
 
-  const handleDeleteClick = (record) => {
-    setItemToDelete(record);
-    setDeleteDialogOpen(true);
-  };
+    const checkInTime = new Date(timesheet.checkInTime);
 
-  const handleConfirmDelete = async () => {
-    try {
-      setLoading(true);
-      await axios.delete(`${API_URL}/${itemToDelete._id}`);
-      fetchAttendanceRecords();
-      showSnackbar("Record deleted successfully");
-      setDeleteDialogOpen(false);
-      setItemToDelete(null);
-    } catch (error) {
-      showSnackbar("Error deleting record", "error");
-    } finally {
-      setLoading(false);
+    // If check-in is after 9:15 AM, consider it late
+    if (
+      checkInTime.getHours() > 9 ||
+      (checkInTime.getHours() === 9 && checkInTime.getMinutes() > 15)
+    ) {
+      return (
+        <Chip
+          label="Late"
+          size="small"
+          sx={{
+            backgroundColor: "#fff8e1",
+            color: "#ffa000",
+            fontWeight: 500,
+          }}
+        />
+      );
     }
+
+    // If there's no checkout time but there is a check-in time
+    if (!timesheet.checkOutTime && timesheet.checkInTime) {
+      return (
+        <Chip
+          label="Checked In"
+          size="small"
+          sx={{
+            backgroundColor: "#e8f5e9",
+            color: "#4caf50",
+            fontWeight: 500,
+          }}
+        />
+      );
+    }
+
+    // Otherwise, present and completed the day
+    return (
+      <Chip
+        label="Present"
+        size="small"
+        sx={{
+          backgroundColor: "#e8f5e9",
+          color: "#4caf50",
+          fontWeight: 500,
+        }}
+      />
+    );
   };
 
-  const handleCloseDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-    setItemToDelete(null);
-  };
+  const filteredData = getFilteredData();
+  const sortedData = getSortedData(filteredData);
+  const paginatedData = sortedData.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
-  const handlePreview = (row) => {
-    setPreviewData(row);
-    setPreviewOpen(true);
-  };
-
-  // Render mobile card view for attendance records
-  const renderAttendanceCard = (row) => (
+  // Render attendance card for mobile view
+  const renderAttendanceCard = (timesheet) => (
     <Card
-      key={row._id}
+      key={timesheet._id}
       sx={{ mb: 2, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
     >
       <CardContent sx={{ p: 2 }}>
@@ -318,26 +789,18 @@ const AttendanceRecords = () => {
                 height: 40,
               }}
             >
-              {row.name[0]}
+              {timesheet.employeeName ? timesheet.employeeName[0] : "U"}
             </Avatar>
             <Box>
               <Typography variant="subtitle1" fontWeight={500}>
-                {row.name}
+                {timesheet.employeeName || "Unknown Employee"}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {row.empId}
+                {timesheet.employeeId || "No ID"}
               </Typography>
             </Box>
           </Box>
-          <Chip
-            label={row.workType || "Regular"}
-            size="small"
-            sx={{
-              backgroundColor: alpha(theme.palette.primary.light, 0.1),
-              color: theme.palette.primary.main,
-              fontWeight: 500,
-            }}
-          />
+          {getAttendanceStatus(timesheet)}
         </Box>
 
         <Divider sx={{ my: 1.5 }} />
@@ -348,102 +811,43 @@ const AttendanceRecords = () => {
               Date:
             </Typography>
             <Typography variant="body2" fontWeight={500}>
-              {new Date(row.date).toLocaleDateString()} ({row.day})
+              {timesheet.checkInTime
+                ? new Date(timesheet.checkInTime).toLocaleDateString()
+                : "N/A"}
             </Typography>
           </Box>
 
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography variant="body2" color="text.secondary">
-              Check In/Out:
+              Check In:
             </Typography>
             <Typography variant="body2" fontWeight={500}>
-              {row.checkIn} - {row.checkOut || "-"}
+              {timesheet.checkInTime
+                ? new Date(timesheet.checkInTime).toLocaleTimeString()
+                : "N/A"}
             </Typography>
           </Box>
 
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography variant="body2" color="text.secondary">
-              Shift:
+              Check Out:
             </Typography>
             <Typography variant="body2" fontWeight={500}>
-              {row.shift || "-"}
+              {timesheet.checkOutTime
+                ? new Date(timesheet.checkOutTime).toLocaleTimeString()
+                : "N/A"}
             </Typography>
           </Box>
 
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography variant="body2" color="text.secondary">
-              Hours:
+              Duration:
             </Typography>
             <Typography variant="body2" fontWeight={500}>
-              Min: {row.minHour || "-"} | At Work: {row.atWork || "-"} | OT:{" "}
-              {row.overtime || "-"}
+              {formatDuration(timesheet.duration)}
             </Typography>
           </Box>
-
-          {row.comment && (
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                Comment:
-              </Typography>
-              <Typography variant="body2" sx={{ mt: 0.5, fontStyle: "italic" }}>
-                {row.comment}
-              </Typography>
-            </Box>
-          )}
         </Stack>
-
-        <Box
-          sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}
-        >
-          <IconButton
-            size="small"
-            onClick={() => handlePreview(row)}
-            sx={{
-              color: theme.palette.info.main,
-              "&:hover": {
-                backgroundColor: alpha(theme.palette.info.main, 0.1),
-              },
-            }}
-          >
-            <Visibility />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => handleEdit(row)}
-            sx={{
-              color: theme.palette.primary.main,
-              "&:hover": {
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-              },
-            }}
-          >
-            <Edit />
-          </IconButton>
-          {/* <IconButton
-            size="small"
-            onClick={() => handleDeleteRecord(row._id)}
-            sx={{
-              color: theme.palette.error.main,
-              "&:hover": {
-                backgroundColor: alpha(theme.palette.error.main, 0.1),
-              },
-            }}
-          >
-            <Cancel />
-          </IconButton> */}
-          <IconButton
-            size="small"
-            onClick={() => handleDeleteClick(row)}
-            sx={{
-              color: theme.palette.error.main,
-              "&:hover": {
-                backgroundColor: alpha(theme.palette.error.main, 0.1),
-              },
-            }}
-          >
-            <Cancel />
-          </IconButton>
-        </Box>
       </CardContent>
     </Card>
   );
@@ -469,6 +873,154 @@ const AttendanceRecords = () => {
         Attendance Records
       </Typography>
 
+      {/* Stats Cards */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              bgcolor: "#e3f2fd",
+              border: "1px solid #90caf9",
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: "#1976d2",
+                borderRadius: "50%",
+                p: 1,
+                mr: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Person sx={{ color: "white" }} />
+            </Box>
+            <Box>
+              <Typography variant="body2" color="#1976d2" fontWeight={500}>
+                Total Records
+              </Typography>
+              <Typography variant="h6" fontWeight={600}>
+                {stats.totalRecords}
+              </Typography>
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              bgcolor: "#e8f5e9",
+              border: "1px solid #a5d6a7",
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: "#4caf50",
+                borderRadius: "50%",
+                p: 1,
+                mr: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CalendarMonth sx={{ color: "white" }} />
+            </Box>
+            <Box>
+              <Typography variant="body2" color="#4caf50" fontWeight={500}>
+                Present Today
+              </Typography>
+              <Typography variant="h6" fontWeight={600}>
+                {stats.presentToday}
+              </Typography>
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              bgcolor: "#fff8e1",
+              border: "1px solid #ffe082",
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: "#ffa000",
+                borderRadius: "50%",
+                p: 1,
+                mr: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <AccessTime sx={{ color: "white" }} />
+            </Box>
+            <Box>
+              <Typography variant="body2" color="#ffa000" fontWeight={500}>
+                Late Today
+              </Typography>
+              <Typography variant="h6" fontWeight={600}>
+                {stats.lateToday}
+              </Typography>
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              bgcolor: "#e1f5fe",
+              border: "1px solid #81d4fa",
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: "#03a9f4",
+                borderRadius: "50%",
+                p: 1,
+                mr: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <AccessTime sx={{ color: "white" }} />
+            </Box>
+            <Box>
+              <Typography variant="body2" color="#03a9f4" fontWeight={500}>
+                Avg. Work Hours
+              </Typography>
+              <Typography variant="h6" fontWeight={600}>
+                {stats.averageWorkHours}
+              </Typography>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Search and Filter Bar */}
       <StyledPaper sx={{ p: isMobile ? 2 : 3 }}>
         <Box
           display="flex"
@@ -482,7 +1034,7 @@ const AttendanceRecords = () => {
           }}
         >
           <SearchTextField
-            placeholder="Search records..."
+            placeholder="Search by employee name or ID..."
             value={searchTerm}
             onChange={handleSearch}
             size="small"
@@ -517,9 +1069,22 @@ const AttendanceRecords = () => {
             </Button>
 
             <Button
+              variant="outlined"
+              startIcon={<Refresh />}
+              onClick={fetchTimesheets}
+              sx={{
+                height: 40,
+                whiteSpace: "nowrap",
+                flex: isMobile ? 1 : "none",
+              }}
+            >
+              Refresh
+            </Button>
+
+            <Button
               variant="contained"
-              startIcon={<Add />}
-              onClick={() => setCreateOpen(true)}
+              startIcon={<FileDownload />}
+              onClick={exportToExcel}
               sx={{
                 height: 40,
                 background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
@@ -530,258 +1095,11 @@ const AttendanceRecords = () => {
                 flex: isMobile ? 1 : "none",
               }}
             >
-              New Record
+              Export
             </Button>
           </Box>
         </Box>
       </StyledPaper>
-
-      {isMobile ? (
-        // Mobile view - card layout
-        <Box>
-          {rows.length > 0 ? (
-            rows.map((row) => renderAttendanceCard(row))
-          ) : (
-            <Box sx={{ textAlign: "center", py: 4 }}>
-              <Typography variant="body1" color="text.secondary">
-                No attendance records found
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      ) : (
-        // Desktop/Tablet view - table layout
-        <TableContainer
-          component={Paper}
-          sx={{
-            borderRadius: 2,
-            boxShadow:
-              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-            overflow: "auto",
-            maxWidth: "100%",
-            maxHeight: { xs: 350, sm: 400, md: 450 },
-            overflowY: "auto",
-            overflowX: "auto",
-            mb: 4,
-            "& .MuiTableContainer-root": {
-              scrollbarWidth: "thin",
-              "&::-webkit-scrollbar": {
-                width: 8,
-                height: 8,
-              },
-              "&::-webkit-scrollbar-track": {
-                backgroundColor: alpha(theme.palette.primary.light, 0.1),
-                borderRadius: 8,
-              },
-              "&::-webkit-scrollbar-thumb": {
-                backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                borderRadius: 8,
-                "&:hover": {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.3),
-                },
-              },
-            },
-          }}
-        >
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <StyledTableCell
-                  sx={{
-                    backgroundColor: theme.palette.primary.main,
-                    color: theme.palette.common.white,
-                    fontSize: 14,
-                    fontWeight: "bold",
-                    padding: theme.spacing(2),
-                    whiteSpace: "nowrap",
-                    minWidth: 180,
-                  }}
-                >
-                  Employee
-                </StyledTableCell>
-                <StyledTableCell sx={{ minWidth: 130 }}>Date</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: 150 }}>
-                  Check In/Out
-                </StyledTableCell>
-                <StyledTableCell sx={{ minWidth: 120 }}>Shift</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: 130 }}>
-                  Work Type
-                </StyledTableCell>
-                <StyledTableCell sx={{ minWidth: 180 }}>Hours</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: 120, textAlign: "center" }}>
-                  Actions
-                </StyledTableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.length > 0 ? (
-                rows.map((row) => (
-                  <StyledTableRow
-                    key={row._id}
-                    sx={{
-                      "&:nth-of-type(odd)": {
-                        backgroundColor: alpha(
-                          theme.palette.primary.light,
-                          0.05
-                        ),
-                      },
-                      "&:hover": {
-                        backgroundColor: alpha(
-                          theme.palette.primary.light,
-                          0.1
-                        ),
-                        transition: "background-color 0.2s ease",
-                      },
-                      // Hide last border
-                      "&:last-child td, &:last-child th": {
-                        borderBottom: 0,
-                      },
-                    }}
-                  >
-                    <TableCell>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Avatar
-                          sx={{
-                            bgcolor: theme.palette.primary.main,
-                            width: 32,
-                            height: 32,
-                          }}
-                        >
-                          {row.name[0]}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body2" fontWeight={500}>
-                            {row.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {row.empId}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {new Date(row.date).toLocaleDateString()}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {row.day}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {row.checkIn} - {row.checkOut || "-"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {row.shift || "-"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={row.workType || "Regular"}
-                        size="small"
-                        sx={{
-                          backgroundColor: alpha(
-                            theme.palette.primary.light,
-                            0.1
-                          ),
-                          color: theme.palette.primary.main,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        Min: {row.minHour || "-"} | At Work: {row.atWork || "-"}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Overtime: {row.overtime || "-"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          gap: 1,
-                          justifyContent: "center",
-                        }}
-                      >
-                        <IconButton
-                          size="small"
-                          onClick={() => handlePreview(row)}
-                          sx={{
-                            color: theme.palette.info.main,
-                            backgroundColor: alpha(
-                              theme.palette.info.main,
-                              0.1
-                            ),
-                            "&:hover": {
-                              backgroundColor: alpha(
-                                theme.palette.info.main,
-                                0.2
-                              ),
-                            },
-                          }}
-                        >
-                          <Visibility fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEdit(row)}
-                          sx={{
-                            color: theme.palette.primary.main,
-                            backgroundColor: alpha(
-                              theme.palette.primary.main,
-                              0.1
-                            ),
-                            "&:hover": {
-                              backgroundColor: alpha(
-                                theme.palette.primary.main,
-                                0.2
-                              ),
-                            },
-                          }}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDeleteClick(row)}
-                          sx={{
-                            color: theme.palette.error.main,
-                            backgroundColor: alpha(
-                              theme.palette.error.main,
-                              0.1
-                            ),
-                            "&:hover": {
-                              backgroundColor: alpha(
-                                theme.palette.error.main,
-                                0.2
-                              ),
-                            },
-                          }}
-                        >
-                          <Cancel fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </TableCell>
-                  </StyledTableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      No attendance records found
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
 
       {/* Filter Menu */}
       <FilterMenu
@@ -806,1156 +1124,388 @@ const AttendanceRecords = () => {
               color: theme.palette.primary.main,
             }}
           >
-            Filter Records
+            Filter Attendance Records
           </Typography>
           <Stack spacing={2}>
-            <TextField
-              label="Employee Name"
-              value={filterValues.employee}
-              onChange={(e) => handleFilterChange("employee", e.target.value)}
-              size="small"
-              fullWidth
-            />
-            <TextField
-              label="Work Type"
-              value={filterValues.workType}
-              onChange={(e) => handleFilterChange("workType", e.target.value)}
-              size="small"
-              fullWidth
-              select
-            >
-              <MenuItem value="">All</MenuItem>
-              <MenuItem value="Regular">Regular</MenuItem>
-              <MenuItem value="Remote">Remote</MenuItem>
-              <MenuItem value="Hybrid">Hybrid</MenuItem>
-            </TextField>
-            <TextField
-              label="Shift"
-              value={filterValues.shift}
-              onChange={(e) => handleFilterChange("shift", e.target.value)}
-              size="small"
-              fullWidth
-              select
-            >
-              <MenuItem value="">All</MenuItem>
-              <MenuItem value="Morning">Morning</MenuItem>
-              <MenuItem value="Evening">Evening</MenuItem>
-              <MenuItem value="Night">Night</MenuItem>
-            </TextField>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setFilterValues({
-                  employee: "",
-                  workType: "",
-                  shift: "",
-                });
-                fetchAttendanceRecords();
-                handleFilterClose();
+            {/* <Autocomplete
+  options={employees}
+  getOptionLabel={(option) => {
+    // Handle different employee data structures
+    if (option.name) return option.name;
+    if (option.personalInfo) {
+      return `${option.personalInfo.firstName || ''} ${option.personalInfo.lastName || ''}`;
+    }
+    return option.employeeId || "Unknown Employee";
+  }}
+  value={filterValues.employee}
+  onChange={handleEmployeeChange}
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Employee"
+      size="small"
+      fullWidth
+    />
+  )}
+/> */}
+            <Autocomplete
+              options={employees}
+              getOptionLabel={(option) => {
+                // Handle different employee data structures
+                if (option.name) return option.name;
+                if (option.personalInfo) {
+                  return `${option.personalInfo.firstName || ""} ${
+                    option.personalInfo.lastName || ""
+                  }`;
+                }
+                return option.employeeId || "Unknown Employee";
               }}
-              fullWidth
-            >
-              Clear Filters
-            </Button>
+              value={filterValues.employee}
+              onChange={handleEmployeeChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Employee"
+                  size="small"
+                  fullWidth
+                />
+              )}
+            />
+
+            <FormControl fullWidth size="small">
+              <InputLabel id="status-filter-label">Status</InputLabel>
+              <Select
+                labelId="status-filter-label"
+                value={filterValues.status}
+                onChange={(e) => handleFilterChange("status", e.target.value)}
+                label="Status"
+              >
+                <MenuItem value="">All Statuses</MenuItem>
+                <MenuItem value="Present">Present</MenuItem>
+                <MenuItem value="Late">Late</MenuItem>
+                <MenuItem value="Absent">Absent</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth size="small">
+              <InputLabel id="date-range-filter-label">Date Range</InputLabel>
+              <Select
+                labelId="date-range-filter-label"
+                value={filterValues.dateRange}
+                onChange={(e) => handleDateRangeChange(e.target.value)}
+                label="Date Range"
+              >
+                <MenuItem value="all">All Dates</MenuItem>
+                <MenuItem value="today">Today</MenuItem>
+                <MenuItem value="week">This Week</MenuItem>
+                <MenuItem value="month">This Month</MenuItem>
+                <MenuItem value="custom">Custom Range</MenuItem>
+              </Select>
+            </FormControl>
+
+            {filterValues.dateRange === "custom" && (
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <DatePicker
+                      label="Start Date"
+                      value={filterValues.startDate}
+                      onChange={(date) => handleFilterChange("startDate", date)}
+                      renderInput={(params) => (
+                        <TextField size="small" {...params} />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <DatePicker
+                      label="End Date"
+                      value={filterValues.endDate}
+                      onChange={(date) => handleFilterChange("endDate", date)}
+                      renderInput={(params) => (
+                        <TextField size="small" {...params} />
+                      )}
+                    />
+                  </Grid>
+                </Grid>
+              </LocalizationProvider>
+            )}
+
+            <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setFilterValues({
+                    employee: null,
+                    status: "",
+                    dateRange: "month",
+                    startDate: startOfMonth(new Date()),
+                    endDate: endOfMonth(new Date()),
+                  });
+                }}
+                fullWidth
+              >
+                Clear
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleApplyFilters}
+                fullWidth
+              >
+                Apply
+              </Button>
+            </Box>
           </Stack>
         </Box>
       </FilterMenu>
 
-      {/* Create Record Dialog */}
-      <Dialog
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        fullWidth
-        maxWidth="md"
-        fullScreen={window.innerWidth < 600} // Full screen on mobile
-        PaperProps={{
-          sx: {
-            width: { xs: "100%", sm: "600px" },
-            maxWidth: "100%",
-            borderRadius: { xs: 0, sm: "20px" },
-            margin: { xs: 0, sm: 2 },
-            overflow: "hidden",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            padding: "24px 32px",
-          }}
-        >
-          Create New Attendance Record
-        </DialogTitle>
-
-        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Employee Name"
-                  value={newRecord.name}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, name: e.target.value })
-                  }
-                  fullWidth
-                  required
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#1976d2",
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Employee ID"
-                  value={newRecord.empId}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, empId: e.target.value })
-                  }
-                  fullWidth
-                  required
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Date"
-                  type="date"
-                  value={newRecord.date}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, date: e.target.value })
-                  }
-                  fullWidth
-                  required
-                  InputLabelProps={{ shrink: true }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Day"
-                  value={newRecord.day}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, day: e.target.value })
-                  }
-                  fullWidth
-                  required
-                  placeholder="e.g. Monday"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Check In"
-                  value={newRecord.checkIn}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, checkIn: e.target.value })
-                  }
-                  fullWidth
-                  required
-                  placeholder="e.g. 09:00 AM"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Check Out"
-                  value={newRecord.checkOut}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, checkOut: e.target.value })
-                  }
-                  fullWidth
-                  placeholder="e.g. 05:00 PM"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Shift"
-                  value={newRecord.shift}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, shift: e.target.value })
-                  }
-                  fullWidth
-                  select
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="Morning">Morning</MenuItem>
-                  <MenuItem value="Evening">Evening</MenuItem>
-                  <MenuItem value="Night">Night</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Work Type"
-                  value={newRecord.workType}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, workType: e.target.value })
-                  }
-                  fullWidth
-                  select
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="Regular">Regular</MenuItem>
-                  <MenuItem value="Remote">Remote</MenuItem>
-                  <MenuItem value="Hybrid">Hybrid</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  label="Minimum Hours"
-                  type="number"
-                  value={newRecord.minHour}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, minHour: e.target.value })
-                  }
-                  fullWidth
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">hours</InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  label="At Work"
-                  type="number"
-                  value={newRecord.atWork}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, atWork: e.target.value })
-                  }
-                  fullWidth
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">hours</InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  label="Overtime"
-                  type="number"
-                  value={newRecord.overtime}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, overtime: e.target.value })
-                  }
-                  fullWidth
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">hours</InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Comment"
-                  value={newRecord.comment}
-                  onChange={(e) =>
-                    setNewRecord({ ...newRecord, comment: e.target.value })
-                  }
-                  fullWidth
-                  multiline
-                  rows={4}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        </DialogContent>
-
-        <DialogActions
-          sx={{
-            padding: "24px 32px",
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
-        >
-          <Button
-            onClick={() => setCreateOpen(false)}
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleCreateRecord}
-            variant="contained"
-            disabled={
-              !newRecord.name ||
-              !newRecord.empId ||
-              !newRecord.date ||
-              !newRecord.checkIn
-            }
-            sx={{
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              fontSize: "0.95rem",
-              textTransform: "none",
-              padding: "8px 32px",
-              borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-              color: "white",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-              },
-            }}
-          >
-            Create Record
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Edit Record Dialog */}
-      <Dialog
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        fullScreen={window.innerWidth < 600} // Full screen on mobile
-        PaperProps={{
-          sx: {
-            width: { xs: "100%", sm: "600px" },
-            maxWidth: "100%",
-            borderRadius: { xs: 0, sm: "20px" },
-            margin: { xs: 0, sm: 2 },
-            overflow: "hidden",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-            color: "white",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            padding: "24px 32px",
-          }}
-        >
-          Edit Attendance Record
-        </DialogTitle>
-        <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
-          {editRecord && (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Employee Name"
-                    value={editRecord.name}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, name: e.target.value })
-                    }
-                    fullWidth
-                    required
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                      "& .MuiInputLabel-root.Mui-focused": {
-                        color: "#1976d2",
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Employee ID"
-                    value={editRecord.empId}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, empId: e.target.value })
-                    }
-                    fullWidth
-                    required
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Date"
-                    type="date"
-                    value={editRecord.date}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, date: e.target.value })
-                    }
-                    fullWidth
-                    required
-                    InputLabelProps={{ shrink: true }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Day"
-                    value={editRecord.day}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, day: e.target.value })
-                    }
-                    fullWidth
-                    required
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Check In"
-                    value={editRecord.checkIn}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, checkIn: e.target.value })
-                    }
-                    fullWidth
-                    required
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Check Out"
-                    value={editRecord.checkOut}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, checkOut: e.target.value })
-                    }
-                    fullWidth
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Shift"
-                    value={editRecord.shift}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, shift: e.target.value })
-                    }
-                    fullWidth
-                    select
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  >
-                    <MenuItem value="Morning">Morning</MenuItem>
-                    <MenuItem value="Evening">Evening</MenuItem>
-                    <MenuItem value="Night">Night</MenuItem>
-                  </TextField>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Work Type"
-                    value={editRecord.workType}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, workType: e.target.value })
-                    }
-                    fullWidth
-                    select
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  >
-                    <MenuItem value="Regular">Regular</MenuItem>
-                    <MenuItem value="Remote">Remote</MenuItem>
-                    <MenuItem value="Hybrid">Hybrid</MenuItem>
-                  </TextField>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    label="Minimum Hours"
-                    type="number"
-                    value={editRecord.minHour}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, minHour: e.target.value })
-                    }
-                    fullWidth
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">hours</InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    label="At Work"
-                    type="number"
-                    value={editRecord.atWork}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, atWork: e.target.value })
-                    }
-                    fullWidth
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">hours</InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    label="Overtime"
-                    type="number"
-                    value={editRecord.overtime}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, overtime: e.target.value })
-                    }
-                    fullWidth
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">hours</InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Comment"
-                    value={editRecord.comment}
-                    onChange={(e) =>
-                      setEditRecord({ ...editRecord, comment: e.target.value })
-                    }
-                    fullWidth
-                    multiline
-                    rows={4}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions
-          sx={{
-            padding: "24px 32px",
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
-        >
-          <Button
-            onClick={() => setEditOpen(false)}
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleUpdateRecord}
-            variant="contained"
-            disabled={
-              !editRecord?.name ||
-              !editRecord?.empId ||
-              !editRecord?.date ||
-              !editRecord?.checkIn
-            }
-            sx={{
-              background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-              fontSize: "0.95rem",
-              textTransform: "none",
-              padding: "8px 32px",
-              borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-              color: "white",
-              "&:hover": {
-                background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-              },
-            }}
-          >
-            Update Record
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Preview Dialog */}
-      <Dialog
-        open={previewOpen}
-        onClose={() => setPreviewOpen(false)}
-        fullWidth
-        maxWidth="sm"
-        fullScreen={isMobile}
-      >
-        <DialogTitle
-          sx={{
-            backgroundColor: theme.palette.info.main,
-            color: "white",
-            fontWeight: 600,
-          }}
-        >
-          Attendance Record Details
-        </DialogTitle>
-        <DialogContent sx={{ p: isMobile ? 2 : 3, pt: isMobile ? 2 : 3 }}>
-          {previewData && (
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Employee Name
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {previewData.name}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Employee ID
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {previewData.empId}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Date
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {new Date(previewData.date).toLocaleDateString()}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Day
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {previewData.day}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Check In
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {previewData.checkIn}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Check Out
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {previewData.checkOut || "-"}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Shift
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {previewData.shift || "-"}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Work Type
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {previewData.workType || "-"}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Minimum Hours
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {previewData.minHour || "-"} hours
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  At Work
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {previewData.atWork || "-"} hours
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Overtime
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {previewData.overtime || "-"} hours
-                </Typography>
-              </Grid>
-              {previewData.comment && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Comment
-                  </Typography>
-                  <Typography variant="body1" gutterBottom>
-                    {previewData.comment}
-                  </Typography>
-                </Grid>
-              )}
-            </Grid>
-          )}
-        </DialogContent>
-        <DialogActions
-          sx={{
-            padding: "24px 32px",
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
-        >
-          <Button
-            onClick={() => setPreviewOpen(false)}
-            color="inherit"
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
-          >
-            Close
-          </Button>
-          {previewData && (
-            <Button
-              onClick={() => {
-                setPreviewOpen(false);
-                handleEdit(previewData);
-              }}
-              variant="contained"
-              color="primary"
-              sx={{
-                background: "linear-gradient(45deg, #1976d2, #64b5f6)",
-                fontSize: "0.95rem",
-                textTransform: "none",
-                padding: "8px 32px",
-                borderRadius: "10px",
-                boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
-                color: "white",
-                "&:hover": {
-                  background: "linear-gradient(45deg, #1565c0, #42a5f5)",
-                },
-              }}
-            >
-              Edit
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
-
-      {/* Floating Action Button for mobile */}
-      {isMobile && (
-        <Fab
-          color="primary"
-          aria-label="add"
-          sx={{
-            position: "fixed",
-            bottom: 16,
-            right: 16,
-            boxShadow: "0 4px 12px rgba(0, 0, 0, .2)",
-          }}
-          onClick={() => setCreateOpen(true)}
-        >
-          <Add />
-        </Fab>
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        PaperProps={{
-          sx: {
-            width: { xs: "95%", sm: "500px" },
-            maxWidth: "500px",
-            borderRadius: "20px",
-            overflow: "hidden",
-            margin: { xs: "8px", sm: "32px" },
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(45deg, #f44336, #ff7961)",
-            fontSize: { xs: "1.25rem", sm: "1.5rem" },
-            fontWeight: 600,
-            padding: { xs: "16px 24px", sm: "24px 32px" },
-            color: "white",
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-          }}
-        >
-          <Cancel />
-          Confirm Deletion
-        </DialogTitle>
-        <DialogContent
-          sx={{
-            padding: { xs: "24px", sm: "32px" },
-            backgroundColor: "#f8fafc",
-            paddingTop: { xs: "24px", sm: "32px" },
-          }}
-        >
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            Are you sure you want to delete this attendance record? This action
-            cannot be undone.
-          </Alert>
-          {itemToDelete && (
-            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
-              <Box
-                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
-              >
-                <Avatar
-                  sx={{
-                    bgcolor: theme.palette.primary.main,
-                    width: 40,
-                    height: 40,
-                  }}
-                >
-                  {itemToDelete.name ? itemToDelete.name[0] : "?"}
-                </Avatar>
-                <Box>
-                  <Typography variant="body1" fontWeight={600} color="#2c3e50">
-                    {itemToDelete.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {itemToDelete.empId}
+      {/* Loading State */}
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          {/* Mobile View - Cards */}
+          {isMobile ? (
+            <Box>
+              {paginatedData.length > 0 ? (
+                paginatedData.map((timesheet) =>
+                  renderAttendanceCard(timesheet)
+                )
+              ) : (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    No attendance records found
                   </Typography>
                 </Box>
-              </Box>
-
-              <Divider sx={{ mb: 2 }} />
-
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Date:
-                  </Typography>
-                  <Typography variant="body2" fontWeight={500}>
-                    {itemToDelete.date
-                      ? new Date(itemToDelete.date).toLocaleDateString()
-                      : "N/A"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Day:
-                  </Typography>
-                  <Typography variant="body2" fontWeight={500}>
-                    {itemToDelete.day || "N/A"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Check In:
-                  </Typography>
-                  <Typography variant="body2" fontWeight={500}>
-                    {itemToDelete.checkIn || "N/A"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Check Out:
-                  </Typography>
-                  <Typography variant="body2" fontWeight={500}>
-                    {itemToDelete.checkOut || "N/A"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Shift:
-                  </Typography>
-                  <Typography variant="body2" fontWeight={500}>
-                    {itemToDelete.shift || "N/A"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Work Type:
-                  </Typography>
-                  <Typography variant="body2" fontWeight={500}>
-                    {itemToDelete.workType || "Regular"}
-                  </Typography>
-                </Grid>
-              </Grid>
+              )}
             </Box>
-          )}
-        </DialogContent>
-        <DialogActions
-          sx={{
-            padding: { xs: "16px 24px", sm: "24px 32px" },
-            backgroundColor: "#f8fafc",
-            borderTop: "1px solid #e0e0e0",
-            gap: 2,
-          }}
-        >
-          <Button
-            onClick={handleCloseDeleteDialog}
-            sx={{
-              border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
-                color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            variant="contained"
-            color="error"
-            disabled={loading}
-            startIcon={
-              loading ? <CircularProgress size={20} color="inherit" /> : null
-            }
-            sx={{
-              background: "linear-gradient(45deg, #f44336, #ff7961)",
-              fontSize: "0.95rem",
-              textTransform: "none",
-              padding: "8px 32px",
-              borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
-              color: "white",
-              "&:hover": {
-                background: "linear-gradient(45deg, #d32f2f, #f44336)",
-              },
-            }}
-          >
-            {loading ? "Deleting..." : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          ) : (
+            /* Desktop/Tablet View - Table */
+            <TableContainer
+              component={Paper}
+              sx={{
+                borderRadius: 2,
+                boxShadow:
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                overflow: "auto",
+                maxWidth: "100%",
+                mb: 2,
+              }}
+            >
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <StyledTableCell
+                      onClick={() => handleSort("employeeName")}
+                      sx={{
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                        minWidth: 180,
+                      }}
+                    >
+                      Employee
+                      {sortConfig.key === "employeeName" &&
+                        (sortConfig.direction === "asc" ? (
+                          <ArrowUpward fontSize="small" />
+                        ) : (
+                          <ArrowDownward fontSize="small" />
+                        ))}
+                    </StyledTableCell>
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+                    <StyledTableCell
+                      onClick={() => handleSort("checkInTime")}
+                      sx={{
+                        cursor: "pointer",
+                        minWidth: 130,
+                      }}
+                    >
+                      Date
+                      {sortConfig.key === "checkInTime" &&
+                        (sortConfig.direction === "asc" ? (
+                          <ArrowUpward fontSize="small" />
+                        ) : (
+                          <ArrowDownward fontSize="small" />
+                        ))}
+                    </StyledTableCell>
+
+                    <StyledTableCell sx={{ minWidth: 130 }}>
+                      Check In
+                    </StyledTableCell>
+
+                    <StyledTableCell sx={{ minWidth: 130 }}>
+                      Check Out
+                    </StyledTableCell>
+
+                    <StyledTableCell
+                      onClick={() => handleSort("duration")}
+                      sx={{
+                        cursor: "pointer",
+                        minWidth: 120,
+                      }}
+                    >
+                      Duration
+                      {sortConfig.key === "duration" &&
+                        (sortConfig.direction === "asc" ? (
+                          <ArrowUpward fontSize="small" />
+                        ) : (
+                          <ArrowDownward fontSize="small" />
+                        ))}
+                    </StyledTableCell>
+
+                    <StyledTableCell sx={{ minWidth: 120 }}>
+                      Status
+                    </StyledTableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paginatedData.length > 0 ? (
+                    paginatedData.map((timesheet) => (
+                      <StyledTableRow
+                        key={timesheet._id}
+                        sx={{
+                          "&:nth-of-type(odd)": {
+                            backgroundColor: alpha(
+                              theme.palette.primary.light,
+                              0.05
+                            ),
+                          },
+                          "&:hover": {
+                            backgroundColor: alpha(
+                              theme.palette.primary.light,
+                              0.1
+                            ),
+                            transition: "background-color 0.2s ease",
+                          },
+                          // Hide last border
+                          "&:last-child td, &:last-child th": {
+                            borderBottom: 0,
+                          },
+                        }}
+                      >
+                        {/* <TableCell>
+                                              <Box
+                                                sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                                              >
+                                                <Avatar
+                                                  sx={{
+                                                    bgcolor: theme.palette.primary.main,
+                                                    width: 32,
+                                                    height: 32,
+                                                  }}
+                                                >
+                                                  {timesheet.employeeName ? timesheet.employeeName[0] : "U"}
+                                                </Avatar>
+                                                <Box>
+                                                  <Typography variant="body2" fontWeight={500}>
+                                                    {timesheet.employeeName || "Unknown Employee"}
+                                                  </Typography>
+                                                  <Typography variant="caption" color="text.secondary">
+                                                    {timesheet.employeeId || "No ID"}
+                                                  </Typography>
+                                                </Box>
+                                              </Box>
+                                            </TableCell> */}
+                        <TableCell>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Avatar
+                              sx={{
+                                bgcolor: theme.palette.primary.main,
+                                width: 32,
+                                height: 32,
+                              }}
+                            >
+                              {timesheet.employeeName
+                                ? timesheet.employeeName[0]
+                                : "U"}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" fontWeight={500}>
+                                {timesheet.employeeName || "Unknown Employee"}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {timesheet.employeeId || "No ID"}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+
+                        <TableCell>
+                          <Typography variant="body2">
+                            {timesheet.checkInTime
+                              ? new Date(
+                                  timesheet.checkInTime
+                                ).toLocaleDateString()
+                              : "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {timesheet.checkInTime
+                              ? new Date(
+                                  timesheet.checkInTime
+                                ).toLocaleTimeString()
+                              : "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {timesheet.checkOutTime
+                              ? new Date(
+                                  timesheet.checkOutTime
+                                ).toLocaleTimeString()
+                              : "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {formatDuration(timesheet.duration)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{getAttendanceStatus(timesheet)}</TableCell>
+                      </StyledTableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                        <Typography variant="body1" color="text.secondary">
+                          No attendance records found
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+
+          {/* Pagination */}
+          <TablePagination
+            component="div"
+            count={filteredData.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            sx={{
+              ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows":
+                {
+                  margin: 0,
+                },
+            }}
+          />
+        </>
+      )}
     </Box>
   );
 };

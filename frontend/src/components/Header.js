@@ -175,41 +175,84 @@ const getUserDisplayName = () => {
     }
   };
 
+  // const handleTimerClick = async () => {
+  //   if (isLoading) return;
+
+  //   setIsLoading(true);
+  //   try {
+  //     if (isTimerRunning) {
+  //       // Calculate duration in seconds
+  //       const checkInTime = new Date(startTime);
+  //       const checkOutTime = new Date();
+  //       const durationInSeconds = Math.floor(
+  //         (checkOutTime - checkInTime) / 1000
+  //       );
+
+  //       // Log out with duration
+  //       await timesheetService.checkOut(employeeId, durationInSeconds);
+  //       cleanupTimesheet();
+  //       setIsTimerRunning(false);
+  //       setTimer(0);
+  //       setStartTime(null);
+  //       localStorage.removeItem("checkInTime");
+  //       showToastMessage("Successfully logged out");
+  //     } else {
+  //       // Log in
+  //       const response = await timesheetService.checkIn(employeeId);
+  //       const checkInTime = new Date(response.data.checkInTime);
+  //       startTimerWithTime(checkInTime);
+  //       showToastMessage("Successfully logged in");
+  //     }
+  //   } catch (error) {
+  //     console.error("Timesheet operation failed:", error);
+  //     showToastMessage("Operation failed. Please try again.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+
+  // Inside the handleTimerClick function in Header.js
+
+
   const handleTimerClick = async () => {
-    if (isLoading) return;
+  if (isLoading) return;
 
-    setIsLoading(true);
-    try {
-      if (isTimerRunning) {
-        // Calculate duration in seconds
-        const checkInTime = new Date(startTime);
-        const checkOutTime = new Date();
-        const durationInSeconds = Math.floor(
-          (checkOutTime - checkInTime) / 1000
-        );
+  setIsLoading(true);
+  try {
+    if (isTimerRunning) {
+      // Calculate duration in seconds
+      const checkInTime = new Date(startTime);
+      const checkOutTime = new Date();
+      const durationInSeconds = Math.floor(
+        (checkOutTime - checkInTime) / 1000
+      );
 
-        // Log out with duration
-        await timesheetService.checkOut(employeeId, durationInSeconds);
-        cleanupTimesheet();
-        setIsTimerRunning(false);
-        setTimer(0);
-        setStartTime(null);
-        localStorage.removeItem("checkInTime");
-        showToastMessage("Successfully logged out");
-      } else {
-        // Log in
-        const response = await timesheetService.checkIn(employeeId);
-        const checkInTime = new Date(response.data.checkInTime);
-        startTimerWithTime(checkInTime);
-        showToastMessage("Successfully logged in");
-      }
-    } catch (error) {
-      console.error("Timesheet operation failed:", error);
-      showToastMessage("Operation failed. Please try again.");
-    } finally {
-      setIsLoading(false);
+      // Log out with duration
+      await timesheetService.checkOut(employeeId, durationInSeconds);
+      cleanupTimesheet();
+      setIsTimerRunning(false);
+      setTimer(0);
+      setStartTime(null);
+      localStorage.removeItem("checkInTime");
+      showToastMessage("Successfully logged out");
+    } else {
+      // Get employee name from profile data
+      const employeeName = getUserDisplayName();
+      
+      // Log in with employee name
+      const response = await timesheetService.checkIn(employeeId, employeeName);
+      const checkInTime = new Date(response.data.checkInTime);
+      startTimerWithTime(checkInTime);
+      showToastMessage("Successfully logged in");
     }
-  };
+  } catch (error) {
+    console.error("Timesheet operation failed:", error);
+    showToastMessage("Operation failed. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const showToastMessage = (message) => {
     setToastMessage(message);
