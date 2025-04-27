@@ -30,9 +30,14 @@ import workTypeRequestRoutes from './routes/workTypeRequestRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 import hiredEmployeeRoutes from './routes/hiredEmployeeRoutes.js';
 import timesheetRoutes from './routes/timesheetRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 import { fileURLToPath } from 'url';
 import { dirname} from "path";
+
+import { Server } from 'socket.io';
+import http from 'http';
+
 
 
 
@@ -65,6 +70,35 @@ const __dirname = path.dirname(__filename);
 dotenv.config()
 connectDB()
 const app = express()
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Set up Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('A user connected');
+  
+  // Handle user joining a room
+  socket.on('join', ({ userId }) => {
+    if (userId) {
+      socket.join(userId);
+      console.log(`User ${userId} joined their room`);
+    }
+  });
+  
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
+});
 
 
 
@@ -126,6 +160,7 @@ app.use('/api/hired-employees', hiredEmployeeRoutes);
 app.use('/api/shift-request', shiftRequestRoutes);
 app.use('/api/work-type-requests', workTypeRequestRoutes);
 app.use('/api/timesheet', timesheetRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 
  
@@ -152,8 +187,12 @@ app.use('/api/leave-requests', myLeaveRequestRoutes);
 app.use('/api/leave-requests', leaveRequestRoutes);
 // app.use('/api/documents', documentRoute);
 
+// After creating the io instance
+app.set('io', io);
+
+
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, console.log(`✨ Server running on port ${PORT}`.yellow.bold));
+server.listen(PORT, console.log(`✨ Server running on port ${PORT}`.yellow.bold));
 

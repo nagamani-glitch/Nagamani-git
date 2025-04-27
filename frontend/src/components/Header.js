@@ -30,37 +30,6 @@ import NotificationSidebar from "./NotificationSidebar";
 import { useNotifications } from "../context/NotificationContext";
 
 const Header = () => {
-  
-  // const { getUserUnreadCount } = useNotifications();
-  // const userUnreadCount = getUserUnreadCount(userId);
-  // const { toggleSidebar } = useSidebar();
-  // const [showProfileMenu, setShowProfileMenu] = useState(false);
-  // const [showNotifications, setShowNotifications] = useState(false);
-  // const [showCompanies, setShowCompanies] = useState(false);
-  // const [showToast, setShowToast] = useState(false);
-  // const [toastMessage, setToastMessage] = useState("");
-  // const [showNotificationSidebar, setShowNotificationSidebar] = useState(false);
-  // const profileMenuRef = useRef(null);
-  // const navbarCollapseRef = useRef(null);
-  // const navigate = useNavigate();
-  // const location = useLocation();
-  // const token = localStorage.getItem("token");
-  
-  // const [timer, setTimer] = useState(0);
-  // const [isTimerRunning, setIsTimerRunning] = useState(false);
-  // const [startTime, setStartTime] = useState(null);
-  // const timerIntervalRef = useRef(null);
-  // const timerStartTimeRef = useRef(null);
-  // const [isLoading, setIsLoading] = useState(false);
-  // // Add this state to track window width
-  // const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  // // Add this state to track if the navbar is expanded
-  // const [navExpanded, setNavExpanded] = useState(false);
-  // const [profileData, setProfileData] = useState(null);
-  // const [profileLoading, setProfileLoading] = useState(false);
-  // const employeeId = profileData?.Emp_ID || localStorage.getItem("employeeId") || "EMP123";
-  // const userId = localStorage.getItem("userId");
-
 // First, get all the hooks and context values
 const { toggleSidebar } = useSidebar();
 const { getUserUnreadCount } = useNotifications();
@@ -96,6 +65,7 @@ const employeeId = profileData?.Emp_ID || localStorage.getItem("employeeId") || 
 
 // Now you can safely use userId
 const userUnreadCount = getUserUnreadCount(userId);
+
 
   useEffect(() => {
     const fetchUserProfile = async () => {
