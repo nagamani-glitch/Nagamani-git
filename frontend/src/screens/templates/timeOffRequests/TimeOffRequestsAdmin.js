@@ -124,45 +124,93 @@ const TimeOffRequestsAdmin = () => {
     setReviewOpen(true);
   };
 
-  const handleReviewSubmit = async () => {
-    try {
-      setLoading(true);
+  // const handleReviewSubmit = async () => {
+  //   try {
+  //     setLoading(true);
       
-      const response = await axios.put(
-        `http://localhost:5000/api/time-off-requests/${selectedRequest._id}`,
-        {
-          ...reviewData,
-          reviewedBy: currentUserName
-        }
-      );
+  //     const response = await axios.put(
+  //       `http://localhost:5000/api/time-off-requests/${selectedRequest._id}`,
+  //       {
+  //         ...reviewData,
+  //         reviewedBy: currentUserName
+  //       }
+  //     );
       
-      if (response.data) {
-        showSnackbar(`Request ${reviewData.status.toLowerCase()} successfully`);
+  //     if (response.data) {
+  //       showSnackbar(`Request ${reviewData.status.toLowerCase()} successfully`);
         
-        // Send notification to the user
-        if (selectedRequest.userId && (reviewData.status === "Approved" || reviewData.status === "Rejected")) {
-          try {
-            await addNotification(
-              `Your time off request for ${new Date(selectedRequest.date).toLocaleDateString()} has been ${reviewData.status.toLowerCase()}`,
-              'timesheet',
-              null,
-              selectedRequest.userId
-            );
-          } catch (notifError) {
-            console.error("Error sending notification:", notifError);
-          }
-        }
+  //       // Send notification to the user
+  //       if (selectedRequest.userId && (reviewData.status === "Approved" || reviewData.status === "Rejected")) {
+  //         try {
+  //           await addNotification(
+  //             `Your time off request for ${new Date(selectedRequest.date).toLocaleDateString()} has been ${reviewData.status.toLowerCase()}`,
+  //             'timesheet',
+  //             null,
+  //             selectedRequest.userId
+  //           );
+  //         } catch (notifError) {
+  //           console.error("Error sending notification:", notifError);
+  //         }
+  //       }
         
-        fetchRequests();
-        setReviewOpen(false);
+  //       fetchRequests();
+  //       setReviewOpen(false);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating request:", error);
+  //     showSnackbar("Error updating request", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Update the handleReviewSubmit function in TimeOffRequestsAdmin.js
+
+const handleReviewSubmit = async () => {
+  try {
+    setLoading(true);
+    
+    const response = await axios.put(
+      `http://localhost:5000/api/time-off-requests/${selectedRequest._id}`,
+      {
+        ...reviewData,
+        reviewedBy: currentUserName
       }
-    } catch (error) {
-      console.error("Error updating request:", error);
-      showSnackbar("Error updating request", "error");
-    } finally {
-      setLoading(false);
+    );
+    
+    if (response.data) {
+      showSnackbar(`Request ${reviewData.status.toLowerCase()} successfully`);
+      
+      // Send notification to the user
+      if (selectedRequest.userId && (reviewData.status === "Approved" || reviewData.status === "Rejected")) {
+        try {
+          // First, add the notification to the database
+          const notificationResponse = await addNotification(
+            `Your time off request for ${new Date(selectedRequest.date).toLocaleDateString()} has been ${reviewData.status.toLowerCase()}`,
+            'timesheet',
+            null,
+            selectedRequest.userId
+          );
+          
+          // The socket.io server will automatically emit this notification
+          // to the connected client with the matching userId
+          
+          console.log(`Notification sent to user ${selectedRequest.userId}`);
+        } catch (notifError) {
+          console.error("Error sending notification:", notifError);
+        }
+      }
+      
+      fetchRequests();
+      setReviewOpen(false);
     }
-  };
+  } catch (error) {
+    console.error("Error updating request:", error);
+    showSnackbar("Error updating request", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleReviewChange = (e) => {
     const { name, value } = e.target;
