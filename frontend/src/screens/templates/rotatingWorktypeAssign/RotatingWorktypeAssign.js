@@ -35,6 +35,7 @@ import {
   Snackbar,
 } from "@mui/material";
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
+import { io } from 'socket.io-client'; // Import socket.io client
 
 const API_URL = "http://localhost:5000/api/rotating-worktype/shifts";
 const USER_API_URL = (userId) =>
@@ -138,6 +139,40 @@ const RotatingWorktypeAssign = () => {
     };
 
     initializeData();
+  }, []);
+
+  // Set up WebSocket connection for real-time notifications
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    // Connect to the WebSocket server
+    const socket = io('http://localhost:5000', {
+      query: { userId }
+    });
+
+    // Listen for new notifications
+    socket.on('new-notification', (notification) => {
+      console.log('Received notification:', notification);
+      
+      // Show a snackbar with the notification
+      setSnackbar({
+        open: true,
+        message: notification.message,
+        severity: notification.status === 'approved' ? 'success' : 'error'
+      });
+      
+      // Reload the worktype requests to reflect the changes
+      loadWorktypeRequests();
+    });
+
+    // Join a room specific to this user
+    socket.emit('join', userId);
+
+    // Cleanup on component unmount
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -253,10 +288,13 @@ const RotatingWorktypeAssign = () => {
   // Handle bulk operations
   const handleBulkApprove = async () => {
     try {
+      const reviewerName = localStorage.getItem("userName") || "Admin";
+      
       await axios.post(`${API_URL}/bulk-approve`, {
         ids: selectedAllocations,
-        isForReview: false, // Remove from review after approval
+        reviewerName
       });
+      
       await loadWorktypeRequests();
       setSelectedAllocations([]);
       setShowSelectionButtons(false);
@@ -280,10 +318,13 @@ const RotatingWorktypeAssign = () => {
 
   const handleBulkReject = async () => {
     try {
+      const reviewerName = localStorage.getItem("userName") || "Admin";
+      
       await axios.post(`${API_URL}/bulk-reject`, {
         ids: selectedAllocations,
-        isForReview: false, // Remove from review after rejection
+        reviewerName
       });
+      
       await loadWorktypeRequests();
       setSelectedAllocations([]);
       setShowSelectionButtons(false);
@@ -320,9 +361,12 @@ const RotatingWorktypeAssign = () => {
   const handleApprove = async (id, e) => {
     e.stopPropagation();
     try {
+      const reviewerName = localStorage.getItem("userName") || "Admin";
+      
       await axios.put(`${API_URL}/${id}/approve`, {
-        isForReview: false, // Remove from review after approval
+        reviewerName
       });
+      
       await loadWorktypeRequests();
       setSnackbar({
         open: true,
@@ -344,9 +388,12 @@ const RotatingWorktypeAssign = () => {
   const handleReject = async (id, e) => {
     e.stopPropagation();
     try {
+      const reviewerName = localStorage.getItem("userName") || "Admin";
+      
       await axios.put(`${API_URL}/${id}/reject`, {
-        isForReview: false, // Remove from review after rejection
+        reviewerName
       });
+      
       await loadWorktypeRequests();
       setSnackbar({
         open: true,
@@ -428,12 +475,12 @@ const RotatingWorktypeAssign = () => {
         }`,
         employeeCode: userToUse.Emp_ID,
         requestedWorktype: formData.requestWorktype,
-        currentWorktype: userToUse.joiningDetails?.workType || "Not Assigned",
+        currentWorktype: userToUse.joiningDetails?.workType || "Full Time",
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
         description: formData.description || "",
         isPermanentRequest,
-        isForReview: true, // Mark for review
+        isForReview: true,
         userId: userId,
       };
 
@@ -490,7 +537,6 @@ const RotatingWorktypeAssign = () => {
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
         description: formData.description,
-        isForReview: true, // Send back for review after edit
         userId: userId, // Include userId for ownership verification
       };
 
@@ -517,7 +563,7 @@ const RotatingWorktypeAssign = () => {
     }
   };
 
-  // Handle delete click
+  // Handle delete
   const handleDeleteClick = (worktype, e) => {
     e.stopPropagation();
     setDeleteType("worktype");
@@ -525,13 +571,13 @@ const RotatingWorktypeAssign = () => {
     setDeleteDialogOpen(true);
   };
 
-  // Handle close delete dialog
+  // Close delete dialog
   const handleCloseDeleteDialog = () => {
     setDeleteDialogOpen(false);
     setItemToDelete(null);
   };
 
-  // Handle confirm delete
+  // Confirm delete
   const handleConfirmDelete = async () => {
     try {
       setLoading(true);
@@ -548,7 +594,6 @@ const RotatingWorktypeAssign = () => {
           severity: "success",
         });
       } else if (deleteType === "bulk" && selectedAllocations.length > 0) {
-        // For bulk operations, we'll need to ensure these are only the user's own requests
         await Promise.all(
           selectedAllocations.map((id) =>
             axios.delete(`${API_URL}/${id}`, {
@@ -590,7 +635,7 @@ const RotatingWorktypeAssign = () => {
           currentUser.personalInfo?.lastName || ""
         }`,
         employeeCode: currentUser.Emp_ID,
-        currentWorktype: currentUser.joiningDetails?.workType || "Not Assigned",
+        currentWorktype: currentUser.joiningDetails?.workType || "Full Time",
         requestWorktype: "",
         requestedDate: "",
         requestedTill: "",
@@ -689,54 +734,54 @@ const RotatingWorktypeAssign = () => {
             </Box>
           </Box>
         </StyledPaper>
+      </Box>
 
-        {/* Selection Buttons */}
-        <Box
+      {/* Selection Buttons */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 2,
+          mb: 2,
+          mt: { xs: 2, sm: 2 },
+        }}
+      >
+        <Button
+          variant="outlined"
           sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: 2,
-            mb: 2,
-            mt: { xs: 2, sm: 2 },
+            color: "green",
+            borderColor: "green",
+            width: { xs: "100%", sm: "auto" },
           }}
+          onClick={handleSelectAll}
         >
-          <Button
-            variant="outlined"
-            sx={{
-              color: "green",
-              borderColor: "green",
-              width: { xs: "100%", sm: "auto" },
-            }}
-            onClick={handleSelectAll}
-          >
-            Select All {tabValue === 0 ? "Requests" : "Review Requests"}
-          </Button>
-          {showSelectionButtons && (
-            <>
-              <Button
-                variant="outlined"
-                sx={{
-                  color: "grey.500",
-                  borderColor: "grey.500",
-                  width: { xs: "100%", sm: "auto" },
-                }}
-                onClick={handleUnselectAll}
-              >
-                Unselect All
-              </Button>
-              <Button
-                variant="outlined"
-                sx={{
-                  color: "maroon",
-                  borderColor: "maroon",
-                  width: { xs: "100%", sm: "auto" },
-                }}
-              >
-                {selectedAllocations.length} Selected
-              </Button>
-            </>
-          )}
-        </Box>
+          Select All {tabValue === 0 ? "Requests" : "Review Requests"}
+        </Button>
+        {showSelectionButtons && (
+          <>
+            <Button
+              variant="outlined"
+              sx={{
+                color: "grey.500",
+                borderColor: "grey.500",
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={handleUnselectAll}
+            >
+              Unselect All
+            </Button>
+            <Button
+              variant="outlined"
+              sx={{
+                color: "maroon",
+                borderColor: "maroon",
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
+              {selectedAllocations.length} Selected
+            </Button>
+          </>
+        )}
       </Box>
 
       {/* Actions Menu */}
@@ -843,7 +888,7 @@ const RotatingWorktypeAssign = () => {
         variant="scrollable"
         scrollButtons="auto"
       >
-        <Tab label="Rotating Worktype Requests" />
+        <Tab label="Worktype Requests" />
         <Tab label="Review" />
       </Tabs>
 
@@ -892,452 +937,453 @@ const RotatingWorktypeAssign = () => {
                   sx={{
                     color: "white",
                     "&.Mui-checked": {
-                  },
-                }}
-                onChange={(e) => {
-                  if (e.target.checked) handleSelectAll();
-                  else handleUnselectAll();
-                }}
-                checked={
-                  selectedAllocations.length ===
-                    (tabValue === 0
-                      ? worktypeRequests.length
-                      : reviewRequests.length) &&
-                  (tabValue === 0
-                    ? worktypeRequests.length > 0
-                    : reviewRequests.length > 0)
-                }
-              />
-            </StyledTableCell>
-            <StyledTableCell sx={{ minWidth: 200 }}>Employee</StyledTableCell>
-            <StyledTableCell sx={{ minWidth: 150 }}>
-              Requested Work Type
-            </StyledTableCell>
-            <StyledTableCell sx={{ minWidth: 150 }}>
-              Current Work Type
-            </StyledTableCell>
-            <StyledTableCell sx={{ minWidth: 130 }}>
-              Requested Date
-            </StyledTableCell>
-            <StyledTableCell sx={{ minWidth: 130 }}>
-              Requested Till
-            </StyledTableCell>
-            <StyledTableCell sx={{ minWidth: 100 }}>Status</StyledTableCell>
-            <StyledTableCell sx={{ minWidth: 150 }}>
-              Description
-            </StyledTableCell>
-            {/* Only show Confirmation column in Review tab */}
-            {tabValue === 1 && (
-              <StyledTableCell sx={{ minWidth: 120, textAlign: "center" }}>
-                Confirmation
-              </StyledTableCell>
-            )}
-            <StyledTableCell sx={{ minWidth: 100, textAlign: "center" }}>
-              Actions
-            </StyledTableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {(tabValue === 0 ? worktypeRequests : reviewRequests)
-            .filter((request) => {
-              const employeeName = request?.name || "";
-              return (
-                employeeName
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase()) &&
-                (filterStatus === "all" || request.status === filterStatus)
-              );
-            })
-            .map((request) => (
-              <StyledTableRow
-                key={request._id}
-                hover
-                onClick={() => handleRowClick(request._id)}
-                selected={selectedAllocations.includes(request._id)}
-                sx={{
-                  cursor: "pointer",
-                  ...(selectedAllocations.includes(request._id) && {
-                    backgroundColor: alpha(theme.palette.primary.light, 0.15),
-                    "&:hover": {
-                      backgroundColor: alpha(
-                        theme.palette.primary.light,
-                        0.2
-                      ),
-                    },
-                  }),
-                }}
-              >
-                <TableCell
-                  padding="checkbox"
-                  sx={{
-                    position: "sticky",
-                    left: 0,
-                    backgroundColor: selectedAllocations.includes(request._id)
-                      ? alpha(theme.palette.primary.light, 0.15)
-                      : request._id % 2 === 0
-                      ? alpha(theme.palette.primary.light, 0.05)
-                      : "inherit",
-                    "&:hover": {
-                      backgroundColor: alpha(
-                        theme.palette.primary.light,
-                        0.2
-                      ),
+                      color: "white",
                     },
                   }}
+                  onChange={(e) => {
+                    if (e.target.checked) handleSelectAll();
+                    else handleUnselectAll();
+                  }}
+                  checked={
+                    selectedAllocations.length ===
+                      (tabValue === 0
+                        ? worktypeRequests.length
+                        : reviewRequests.length) &&
+                    (tabValue === 0
+                      ? worktypeRequests.length > 0
+                      : reviewRequests.length > 0)
+                  }
+                />
+              </StyledTableCell>
+              <StyledTableCell sx={{ minWidth: 200 }}>Employee</StyledTableCell>
+              <StyledTableCell sx={{ minWidth: 150 }}>
+                Requested Worktype
+              </StyledTableCell>
+              <StyledTableCell sx={{ minWidth: 150 }}>
+                Current Worktype
+              </StyledTableCell>
+              <StyledTableCell sx={{ minWidth: 130 }}>
+                Requested Date
+              </StyledTableCell>
+              <StyledTableCell sx={{ minWidth: 130 }}>
+                Requested Till
+              </StyledTableCell>
+              <StyledTableCell sx={{ minWidth: 100 }}>Status</StyledTableCell>
+              <StyledTableCell sx={{ minWidth: 150 }}>
+                Description
+              </StyledTableCell>
+              {/* Only show Confirmation column in Review tab */}
+              {tabValue === 1 && (
+                <StyledTableCell sx={{ minWidth: 120, textAlign: "center" }}>
+                  Confirmation
+                </StyledTableCell>
+              )}
+              <StyledTableCell sx={{ minWidth: 100, textAlign: "center" }}>
+                Actions
+              </StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {(tabValue === 0 ? worktypeRequests : reviewRequests)
+              .filter((request) => {
+                const employeeName = request?.name || "";
+                return (
+                  employeeName
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase()) &&
+                  (filterStatus === "all" || request.status === filterStatus)
+                );
+              })
+              .map((request) => (
+                <StyledTableRow
+                  key={request._id}
+                  hover
+                  onClick={() => handleRowClick(request._id)}
+                  selected={selectedAllocations.includes(request._id)}
+                  sx={{
+                    cursor: "pointer",
+                    ...(selectedAllocations.includes(request._id) && {
+                      backgroundColor: alpha(theme.palette.primary.light, 0.15),
+                      "&:hover": {
+                        backgroundColor: alpha(
+                          theme.palette.primary.light,
+                          0.2
+                        ),
+                      },
+                    }),
+                  }}
                 >
-                  <Checkbox
-                    checked={selectedAllocations.includes(request._id)}
-                    onChange={() => handleRowClick(request._id)}
+                  <TableCell
+                    padding="checkbox"
                     sx={{
-                      "&.Mui-checked": {
-                        color: theme.palette.primary.main,
+                      position: "sticky",
+                      left: 0,
+                      backgroundColor: selectedAllocations.includes(request._id)
+                        ? alpha(theme.palette.primary.light, 0.15)
+                        : request._id % 2 === 0
+                        ? alpha(theme.palette.primary.light, 0.05)
+                        : "inherit",
+                      "&:hover": {
+                        backgroundColor: alpha(
+                          theme.palette.primary.light,
+                          0.2
+                        ),
                       },
                     }}
-                  />
-                </TableCell>
-
-                <TableCell>
-                  <Box display="flex" alignItems="flex-start" gap={1}>
-                    <Box
+                  >
+                    <Checkbox
+                      checked={selectedAllocations.includes(request._id)}
+                      onChange={() => handleRowClick(request._id)}
                       sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        bgcolor:
-                          request._id % 2 === 0
-                            ? alpha(theme.palette.primary.main, 0.8)
-                            : alpha(theme.palette.secondary.main, 0.8),
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: "bold",
-                        fontSize: "0.875rem",
-                        flexShrink: 0,
-                        mt: 0.5, // Add a small top margin to align with the first line of text
+                        "&.Mui-checked": {
+                          color: theme.palette.primary.main,
+                        },
                       }}
-                    >
-                      {request.name?.[0] || "U"}
-                    </Box>
-                    <Box sx={{ display: "flex", flexDirection: "column" }}>
-                      <Typography
-                        variant="body2"
+                    />
+                  </TableCell>
+
+                  <TableCell>
+                    <Box display="flex" alignItems="flex-start" gap={1}>
+                      <Box
                         sx={{
-                          fontWeight: 600,
-                          wordBreak: "break-word", // Allow breaking words to prevent overflow
-                          whiteSpace: "normal", // Allow text to wrap
-                          lineHeight: 1.3, // Tighter line height for wrapped text
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          bgcolor:
+                            request._id % 2 === 0
+                              ? alpha(theme.palette.primary.main, 0.8)
+                              : alpha(theme.palette.secondary.main, 0.8),
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "bold",
+                          fontSize: "0.875rem",
+                          flexShrink: 0,
+                          mt: 0.5,
                         }}
                       >
-                        {request.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {request.employeeCode}
-                      </Typography>
+                        {request.name?.[0] || "U"}
+                      </Box>
+                      <Box sx={{ display: "flex", flexDirection: "column" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 600,
+                            wordBreak: "break-word",
+                            whiteSpace: "normal",
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {request.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {request.employeeCode}
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                </TableCell>
+                  </TableCell>
 
-                <TableCell>
-                  <Typography variant="body2">
-                    {request.requestedWorktype}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
-                    {request.currentWorktype}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
-                    {new Date(request.requestedDate).toLocaleDateString(
-                      undefined,
-                      {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }
-                    )}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
-                    {new Date(request.requestedTill).toLocaleDateString(
-                      undefined,
-                      {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }
-                    )}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Box
-                    sx={{
-                      display: "inline-block",
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 1,
-                      fontSize: "0.75rem",
-                      fontWeight: "medium",
-                      backgroundColor:
-                        request.status === "Approved"
-                          ? alpha("#4caf50", 0.1)
-                          : request.status === "Rejected"
-                          ? alpha("#f44336", 0.1)
-                          : alpha("#ff9800", 0.1),
-                      color:
-                        request.status === "Approved"
-                          ? "#2e7d32"
-                          : request.status === "Rejected"
-                          ? "#d32f2f"
-                          : "#e65100",
-                    }}
-                  >
-                    {request.status}
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      maxWidth: 200,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {request.description}
-                  </Typography>
-                </TableCell>
-
-                {/* Only show Confirmation cell in Review tab */}
-                {tabValue === 1 && (
-                  <TableCell align="center">
+                  <TableCell>
+                    <Typography variant="body2">
+                      {request.requestedWorktype}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {request.currentWorktype}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {new Date(request.requestedDate).toLocaleDateString(
+                        undefined,
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {new Date(request.requestedTill).toLocaleDateString(
+                        undefined,
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
                     <Box
                       sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: 1,
+                        display: "inline-block",
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: "0.75rem",
+                        fontWeight: "medium",
+                        backgroundColor:
+                          request.status === "Approved"
+                            ? alpha("#4caf50", 0.1)
+                            : request.status === "Rejected"
+                            ? alpha("#f44336", 0.1)
+                            : alpha("#ff9800", 0.1),
+                        color:
+                          request.status === "Approved"
+                            ? "#2e7d32"
+                            : request.status === "Rejected"
+                            ? "#d32f2f"
+                            : "#e65100",
                       }}
+                    >
+                      {request.status}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        maxWidth: 200,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {request.description}
+                    </Typography>
+                  </TableCell>
+
+                  {/* Only show Confirmation cell in Review tab */}
+                  {tabValue === 1 && (
+                    <TableCell align="center">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={(e) => handleApprove(request._id, e)}
+                          disabled={request.status === "Approved"}
+                          sx={{
+                            backgroundColor: alpha("#4caf50", 0.1),
+                            "&:hover": {
+                              backgroundColor: alpha("#4caf50", 0.2),
+                            },
+                            "&.Mui-disabled": {
+                              backgroundColor: alpha("#e0e0e0", 0.3),
+                            },
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: "bold" }}
+                          >
+                            ✓
+                          </Typography>
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => handleReject(request._id, e)}
+                          disabled={request.status === "Rejected"}
+                          sx={{
+                            backgroundColor: alpha("#f44336", 0.1),
+                            "&:hover": {
+                              backgroundColor: alpha("#f44336", 0.2),
+                            },
+                            "&.Mui-disabled": {
+                              backgroundColor: alpha("#e0e0e0", 0.3),
+                            },
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: "bold" }}
+                          >
+                            ✕
+                          </Typography>
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  )}
+
+                  <TableCell align="center">
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", gap: 1 }}
                     >
                       <IconButton
                         size="small"
-                        color="success"
-                        onClick={(e) => handleApprove(request._id, e)}
-                        disabled={request.status === "Approved"}
+                        color="primary"
+                        onClick={(e) => handleEdit(request, e)}
                         sx={{
-                          backgroundColor: alpha("#4caf50", 0.1),
+                          backgroundColor: alpha(
+                            theme.palette.primary.main,
+                            0.1
+                          ),
                           "&:hover": {
-                            backgroundColor: alpha("#4caf50", 0.2),
-                          },
-                          "&.Mui-disabled": {
-                            backgroundColor: alpha("#e0e0e0", 0.3),
+                            backgroundColor: alpha(
+                              theme.palette.primary.main,
+                              0.2
+                            ),
                           },
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: "bold" }}
-                        >
-                          ✓
-                        </Typography>
+                        <Edit fontSize="small" />
                       </IconButton>
                       <IconButton
                         size="small"
                         color="error"
-                        onClick={(e) => handleReject(request._id, e)}
-                        disabled={request.status === "Rejected"}
+                        onClick={(e) => handleDeleteClick(request, e)}
                         sx={{
-                          backgroundColor: alpha("#f44336", 0.1),
+                          backgroundColor: alpha(theme.palette.error.main, 0.1),
                           "&:hover": {
-                            backgroundColor: alpha("#f44336", 0.2),
-                          },
-                          "&.Mui-disabled": {
-                            backgroundColor: alpha("#e0e0e0", 0.3),
+                            backgroundColor: alpha(
+                              theme.palette.error.main,
+                              0.2
+                            ),
                           },
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: "bold" }}
-                        >
-                          ✕
-                        </Typography>
+                        <Delete fontSize="small" />
                       </IconButton>
                     </Box>
                   </TableCell>
-                )}
-
-                <TableCell align="center">
-                  <Box
-                    sx={{ display: "flex", justifyContent: "center", gap: 1 }}
+                </StyledTableRow>
+              ))}
+            {/* Empty state message when no records match filters */}
+            {(tabValue === 0 ? worktypeRequests : reviewRequests).filter(
+              (request) => {
+                const employeeName = request?.name || "";
+                return (
+                  employeeName
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase()) &&
+                  (filterStatus === "all" || request.status === filterStatus)
+                );
+              }
+            ).length === 0 && (
+              <TableRow>
+                <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    No {tabValue === 0 ? "worktype requests" : "review requests"}{" "}
+                    found matching your filters.
+                  </Typography>
+                  <Button
+                    variant="text"
+                    color="primary"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setFilterStatus("all");
+                    }}
+                    sx={{ mt: 1 }}
                   >
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={(e) => handleEdit(request, e)}
-                      sx={{
-                        backgroundColor: alpha(
-                          theme.palette.primary.main,
-                          0.1
-                        ),
-                        "&:hover": {
-                          backgroundColor: alpha(
-                            theme.palette.primary.main,
-                            0.2
-                          ),
-                        },
-                      }}
-                    >
-                      <Edit fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={(e) => handleDeleteClick(request, e)}
-                      sx={{
-                        backgroundColor: alpha(theme.palette.error.main, 0.1),
-                        "&:hover": {
-                          backgroundColor: alpha(
-                            theme.palette.error.main,
-                            0.2
-                          ),
-                        },
-                      }}
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Box>
+                    Clear filters
+                  </Button>
                 </TableCell>
-              </StyledTableRow>
-            ))}
-          {/* Empty state message when no records match filters */}
-          {(tabValue === 0 ? worktypeRequests : reviewRequests).filter(
-            (request) => {
-              const employeeName = request?.name || "";
-              return (
-                employeeName
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase()) &&
-                (filterStatus === "all" || request.status === filterStatus)
-              );
-            }
-          ).length === 0 && (
-            <TableRow>
-              <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
-                <Typography variant="body1" color="text.secondary">
-                  No {tabValue === 0 ? "worktype requests" : "review requests"}{" "}
-                  found matching your filters.
-                </Typography>
-                <Button
-                  variant="text"
-                  color="primary"
-                  onClick={() => {
-                    setSearchTerm("");
-                    setFilterStatus("all");
-                  }}
-                  sx={{ mt: 1 }}
-                >
-                  Clear filters
-                </Button>
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
-
-    {/* Delete confirmation dialog */}
-    <Dialog
-      open={deleteDialogOpen}
-      onClose={handleCloseDeleteDialog}
-      PaperProps={{
-        sx: {
-          width: { xs: "95%", sm: "500px" },
-          maxWidth: "500px",
-          borderRadius: "20px",
-          overflow: "hidden",
-          margin: { xs: "8px", sm: "32px" },
-        },
-      }}
-    >
-      <DialogTitle
-        sx={{
-          background: "linear-gradient(45deg, #f44336, #ff7961)",
-          fontSize: { xs: "1.25rem", sm: "1.5rem" },
-          fontWeight: 600,
-          padding: { xs: "16px 24px", sm: "24px 32px" },
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-        }}
-      >
-        <Delete />
-        Confirm Deletion
-      </DialogTitle>
-      <DialogContent
-        sx={{
-          padding: { xs: "24px", sm: "32px" },
-          backgroundColor: "#f8fafc",
-          paddingTop: { xs: "24px", sm: "32px" },
-        }}
-      >
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          {deleteType === "bulk"
-            ? `Are you sure you want to delete ${selectedAllocations.length} selected ${itemToDelete?.type}?`
-            : "Are you sure you want to delete this worktype request?"}
-        </Alert>
-        {itemToDelete && (
-          <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
-            {deleteType === "bulk" ? (
-              <>
-                <Typography variant="body1" fontWeight={600} color="#2c3e50">
-                  Bulk Deletion
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mt: 1 }}
-                >
-                  You are about to delete {selectedAllocations.length}{" "}
-                  {itemToDelete.type}. This action cannot be undone.
-                </Typography>
-              </>
-            ) : (
-              <>
-                <Typography variant="body1" fontWeight={600} color="#2c3e50">
-                  Worktype Request Details:
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    mt: 1,
-                    p: 1,
-                    bgcolor: "#fff",
-                    borderRadius: 1,
-                    border: "1px solid #e2e8f0",
-                  }}
-                >
-                  <strong>Employee:</strong> {itemToDelete.name} (
-                  {itemToDelete.employeeCode})<br />
-                  <strong>Requested Worktype:</strong>{" "}
-                  {itemToDelete.requestedWorktype}
-                  <br />
-                  <strong>Date Range:</strong>{" "}
-                  {new Date(itemToDelete.requestedDate).toLocaleDateString()}{" "}
-                  -{" "}
-                  {new Date(itemToDelete.requestedTill).toLocaleDateString()}
-                  <br />
-                  <strong>Status:</strong> {itemToDelete.status}
-                </Typography>
-              </>
+              </TableRow>
             )}
-          </Box>
-        )}
-                </DialogContent>
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "500px" },
+            maxWidth: "500px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(45deg, #f44336, #ff7961)",
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            fontWeight: 600,
+            padding: { xs: "16px 24px", sm: "24px 32px" },
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Delete />
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            padding: { xs: "24px", sm: "32px" },
+            backgroundColor: "#f8fafc",
+            paddingTop: { xs: "24px", sm: "32px" },
+          }}
+        >
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {deleteType === "bulk"
+              ? `Are you sure you want to delete ${selectedAllocations.length} selected ${itemToDelete?.type}?`
+              : "Are you sure you want to delete this worktype request?"}
+          </Alert>
+          {itemToDelete && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+              {deleteType === "bulk" ? (
+                <>
+                  <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                    Bulk Deletion
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    You are about to delete {selectedAllocations.length}{" "}
+                    {itemToDelete.type}. This action cannot be undone.
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Typography variant="body1" fontWeight={600} color="#2c3e50">
+                    Worktype Request Details:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      mt: 1,
+                      p: 1,
+                      bgcolor: "#fff",
+                      borderRadius: 1,
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <strong>Employee:</strong> {itemToDelete.name} (
+                    {itemToDelete.employeeCode})<br />
+                    <strong>Requested Worktype:</strong>{" "}
+                    {itemToDelete.requestedWorktype}
+                    <br />
+                    <strong>Date Range:</strong>{" "}
+                    {new Date(itemToDelete.requestedDate).toLocaleDateString()}{" "}
+                    -{" "}
+                    {new Date(itemToDelete.requestedTill).toLocaleDateString()}
+                    <br />
+                    <strong>Status:</strong> {itemToDelete.status}
+                  </Typography>
+                </>
+              )}
+            </Box>
+          )}
+        </DialogContent>
         <DialogActions
           sx={{
             padding: { xs: "16px 24px", sm: "24px 32px" },
@@ -1390,7 +1436,6 @@ const RotatingWorktypeAssign = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -1431,7 +1476,7 @@ const RotatingWorktypeAssign = () => {
             padding: "24px 32px",
           }}
         >
-          {tabValue === 0 ? "Create Worktype Request" : "Create Review Request"}
+          {tabValue === 0 ? "Create Worktype Request" : "Review Request"}
         </DialogTitle>
         <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -1472,8 +1517,8 @@ const RotatingWorktypeAssign = () => {
                     {currentUser.joiningDetails?.department || "Not Assigned"}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Current Work Type:</strong>{" "}
-                    {currentUser.joiningDetails?.workType || "Regular Work Type"}
+                    <strong>Current Worktype:</strong>{" "}
+                    {currentUser.joiningDetails?.workType || "Full Time"}
                   </Typography>
                 </Box>
               </Paper>
@@ -1484,9 +1529,9 @@ const RotatingWorktypeAssign = () => {
               </Alert>
             )}
 
-            {/* Request Work Type */}
+            {/* Request Worktype Type */}
             <TextField
-              label="Request Work Type"
+              label="Request Worktype"
               name="requestWorktype"
               value={formData.requestWorktype}
               onChange={handleFormChange}
@@ -1502,9 +1547,11 @@ const RotatingWorktypeAssign = () => {
                 },
               }}
             >
-              <MenuItem value="On-site">On-site</MenuItem>
-              <MenuItem value="Work From Home">Work From Home</MenuItem>
-              <MenuItem value="Hybrid">Hybrid</MenuItem>
+              <MenuItem value="Full Time">Full Time</MenuItem>
+              <MenuItem value="Part Time">Part Time</MenuItem>
+              <MenuItem value="Contract">Contract</MenuItem>
+              <MenuItem value="Freelance">Freelance</MenuItem>
+              <MenuItem value="Remote">Remote</MenuItem>
             </TextField>
 
             {/* Rest of your form fields remain the same */}
@@ -1711,7 +1758,7 @@ const RotatingWorktypeAssign = () => {
             </Box>
 
             <TextField
-              label="Request Work Type"
+              label="Request Worktype"
               name="requestWorktype"
               value={formData.requestWorktype}
               onChange={handleFormChange}
@@ -1727,9 +1774,11 @@ const RotatingWorktypeAssign = () => {
                 },
               }}
             >
-              <MenuItem value="On-site">On-site</MenuItem>
-              <MenuItem value="Work From Home">Work From Home</MenuItem>
-              <MenuItem value="Hybrid">Hybrid</MenuItem>
+              <MenuItem value="Full Time">Full Time</MenuItem>
+              <MenuItem value="Part Time">Part Time</MenuItem>
+              <MenuItem value="Contract">Contract</MenuItem>
+              <MenuItem value="Freelance">Freelance</MenuItem>
+              <MenuItem value="Remote">Remote</MenuItem>
             </TextField>
 
             <TextField
@@ -1847,7 +1896,8 @@ const RotatingWorktypeAssign = () => {
 };
 
 export default RotatingWorktypeAssign;
- 
+
+
 
 
 

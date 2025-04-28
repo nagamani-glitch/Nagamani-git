@@ -257,6 +257,37 @@ const addWorkTypeRequestNotification = useCallback(async (employeeName, status, 
   }
 }, []);
 
+// Add this function to the NotificationContext
+const addRotatingWorktypeNotification = useCallback(async (employeeName, status, requestedWorktype, startDate, endDate, userId = null) => {
+  if (!userId) {
+    console.error('User ID is required to add a rotating worktype notification');
+    return null;
+  }
+
+  const statusText = status === "Approved" ? "approved" : "rejected";
+  const message = `Your ${requestedWorktype} worktype request from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been ${statusText}`;
+  
+  try {
+    const response = await axios.post('http://localhost:5000/api/notifications', {
+      message,
+      type: 'rotating-worktype',
+      status: status.toLowerCase(),
+      userId
+    });
+    
+    const newNotification = response.data;
+    
+    // Update local state
+    setNotifications(prev => [newNotification, ...prev]);
+    
+    return newNotification._id;
+  } catch (error) {
+    console.error('Error adding rotating worktype notification:', error);
+    return null;
+  }
+}, []);
+
+
 
   // Function to delete a notification
   const deleteNotification = useCallback(async (id) => {
@@ -387,6 +418,7 @@ const addWorkTypeRequestNotification = useCallback(async (employeeName, status, 
       addTimeOffNotification,
       addShiftRequestNotification,
       addWorkTypeRequestNotification,
+      addRotatingWorktypeNotification,
       markAsRead,
       markAllAsRead,
       deleteNotification,
