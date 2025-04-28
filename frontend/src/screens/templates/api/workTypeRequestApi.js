@@ -24,3 +24,6 @@ export const approveWorkTypeRequest = (id) => axios.put(`${API_URL}/${id}/approv
 export const rejectWorkTypeRequest = (id) => axios.put(`${API_URL}/${id}/reject`);
 export const bulkApproveRequests = (ids) => axios.put(`${API_URL}/bulk-approve`, { ids });
 export const bulkRejectRequests = (ids) => axios.put(`${API_URL}/bulk-reject`, { ids });
+export const fetchWorkTypeRequestsByEmployeeCode = (employeeCode) => 
+    axios.get(`${API_URL}/employee/${employeeCode}`);
+  

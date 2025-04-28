@@ -95,3 +95,14 @@ export const bulkRejectRequests = async (req, res) => {
   }
 };
 
+
+export const getWorkTypeRequestsByEmployeeCode = async (req, res) => {
+  try {
+    const { employeeCode } = req.params;
+    const workTypeRequests = await WorkTypeRequest.find({ employeeCode }).sort({ createdAt: -1 });
+    res.status(200).json(workTypeRequests);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching work type requests', error });
+  }
+};
+

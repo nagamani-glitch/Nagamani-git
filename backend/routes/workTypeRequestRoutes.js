@@ -8,7 +8,8 @@ import {
   approveWorkTypeRequest,
   rejectWorkTypeRequest,
   bulkApproveRequests,
-  bulkRejectRequests 
+  bulkRejectRequests,
+  getWorkTypeRequestsByEmployeeCode 
 } from '../controllers/workTypeRequestController.js';
 
 router.get('/', getAllWorkTypeRequests);
@@ -19,5 +20,7 @@ router.put('/:id/approve', approveWorkTypeRequest);
 router.put('/:id/reject', rejectWorkTypeRequest);
 router.put('/bulk-approve', bulkApproveRequests);
 router.put('/bulk-reject', bulkRejectRequests);
+router.get('/employee/:employeeCode', getWorkTypeRequestsByEmployeeCode);
+
 
 export default router;
