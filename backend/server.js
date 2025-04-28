@@ -13,6 +13,7 @@ import applicantProfileRoutes from './routes/applicantProfileRoutes.js'
 import candidateRoutes from './routes/candidateRoutes.js'
 import employeeRoutes from './routes/employeeRoutes.js'
 import interviewRoutes from './routes/interviewRoutes.js'
+
 import skillZoneRoutes from './routes/skillZoneRoutes.js'
 import surveyRoutes from './routes/surveyRoutes.js'
 // import assetRoutes from './routes/assets.js';
