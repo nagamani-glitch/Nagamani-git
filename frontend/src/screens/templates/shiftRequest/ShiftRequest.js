@@ -147,57 +147,128 @@ const ShiftRequest = () => {
   });
 
   useEffect(() => {
-    fetchCurrentUser();
+    const initializeData = async () => {
+      await fetchCurrentUser();
+      await loadShiftRequests();
+      await fetchRegisteredEmployees();
+    };
+    
+    initializeData();
   }, []);
 
-  // Add this function to fetch the current user's details
-  const fetchCurrentUser = async () => {
-    try {
-      setLoadingCurrentUser(true);
-      const userId = localStorage.getItem("userId"); // Get the current user's ID from localStorage
+  // // Add this function to fetch the current user's details
+  // const fetchCurrentUser = async () => {
+  //   try {
+  //     setLoadingCurrentUser(true);
+  //     const userId = localStorage.getItem("userId"); // Get the current user's ID from localStorage
 
-      if (!userId) {
-        console.error("No user ID found in localStorage");
-        return;
-      }
+  //     if (!userId) {
+  //       console.error("No user ID found in localStorage");
+  //       return;
+  //     }
 
-      const response = await axios.get(
-        `http://localhost:5000/api/employees/by-user/${userId}`
-      );
+  //     const response = await axios.get(
+  //       `http://localhost:5000/api/employees/by-user/${userId}`
+  //     );
 
-      if (response.data.success) {
-        const userData = response.data.data;
+  //     if (response.data.success) {
+  //       const userData = response.data.data;
 
-        // Set the current user
-        setCurrentUser(userData);
+  //       // Set the current user
+  //       setCurrentUser(userData);
 
-        // Pre-fill the form with the current user's details
-        setFormData((prev) => ({
-          ...prev,
-          employee: `${userData.personalInfo?.firstName || ""} ${
-            userData.personalInfo?.lastName || ""
-          }`,
-          employeeCode: userData.Emp_ID,
-          currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
-        }));
+  //       // Pre-fill the form with the current user's details
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         employee: `${userData.personalInfo?.firstName || ""} ${
+  //           userData.personalInfo?.lastName || ""
+  //         }`,
+  //         employeeCode: userData.Emp_ID,
+  //         currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
+  //       }));
 
-        // Set the selected employee
-        setSelectedEmployee({
-          id: userData.Emp_ID,
-          name: `${userData.personalInfo?.firstName || ""} ${
-            userData.personalInfo?.lastName || ""
-          }`,
-          employeeCode: userData.Emp_ID,
-          department: userData.joiningDetails?.department || "Not Assigned",
-          currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching current user:", error);
-    } finally {
-      setLoadingCurrentUser(false);
+  //       // Set the selected employee
+  //       setSelectedEmployee({
+  //         id: userData.Emp_ID,
+  //         name: `${userData.personalInfo?.firstName || ""} ${
+  //           userData.personalInfo?.lastName || ""
+  //         }`,
+  //         employeeCode: userData.Emp_ID,
+  //         department: userData.joiningDetails?.department || "Not Assigned",
+  //         currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching current user:", error);
+  //   } finally {
+  //     setLoadingCurrentUser(false);
+  //   }
+  // };
+
+  // Update the fetchCurrentUser function to properly handle state updates
+const fetchCurrentUser = async () => {
+  try {
+    setLoadingCurrentUser(true);
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      console.error("No user ID found in localStorage");
+      setSnackbar({
+        open: true,
+        message: "User ID not found. Please log in again.",
+        severity: "error",
+      });
+      return;
     }
-  };
+
+    const response = await axios.get(
+      `http://localhost:5000/api/employees/by-user/${userId}`
+    );
+
+    if (response.data.success) {
+      const userData = response.data.data;
+
+      // Set the current user
+      setCurrentUser(userData);
+
+      // Pre-fill the form with the current user's details
+      setFormData((prev) => ({
+        ...prev,
+        employee: `${userData.personalInfo?.firstName || ""} ${
+          userData.personalInfo?.lastName || ""
+        }`,
+        employeeCode: userData.Emp_ID,
+        currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
+      }));
+
+      // Set the selected employee
+      setSelectedEmployee({
+        id: userData.Emp_ID,
+        name: `${userData.personalInfo?.firstName || ""} ${
+          userData.personalInfo?.lastName || ""
+        }`,
+        employeeCode: userData.Emp_ID,
+        department: userData.joiningDetails?.department || "Not Assigned",
+        currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
+      });
+      
+      console.log("Current user loaded successfully:", userData.Emp_ID);
+      return userData; // Return the user data for chaining
+    } else {
+      throw new Error("Failed to load user data");
+    }
+  } catch (error) {
+    console.error("Error fetching current user:", error);
+    setSnackbar({
+      open: true,
+      message: "Error loading user data: " + error.message,
+      severity: "error",
+    });
+    return null;
+  } finally {
+    setLoadingCurrentUser(false);
+  }
+};
 
   const fetchRegisteredEmployees = async () => {
     try {
@@ -348,6 +419,13 @@ const ShiftRequest = () => {
     loadShiftRequests();
     fetchRegisteredEmployees(); // Fetch employees when component mounts
   }, [tabValue]);
+
+  // Add this to the component to debug state
+useEffect(() => {
+  console.log("Current user state:", currentUser ? currentUser.Emp_ID : "Not loaded");
+  console.log("Form data state:", formData);
+}, [currentUser, formData]);
+
 
   // const loadShiftRequests = async () => {
   //   try {
@@ -616,18 +694,68 @@ const ShiftRequest = () => {
     }
   };
 
+  // const handleCreateShift = async () => {
+  //   try {
+  //     if (!currentUser) {
+  //       setSnackbar({
+  //         open: true,
+  //         message:
+  //           "Unable to create shift request: User information not available",
+  //         severity: "error",
+  //       });
+  //       return;
+  //     }
+
+  //     const userId = localStorage.getItem("userId");
+  //     if (!userId) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Unable to create shift request: User ID not available",
+  //         severity: "error",
+  //       });
+  //       return;
+  //     }
+
+  //     const shiftData = {
+  //       name: `${currentUser.personalInfo?.firstName || ""} ${
+  //         currentUser.personalInfo?.lastName || ""
+  //       }`,
+  //       employeeCode: currentUser.Emp_ID,
+  //       requestedShift: formData.requestShift,
+  //       currentShift: currentUser.joiningDetails?.shiftType || "Not Assigned",
+  //       requestedDate: formData.requestedDate,
+  //       requestedTill: formData.requestedTill,
+  //       description: formData.description,
+  //       isPermanentRequest,
+  //       isAllocated: tabValue === 1,
+  //       userId: userId, // Always include the userId
+  //     };
+
+  //     await axios.post(API_URL, shiftData);
+  //     await loadShiftRequests();
+  //     setCreateDialogOpen(false);
+  //     resetFormData();
+
+  //     // Show success message
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Shift request created successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error creating shift:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error creating shift request: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
   const handleCreateShift = async () => {
     try {
-      if (!currentUser) {
-        setSnackbar({
-          open: true,
-          message:
-            "Unable to create shift request: User information not available",
-          severity: "error",
-        });
-        return;
-      }
-
       const userId = localStorage.getItem("userId");
       if (!userId) {
         setSnackbar({
@@ -637,28 +765,75 @@ const ShiftRequest = () => {
         });
         return;
       }
-
+  
+      // If currentUser is not loaded yet, try to fetch it again
+      let userToUse = currentUser;
+      if (!userToUse) {
+        console.log("Current user not loaded, fetching again...");
+        userToUse = await fetchCurrentUser();
+        
+        if (!userToUse) {
+          setSnackbar({
+            open: true,
+            message: "Unable to create shift request: Failed to load user data",
+            severity: "error",
+          });
+          return;
+        }
+      }
+  
+      // Validate form data
+      if (!formData.requestShift) {
+        setSnackbar({
+          open: true,
+          message: "Please select a shift type",
+          severity: "warning",
+        });
+        return;
+      }
+  
+      if (!formData.requestedDate) {
+        setSnackbar({
+          open: true,
+          message: "Please select a requested date",
+          severity: "warning",
+        });
+        return;
+      }
+  
+      if (!formData.requestedTill) {
+        setSnackbar({
+          open: true,
+          message: "Please select a requested till date",
+          severity: "warning",
+        });
+        return;
+      }
+  
       const shiftData = {
-        name: `${currentUser.personalInfo?.firstName || ""} ${
-          currentUser.personalInfo?.lastName || ""
+        name: `${userToUse.personalInfo?.firstName || ""} ${
+          userToUse.personalInfo?.lastName || ""
         }`,
-        employeeCode: currentUser.Emp_ID,
+        employeeCode: userToUse.Emp_ID,
         requestedShift: formData.requestShift,
-        currentShift: currentUser.joiningDetails?.shiftType || "Not Assigned",
+        currentShift: userToUse.joiningDetails?.shiftType || "Not Assigned",
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
-        description: formData.description,
+        description: formData.description || "",
         isPermanentRequest,
         isAllocated: tabValue === 1,
-        userId: userId, // Always include the userId
+        userId: userId,
       };
-
-      await axios.post(API_URL, shiftData);
+  
+      console.log("Creating shift request with data:", shiftData);
+      
+      const response = await axios.post(API_URL, shiftData);
+      console.log("Shift request created:", response.data);
+      
       await loadShiftRequests();
       setCreateDialogOpen(false);
       resetFormData();
-
-      // Show success message
+  
       setSnackbar({
         open: true,
         message: "Shift request created successfully",
@@ -668,9 +843,7 @@ const ShiftRequest = () => {
       console.error("Error creating shift:", error);
       setSnackbar({
         open: true,
-        message:
-          "Error creating shift request: " +
-          (error.response?.data?.message || error.message),
+        message: "Error creating shift request: " + (error.response?.data?.message || error.message),
         severity: "error",
       });
     }
@@ -751,17 +924,47 @@ const ShiftRequest = () => {
     }
   };
 
-  const resetFormData = () => {
+  // const resetFormData = () => {
+  //   setFormData({
+  //     employee: "",
+  //     requestShift: "",
+  //     requestedDate: "",
+  //     requestedTill: "",
+  //     description: "",
+  //   });
+  //   setIsPermanentRequest(false);
+  //   setSelectedEmployee(null);
+  // };
+
+const resetFormData = () => {
+  // If we have current user data, preserve the employee info
+  if (currentUser) {
     setFormData({
-      employee: "",
+      employee: `${currentUser.personalInfo?.firstName || ""} ${
+        currentUser.personalInfo?.lastName || ""
+      }`,
+      employeeCode: currentUser.Emp_ID,
+      currentShift: currentUser.joiningDetails?.shiftType || "Not Assigned",
       requestShift: "",
       requestedDate: "",
       requestedTill: "",
       description: "",
     });
-    setIsPermanentRequest(false);
-    setSelectedEmployee(null);
-  };
+  } else {
+    setFormData({
+      employee: "",
+      employeeCode: "",
+      currentShift: "",
+      requestShift: "",
+      requestedDate: "",
+      requestedTill: "",
+      description: "",
+    });
+  }
+  setIsPermanentRequest(false);
+};
+  
+  
   return (
     <Box
       sx={{
@@ -1571,9 +1774,12 @@ const ShiftRequest = () => {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {/* Current User Information */}
             {loadingCurrentUser ? (
-              <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
-                <CircularProgress size={24} />
-              </Box>
+  <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+    <CircularProgress size={24} />
+    <Typography variant="body2" sx={{ ml: 2 }}>
+      Loading user data...
+    </Typography>
+  </Box>
             ) : currentUser ? (
               <Paper
                 elevation={0}
