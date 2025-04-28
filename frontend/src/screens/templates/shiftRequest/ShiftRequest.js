@@ -36,6 +36,7 @@ import {
   Snackbar,
 } from "@mui/material";
 import { Search, Edit, Delete } from "@mui/icons-material";
+import { io } from 'socket.io-client';
 
 //const API_URL = "http://localhost:5000/api/shift-request/shifts";
 const API_URL = "http://localhost:5000/api/shift-request/shifts";
@@ -368,6 +369,40 @@ const ShiftRequest = () => {
     console.log("Form data state:", formData);
   }, [currentUser, formData]);
 
+  // Add this useEffect inside the ShiftRequest component
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    // Connect to the WebSocket server
+    const socket = io('http://localhost:5000', {
+      query: { userId }
+    });
+
+    // Listen for new notifications
+    socket.on('new-notification', (notification) => {
+      console.log('Received notification:', notification);
+      
+      // Show a snackbar with the notification
+      setSnackbar({
+        open: true,
+        message: notification.message,
+        severity: notification.status === 'approved' ? 'success' : 'error'
+      });
+      
+      // Reload the shift requests to reflect the changes
+      loadShiftRequests();
+    });
+
+    // Join a room specific to this user
+    socket.emit('join', userId);
+
+    // Cleanup on component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   // Now, let's modify the loadShiftRequests function to handle the new workflow
   const loadShiftRequests = async () => {
     try {
@@ -421,13 +456,73 @@ const ShiftRequest = () => {
     setShowSelectionButtons(false);
   };
 
-  // Update bulk operations similarly
+  // // Update bulk operations similarly
+  // const handleBulkApprove = async () => {
+  //   try {
+  //     await axios.post(`${API_URL}/bulk-approve`, {
+  //       ids: selectedAllocations,
+  //       isForReview: false, // Remove from review after approval
+  //     });
+  //     await loadShiftRequests();
+  //     setSelectedAllocations([]);
+  //     setShowSelectionButtons(false);
+  //     setAnchorEl(null);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Shift requests approved successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error bulk approving shifts:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error approving shift requests: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  // const handleBulkReject = async () => {
+  //   try {
+  //     await axios.post(`${API_URL}/bulk-reject`, {
+  //       ids: selectedAllocations,
+  //       isForReview: false, // Remove from review after rejection
+  //     });
+  //     await loadShiftRequests();
+  //     setSelectedAllocations([]);
+  //     setShowSelectionButtons(false);
+  //     setAnchorEl(null);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Shift requests rejected successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error bulk rejecting shifts:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error rejecting shift requests: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+
+  // Update the bulk operations to include reviewer information
   const handleBulkApprove = async () => {
     try {
+      const reviewerName = localStorage.getItem("userName") || "Admin";
+      
       await axios.post(`${API_URL}/bulk-approve`, {
         ids: selectedAllocations,
         isForReview: false, // Remove from review after approval
+        reviewedBy: reviewerName
       });
+      
       await loadShiftRequests();
       setSelectedAllocations([]);
       setShowSelectionButtons(false);
@@ -451,10 +546,14 @@ const ShiftRequest = () => {
 
   const handleBulkReject = async () => {
     try {
+      const reviewerName = localStorage.getItem("userName") || "Admin";
+      
       await axios.post(`${API_URL}/bulk-reject`, {
         ids: selectedAllocations,
         isForReview: false, // Remove from review after rejection
+        reviewedBy: reviewerName
       });
+      
       await loadShiftRequests();
       setSelectedAllocations([]);
       setShowSelectionButtons(false);
@@ -476,53 +575,112 @@ const ShiftRequest = () => {
     }
   };
 
-  const handleApprove = async (id, e) => {
-    e.stopPropagation();
-    try {
-      await axios.put(`${API_URL}/${id}/approve`, {
-        isForReview: false, // Remove from review after approval
-      });
-      await loadShiftRequests();
-      setSnackbar({
-        open: true,
-        message: "Shift request approved successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error approving shift:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error approving shift request: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
+// //handle approve and reject functions
+//   const handleApprove = async (id, e) => {
+//     e.stopPropagation();
+//     try {
+//       await axios.put(`${API_URL}/${id}/approve`, {
+//         isForReview: false, // Remove from review after approval
+//       });
+//       await loadShiftRequests();
+//       setSnackbar({
+//         open: true,
+//         message: "Shift request approved successfully",
+//         severity: "success",
+//       });
+//     } catch (error) {
+//       console.error("Error approving shift:", error);
+//       setSnackbar({
+//         open: true,
+//         message:
+//           "Error approving shift request: " +
+//           (error.response?.data?.message || error.message),
+//         severity: "error",
+//       });
+//     }
+//   };
 
-  const handleReject = async (id, e) => {
-    e.stopPropagation();
-    try {
-      await axios.put(`${API_URL}/${id}/reject`, {
-        isForReview: false, // Remove from review after rejection
-      });
-      await loadShiftRequests();
-      setSnackbar({
-        open: true,
-        message: "Shift request rejected successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error rejecting shift:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error rejecting shift request: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
+//   const handleReject = async (id, e) => {
+//     e.stopPropagation();
+//     try {
+//       await axios.put(`${API_URL}/${id}/reject`, {
+//         isForReview: false, // Remove from review after rejection
+//       });
+//       await loadShiftRequests();
+//       setSnackbar({
+//         open: true,
+//         message: "Shift request rejected successfully",
+//         severity: "success",
+//       });
+//     } catch (error) {
+//       console.error("Error rejecting shift:", error);
+//       setSnackbar({
+//         open: true,
+//         message:
+//           "Error rejecting shift request: " +
+//           (error.response?.data?.message || error.message),
+//         severity: "error",
+//       });
+//     }
+//   };
+
+// Update the handleApprove function to include reviewer information
+const handleApprove = async (id, e) => {
+  e.stopPropagation();
+  try {
+    const reviewerName = localStorage.getItem("userName") || "Admin";
+    
+    await axios.put(`${API_URL}/${id}/approve`, {
+      isForReview: false, // Remove from review after approval
+      reviewedBy: reviewerName
+    });
+    
+    await loadShiftRequests();
+    setSnackbar({
+      open: true,
+      message: "Shift request approved successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error approving shift:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error approving shift request: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
+
+// Update the handleReject function to include reviewer information
+const handleReject = async (id, e) => {
+  e.stopPropagation();
+  try {
+    const reviewerName = localStorage.getItem("userName") || "Admin";
+    
+    await axios.put(`${API_URL}/${id}/reject`, {
+      isForReview: false, // Remove from review after rejection
+      reviewedBy: reviewerName
+    });
+    
+    await loadShiftRequests();
+    setSnackbar({
+      open: true,
+      message: "Shift request rejected successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error rejecting shift:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error rejecting shift request: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
 
   const handleCreateShift = async () => {
     try {

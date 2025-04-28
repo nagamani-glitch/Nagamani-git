@@ -48,6 +48,15 @@ const shiftRequestSchema = new mongoose.Schema({
   isAllocated: {
     type: Boolean,
     default: false
+  },
+  // Add fields for tracking who reviewed the request
+  reviewedBy: {
+    type: String,
+    default: null
+  },
+  reviewedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true
