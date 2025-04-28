@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const shiftRequestSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true 
+  },// Add userId as a required field
   name: {
     type: String,
     required: true

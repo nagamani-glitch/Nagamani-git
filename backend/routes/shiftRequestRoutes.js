@@ -8,15 +8,26 @@ import {
   approveShiftRequest,
   rejectShiftRequest,
   bulkApproveRequests,
-  bulkRejectRequests
+  bulkRejectRequests,
+  getUserShiftRequests
 } from '../controllers/shiftRequestController.js';
 
+// Admin routes - for all shift requests
 router.get('/shifts', getAllShiftRequests);
+
+// User-specific routes
+router.get('/shifts/user/:userId', getUserShiftRequests);
+
+// Create new shift request
 router.post('/shifts', createShiftRequest);
+
+// Update, delete, approve, reject specific shift request
 router.put('/shifts/:id', updateShiftRequest);
 router.delete('/shifts/:id', deleteShiftRequest);
 router.put('/shifts/:id/approve', approveShiftRequest);
 router.put('/shifts/:id/reject', rejectShiftRequest);
+
+// Bulk operations
 router.post('/shifts/bulk-approve', bulkApproveRequests);
 router.post('/shifts/bulk-reject', bulkRejectRequests);
 
