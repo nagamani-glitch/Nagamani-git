@@ -2,26 +2,53 @@ import mongoose from "mongoose";
 
 const workTypeRequestSchema = new mongoose.Schema(
   {
-    employee: { type: String, required: true },
-    employeeCode: { type: String, required: true },
-    requestedShift: {
+    name: { 
+      type: String, 
+      required: true 
+    },
+    employeeCode: { 
+      type: String, 
+      required: true 
+    },
+    userId: {
+      type: String,
+      required: true
+    },
+    requestedWorktype: {
       type: String,
       required: true,
       enum: ["Full Time", "Part Time", "Contract", "Freelance", "Remote"],
     },
-    currentWorktype: {  // Rename from currentShift to currentWorktype
+    currentWorktype: {
       type: String,
-      default: "Full Time",  // Change default from "Regular Shift" to "Full Time"
+      default: "Full Time",
     },
-    requestedDate: { type: Date, required: true },
-    requestedTill: { type: Date, required: true },
+    requestedDate: { 
+      type: Date, 
+      required: true 
+    },
+    requestedTill: { 
+      type: Date, 
+      required: true 
+    },
     status: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
     },
-    description: { type: String },
-    isPermanentRequest: { type: Boolean, default: false },
+    description: { 
+      type: String 
+    },
+    isPermanentRequest: { 
+      type: Boolean, 
+      default: false 
+    },
+    reviewedBy: {
+      type: String
+    },
+    reviewedAt: {
+      type: Date
+    }
   },
   {
     timestamps: true,

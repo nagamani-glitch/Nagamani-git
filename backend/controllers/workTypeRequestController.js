@@ -1,4 +1,5 @@
 import WorkTypeRequest from '../models/WorkTypeRequest.js';
+import Notification from '../models/Notification.js';
 
 export const getAllWorkTypeRequests = async (req, res) => {
   try {
@@ -43,12 +44,54 @@ export const deleteWorkTypeRequest = async (req, res) => {
 
 export const approveWorkTypeRequest = async (req, res) => {
   try {
-    const request = await WorkTypeRequest.findByIdAndUpdate(
+    const request = await WorkTypeRequest.findById(req.params.id);
+    if (!request) {
+      return res.status(404).json({ message: 'Work type request not found' });
+    }
+
+    const previousStatus = request.status;
+    
+    const updatedRequest = await WorkTypeRequest.findByIdAndUpdate(
       req.params.id,
-      { status: 'Approved' },
+      { 
+        status: 'Approved',
+        reviewedBy: req.body.reviewerName || 'Admin',
+        reviewedAt: new Date()
+      },
       { new: true }
     );
-    res.status(200).json(request);
+
+    // Create notification if status changed to Approved
+    if (previousStatus !== 'Approved' && request.userId) {
+      try {
+        // Create notification message
+        const notificationMessage = `Your work type request for ${new Date(request.requestedDate).toLocaleDateString()} has been approved`;
+        
+        // Create notification in database
+        const notification = new Notification({
+          message: notificationMessage,
+          type: 'worktype',
+          userId: request.userId,
+          status: 'approved',
+          read: false,
+          time: new Date()
+        });
+        
+        await notification.save();
+        
+        // Get the io instance from the request app
+        const io = req.app.get('io');
+        
+        if (io) {
+          // Emit to the specific user's room
+          io.to(request.userId).emit('new-notification', notification);
+        }
+      } catch (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      }
+    }
+    
+    res.status(200).json(updatedRequest);
   } catch (error) {
     res.status(500).json({ message: 'Error approving work type request', error });
   }
@@ -56,26 +99,103 @@ export const approveWorkTypeRequest = async (req, res) => {
 
 export const rejectWorkTypeRequest = async (req, res) => {
   try {
-    const request = await WorkTypeRequest.findByIdAndUpdate(
+    const request = await WorkTypeRequest.findById(req.params.id);
+    if (!request) {
+      return res.status(404).json({ message: 'Work type request not found' });
+    }
+
+    const previousStatus = request.status;
+    
+    const updatedRequest = await WorkTypeRequest.findByIdAndUpdate(
       req.params.id,
-      { status: 'Rejected' },
+      { 
+        status: 'Rejected',
+        reviewedBy: req.body.reviewerName || 'Admin',
+        reviewedAt: new Date()
+      },
       { new: true }
     );
-    res.status(200).json(request);
+
+    // Create notification if status changed to Rejected
+    if (previousStatus !== 'Rejected' && request.userId) {
+      try {
+        // Create notification message
+        const notificationMessage = `Your work type request for ${new Date(request.requestedDate).toLocaleDateString()} has been rejected`;
+        
+        // Create notification in database
+        const notification = new Notification({
+          message: notificationMessage,
+          type: 'worktype',
+          userId: request.userId,
+          status: 'rejected',
+          read: false,
+          time: new Date()
+        });
+        
+        await notification.save();
+        
+        // Get the io instance from the request app
+        const io = req.app.get('io');
+        
+        if (io) {
+          // Emit to the specific user's room
+          io.to(request.userId).emit('new-notification', notification);
+        }
+      } catch (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      }
+    }
+    
+    res.status(200).json(updatedRequest);
   } catch (error) {
     res.status(500).json({ message: 'Error rejecting work type request', error });
   }
 };
 
-// Add these new functions to the existing controller
-
 export const bulkApproveRequests = async (req, res) => {
   try {
     const { ids } = req.body;
+    
+    // First get all requests to send notifications
+    const requests = await WorkTypeRequest.find({ _id: { $in: ids } });
+    
+    // Update all requests
     await WorkTypeRequest.updateMany(
       { _id: { $in: ids } },
-      { status: 'Approved' }
+      { 
+        status: 'Approved',
+        reviewedBy: req.body.reviewerName || 'Admin',
+        reviewedAt: new Date()
+      }
     );
+    
+    // Send notifications for each request
+    const io = req.app.get('io');
+    
+    if (io) {
+      for (const request of requests) {
+        if (request.userId) {
+          try {
+            const notificationMessage = `Your work type request for ${new Date(request.requestedDate).toLocaleDateString()} has been approved`;
+            
+            const notification = new Notification({
+              message: notificationMessage,
+              type: 'worktype',
+              userId: request.userId,
+              status: 'approved',
+              read: false,
+              time: new Date()
+            });
+            
+            await notification.save();
+            io.to(request.userId).emit('new-notification', notification);
+          } catch (error) {
+            console.error('Error sending notification:', error);
+          }
+        }
+      }
+    }
+    
     res.status(200).json({ message: 'Requests approved successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error bulk approving requests', error });
@@ -85,16 +205,52 @@ export const bulkApproveRequests = async (req, res) => {
 export const bulkRejectRequests = async (req, res) => {
   try {
     const { ids } = req.body;
+    
+    // First get all requests to send notifications
+    const requests = await WorkTypeRequest.find({ _id: { $in: ids } });
+    
+    // Update all requests
     await WorkTypeRequest.updateMany(
       { _id: { $in: ids } },
-      { status: 'Rejected' }
+      { 
+        status: 'Rejected',
+        reviewedBy: req.body.reviewerName || 'Admin',
+        reviewedAt: new Date()
+      }
     );
+    
+    // Send notifications for each request
+    const io = req.app.get('io');
+    
+    if (io) {
+      for (const request of requests) {
+        if (request.userId) {
+          try {
+            const notificationMessage = `Your work type request for ${new Date(request.requestedDate).toLocaleDateString()} has been rejected`;
+            
+            const notification = new Notification({
+              message: notificationMessage,
+              type: 'worktype',
+              userId: request.userId,
+              status: 'rejected',
+              read: false,
+              time: new Date()
+            });
+            
+            await notification.save();
+            io.to(request.userId).emit('new-notification', notification);
+          } catch (error) {
+            console.error('Error sending notification:', error);
+          }
+        }
+      }
+    }
+    
     res.status(200).json({ message: 'Requests rejected successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error bulk rejecting requests', error });
   }
 };
-
 
 export const getWorkTypeRequestsByEmployeeCode = async (req, res) => {
   try {
@@ -105,4 +261,3 @@ export const getWorkTypeRequestsByEmployeeCode = async (req, res) => {
     res.status(500).json({ message: 'Error fetching work type requests', error });
   }
 };
-

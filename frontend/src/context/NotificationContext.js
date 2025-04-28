@@ -227,6 +227,37 @@ export const NotificationProvider = ({ children }) => {
     }
   }, []);
 
+  // Add this function to the NotificationContext
+const addWorkTypeRequestNotification = useCallback(async (employeeName, status, requestedWorktype, startDate, endDate, userId = null) => {
+  if (!userId) {
+    console.error('User ID is required to add a work type request notification');
+    return null;
+  }
+
+  const statusText = status === "approved" ? "approved" : "rejected";
+  const message = `Your ${requestedWorktype} request from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been ${statusText}`;
+  
+  try {
+    const response = await axios.post('http://localhost:5000/api/notifications', {
+      message,
+      type: 'worktype',
+      status,
+      userId
+    });
+    
+    const newNotification = response.data;
+    
+    // Update local state
+    setNotifications(prev => [newNotification, ...prev]);
+    
+    return newNotification._id;
+  } catch (error) {
+    console.error('Error adding work type request notification:', error);
+    return null;
+  }
+}, []);
+
+
   // Function to delete a notification
   const deleteNotification = useCallback(async (id) => {
     try {
@@ -354,7 +385,8 @@ export const NotificationProvider = ({ children }) => {
       addLeaveRequestNotification,
       addResignationNotification,
       addTimeOffNotification,
-      addShiftRequestNotification, // Add the new function
+      addShiftRequestNotification,
+      addWorkTypeRequestNotification,
       markAsRead,
       markAllAsRead,
       deleteNotification,
