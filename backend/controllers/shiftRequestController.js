@@ -2,14 +2,14 @@ import ShiftRequest from '../models/ShiftRequest.js';
 
 export const getAllShiftRequests = async (req, res) => {
   try {
-    const { isAllocated, userId } = req.query;
+    const { isForReview, userId } = req.query;
     
     // Build the query object
     const queryObj = {};
     
-    // Add isAllocated filter if provided
-    if (isAllocated === 'true' || isAllocated === 'false') {
-      queryObj.isAllocated = isAllocated === 'true';
+    // Add isForReview filter if provided
+    if (isForReview === 'true' || isForReview === 'false') {
+      queryObj.isForReview = isForReview === 'true';
     }
     
     // Add userId filter if provided
@@ -55,7 +55,8 @@ export const createShiftRequest = async (req, res) => {
       requestedTill: req.body.requestedTill,
       description: req.body.description,
       isPermanentRequest: req.body.isPermanentRequest,
-      isAllocated: req.body.isAllocated
+      isForReview: true, // Always set to true for new requests
+      isAllocated: req.body.isAllocated || false
     });
     
     const savedRequest = await newShiftRequest.save();
@@ -75,7 +76,7 @@ export const updateShiftRequest = async (req, res) => {
     }
     
     // Check if the user owns this request (if userId is provided in the request)
-    if (req.body.userId && shiftRequest.userId !== req.body.userId) {
+    if (req.body.userId && shiftRequest.userId !== req.body.userId && !isAdmin(req)) {
       return res.status(403).json({ message: 'You can only update your own requests' });
     }
     
@@ -101,7 +102,7 @@ export const deleteShiftRequest = async (req, res) => {
     }
     
     // Check if the user owns this request (if userId is provided in the query)
-    if (req.query.userId && shiftRequest.userId !== req.query.userId) {
+    if (req.query.userId && shiftRequest.userId !== req.query.userId && !isAdmin(req)) {
       return res.status(403).json({ message: 'You can only delete your own requests' });
     }
     
@@ -114,11 +115,23 @@ export const deleteShiftRequest = async (req, res) => {
 
 export const approveShiftRequest = async (req, res) => {
   try {
+    // Update the request to approved status and remove from review if specified
+    const updateData = { 
+      status: 'Approved',
+      // If isForReview is specified in the request body, use that value
+      ...(req.body.hasOwnProperty('isForReview') && { isForReview: req.body.isForReview })
+    };
+    
     const request = await ShiftRequest.findByIdAndUpdate(
       req.params.id,
-      { status: 'Approved' },
+      updateData,
       { new: true }
     );
+    
+    if (!request) {
+      return res.status(404).json({ message: 'Shift request not found' });
+    }
+    
     res.status(200).json(request);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -127,11 +140,23 @@ export const approveShiftRequest = async (req, res) => {
 
 export const rejectShiftRequest = async (req, res) => {
   try {
+    // Update the request to rejected status and remove from review if specified
+    const updateData = { 
+      status: 'Rejected',
+      // If isForReview is specified in the request body, use that value
+      ...(req.body.hasOwnProperty('isForReview') && { isForReview: req.body.isForReview })
+    };
+    
     const request = await ShiftRequest.findByIdAndUpdate(
       req.params.id,
-      { status: 'Rejected' },
+      updateData,
       { new: true }
     );
+    
+    if (!request) {
+      return res.status(404).json({ message: 'Shift request not found' });
+    }
+    
     res.status(200).json(request);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -140,12 +165,28 @@ export const rejectShiftRequest = async (req, res) => {
 
 export const bulkApproveRequests = async (req, res) => {
   try {
-    const { ids } = req.body;
-    await ShiftRequest.updateMany(
+    const { ids, isForReview } = req.body;
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'No request IDs provided' });
+    }
+    
+    // Update the requests to approved status and remove from review if specified
+    const updateData = { 
+      status: 'Approved',
+      // If isForReview is specified in the request body, use that value
+      ...(isForReview !== undefined && { isForReview })
+    };
+    
+    const result = await ShiftRequest.updateMany(
       { _id: { $in: ids } },
-      { status: 'Approved' }
+      updateData
     );
-    res.status(200).json({ message: 'Shifts approved successfully' });
+    
+    res.status(200).json({ 
+      message: 'Shifts approved successfully',
+      count: result.modifiedCount
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -153,13 +194,38 @@ export const bulkApproveRequests = async (req, res) => {
 
 export const bulkRejectRequests = async (req, res) => {
   try {
-    const { ids } = req.body;
-    await ShiftRequest.updateMany(
+    const { ids, isForReview } = req.body;
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'No request IDs provided' });
+    }
+    
+    // Update the requests to rejected status and remove from review if specified
+    const updateData = { 
+      status: 'Rejected',
+      // If isForReview is specified in the request body, use that value
+      ...(isForReview !== undefined && { isForReview })
+    };
+    
+    const result = await ShiftRequest.updateMany(
       { _id: { $in: ids } },
-      { status: 'Rejected' }
+      updateData
     );
-    res.status(200).json({ message: 'Shifts rejected successfully' });
+    
+    res.status(200).json({ 
+      message: 'Shifts rejected successfully',
+      count: result.modifiedCount
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
+
+// Helper function to check if a user is an admin
+// This is a placeholder - implement your actual admin check logic
+const isAdmin = (req) => {
+  // You might check a role field in the user's JWT token
+  // or check against a list of admin user IDs
+  return false; // Default to false for now
+};
+

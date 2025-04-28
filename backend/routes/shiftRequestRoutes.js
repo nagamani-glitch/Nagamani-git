@@ -12,7 +12,7 @@ import {
   getUserShiftRequests
 } from '../controllers/shiftRequestController.js';
 
-// Admin routes - for all shift requests
+// Admin routes - for all shift requests and review
 router.get('/shifts', getAllShiftRequests);
 
 // User-specific routes

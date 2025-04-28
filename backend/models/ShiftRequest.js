@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 const shiftRequestSchema = new mongoose.Schema({
   userId: {
     type: String,
-    required: true 
-  },// Add userId as a required field
+    required: true
+  },
   name: {
     type: String,
     required: true
@@ -40,6 +40,11 @@ const shiftRequestSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isForReview: {
+    type: Boolean,
+    default: true
+  },
+  // Keep isAllocated for backward compatibility but we'll use isForReview instead
   isAllocated: {
     type: Boolean,
     default: false
