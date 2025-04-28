@@ -67,33 +67,69 @@ export const getUserNotifications = async (req, res) => {
 //     res.status(500).json({ message: error.message });
 //   }
 // };
-// In the createNotification function:
-export const createNotification = async (req, res) => {
-    try {
-      const { message, type, status, userId } = req.body;
+// // In the createNotification function:
+// export const createNotification = async (req, res) => {
+//     try {
+//       const { message, type, status, userId } = req.body;
       
-      if (!userId) {
-        return res.status(400).json({ message: 'User ID is required' });
-      }
+//       if (!userId) {
+//         return res.status(400).json({ message: 'User ID is required' });
+//       }
       
-      const notification = new Notification({
-        message,
-        type,
-        status,
-        userId
-      });
+//       const notification = new Notification({
+//         message,
+//         type,
+//         status,
+//         userId
+//       });
       
-      const savedNotification = await notification.save();
+//       const savedNotification = await notification.save();
       
-      // Emit the new notification to the user's room
-      req.app.get('io').to(userId).emit('new-notification', savedNotification);
+//       // Emit the new notification to the user's room
+//       req.app.get('io').to(userId).emit('new-notification', savedNotification);
       
-      res.status(201).json(savedNotification);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
+//       res.status(201).json(savedNotification);
+//     } catch (error) {
+//       res.status(500).json({ message: error.message });
+//     }
+//   };
   
+// Update the createNotification function
+export const createNotification = async (req, res) => {
+  try {
+    const { message, type, status, userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+    
+    const notification = new Notification({
+      message,
+      type,
+      status,
+      userId,
+      read: false,
+      time: new Date()
+    });
+    
+    const savedNotification = await notification.save();
+    
+    // Emit the new notification to the user's room
+    const io = req.app.get('io');
+    if (io) {
+      io.to(userId).emit('new-notification', savedNotification);
+      console.log(`Socket notification emitted to user ${userId}`);
+    } else {
+      console.error('Socket.io instance not available');
+    }
+    
+    res.status(201).json(savedNotification);
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 // Mark a notification as read
 export const markAsRead = async (req, res) => {

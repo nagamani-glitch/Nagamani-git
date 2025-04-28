@@ -60,6 +60,7 @@ const TimeOffRequests = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const userId = localStorage.getItem('userId');
   const employeeId = localStorage.getItem('employeeId');
+  const { addTimeOffNotification } = useNotifications();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -148,32 +149,83 @@ const TimeOffRequests = () => {
     }
   };
 
-  useEffect(() => {
-    if (!userId) return;
+  // useEffect(() => {
+  //   if (!userId) return;
 
-    // Connect to WebSocket
-    const socket = io('http://localhost:5000');
+  //   // Connect to WebSocket
+  //   const socket = io('http://localhost:5000');
+    
+  //   // Join a room specific to this user
+  //   socket.emit('join', { userId });
+    
+  //   // Listen for new notifications related to time off requests
+  //   socket.on('new-notification', (notification) => {
+  //     // If the notification is about a time off request, refresh the requests
+  //     if (notification.type === 'timesheet' && notification.userId === userId) {
+  //       console.log('Received time off request notification:', notification);
+  //       fetchRequests();
+        
+  //       // Show a snackbar with the notification message
+  //       showSnackbar(notification.message, 'info');
+  //     }
+  //   });
+    
+  //   // Clean up on unmount
+  //   return () => {
+  //     socket.disconnect();
+  //   };
+  // }, [userId]);
+
+
+
+// Inside the component, update the socket connection useEffect
+
+
+useEffect(() => {
+  if (!userId) return;
+
+  console.log('Setting up WebSocket connection for time off requests:', userId);
+
+  // Connect to WebSocket
+  const socket = io('http://localhost:5000', {
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+  });
+  
+  // Handle connection events for debugging
+  socket.on('connect', () => {
+    console.log('Socket connected successfully in TimeOffRequests');
     
     // Join a room specific to this user
     socket.emit('join', { userId });
-    
-    // Listen for new notifications related to time off requests
-    socket.on('new-notification', (notification) => {
-      // If the notification is about a time off request, refresh the requests
-      if (notification.type === 'timesheet' && notification.userId === userId) {
-        console.log('Received time off request notification:', notification);
-        fetchRequests();
-        
-        // Show a snackbar with the notification message
-        showSnackbar(notification.message, 'info');
-      }
-    });
-    
-    // Clean up on unmount
-    return () => {
-      socket.disconnect();
-    };
-  }, [userId]);
+    console.log('Joined room:', userId);
+  });
+  
+  socket.on('connect_error', (error) => {
+    console.error('Socket connection error in TimeOffRequests:', error);
+  });
+  
+  // Listen for new notifications related to time off requests
+  socket.on('new-notification', (notification) => {
+    // If the notification is about a time off request, refresh the requests
+    if (notification.type === 'timesheet' && notification.userId === userId) {
+      console.log('Received time off request notification:', notification);
+      fetchRequests();
+      
+      // Show a snackbar with the notification message
+      showSnackbar(notification.message, notification.status === 'approved' ? 'success' : 'error');
+    }
+  });
+  
+  // Clean up on unmount
+  return () => {
+    console.log('Cleaning up socket connection in TimeOffRequests');
+    socket.disconnect();
+  };
+}, [userId]);
+
+// The rest of the component remains the same
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
