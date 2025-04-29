@@ -30,7 +30,7 @@ export class PayrollPDFService {
         const formatCurrency = (amount) => `Rs ${parseFloat(amount).toFixed(2)}`;
 
         // Extract values
-        const { empId, empName, department, designation, bankDetails, basicPay, allowances, deductions, month, year, pfNo, panNo, dateOfJoining } = payslipData;
+        const { empId, empName, department, designation, bankDetails, basicPay, allowances, deductions, month, year, pfNo,uanNo, panNo, dateOfJoining } = payslipData;
         
         // Calculate working days and LOP days
         const totalDaysInMonth = new Date(year, month, 0).getDate();
@@ -114,6 +114,37 @@ export class PayrollPDFService {
         
         // Define employee details in a structured format for the table
         
+        // const employeeDetails = [
+        //   [
+        //     { label: 'Employee ID', value: empId },
+        //     { label: 'Bank Name', value: bankDetails?.bankName }
+        //   ],
+        //   [
+        //     { label: 'Employee Name', value: empName },
+        //     { label: 'Bank A/C No.', value: bankDetails?.accountNo }
+        //   ],
+        //   [
+        //     { label: 'Date of Joining', value: dateOfJoining ? new Date(dateOfJoining).toLocaleDateString() : 'N/A' },
+            
+        //     { label: 'PAN Number', value: panNo },
+        //     { label: 'UAN Number', value: uanNo || 'N/A' }
+        //   ],
+        //   [
+        //     { label: 'Department', value: department },
+        //     { label: 'Working Days', value: workingDays.toString() },
+        //   ],
+        //   [
+        //     { label: 'Designation', value: designation },
+            
+        //     { label: 'LOP Days', value: lopDays.toString() },
+        //   ],
+        //   [
+        //     { label: 'PF Number', value: pfNo },
+            
+        //     { label: 'Payable Days', value: effectiveWorkingDays.toString() }
+        //   ]
+        // ];
+
         const employeeDetails = [
           [
             { label: 'Employee ID', value: empId },
@@ -125,22 +156,23 @@ export class PayrollPDFService {
           ],
           [
             { label: 'Date of Joining', value: dateOfJoining ? new Date(dateOfJoining).toLocaleDateString() : 'N/A' },
-            
             { label: 'PAN Number', value: panNo }
           ],
           [
             { label: 'Department', value: department },
-            { label: 'Working Days', value: workingDays.toString() },
+            { label: 'UAN Number', value: uanNo || 'N/A' }
           ],
           [
             { label: 'Designation', value: designation },
-            
-            { label: 'LOP Days', value: lopDays.toString() },
+            { label: 'PF Number', value: pfNo }
           ],
           [
-            { label: 'PF Number', value: pfNo },
-            
-            { label: 'Payable Days', value: effectiveWorkingDays.toString() }
+            { label: 'Working Days', value: workingDays.toString() },
+            { label: 'LOP Days', value: lopDays.toString() }
+          ],
+          [
+            { label: 'Payable Days', value: effectiveWorkingDays.toString() },
+            { label: '', value: '' }  // Empty cell to maintain the layout
           ]
         ];
         
