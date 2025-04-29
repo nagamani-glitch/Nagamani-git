@@ -37,26 +37,9 @@ import {
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
 import { io } from 'socket.io-client'; // Import socket.io client
 
-<<<<<<< HEAD
 const API_URL = "http://localhost:5002/api/rotating-worktype/shifts";
-const EMPLOYEES_API_URL = "http://localhost:5002/api/employees/registered";
-
-const employees = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  name: `Employee ${i + 1}`,
-  employeeCode: `#EMP${i + 1}`,
-  requestedWorktype: i % 2 === 0 ? "Full Time" : "Part Time",
-  currentWorktype: "Regular",
-  requestedDate: "2024-02-07",
-  requestedTill: "2024-02-09",
-  status: i % 2 === 0 ? "Approved" : "Rejected",
-  description: "Request for worktype adjustment",
-}));
-=======
-const API_URL = "http://localhost:5000/api/rotating-worktype/shifts";
 const USER_API_URL = (userId) =>
-  `http://localhost:5000/api/rotating-worktype/shifts/user/${userId}`;
->>>>>>> 804de9616ea57755748614f10fa352a108bbc358
+  `http://localhost:5002/api/rotating-worktype/shifts/user/${userId}`;
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -164,7 +147,7 @@ const RotatingWorktypeAssign = () => {
     if (!userId) return;
 
     // Connect to the WebSocket server
-    const socket = io('http://localhost:5000', {
+    const socket = io('http://localhost:5002', {
       query: { userId }
     });
 
@@ -213,7 +196,7 @@ const RotatingWorktypeAssign = () => {
       }
 
       const response = await axios.get(
-        `http://localhost:5000/api/employees/by-user/${userId}`
+        `http://localhost:5002/api/employees/by-user/${userId}`
       );
 
       if (response.data.success) {

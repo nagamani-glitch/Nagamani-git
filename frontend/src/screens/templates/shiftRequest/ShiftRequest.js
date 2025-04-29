@@ -375,7 +375,7 @@ const ShiftRequest = () => {
     if (!userId) return;
 
     // Connect to the WebSocket server
-    const socket = io('http://localhost:5000', {
+    const socket = io('http://localhost:5002', {
       query: { userId }
     });
 

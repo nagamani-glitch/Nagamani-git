@@ -37,14 +37,9 @@ import {
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
 import { io } from 'socket.io-client';
 
-<<<<<<< HEAD
-const API_URL = "http://localhost:5002/api/rotating-shift";
-const EMPLOYEES_API_URL = "http://localhost:5002/api/employees/registered";
-=======
-const API_URL = "http://localhost:5000/api/rotating-shift/shifts";
+const API_URL = "http://localhost:5002/api/rotating-shift/shifts";
 const USER_API_URL = (userId) =>
-  `http://localhost:5000/api/rotating-shift/shifts/user/${userId}`;
->>>>>>> 804de9616ea57755748614f10fa352a108bbc358
+  `http://localhost:5002/api/rotating-shift/shifts/user/${userId}`;
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -156,7 +151,7 @@ useEffect(() => {
   if (!userId) return;
 
   // Connect to the WebSocket server
-  const socket = io('http://localhost:5000', {
+  const socket = io('http://localhost:5002', {
     query: { userId }
   });
 
@@ -201,7 +196,7 @@ useEffect(() => {
       }
 
       const response = await axios.get(
-        `http://localhost:5000/api/employees/by-user/${userId}`
+        `http://localhost:5002/api/employees/by-user/${userId}`
       );
 
       if (response.data.success) {

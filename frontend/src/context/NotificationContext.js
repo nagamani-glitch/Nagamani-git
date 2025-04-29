@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
 
@@ -320,14 +319,12 @@
 // };
 
 
-=======
->>>>>>> 804de9616ea57755748614f10fa352a108bbc358
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { FaCalendarAlt, FaClock, FaFileAlt, FaUserAlt } from 'react-icons/fa';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 // Add this constant at the top of the file, after the imports
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5002/api';
 
 // Create the context
 const NotificationContext = createContext();
@@ -534,7 +531,7 @@ export const NotificationProvider = ({ children }) => {
     const message = `Your ${requestedShift} request from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been ${statusText}`;
     
     try {
-      const response = await axios.post('http://localhost:5000/api/notifications', {
+      const response = await axios.post('http://localhost:5002/api/notifications', {
         message,
         type: 'shift',
         status,
@@ -564,7 +561,7 @@ const addWorkTypeRequestNotification = useCallback(async (employeeName, status, 
   const message = `Your ${requestedWorktype} request from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been ${statusText}`;
   
   try {
-    const response = await axios.post('http://localhost:5000/api/notifications', {
+    const response = await axios.post('http://localhost:5002/api/notifications', {
       message,
       type: 'worktype',
       status,
@@ -594,7 +591,7 @@ const addRotatingWorktypeNotification = useCallback(async (employeeName, status,
   const message = `Your ${requestedWorktype} worktype request from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been ${statusText}`;
   
   try {
-    const response = await axios.post('http://localhost:5000/api/notifications', {
+    const response = await axios.post('http://localhost:5002/api/notifications', {
       message,
       type: 'rotating-worktype',
       status: status.toLowerCase(),
