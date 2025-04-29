@@ -2,6 +2,8 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import { FaCalendarAlt, FaClock, FaFileAlt, FaUserAlt } from 'react-icons/fa';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+// Add this constant at the top of the file, after the imports
+const API_URL = 'http://localhost:5000/api';
 
 // Create the context
 const NotificationContext = createContext();
@@ -374,6 +376,152 @@ const addWorkTypeRequestNotification = useCallback(async (employeeName, status, 
     };
   }, []);
 
+
+//   // Add this function to the NotificationContext
+// const markRotatingShiftNotificationAsRead = async (notificationId) => {
+//   try {
+//     const response = await axios.put(
+//       `$http://localhost:5000/api/notifications/${notificationId}/read`,
+//       {},
+//       {
+//         headers: {
+//           Authorization: `Bearer ${localStorage.getItem("token")}`,
+//         },
+//       }
+//     );
+    
+//     if (response.status === 200) {
+//       setNotifications((prevNotifications) =>
+//         prevNotifications.map((notification) =>
+//           notification._id === notificationId
+//             ? { ...notification, read: true }
+//             : notification
+//         )
+//       );
+//     }
+//   } catch (error) {
+//     console.error("Error marking rotating shift notification as read:", error);
+//   }
+// };
+
+
+// Add this function to the NotificationContext
+// const sendRotatingShiftNotification = async (userId, message, status, relatedId) => {
+//   try {
+//     const response = await axios.post(
+//       `${API_URL}/notifications`,
+//       {
+//         userId,
+//         message,
+//         type: 'rotating-shift',
+//         status,
+//         relatedId,
+//         read: false,
+//         time: new Date()
+//       },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${localStorage.getItem("token")}`,
+//         },
+//       }
+//     );
+    
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error sending rotating shift notification:", error);
+//     throw error;
+//   }
+// };
+
+// // Add this function to the NotificationContext
+// const markRotatingShiftNotificationAsRead = async (notificationId) => {
+//   try {
+//     const response = await axios.put(
+//       `${API_URL}/notifications/${notificationId}/read`,
+//       {},
+//       {
+//         headers: {
+//           Authorization: `Bearer ${localStorage.getItem("token")}`,
+//         },
+//       }
+//     );
+    
+//     if (response.status === 200) {
+//       setNotifications((prevNotifications) =>
+//         prevNotifications.map((notification) =>
+//           notification._id === notificationId
+//             ? { ...notification, read: true }
+//             : notification
+//         )
+//       );
+//     }
+//   } catch (error) {
+//     console.error("Error marking rotating shift notification as read:", error);
+//   }
+// };
+
+
+
+
+
+// Then update the sendRotatingShiftNotification function
+const sendRotatingShiftNotification = async (userId, message, status, relatedId) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/notifications`,
+      {
+        userId,
+        message,
+        type: 'rotating-shift',
+        status,
+        relatedId,
+        read: false,
+        time: new Date()
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error sending rotating shift notification:", error);
+    throw error;
+  }
+};
+
+// And update the markRotatingShiftNotificationAsRead function
+const markRotatingShiftNotificationAsRead = async (notificationId) => {
+  try {
+    const response = await axios.put(
+      `${API_URL}/notifications/${notificationId}/read`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    
+    if (response.status === 200) {
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((notification) =>
+          notification._id === notificationId
+            ? { ...notification, read: true }
+            : notification
+        )
+      );
+    }
+  } catch (error) {
+    console.error("Error marking rotating shift notification as read:", error);
+  }
+};
+
+
+
+
   return (
     <NotificationContext.Provider value={{ 
       notifications, 
@@ -387,11 +535,15 @@ const addWorkTypeRequestNotification = useCallback(async (employeeName, status, 
       addTimeOffNotification,
       addShiftRequestNotification,
       addWorkTypeRequestNotification,
+      markRotatingShiftNotificationAsRead,
+      sendRotatingShiftNotification,
+      
       markAsRead,
       markAllAsRead,
       deleteNotification,
       clearAll,
-      getUserNotifications
+      getUserNotifications,
+      
     }}>
       {children}
     </NotificationContext.Provider>
