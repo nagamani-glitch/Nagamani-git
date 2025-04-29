@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// const BASE_URL = 'http://localhost:5000/api/contracts';
+// const BASE_URL = 'http://localhost:5002/api/contracts';
 
 export const getContractsByEmployeeId = async (userId) => {
   const response = await axios.get(`/api/contracts/employee/${userId}`);

@@ -30,7 +30,7 @@ const DocumentRequestPage = () => {
 
   const fetchDocuments = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/documents');
+      const response = await axios.get('http://localhost:5002/api/documents');
       setDocumentData(response.data);
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -92,7 +92,7 @@ const DocumentRequestPage = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/documents/${id}`);
+      await axios.delete(`http://localhost:5002/api/documents/${id}`);
       setDocumentData(prev => prev.filter(doc => doc._id !== id));
     } catch (error) {
       console.error('Error deleting document:', error);
@@ -105,7 +105,7 @@ const DocumentRequestPage = () => {
     try {
       if (editingDocument) {
         const response = await axios.put(
-          `http://localhost:5000/api/documents/${editingDocument._id}`, 
+          `http://localhost:5002/api/documents/${editingDocument._id}`, 
           editingDocument
         );
         setDocumentData(prev => prev.map(doc => 
@@ -124,7 +124,7 @@ const DocumentRequestPage = () => {
           details: [newDocument.employee]
         };
   
-        const response = await axios.post('http://localhost:5000/api/documents', documentToCreate);
+        const response = await axios.post('http://localhost:5002/api/documents', documentToCreate);
         setDocumentData(prev => [...prev, response.data]);
       }
       closeCreateModal();

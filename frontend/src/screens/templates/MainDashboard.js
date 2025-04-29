@@ -69,7 +69,7 @@ const StyledHeader = styled(Box)(({ theme, color }) => ({
 }));
 
 const apiBaseURL =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+  process.env.REACT_APP_API_BASE_URL || "http://localhost:5002";
 
 const MainDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -217,7 +217,7 @@ const MainDashboard = () => {
 
       // Fetch offboarding data to get total offboarded count
       const offboardingResponse = await axios.get(
-        `http://localhost:5000/api/offboarding`
+        `http://localhost:5002/api/offboarding`
       );
       const totalOffboarded = offboardingResponse.data.length || 0;
 

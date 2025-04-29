@@ -203,7 +203,7 @@ const Feedback = () => {
       }
 
       const response = await axios.get(
-        `http://localhost:5000/api/employees/by-user/${userId}`
+        `http://localhost:5002/api/employees/by-user/${userId}`
       );
       if (response.data.success) {
         setCurrentUser(response.data.data);
@@ -241,7 +241,7 @@ const Feedback = () => {
     try {
       setLoadingEmployees(true);
       const response = await axios.get(
-        "http://localhost:5000/api/employees/registered"
+        "http://localhost:5002/api/employees/registered"
       );
 
       // Transform the data to the format we need
@@ -311,12 +311,12 @@ const Feedback = () => {
   const fetchFeedbacks = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/feedback");
+      const response = await axios.get("http://localhost:5002/api/feedback");
 
       // Get the current user's employee ID
       const userId = localStorage.getItem("userId");
       const currentUserResponse = await axios.get(
-        `http://localhost:5000/api/employees/by-user/${userId}`
+        `http://localhost:5002/api/employees/by-user/${userId}`
       );
       const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
 
@@ -346,7 +346,7 @@ const Feedback = () => {
       // Get current user's employee ID
       const userId = localStorage.getItem("userId");
       const currentUserResponse = await axios.get(
-        `http://localhost:5000/api/employees/by-user/${userId}`
+        `http://localhost:5002/api/employees/by-user/${userId}`
       );
       const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
 
@@ -359,7 +359,7 @@ const Feedback = () => {
 
       if (isEditing) {
         await axios.put(
-          `http://localhost:5000/api/feedback/${newFeedback._id}`,
+          `http://localhost:5002/api/feedback/${newFeedback._id}`,
           feedbackData
         );
       } else {
@@ -369,7 +369,7 @@ const Feedback = () => {
           feedbackData.reviewStatus = "Pending";
         }
 
-        await axios.post("http://localhost:5000/api/feedback", feedbackData);
+        await axios.post("http://localhost:5002/api/feedback", feedbackData);
       }
 
       await fetchFeedbacks();
@@ -397,7 +397,7 @@ const Feedback = () => {
     try {
       setLoading(true);
       await axios.delete(
-        `http://localhost:5000/api/feedback/${
+        `http://localhost:5002/api/feedback/${
           itemToDelete._id || itemToDelete.id
         }`
       );
@@ -437,7 +437,7 @@ const Feedback = () => {
   // Status change handler
   const handleStatusChange = async (feedbackId, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/feedback/${feedbackId}`, {
+      await axios.put(`http://localhost:5002/api/feedback/${feedbackId}`, {
         status: newStatus,
       });
       await fetchFeedbacks();
@@ -452,7 +452,7 @@ const Feedback = () => {
     try {
       // In a real app, you would fetch the history from the backend
       const response = await axios.get(
-        `http://localhost:5000/api/feedback/${feedbackId}/history`
+        `http://localhost:5002/api/feedback/${feedbackId}/history`
       );
       setSelectedFeedback({
         ...Object.values(feedbackData)
@@ -506,7 +506,7 @@ const Feedback = () => {
     try {
       // In a real app, you would send this to the backend
       await axios.post(
-        `http://localhost:5000/api/feedback/${selectedFeedback._id}/comments`,
+        `http://localhost:5002/api/feedback/${selectedFeedback._id}/comments`,
         {
           comment,
         }
@@ -664,13 +664,13 @@ const Feedback = () => {
       if (action === "delete") {
         await Promise.all(
           selectedItems.map((id) =>
-            axios.delete(`http://localhost:5000/api/feedback/${id}`)
+            axios.delete(`http://localhost:5002/api/feedback/${id}`)
           )
         );
       } else if (action === "status") {
         await Promise.all(
           selectedItems.map((id) =>
-            axios.put(`http://localhost:5000/api/feedback/${id}`, {
+            axios.put(`http://localhost:5002/api/feedback/${id}`, {
               status: "Completed",
             })
           )
@@ -693,7 +693,7 @@ const Feedback = () => {
       // Try to fetch analytics from the backend
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/feedback/analytics/summary"
+          "http://localhost:5002/api/feedback/analytics/summary"
         );
         setAnalyticsData(response.data);
         setShowAnalytics(true);

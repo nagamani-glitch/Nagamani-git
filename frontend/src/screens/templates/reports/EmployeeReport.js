@@ -114,7 +114,7 @@ const EmployeeReport = () => {
 
       // Fetch offboarding data
       const offboardingResponse = await axios.get(
-        "http://localhost:5000/api/offboarding"
+        "http://localhost:5002/api/offboarding"
       );
 
       // Process offboarding data

@@ -89,7 +89,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 // API URL for current user's employee profile
-const USER_PROFILE_API_URL = "http://localhost:5000/api/employees/by-user";
+const USER_PROFILE_API_URL = "http://localhost:5002/api/employees/by-user";
 
 const WorkTypeRequest = () => {
   const theme = useTheme();
@@ -134,7 +134,7 @@ const WorkTypeRequest = () => {
 
         // Fetch user role from your authentication API
         const response = await axios.get(
-          `http://localhost:5000/api/users/${userId}`
+          `http://localhost:5002/api/users/${userId}`
         );
         setIsAdmin(response.data.role === "admin");
       } catch (error) {

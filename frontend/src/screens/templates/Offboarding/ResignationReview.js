@@ -150,7 +150,7 @@ const ResignationReview = () => {
   const fetchCurrentUser = async (userId) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/employees/by-user/${userId}`
+        `http://localhost:5002/api/employees/by-user/${userId}`
       );
       setCurrentUser(response.data.data);
 
@@ -177,7 +177,7 @@ const ResignationReview = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        "http://localhost:5000/api/resignations"
+        "http://localhost:5002/api/resignations"
       );
 
       // Get employee data for each resignation
@@ -187,7 +187,7 @@ const ResignationReview = () => {
             try {
               // Fetch employee data using the userId
               const employeeResponse = await axios.get(
-                `http://localhost:5000/api/employees/by-user/${resignation.userId}`
+                `http://localhost:5002/api/employees/by-user/${resignation.userId}`
               );
               const employeeData = employeeResponse.data.data;
 
@@ -265,7 +265,7 @@ const ResignationReview = () => {
     try {
       setLoading(true);
       await axios.delete(
-        `http://localhost:5000/api/resignations/${resignationToDelete._id}`
+        `http://localhost:5002/api/resignations/${resignationToDelete._id}`
       );
 
       setSnackbar({
@@ -308,7 +308,7 @@ const ResignationReview = () => {
       setLoading(true);
 
       const response = await axios.put(
-        `http://localhost:5000/api/resignations/${selectedResignation._id}`,
+        `http://localhost:5002/api/resignations/${selectedResignation._id}`,
         {
           status: reviewStatus,
           reviewNotes: reviewNotes,
@@ -362,7 +362,7 @@ const ResignationReview = () => {
   const handleSendEmail = async (resignation) => {
     try {
       setLoading(true);
-      await axios.post("http://localhost:5000/api/resignations/email", {
+      await axios.post("http://localhost:5002/api/resignations/email", {
         name: resignation.name,
         email: resignation.email,
         position: resignation.position,
@@ -391,7 +391,7 @@ const ResignationReview = () => {
   // Add this function to send notification after review
   const sendStatusNotification = async (resignation) => {
     try {
-      await axios.post("http://localhost:5000/api/resignations/email", {
+      await axios.post("http://localhost:5002/api/resignations/email", {
         name: resignation.name,
         email: resignation.email,
         position: resignation.position,
@@ -1157,7 +1157,7 @@ const ResignationReview = () => {
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={5000}
+        autoHideDuration={5002}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >

@@ -95,7 +95,7 @@ const RecruitmentSurvey = () => {
 
       if (deleteType === "template" && itemToDelete) {
         await axios.delete(
-          `http://localhost:5000/api/recruitment-survey/${itemToDelete._id}`
+          `http://localhost:5002/api/recruitment-survey/${itemToDelete._id}`
         );
         setTemplates((prevTemplates) =>
           prevTemplates.filter((template) => template._id !== itemToDelete._id)
@@ -107,7 +107,7 @@ const RecruitmentSurvey = () => {
         parentTemplateId
       ) {
         await axios.delete(
-          `http://localhost:5000/api/recruitment-survey/${parentTemplateId}/questions/${itemToDelete._id}`
+          `http://localhost:5002/api/recruitment-survey/${parentTemplateId}/questions/${itemToDelete._id}`
         );
         setTemplates((prevTemplates) =>
           prevTemplates.map((template) =>
@@ -137,7 +137,7 @@ const RecruitmentSurvey = () => {
     const fetchTemplates = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/recruitment-survey"
+          "http://localhost:5002/api/recruitment-survey"
         );
         console.log("Fetched templates:", response.data);
         setTemplates(response.data);
@@ -155,7 +155,7 @@ const RecruitmentSurvey = () => {
     try {
       setLoadingEmployees(true);
       const response = await axios.get(
-        "http://localhost:5000/api/employees/registered"
+        "http://localhost:5002/api/employees/registered"
       );
       console.log("Fetched employees:", response.data);
       setRegisteredEmployees(response.data);
@@ -233,7 +233,7 @@ const RecruitmentSurvey = () => {
         console.log("Sending template data:", newTemplate);
 
         const { data } = await axios.post(
-          "http://localhost:5000/api/recruitment-survey/add",
+          "http://localhost:5002/api/recruitment-survey/add",
           newTemplate
         );
 
@@ -293,7 +293,7 @@ const RecruitmentSurvey = () => {
       console.log("Sending question data:", requestData);
 
       const { data } = await axios.post(
-        `http://localhost:5000/api/recruitment-survey/${currentTemplateId}/questions`,
+        `http://localhost:5002/api/recruitment-survey/${currentTemplateId}/questions`,
         requestData
       );
 
@@ -371,7 +371,7 @@ const RecruitmentSurvey = () => {
       console.log("Sending edit data:", requestData);
 
       const { data } = await axios.put(
-        `http://localhost:5000/api/recruitment-survey/${currentTemplateId}/questions/${currentQuestionId}`,
+        `http://localhost:5002/api/recruitment-survey/${currentTemplateId}/questions/${currentQuestionId}`,
         requestData
       );
 

@@ -156,7 +156,7 @@ const RegisterPage = () => {
     console.log('Sending registration data:', apiData);
     
     try {
-      await axios.post('http://localhost:5000/api/auth/register', apiData);
+      await axios.post('http://localhost:5002/api/auth/register', apiData);
       alert('OTP sent to email. Please verify.');
       setOtpSent(true);
       navigate('/verifyOtp', { state: { email: formData.email } });
@@ -225,7 +225,7 @@ const apiData = {
             WebkitBoxShadow: '0 0 0 1000px black inset',
             WebkitTextFillColor: 'white',
             caretColor: 'white',
-            transition: 'background-color 5000s ease-in-out 0s',
+            transition: 'background-color 5002s ease-in-out 0s',
                 },
                 '&:-webkit-autofill:hover, &:-webkit-autofill:focus': {
             WebkitBoxShadow: '0 0 0 1000px black inset',

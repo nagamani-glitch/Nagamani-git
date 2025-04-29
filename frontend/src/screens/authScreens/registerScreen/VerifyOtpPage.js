@@ -66,7 +66,7 @@ const VerifyOtpPage = () => {
     }
     
     try {
-      await axios.post('http://localhost:5000/api/auth/verify-otp', { email, otp: otpString });
+      await axios.post('http://localhost:5002/api/auth/verify-otp', { email, otp: otpString });
       alert('Email verified successfully');
       navigate('/login');
     } catch (error) {
@@ -127,7 +127,7 @@ const VerifyOtpPage = () => {
                     WebkitBoxShadow: '0 0 0 1000px black inset',
                     WebkitTextFillColor: 'white',
                     caretColor: 'white',
-                    transition: 'background-color 5000s ease-in-out 0s',
+                    transition: 'background-color 5002s ease-in-out 0s',
                   },
                 }
               },

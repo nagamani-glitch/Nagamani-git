@@ -1,6 +1,6 @@
 // import axios from 'axios';
 
-// const API_URL = 'http://localhost:5000/api/payslips';
+// const API_URL = 'http://localhost:5002/api/payslips';
 
 // // export const payslipAPI = {
 //     // // Get all payslips with pagination and filters
@@ -105,7 +105,7 @@
 
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/payslips';
+const API_URL = 'http://localhost:5002/api/payslips';
 
 // Create axios instance with default config
 const axiosInstance = axios.create({

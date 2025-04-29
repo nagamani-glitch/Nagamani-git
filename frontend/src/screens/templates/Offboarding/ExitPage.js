@@ -250,7 +250,7 @@ const ExitPage = () => {
 
     axios
       .put(
-        `http://localhost:5000/api/offboarding/${employee._id}`,
+        `http://localhost:5002/api/offboarding/${employee._id}`,
         updatedEmployee
       )
       .then(() => {
@@ -286,7 +286,7 @@ const ExitPage = () => {
 
     axios
       .put(
-        `http://localhost:5000/api/offboarding/${employee._id}`,
+        `http://localhost:5002/api/offboarding/${employee._id}`,
         updatedEmployee
       )
       .then(() => {
@@ -324,7 +324,7 @@ const ExitPage = () => {
 
       axios
         .put(
-          `http://localhost:5000/api/offboarding/${employee._id}`,
+          `http://localhost:5002/api/offboarding/${employee._id}`,
           updatedEmployee
         )
         .then(() => {
@@ -369,7 +369,7 @@ const ExitPage = () => {
 
     axios
       .put(
-        `http://localhost:5000/api/offboarding/${employeeId}`,
+        `http://localhost:5002/api/offboarding/${employeeId}`,
         updatedEmployee
       )
       .then(() => {
@@ -405,7 +405,7 @@ const ExitPage = () => {
     formData.append("employeeId", selectedEmployee?._id || "");
 
     axios
-      .post("http://localhost:5000/api/documents/upload", formData, {
+      .post("http://localhost:5002/api/documents/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -436,13 +436,13 @@ const ExitPage = () => {
 
   const handleDownloadDocument = (path) => {
     // Implement document download functionality
-    window.open(`http://localhost:5000${path}`, "_blank");
+    window.open(`http://localhost:5002${path}`, "_blank");
   };
 
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/employees/list"
+        "http://localhost:5002/api/employees/list"
       );
       setEmployees(response.data.data || []);
     } catch (error) {
@@ -469,7 +469,7 @@ const ExitPage = () => {
 
   const fetchOffboardings = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/offboarding");
+      const response = await axios.get("http://localhost:5002/api/offboarding");
       const offboardings = response.data;
       const updatedStages = offboardingStages.map((stage) => ({
         ...stage,
@@ -497,11 +497,11 @@ const ExitPage = () => {
       setLoading(true);
       if (editMode) {
         await axios.put(
-          `http://localhost:5000/api/offboarding/${editData._id}`,
+          `http://localhost:5002/api/offboarding/${editData._id}`,
           editData
         );
       } else {
-        await axios.post("http://localhost:5000/api/offboarding", newData);
+        await axios.post("http://localhost:5002/api/offboarding", newData);
       }
       await fetchOffboardings();
       setCreateOpen(false);
@@ -560,7 +560,7 @@ const ExitPage = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/offboarding/${id}`);
+      await axios.delete(`http://localhost:5002/api/offboarding/${id}`);
       await fetchOffboardings();
       setSnackbar({
         open: true,
@@ -3401,7 +3401,7 @@ const ExitPage = () => {
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={5000}
+        autoHideDuration={5002}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >

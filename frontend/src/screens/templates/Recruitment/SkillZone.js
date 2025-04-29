@@ -134,7 +134,7 @@ const handleConfirmDelete = async () => {
     setLoading(true);
     
     if (deleteType === "skill" && itemToDelete) {
-      await axios.delete(`http://localhost:5000/api/skill-zone/${itemToDelete._id}`);
+      await axios.delete(`http://localhost:5002/api/skill-zone/${itemToDelete._id}`);
       setSkills((prevSkills) =>
         prevSkills.filter((skill) => skill._id !== itemToDelete._id)
       );
@@ -142,7 +142,7 @@ const handleConfirmDelete = async () => {
     } 
     else if (deleteType === "candidate" && itemToDelete && parentSkillId) {
       await axios.delete(
-        `http://localhost:5000/api/skill-zone/${parentSkillId}/candidates/${itemToDelete._id}`
+        `http://localhost:5002/api/skill-zone/${parentSkillId}/candidates/${itemToDelete._id}`
       );
       setSkills((prevSkills) =>
         prevSkills.map((skill) =>
@@ -177,7 +177,7 @@ const handleConfirmDelete = async () => {
   const fetchSkills = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://localhost:5000/api/skill-zone");
+      const response = await axios.get("http://localhost:5002/api/skill-zone");
       console.log("Fetched skills:", response.data);
       setSkills(response.data);
     } catch (error) {
@@ -192,7 +192,7 @@ const handleConfirmDelete = async () => {
     try {
       setLoadingEmployees(true);
       const response = await axios.get(
-        "http://localhost:5000/api/employees/registered"
+        "http://localhost:5002/api/employees/registered"
       );
       console.log("Fetched employees:", response.data);
       setRegisteredEmployees(response.data);
@@ -286,7 +286,7 @@ const handleConfirmDelete = async () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://localhost:5000/api/skill-zone",
+        "http://localhost:5002/api/skill-zone",
         {
           name: newSkillName,
           candidates: [], // Start with empty candidates array
@@ -332,7 +332,7 @@ const handleConfirmDelete = async () => {
       console.log("Sending candidate data:", candidateData);
 
       const response = await axios.post(
-        `http://localhost:5000/api/skill-zone/${currentSkillId}/candidates`,
+        `http://localhost:5002/api/skill-zone/${currentSkillId}/candidates`,
         candidateData
       );
 
@@ -413,7 +413,7 @@ const handleConfirmDelete = async () => {
       console.log("Sending updated candidate data:", updatedCandidate);
 
       const response = await axios.put(
-        `http://localhost:5000/api/skill-zone/${currentSkillId}/candidates/${currentCandidateId}`,
+        `http://localhost:5002/api/skill-zone/${currentSkillId}/candidates/${currentCandidateId}`,
         updatedCandidate
       );
 

@@ -64,8 +64,8 @@ import Popover from "@mui/material/Popover";
 
 import "./Objectives.css";
 
-const API_URL = "http://localhost:5000/api/objectives";
-const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/registered";
+const API_URL = "http://localhost:5002/api/objectives";
+const EMPLOYEES_API_URL = "http://localhost:5002/api/employees/registered";
 
 const Objectives = () => {
   const theme = useTheme();
@@ -3609,7 +3609,7 @@ const handleTabChange = (event, newValue) => {
       {/* Notification Snackbar */}
       <Snackbar
         open={notification.open}
-        autoHideDuration={5000}
+        autoHideDuration={5002}
         onClose={handleNotificationClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >

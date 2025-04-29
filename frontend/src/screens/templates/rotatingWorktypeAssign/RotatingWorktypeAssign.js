@@ -36,8 +36,8 @@ import {
 } from "@mui/material";
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
 
-const API_URL = "http://localhost:5000/api/rotating-worktype/shifts";
-const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/registered";
+const API_URL = "http://localhost:5002/api/rotating-worktype/shifts";
+const EMPLOYEES_API_URL = "http://localhost:5002/api/employees/registered";
 
 const employees = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,

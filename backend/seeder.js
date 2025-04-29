@@ -58,7 +58,7 @@
 //       startDate: new Date(),
 //       endDate: null,
 //       wageType: 'Monthly',
-//       basicSalary: Math.floor(Math.random() * 50000) + 30000,
+//       basicSalary: Math.floor(Math.random() * 50020) + 30000,
 //       filingStatus: 'Single',
 //       status: 'Active',
 //     }));

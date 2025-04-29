@@ -73,7 +73,7 @@ const RegisterScreen = () => {
     try {
       // First save the nomination details
       const nominationResponse = await axios.post(
-        'http://localhost:5000/api/employees/nomination-details',
+        'http://localhost:5002/api/employees/nomination-details',
         {
           employeeId,
           nominationDetails: formData
@@ -82,7 +82,7 @@ const RegisterScreen = () => {
   
       // Then complete the registration
       const completeResponse = await axios.post(
-        'http://localhost:5000/api/employees/complete-registration',
+        'http://localhost:5002/api/employees/complete-registration',
         {
           employeeId,
           registrationComplete: true,
@@ -99,7 +99,7 @@ const RegisterScreen = () => {
       if (completeResponse.data.success) {
         // Get final employee data
         const employeeData = await axios.get(
-          `http://localhost:5000/api/employees/get-employee/${employeeId}`
+          `http://localhost:5002/api/employees/get-employee/${employeeId}`
         );
   
         toast.success(`Registration completed successfully! Employee Code: ${employeeData.data.data.Emp_ID}`);

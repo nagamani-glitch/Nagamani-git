@@ -122,7 +122,7 @@ const ResetPassword = () => {
         }
 
         try {
-            const response = await axios.post(`http://localhost:5000/api/auth/reset-password/${token}`, { password });
+            const response = await axios.post(`http://localhost:5002/api/auth/reset-password/${token}`, { password });
             setMessage(response.data.message);
             
             // Show success modal and start countdown

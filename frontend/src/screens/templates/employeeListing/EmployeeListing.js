@@ -386,7 +386,7 @@ const EmployeeListing = ({ onNavigate }) => {
             employee.addressDetails?.presentAddress?.city || "Not Specified",
           // Use the correct field name (employeeImage instead of profileImage)
           profileImage: employee.personalInfo?.employeeImage
-            ? `http://localhost:5000${employee.personalInfo.employeeImage}`
+            ? `http://localhost:5002${employee.personalInfo.employeeImage}`
             : null,
         }));
 

@@ -1,6 +1,6 @@
 // import axios from 'axios';
 
-// const API_URL = `http://localhost:5000/api/work-type-requests`;
+// const API_URL = `http://localhost:5002/api/work-type-requests`;
 
 // export const fetchWorkTypeRequests = () => axios.get(API_URL);
 // export const createWorkTypeRequest = (data) => {
@@ -14,7 +14,7 @@
 
 import axios from 'axios';
 
-const API_URL = `http://localhost:5000/api/work-type-requests`;
+const API_URL = `http://localhost:5002/api/work-type-requests`;
 
 export const fetchWorkTypeRequests = () => axios.get(API_URL);
 export const createWorkTypeRequest = (data) => axios.post(API_URL, data);

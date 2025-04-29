@@ -2,7 +2,7 @@
   "name": "hrms",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:5000",
+  "proxy": "http://localhost:5002",
   "dependencies": {
     "-": "^0.0.1",
     "@ant-design/icons": "^5.6.1",

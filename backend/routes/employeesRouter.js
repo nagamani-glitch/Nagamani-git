@@ -413,7 +413,9 @@ router.put('/work-info/:employeeId', async (req, res) => {
       { 
         $set: { 
           'joiningDetails.shiftType': shiftType,
-          'joiningDetails.workType': workType
+          'joiningDetails.workType': workType,
+          'joiningDetails.uanNumber': req.body.uanNumber,
+          'joiningDetails.pfNumber': req.body.pfNumber,
         }
       },
       { 

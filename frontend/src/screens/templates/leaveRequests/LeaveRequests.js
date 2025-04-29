@@ -50,7 +50,7 @@ import { Stack } from "@mui/material";
 import { useNotifications } from '../../../context/NotificationContext';
 
 // Use the new API endpoint for leave requests
-const API_URL = "http://localhost:5000/api/leave-requests";
+const API_URL = "http://localhost:5002/api/leave-requests";
 
 
 const StyledPaper = styled(Paper)(({ theme }) => ({

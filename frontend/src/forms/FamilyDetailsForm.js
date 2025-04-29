@@ -32,7 +32,7 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
     onSubmit: async (values) => {
       try {
         const employeeId = localStorage.getItem('Emp_ID');
-        const response = await axios.post('http://localhost:5000/api/employees/family-details', {
+        const response = await axios.post('http://localhost:5002/api/employees/family-details', {
           employeeId,
           familyDetails: values.familyDetails
         });

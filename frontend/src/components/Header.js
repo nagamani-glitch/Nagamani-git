@@ -79,7 +79,7 @@ const userUnreadCount = getUserUnreadCount(userId);
       try {
         setProfileLoading(true);
         // Use the by-user endpoint from employeesRouter.js
-        const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
+        const response = await axios.get(`http://localhost:5002/api/employees/by-user/${userId}`);
         
         if (response.data.success) {
           setProfileData(response.data.data);
@@ -106,7 +106,7 @@ const getProfileImageUrl = () => {
     if (imagePath.startsWith('http')) {
       return imagePath;
     } else {
-      return `http://localhost:5000${imagePath}`;
+      return `http://localhost:5002${imagePath}`;
     }
   }
   return null;

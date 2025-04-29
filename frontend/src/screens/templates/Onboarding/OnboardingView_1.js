@@ -138,7 +138,7 @@ function OnboardingView() {
   // since we'll handle that separately
   const handleDeleteCandidate = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/onboarding/${id}`);
+      await axios.delete(`http://localhost:5002/api/onboarding/${id}`);
       setCandidates(candidates.filter((candidate) => candidate._id !== id));
     } catch (error) {
       console.error("Error deleting candidate:", error);
@@ -153,8 +153,8 @@ function OnboardingView() {
     try {
       const url =
         stageFilter === "All"
-          ? "http://localhost:5000/api/onboarding"
-          : `http://localhost:5000/api/onboarding/filter?stage=${stageFilter}`;
+          ? "http://localhost:5002/api/onboarding"
+          : `http://localhost:5002/api/onboarding/filter?stage=${stageFilter}`;
       const response = await axios.get(url);
       setCandidates(response.data);
     } catch (error) {
@@ -226,7 +226,7 @@ function OnboardingView() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/onboarding",
+        "http://localhost:5002/api/onboarding",
         newCandidate
       );
       setCandidates([...candidates, response.data]);
@@ -253,7 +253,7 @@ function OnboardingView() {
 
   const sendMailToCandidate = async (candidate) => {
     try {
-      await axios.post("http://localhost:5000/api/onboarding/send-email", {
+      await axios.post("http://localhost:5002/api/onboarding/send-email", {
         email: candidate.email,
         name: candidate.name,
         jobPosition: candidate.jobPosition,

@@ -34,7 +34,7 @@ const ForgotPassword = () => {
         }
 
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
+            const response = await axios.post('http://localhost:5002/api/auth/forgot-password', { email });
             setMessage(response.data.message);
             // Show success modal and start countdown
             setOpenSuccessModal(true);
@@ -97,7 +97,7 @@ const ForgotPassword = () => {
             WebkitBoxShadow: '0 0 0 1000px black inset',
             WebkitTextFillColor: 'white',
             caretColor: 'white',
-            transition: 'background-color 5000s ease-in-out 0s',
+            transition: 'background-color 5002s ease-in-out 0s',
           },
           '&:-webkit-autofill:hover, &:-webkit-autofill:focus': {
             WebkitBoxShadow: '0 0 0 1000px black inset',

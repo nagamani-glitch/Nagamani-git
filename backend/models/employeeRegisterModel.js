@@ -54,7 +54,9 @@ const onboardingFormSchema = new mongoose.Schema({
     modeOfRecruitment: String,
     employeeType: String,
     shiftType: String, 
-    workType: String
+    workType: String,
+    uanNumber: String,
+    pfNumber: String,
     // shiftType: {
     //   type: String,
     //   enum: ['Morning Shift', 'Day Shift', 'Night Shift'],

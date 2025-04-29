@@ -41,7 +41,7 @@ const LoginPage = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:5000/api/auth/login',
+        'http://localhost:5002/api/auth/login',
         formData,
         config
       );
@@ -128,7 +128,7 @@ const LoginPage = () => {
                     WebkitBoxShadow: '0 0 0 1000px black inset',
                     WebkitTextFillColor: 'white',
                     caretColor: 'white',
-                    transition: 'background-color 5000s ease-in-out 0s',
+                    transition: 'background-color 5002s ease-in-out 0s',
                   },
                   '&:-webkit-autofill:hover, &:-webkit-autofill:focus': {
                     WebkitBoxShadow: '0 0 0 1000px black inset',

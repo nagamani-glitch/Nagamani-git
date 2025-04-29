@@ -42,7 +42,7 @@ import {
   FilterList as FilterListIcon,
 } from "@mui/icons-material";
 
-const API_URL = "http://localhost:5000/api/hired-employees";
+const API_URL = "http://localhost:5002/api/hired-employees";
 
 // Add these styled components for consistent styling with AttendanceRecords.js
 const StyledPaper = styled(Paper)(({ theme }) => ({

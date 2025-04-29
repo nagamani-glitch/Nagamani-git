@@ -96,7 +96,7 @@ const RecruitmentPipeline = () => {
     const selectedTabLabel = tabLabels[tabIndex];
     try {
       await axios.delete(
-        `http://localhost:5000/api/recruitment/${candidateToDelete._id}`
+        `http://localhost:5002/api/recruitment/${candidateToDelete._id}`
       );
       fetchCandidates(selectedTabLabel);
       setDeleteDialogOpen(false);
@@ -154,7 +154,7 @@ const RecruitmentPipeline = () => {
   const fetchCandidates = async (recruitment) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/recruitment/${recruitment}`
+        `http://localhost:5002/api/recruitment/${recruitment}`
       );
       setCandidates(response.data);
     } catch (error) {
@@ -166,7 +166,7 @@ const RecruitmentPipeline = () => {
     try {
       setLoadingEmployees(true);
       const response = await axios.get(
-        "http://localhost:5000/api/employees/registered"
+        "http://localhost:5002/api/employees/registered"
       );
       setRegisteredEmployees(response.data);
       setLoadingEmployees(false);
@@ -276,11 +276,11 @@ const RecruitmentPipeline = () => {
     try {
       if (editingCandidate) {
         await axios.put(
-          `http://localhost:5000/api/recruitment/${editingCandidate._id}`,
+          `http://localhost:5002/api/recruitment/${editingCandidate._id}`,
           newCandidate
         );
       } else {
-        await axios.post("http://localhost:5000/api/recruitment", {
+        await axios.post("http://localhost:5002/api/recruitment", {
           ...newCandidate,
           recruitment: selectedTabLabel,
         });

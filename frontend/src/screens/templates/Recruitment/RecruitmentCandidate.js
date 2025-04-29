@@ -392,7 +392,7 @@ const RecruitmentCandidate = () => {
   const fetchCandidates = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/applicantProfiles"
+        "http://localhost:5002/api/applicantProfiles"
       );
       setCandidates(response.data);
     } catch (error) {
@@ -404,7 +404,7 @@ const RecruitmentCandidate = () => {
     try {
       setLoadingEmployees(true);
       const response = await axios.get(
-        "http://localhost:5000/api/employees/registered"
+        "http://localhost:5002/api/employees/registered"
       );
       setRegisteredEmployees(response.data);
       setLoadingEmployees(false);
@@ -434,7 +434,7 @@ const RecruitmentCandidate = () => {
   const handleCreateSubmit = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/applicantProfiles",
+        "http://localhost:5002/api/applicantProfiles",
         newCandidate
       );
       setCandidates([...candidates, response.data]);
@@ -448,7 +448,7 @@ const RecruitmentCandidate = () => {
 
   const handleDeleteCandidate = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/applicantProfiles/${id}`);
+      await axios.delete(`http://localhost:5002/api/applicantProfiles/${id}`);
       setCandidates(candidates.filter((c) => c._id !== id));
       setDeleteDialogOpen(false);
       showSnackbar("Candidate deleted successfully");

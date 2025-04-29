@@ -77,7 +77,7 @@ const OrganizationChart = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-  const API_URL = "http://localhost:5000/api";
+  const API_URL = "http://localhost:5002/api";
 
   useEffect(() => {
     fetchOrganizationChart();

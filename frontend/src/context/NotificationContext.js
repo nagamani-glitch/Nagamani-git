@@ -25,7 +25,7 @@
     
 //     setLoading(true);
 //     try {
-//       const response = await axios.get(`http://localhost:5000/api/notifications/user/${userId}`);
+//       const response = await axios.get(`http://localhost:5002/api/notifications/user/${userId}`);
 //       setNotifications(response.data);
 //       return response.data;
 //     } catch (error) {
@@ -59,7 +59,7 @@
 //     if (!userId) return;
 
 //     // Connect to WebSocket
-//     const socket = io('http://localhost:5000');
+//     const socket = io('http://localhost:5002');
     
 //     // Join a room specific to this user
 //     socket.emit('join', { userId });
@@ -83,7 +83,7 @@
 //     }
 
 //     try {
-//       const response = await axios.post('http://localhost:5000/api/notifications', {
+//       const response = await axios.post('http://localhost:5002/api/notifications', {
 //         message,
 //         type,
 //         userId
@@ -113,7 +113,7 @@
 //     const message = `Your time off request for ${new Date(date).toLocaleDateString()} has been ${status}`;
     
 //     // Create notification in database
-//     const response = await axios.post('http://localhost:5000/api/notifications', {
+//     const response = await axios.post('http://localhost:5002/api/notifications', {
 //       message,
 //       type: 'timesheet',
 //       status,
@@ -155,7 +155,7 @@
 //     const message = `Your ${leaveType} request from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been ${statusText}`;
     
 //     try {
-//       const response = await axios.post('http://localhost:5000/api/notifications', {
+//       const response = await axios.post('http://localhost:5002/api/notifications', {
 //         message,
 //         type: 'leave',
 //         status,
@@ -193,7 +193,7 @@
 //     const message = `Your resignation request has been ${statusText}`;
     
 //     try {
-//       const response = await axios.post('http://localhost:5000/api/notifications', {
+//       const response = await axios.post('http://localhost:5002/api/notifications', {
 //         message,
 //         type: 'leave',
 //         status,
@@ -220,7 +220,7 @@
 //   // Function to mark a notification as read
 //   const markAsRead = useCallback(async (id) => {
 //     try {
-//       await axios.put(`http://localhost:5000/api/notifications/${id}/read`);
+//       await axios.put(`http://localhost:5002/api/notifications/${id}/read`);
       
 //       // Update local state
 //       setNotifications(prev => {
@@ -240,7 +240,7 @@
 //     if (!userId) return;
     
 //     try {
-//       await axios.put(`http://localhost:5000/api/notifications/user/${userId}/read-all`);
+//       await axios.put(`http://localhost:5002/api/notifications/user/${userId}/read-all`);
       
 //       // Update local state
 //       setNotifications(prev => {
@@ -254,7 +254,7 @@
 //   // Function to delete a notification
 //   const deleteNotification = useCallback(async (id) => {
 //     try {
-//       await axios.delete(`http://localhost:5000/api/notifications/${id}`);
+//       await axios.delete(`http://localhost:5002/api/notifications/${id}`);
       
 //       // Update local state
 //       setNotifications(prev => {
@@ -270,7 +270,7 @@
 //     if (!userId) return;
     
 //     try {
-//       await axios.delete(`http://localhost:5000/api/notifications/user/${userId}/clear-all`);
+//       await axios.delete(`http://localhost:5002/api/notifications/user/${userId}/clear-all`);
       
 //       // Update local state
 //       setNotifications([]);
@@ -344,7 +344,7 @@ export const NotificationProvider = ({ children }) => {
     
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/notifications/user/${userId}`);
+      const response = await axios.get(`http://localhost:5002/api/notifications/user/${userId}`);
       setNotifications(response.data);
       return response.data;
     } catch (error) {
@@ -358,7 +358,7 @@ export const NotificationProvider = ({ children }) => {
   // Function to mark a notification as read
   const markAsRead = useCallback(async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/notifications/${id}/read`);
+      await axios.put(`http://localhost:5002/api/notifications/${id}/read`);
       
       // Update local state
       setNotifications(prev => {
@@ -378,7 +378,7 @@ export const NotificationProvider = ({ children }) => {
     if (!userId) return;
     
     try {
-      await axios.put(`http://localhost:5000/api/notifications/user/${userId}/read-all`);
+      await axios.put(`http://localhost:5002/api/notifications/user/${userId}/read-all`);
       
       // Update local state
       setNotifications(prev => {
@@ -397,7 +397,7 @@ export const NotificationProvider = ({ children }) => {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/notifications', {
+      const response = await axios.post('http://localhost:5002/api/notifications', {
         message,
         type,
         userId
@@ -426,7 +426,7 @@ export const NotificationProvider = ({ children }) => {
     const message = `Your ${leaveType} request from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been ${statusText}`;
     
     try {
-      const response = await axios.post('http://localhost:5000/api/notifications', {
+      const response = await axios.post('http://localhost:5002/api/notifications', {
         message,
         type: 'leave',
         status,
@@ -464,7 +464,7 @@ export const NotificationProvider = ({ children }) => {
     const message = `Your resignation request has been ${statusText}`;
     
     try {
-      const response = await axios.post('http://localhost:5000/api/notifications', {
+      const response = await axios.post('http://localhost:5002/api/notifications', {
         message,
         type: 'leave',
         status,
@@ -499,7 +499,7 @@ export const NotificationProvider = ({ children }) => {
       const message = `Your time off request for ${new Date(date).toLocaleDateString()} has been ${status}`;
       
       // Create notification in database
-      const response = await axios.post('http://localhost:5000/api/notifications', {
+      const response = await axios.post('http://localhost:5002/api/notifications', {
         message,
         type: 'timesheet',
         status,
@@ -521,7 +521,7 @@ export const NotificationProvider = ({ children }) => {
   // Function to delete a notification
   const deleteNotification = useCallback(async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/notifications/${id}`);
+      await axios.delete(`http://localhost:5002/api/notifications/${id}`);
       
       // Update local state
       setNotifications(prev => {
@@ -537,7 +537,7 @@ export const NotificationProvider = ({ children }) => {
     if (!userId) return;
     
     try {
-      await axios.delete(`http://localhost:5000/api/notifications/user/${userId}/clear-all`);
+      await axios.delete(`http://localhost:5002/api/notifications/user/${userId}/clear-all`);
       
       // Update local state
       setNotifications([]);
@@ -589,7 +589,7 @@ export const NotificationProvider = ({ children }) => {
     console.log('Setting up WebSocket connection for user:', userId);
 
     // Connect to WebSocket
-    const socket = io('http://localhost:5000', {
+    const socket = io('http://localhost:5002', {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
