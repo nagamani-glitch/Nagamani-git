@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
 
@@ -319,10 +320,14 @@
 // };
 
 
+=======
+>>>>>>> 804de9616ea57755748614f10fa352a108bbc358
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { FaCalendarAlt, FaClock, FaFileAlt, FaUserAlt } from 'react-icons/fa';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+// Add this constant at the top of the file, after the imports
+const API_URL = 'http://localhost:5000/api';
 
 // Create the context
 const NotificationContext = createContext();
@@ -518,6 +523,98 @@ export const NotificationProvider = ({ children }) => {
     }
   }, []);
 
+  // Add this function to the NotificationContext
+  const addShiftRequestNotification = useCallback(async (employeeName, status, requestedShift, startDate, endDate, userId = null) => {
+    if (!userId) {
+      console.error('User ID is required to add a shift request notification');
+      return null;
+    }
+
+    const statusText = status === "Approved" ? "approved" : "rejected";
+    const message = `Your ${requestedShift} request from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been ${statusText}`;
+    
+    try {
+      const response = await axios.post('http://localhost:5000/api/notifications', {
+        message,
+        type: 'shift',
+        status,
+        userId
+      });
+      
+      const newNotification = response.data;
+      
+      // Update local state
+      setNotifications(prev => [newNotification, ...prev]);
+      
+      return newNotification._id;
+    } catch (error) {
+      console.error('Error adding shift request notification:', error);
+      return null;
+    }
+  }, []);
+
+  // Add this function to the NotificationContext
+const addWorkTypeRequestNotification = useCallback(async (employeeName, status, requestedWorktype, startDate, endDate, userId = null) => {
+  if (!userId) {
+    console.error('User ID is required to add a work type request notification');
+    return null;
+  }
+
+  const statusText = status === "approved" ? "approved" : "rejected";
+  const message = `Your ${requestedWorktype} request from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been ${statusText}`;
+  
+  try {
+    const response = await axios.post('http://localhost:5000/api/notifications', {
+      message,
+      type: 'worktype',
+      status,
+      userId
+    });
+    
+    const newNotification = response.data;
+    
+    // Update local state
+    setNotifications(prev => [newNotification, ...prev]);
+    
+    return newNotification._id;
+  } catch (error) {
+    console.error('Error adding work type request notification:', error);
+    return null;
+  }
+}, []);
+
+// Add this function to the NotificationContext
+const addRotatingWorktypeNotification = useCallback(async (employeeName, status, requestedWorktype, startDate, endDate, userId = null) => {
+  if (!userId) {
+    console.error('User ID is required to add a rotating worktype notification');
+    return null;
+  }
+
+  const statusText = status === "Approved" ? "approved" : "rejected";
+  const message = `Your ${requestedWorktype} worktype request from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been ${statusText}`;
+  
+  try {
+    const response = await axios.post('http://localhost:5000/api/notifications', {
+      message,
+      type: 'rotating-worktype',
+      status: status.toLowerCase(),
+      userId
+    });
+    
+    const newNotification = response.data;
+    
+    // Update local state
+    setNotifications(prev => [newNotification, ...prev]);
+    
+    return newNotification._id;
+  } catch (error) {
+    console.error('Error adding rotating worktype notification:', error);
+    return null;
+  }
+}, []);
+
+
+
   // Function to delete a notification
   const deleteNotification = useCallback(async (id) => {
     try {
@@ -634,6 +731,63 @@ export const NotificationProvider = ({ children }) => {
     };
   }, []);
 
+const sendRotatingShiftNotification = async (userId, message, status, relatedId) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/notifications`,
+      {
+        userId,
+        message,
+        type: 'rotating-shift',
+        status,
+        relatedId,
+        read: false,
+        time: new Date()
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error sending rotating shift notification:", error);
+    throw error;
+  }
+};
+
+// And update the markRotatingShiftNotificationAsRead function
+const markRotatingShiftNotificationAsRead = async (notificationId) => {
+  try {
+    const response = await axios.put(
+      `${API_URL}/notifications/${notificationId}/read`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    
+    if (response.status === 200) {
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((notification) =>
+          notification._id === notificationId
+            ? { ...notification, read: true }
+            : notification
+        )
+      );
+    }
+  } catch (error) {
+    console.error("Error marking rotating shift notification as read:", error);
+  }
+};
+
+
+
+
   return (
     <NotificationContext.Provider value={{ 
       notifications, 
@@ -645,11 +799,17 @@ export const NotificationProvider = ({ children }) => {
       addLeaveRequestNotification,
       addResignationNotification,
       addTimeOffNotification,
+      addShiftRequestNotification,
+      addWorkTypeRequestNotification,
+      markRotatingShiftNotificationAsRead,
+      sendRotatingShiftNotification,
+      addRotatingWorktypeNotification,
       markAsRead,
       markAllAsRead,
       deleteNotification,
       clearAll,
-      getUserNotifications
+      getUserNotifications,
+      
     }}>
       {children}
     </NotificationContext.Provider>

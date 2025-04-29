@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // import axios from 'axios';
 
 // const API_URL = `http://localhost:5002/api/work-type-requests`;
@@ -12,6 +13,8 @@
 // export const approveWorkTypeRequest = (id) => axios.put(`${API_URL}/${id}/approve`);
 // export const rejectWorkTypeRequest = (id) => axios.put(`${API_URL}/${id}/reject`);
 
+=======
+>>>>>>> 804de9616ea57755748614f10fa352a108bbc358
 import axios from 'axios';
 
 const API_URL = `http://localhost:5002/api/work-type-requests`;
