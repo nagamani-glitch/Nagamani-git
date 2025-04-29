@@ -45,31 +45,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// // PUT update an asset
-// router.put('/:id', async (req, res) => {
-//   // Update to include all fields that can be updated
-//   const { 
-//     status, 
-//     returnDate, 
-//     allottedDate, 
-//     currentEmployee, 
-//     batch 
-//   } = req.body;
-  
-//   try {
-//     const asset = await Asset.findByIdAndUpdate(
-//       req.params.id,
-//       { status, returnDate, allottedDate, currentEmployee, batch },
-//       { new: true, runValidators: true }
-//     );
-
-//     if (!asset) return res.status(404).json({ message: 'Asset not found' });
-//     res.json(asset);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// });
-
 router.put('/:id', async (req, res) => {
   // Update to include all fields that can be updated
   const { 

@@ -221,49 +221,67 @@ const PayrollSystem = () => {
     });
   };
 
-  // Add this function to handle registered employee selection
-  const handleRegisteredEmployeeSelect = (empId) => {
-    if (!empId) {
-      setSelectedRegisteredEmployee("");
-      return;
+  // Modify the handleRegisteredEmployeeSelect function
+const handleRegisteredEmployeeSelect = (empId) => {
+  if (!empId) {
+    setSelectedRegisteredEmployee("");
+    return;
+  }
+
+  setSelectedRegisteredEmployee(empId);
+
+  // Find the selected employee
+  const selectedEmp = registeredEmployees.find((emp) => emp.Emp_ID === empId);
+
+  if (selectedEmp) {
+    // Map the fields from registered employee to payroll employee
+    const basicPay = selectedEmp.joiningDetails?.salary || 0;
+    const lpa = (parseFloat(basicPay) * 12) / 100000;
+
+    // Format the date of joining if it exists
+    let formattedDateOfJoining = "";
+    if (selectedEmp.joiningDetails?.dateOfJoining) {
+      const dateObj = new Date(selectedEmp.joiningDetails.dateOfJoining);
+      formattedDateOfJoining = dateObj.toISOString().split("T")[0]; // Format as YYYY-MM-DD
     }
 
-    setSelectedRegisteredEmployee(empId);
+    // Get PAN, UAN, and PF numbers from the correct locations
+    const panNo = selectedEmp.personalInfo?.panNumber || "";
+    const uanNo = selectedEmp.joiningDetails?.uanNumber || "";
+    const pfNo = selectedEmp.joiningDetails?.pfNumber || "";
+    
+    // Get bank information
+    const bankName = selectedEmp.bankInfo?.bankName || "";
+    const bankAccountNo = selectedEmp.bankInfo?.accountNumber || "";
 
-    // Find the selected employee
-    const selectedEmp = registeredEmployees.find((emp) => emp.Emp_ID === empId);
+    setNewEmployee({
+      ...newEmployee,
+      empId: selectedEmp.Emp_ID || "",
+      empName: `${selectedEmp.personalInfo?.firstName || ""} ${
+        selectedEmp.personalInfo?.lastName || ""
+      }`,
+      department: selectedEmp.joiningDetails?.department || "",
+      designation: selectedEmp.joiningDetails?.initialDesignation || "",
+      email: selectedEmp.personalInfo?.email || "",
+      basicPay: basicPay,
+      dateOfJoining: formattedDateOfJoining,
+      // Add the PAN, UAN, and PF numbers from the correct locations
+      panNo: panNo,
+      uanNo: uanNo,
+      pfNo: pfNo,
+      // Add bank information
+      bankName: bankName,
+      bankAccountNo: bankAccountNo,
+      // Keep other fields as they are since they might not have direct mappings
+    });
 
-    if (selectedEmp) {
-      // Map the fields from registered employee to payroll employee
-      const basicPay = selectedEmp.joiningDetails?.salary || 0;
-      const lpa = (parseFloat(basicPay) * 12) / 100000;
+    setLpaValue(lpa.toFixed(2));
 
-      // Format the date of joining if it exists
-      let formattedDateOfJoining = "";
-      if (selectedEmp.joiningDetails?.dateOfJoining) {
-        const dateObj = new Date(selectedEmp.joiningDetails.dateOfJoining);
-        formattedDateOfJoining = dateObj.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-      }
+    showAlert("Employee data loaded successfully", "success");
+  }
+};
 
-      setNewEmployee({
-        ...newEmployee,
-        empId: selectedEmp.Emp_ID || "",
-        empName: `${selectedEmp.personalInfo?.firstName || ""} ${
-          selectedEmp.personalInfo?.lastName || ""
-        }`,
-        department: selectedEmp.joiningDetails?.department || "",
-        designation: selectedEmp.joiningDetails?.initialDesignation || "",
-        email: selectedEmp.personalInfo?.email || "",
-        basicPay: basicPay,
-        dateOfJoining: formattedDateOfJoining,
-        // Keep other fields as they are since they might not have direct mappings
-      });
 
-      setLpaValue(lpa.toFixed(2));
-
-      showAlert("Employee data loaded successfully", "success");
-    }
-  };
 
   const handleAddMultipleAllowances = async () => {
     try {
