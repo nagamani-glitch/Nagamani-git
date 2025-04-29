@@ -1,4 +1,5 @@
 import ShiftRequest from '../models/ShiftRequest.js';
+import Notification from '../models/Notification.js';
 
 export const getAllShiftRequests = async (req, res) => {
   try {
@@ -115,11 +116,23 @@ export const deleteShiftRequest = async (req, res) => {
 
 export const approveShiftRequest = async (req, res) => {
   try {
+    // Find the request first to get user information
+    const shiftRequest = await ShiftRequest.findById(req.params.id);
+    
+    if (!shiftRequest) {
+      return res.status(404).json({ message: 'Shift request not found' });
+    }
+    
+    // Store the previous status to check if it changed
+    const previousStatus = shiftRequest.status;
+    
     // Update the request to approved status and remove from review if specified
     const updateData = { 
       status: 'Approved',
       // If isForReview is specified in the request body, use that value
-      ...(req.body.hasOwnProperty('isForReview') && { isForReview: req.body.isForReview })
+      ...(req.body.hasOwnProperty('isForReview') && { isForReview: req.body.isForReview }),
+      reviewedBy: req.body.reviewedBy || 'Admin',
+      reviewedAt: new Date()
     };
     
     const request = await ShiftRequest.findByIdAndUpdate(
@@ -128,8 +141,38 @@ export const approveShiftRequest = async (req, res) => {
       { new: true }
     );
     
-    if (!request) {
-      return res.status(404).json({ message: 'Shift request not found' });
+    // If status changed to Approved, create a notification
+    if (previousStatus !== 'Approved' && shiftRequest.userId) {
+      // Create notification message
+      const notificationMessage = `Your shift request for ${new Date(shiftRequest.requestedDate).toLocaleDateString()} has been approved`;
+      
+      try {
+        // Create notification in database
+        const notification = new Notification({
+          message: notificationMessage,
+          type: 'shift',
+          userId: shiftRequest.userId,
+          status: 'approved',
+          read: false,
+          time: new Date()
+        });
+        
+        await notification.save();
+        console.log(`Notification saved to database for user ${shiftRequest.userId}`);
+        
+        // Get the io instance from the request app
+        const io = req.app.get('io');
+        
+        if (io) {
+          // Emit to the specific user's room
+          io.to(shiftRequest.userId).emit('new-notification', notification);
+          console.log(`Socket notification emitted to user ${shiftRequest.userId}`);
+        } else {
+          console.error('Socket.io instance not available');
+        }
+      } catch (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      }
     }
     
     res.status(200).json(request);
@@ -140,11 +183,23 @@ export const approveShiftRequest = async (req, res) => {
 
 export const rejectShiftRequest = async (req, res) => {
   try {
+    // Find the request first to get user information
+    const shiftRequest = await ShiftRequest.findById(req.params.id);
+    
+    if (!shiftRequest) {
+      return res.status(404).json({ message: 'Shift request not found' });
+    }
+    
+    // Store the previous status to check if it changed
+    const previousStatus = shiftRequest.status;
+    
     // Update the request to rejected status and remove from review if specified
     const updateData = { 
       status: 'Rejected',
       // If isForReview is specified in the request body, use that value
-      ...(req.body.hasOwnProperty('isForReview') && { isForReview: req.body.isForReview })
+      ...(req.body.hasOwnProperty('isForReview') && { isForReview: req.body.isForReview }),
+      reviewedBy: req.body.reviewedBy || 'Admin',
+      reviewedAt: new Date()
     };
     
     const request = await ShiftRequest.findByIdAndUpdate(
@@ -153,8 +208,38 @@ export const rejectShiftRequest = async (req, res) => {
       { new: true }
     );
     
-    if (!request) {
-      return res.status(404).json({ message: 'Shift request not found' });
+    // If status changed to Rejected, create a notification
+    if (previousStatus !== 'Rejected' && shiftRequest.userId) {
+      // Create notification message
+      const notificationMessage = `Your shift request for ${new Date(shiftRequest.requestedDate).toLocaleDateString()} has been rejected`;
+      
+      try {
+        // Create notification in database
+        const notification = new Notification({
+          message: notificationMessage,
+          type: 'shift',
+          userId: shiftRequest.userId,
+          status: 'rejected',
+          read: false,
+          time: new Date()
+        });
+        
+        await notification.save();
+        console.log(`Notification saved to database for user ${shiftRequest.userId}`);
+        
+        // Get the io instance from the request app
+        const io = req.app.get('io');
+        
+        if (io) {
+          // Emit to the specific user's room
+          io.to(shiftRequest.userId).emit('new-notification', notification);
+          console.log(`Socket notification emitted to user ${shiftRequest.userId}`);
+        } else {
+          console.error('Socket.io instance not available');
+        }
+      } catch (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      }
     }
     
     res.status(200).json(request);
@@ -165,23 +250,65 @@ export const rejectShiftRequest = async (req, res) => {
 
 export const bulkApproveRequests = async (req, res) => {
   try {
-    const { ids, isForReview } = req.body;
+    const { ids, isForReview, reviewedBy = 'Admin' } = req.body;
     
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ message: 'No request IDs provided' });
     }
     
+    // Get all the requests before updating them to create notifications
+    const requests = await ShiftRequest.find({ _id: { $in: ids } });
+    
     // Update the requests to approved status and remove from review if specified
     const updateData = { 
       status: 'Approved',
       // If isForReview is specified in the request body, use that value
-      ...(isForReview !== undefined && { isForReview })
+      ...(isForReview !== undefined && { isForReview }),
+      reviewedBy,
+      reviewedAt: new Date()
     };
     
     const result = await ShiftRequest.updateMany(
       { _id: { $in: ids } },
       updateData
     );
+    
+    // Create notifications for each approved request
+    const notificationPromises = requests.map(async (request) => {
+      if (request.userId) {
+        const notificationMessage = `Your shift request for ${new Date(request.requestedDate).toLocaleDateString()} has been approved`;
+        
+        try {
+          // Create notification in database
+          const notification = new Notification({
+            message: notificationMessage,
+            type: 'shift',
+            userId: request.userId,
+            status: 'approved',
+            read: false,
+            time: new Date()
+          });
+          
+          await notification.save();
+          
+          // Get the io instance from the request app
+          const io = req.app.get('io');
+          
+          if (io) {
+            // Emit to the specific user's room
+            io.to(request.userId).emit('new-notification', notification);
+          }
+          
+          return notification;
+        } catch (error) {
+          console.error(`Error creating notification for user ${request.userId}:`, error);
+          return null;
+        }
+      }
+      return null;
+    });
+    
+    await Promise.all(notificationPromises);
     
     res.status(200).json({ 
       message: 'Shifts approved successfully',
@@ -194,23 +321,65 @@ export const bulkApproveRequests = async (req, res) => {
 
 export const bulkRejectRequests = async (req, res) => {
   try {
-    const { ids, isForReview } = req.body;
+    const { ids, isForReview, reviewedBy = 'Admin' } = req.body;
     
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ message: 'No request IDs provided' });
     }
     
+    // Get all the requests before updating them to create notifications
+    const requests = await ShiftRequest.find({ _id: { $in: ids } });
+    
     // Update the requests to rejected status and remove from review if specified
     const updateData = { 
       status: 'Rejected',
       // If isForReview is specified in the request body, use that value
-      ...(isForReview !== undefined && { isForReview })
+      ...(isForReview !== undefined && { isForReview }),
+      reviewedBy,
+      reviewedAt: new Date()
     };
     
     const result = await ShiftRequest.updateMany(
       { _id: { $in: ids } },
       updateData
     );
+    
+    // Create notifications for each rejected request
+    const notificationPromises = requests.map(async (request) => {
+      if (request.userId) {
+        const notificationMessage = `Your shift request for ${new Date(request.requestedDate).toLocaleDateString()} has been rejected`;
+        
+        try {
+          // Create notification in database
+          const notification = new Notification({
+            message: notificationMessage,
+            type: 'shift',
+            userId: request.userId,
+            status: 'rejected',
+            read: false,
+            time: new Date()
+          });
+          
+          await notification.save();
+          
+          // Get the io instance from the request app
+          const io = req.app.get('io');
+          
+          if (io) {
+            // Emit to the specific user's room
+            io.to(request.userId).emit('new-notification', notification);
+          }
+          
+          return notification;
+        } catch (error) {
+          console.error(`Error creating notification for user ${request.userId}:`, error);
+          return null;
+        }
+      }
+      return null;
+    });
+    
+    await Promise.all(notificationPromises);
     
     res.status(200).json({ 
       message: 'Shifts rejected successfully',
@@ -228,4 +397,5 @@ const isAdmin = (req) => {
   // or check against a list of admin user IDs
   return false; // Default to false for now
 };
+
 

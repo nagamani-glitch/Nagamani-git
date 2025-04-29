@@ -11,7 +11,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
-import { useNavigate, useLocation , Link} from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   FaBars,
   FaBell,
@@ -30,60 +30,62 @@ import NotificationSidebar from "./NotificationSidebar";
 import { useNotifications } from "../context/NotificationContext";
 
 const Header = () => {
-// First, get all the hooks and context values
-const { toggleSidebar } = useSidebar();
-const { getUserUnreadCount } = useNotifications();
-const navigate = useNavigate();
-const location = useLocation();
+  // First, get all the hooks and context values
+  const { toggleSidebar } = useSidebar();
+  const { getUserUnreadCount } = useNotifications();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-// Then declare all your state variables
-const [showProfileMenu, setShowProfileMenu] = useState(false);
-const [showNotifications, setShowNotifications] = useState(false);
-const [showCompanies, setShowCompanies] = useState(false);
-const [showToast, setShowToast] = useState(false);
-const [toastMessage, setToastMessage] = useState("");
-const [showNotificationSidebar, setShowNotificationSidebar] = useState(false);
-const [timer, setTimer] = useState(0);
-const [isTimerRunning, setIsTimerRunning] = useState(false);
-const [startTime, setStartTime] = useState(null);
-const [isLoading, setIsLoading] = useState(false);
-const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-const [navExpanded, setNavExpanded] = useState(false);
-const [profileData, setProfileData] = useState(null);
-const [profileLoading, setProfileLoading] = useState(false);
+  // Then declare all your state variables
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showCompanies, setShowCompanies] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [showNotificationSidebar, setShowNotificationSidebar] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [startTime, setStartTime] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [navExpanded, setNavExpanded] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-// Create refs
-const profileMenuRef = useRef(null);
-const navbarCollapseRef = useRef(null);
-const timerIntervalRef = useRef(null);
-const timerStartTimeRef = useRef(null);
+  // Create refs
+  const profileMenuRef = useRef(null);
+  const navbarCollapseRef = useRef(null);
+  const timerIntervalRef = useRef(null);
+  const timerStartTimeRef = useRef(null);
 
-// Get data from localStorage
-const token = localStorage.getItem("token");
-const userId = localStorage.getItem("userId");
-const employeeId = profileData?.Emp_ID || localStorage.getItem("employeeId") || "EMP123";
+  // Get data from localStorage
+  const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("userId");
+  const employeeId =
+    profileData?.Emp_ID || localStorage.getItem("employeeId") || "EMP123";
 
-// Now you can safely use userId
-const userUnreadCount = getUserUnreadCount(userId);
-
+  // Now you can safely use userId
+  const userUnreadCount = getUserUnreadCount(userId);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
-      
+
       if (!token || !userId) {
         return; // Don't fetch if not logged in
       }
-      
+
       try {
         setProfileLoading(true);
         // Use the by-user endpoint from employeesRouter.js
-        const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
-        
+        const response = await axios.get(
+          `http://localhost:5000/api/employees/by-user/${userId}`
+        );
+
         if (response.data.success) {
           setProfileData(response.data.data);
-          
+
           // Store employee ID in localStorage if not already there
           if (response.data.data.Emp_ID) {
             localStorage.setItem("employeeId", response.data.data.Emp_ID);
@@ -95,40 +97,36 @@ const userUnreadCount = getUserUnreadCount(userId);
         setProfileLoading(false);
       }
     };
-  
+
     fetchUserProfile();
   }, []);
 
   // Get profile image URL
-const getProfileImageUrl = () => {
-  if (profileData?.personalInfo?.employeeImage) {
-    const imagePath = profileData.personalInfo.employeeImage;
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    } else {
-      return `http://localhost:5000${imagePath}`;
+  const getProfileImageUrl = () => {
+    if (profileData?.personalInfo?.employeeImage) {
+      const imagePath = profileData.personalInfo.employeeImage;
+      if (imagePath.startsWith("http")) {
+        return imagePath;
+      } else {
+        return `http://localhost:5000${imagePath}`;
+      }
     }
-  }
-  return null;
-};
- 
-// Add this function to toggle the notification sidebar
- const toggleNotificationSidebar = () => {
-  setShowNotificationSidebar(!showNotificationSidebar);
-};
+    return null;
+  };
 
+  // Add this function to toggle the notification sidebar
+  const toggleNotificationSidebar = () => {
+    setShowNotificationSidebar(!showNotificationSidebar);
+  };
 
-// Get user display name
-const getUserDisplayName = () => {
-  if (profileData?.personalInfo) {
-    const { firstName, lastName } = profileData.personalInfo;
-    return `${firstName || ''} ${lastName || ''}`.trim() || employeeId;
-  }
-  return employeeId;
-};
-
-  
-
+  // Get user display name
+  const getUserDisplayName = () => {
+    if (profileData?.personalInfo) {
+      const { firstName, lastName } = profileData.personalInfo;
+      return `${firstName || ""} ${lastName || ""}`.trim() || employeeId;
+    }
+    return employeeId;
+  };
 
   // Add this useEffect to handle window resize
   useEffect(() => {
@@ -219,48 +217,49 @@ const getUserDisplayName = () => {
   //   }
   // };
 
-
   // Inside the handleTimerClick function in Header.js
 
-
   const handleTimerClick = async () => {
-  if (isLoading) return;
+    if (isLoading) return;
 
-  setIsLoading(true);
-  try {
-    if (isTimerRunning) {
-      // Calculate duration in seconds
-      const checkInTime = new Date(startTime);
-      const checkOutTime = new Date();
-      const durationInSeconds = Math.floor(
-        (checkOutTime - checkInTime) / 1000
-      );
+    setIsLoading(true);
+    try {
+      if (isTimerRunning) {
+        // Calculate duration in seconds
+        const checkInTime = new Date(startTime);
+        const checkOutTime = new Date();
+        const durationInSeconds = Math.floor(
+          (checkOutTime - checkInTime) / 1000
+        );
 
-      // Log out with duration
-      await timesheetService.checkOut(employeeId, durationInSeconds);
-      cleanupTimesheet();
-      setIsTimerRunning(false);
-      setTimer(0);
-      setStartTime(null);
-      localStorage.removeItem("checkInTime");
-      showToastMessage("Successfully logged out");
-    } else {
-      // Get employee name from profile data
-      const employeeName = getUserDisplayName();
-      
-      // Log in with employee name
-      const response = await timesheetService.checkIn(employeeId, employeeName);
-      const checkInTime = new Date(response.data.checkInTime);
-      startTimerWithTime(checkInTime);
-      showToastMessage("Successfully logged in");
+        // Log out with duration
+        await timesheetService.checkOut(employeeId, durationInSeconds);
+        cleanupTimesheet();
+        setIsTimerRunning(false);
+        setTimer(0);
+        setStartTime(null);
+        localStorage.removeItem("checkInTime");
+        showToastMessage("Successfully logged out");
+      } else {
+        // Get employee name from profile data
+        const employeeName = getUserDisplayName();
+
+        // Log in with employee name
+        const response = await timesheetService.checkIn(
+          employeeId,
+          employeeName
+        );
+        const checkInTime = new Date(response.data.checkInTime);
+        startTimerWithTime(checkInTime);
+        showToastMessage("Successfully logged in");
+      }
+    } catch (error) {
+      console.error("Timesheet operation failed:", error);
+      showToastMessage("Operation failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error("Timesheet operation failed:", error);
-    showToastMessage("Operation failed. Please try again.");
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const showToastMessage = (message) => {
     setToastMessage(message);
@@ -369,7 +368,6 @@ const getUserDisplayName = () => {
     localStorage.removeItem("checkInTime");
     navigate("/login");
   };
-  
 
   const getPathIndicator = () => {
     const path = location.pathname.split("/").filter(Boolean);
@@ -448,7 +446,15 @@ const getUserDisplayName = () => {
         onClose={() => setShowNotificationSidebar(false)}
       />
       <header className="mb-5">
-      <Navbar className="custom-navbar" expand="lg" variant="dark" fixed="top" expanded={navExpanded} onToggle={handleNavToggle} ref={navbarCollapseRef}>
+        <Navbar
+          className="custom-navbar"
+          expand="lg"
+          variant="dark"
+          fixed="top"
+          expanded={navExpanded}
+          onToggle={handleNavToggle}
+          ref={navbarCollapseRef}
+        >
           <Container fluid>
             <Button variant="link" className="me-3" onClick={toggleSidebar}>
               <FaBars size={28} color="white" />
@@ -473,7 +479,10 @@ const getUserDisplayName = () => {
             <div className="path-indicator">{getPathIndicator()}</div>
 
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
-            <Navbar.Collapse id="basic-navbar-nav" className="navbar-collapse-container">
+            <Navbar.Collapse
+              id="basic-navbar-nav"
+              className="navbar-collapse-container"
+            >
               <Nav className="ms-auto align-items-center">
                 <div className="d-flex align-items-center">
                   <div className="check-in-out-box">
@@ -536,20 +545,19 @@ const getUserDisplayName = () => {
                   >
                     <FaBell size={24} />
                     {userUnreadCount > 0 && (
-  <Badge
-    pill
-    bg="danger"
-    className="position-absolute"
-    style={{
-      top: "-5px",
-      right: "-5px",
-      fontSize: "0.6rem",
-      padding: "0.25em 0.4em",
-    }}
-  >
-    {userUnreadCount > 99 ? "99+" : userUnreadCount}
-  </Badge>
-
+                      <Badge
+                        pill
+                        bg="danger"
+                        className="position-absolute"
+                        style={{
+                          top: "-5px",
+                          right: "-5px",
+                          fontSize: "0.6rem",
+                          padding: "0.25em 0.4em",
+                        }}
+                      >
+                        {userUnreadCount > 99 ? "99+" : userUnreadCount}
+                      </Badge>
                     )}
                   </Nav.Link>
                   <div className="profile-dropdown-container">
@@ -557,48 +565,54 @@ const getUserDisplayName = () => {
                     {windowWidth <= 1024 ? (
                       <>
                         <div
-        className="profile-dropdown-toggle"
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowProfileMenu(!showProfileMenu);
-        }}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          cursor: "pointer",
-        }}
-      >
-        {profileLoading ? (
-          <Spinner animation="border" size="sm" variant="light" />
-        ) : getProfileImageUrl() ? (
-          <img
-            src={getProfileImageUrl()}
-            alt="Profile"
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "1px solid white",
-            }}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = `${process.env.PUBLIC_URL}/default-avatar.png`;
-            }}
-          />
-        ) : (
-          <FaUserCircle size={28} color="white" />
-        )}
-      </div>
+                          className="profile-dropdown-toggle"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowProfileMenu(!showProfileMenu);
+                          }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {profileLoading ? (
+                            <Spinner
+                              animation="border"
+                              size="sm"
+                              variant="light"
+                            />
+                          ) : getProfileImageUrl() ? (
+                            <img
+                              src={getProfileImageUrl()}
+                              alt="Profile"
+                              style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                border: "1px solid white",
+                              }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `${process.env.PUBLIC_URL}/default-avatar.png`;
+                              }}
+                            />
+                          ) : (
+                            <FaUserCircle size={28} color="white" />
+                          )}
+                        </div>
 
-      {showProfileMenu && (
-        <div className="custom-dropdown-menu">
-          <div className="dropdown-header d-flex align-items-center px-3 py-2">
-            <strong>{getUserDisplayName()}</strong>
-            {profileData?.Emp_ID && (
-              <small className="ms-2 text-muted">({profileData.Emp_ID})</small>
-            )}
-          </div>
+                        {showProfileMenu && (
+                          <div className="custom-dropdown-menu">
+                            <div className="dropdown-header d-flex align-items-center px-3 py-2">
+                              <strong>{getUserDisplayName()}</strong>
+                              {profileData?.Emp_ID && (
+                                <small className="ms-2 text-muted">
+                                  ({profileData.Emp_ID})
+                                </small>
+                              )}
+                            </div>
                             <div
                               className="dropdown-item"
                               onClick={() => {
@@ -704,46 +718,54 @@ const getUserDisplayName = () => {
                     ) : (
                       // Use Bootstrap NavDropdown for desktop
                       <NavDropdown
-      title={
-        profileLoading ? (
-          <Spinner animation="border" size="sm" variant="light" />
-        ) : getProfileImageUrl() ? (
-          <img
-            src={getProfileImageUrl()}
-            alt="Profile"
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "1px solid white",
-            }}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = `${process.env.PUBLIC_URL}/default-avatar.png`;
-            }}
-          />
-        ) : (
-          <FaUserCircle size={28} color="white" />
-        )
-      }
-      id="profile-dropdown"
-      show={showProfileMenu}
-      onClick={handleProfileToggle}
-      ref={profileMenuRef}
-      align="end"
-      className="profile-dropdown ms-3"
-      menuVariant="dark"
-    >
-      <div className="dropdown-header d-flex align-items-center px-3 py-2">
-        <strong>{getUserDisplayName()}</strong>
-        {profileData?.Emp_ID && (
-          <small className="ms-2 text-muted">({profileData.Emp_ID})</small>
-        )}
-      </div>
+                        title={
+                          profileLoading ? (
+                            <Spinner
+                              animation="border"
+                              size="sm"
+                              variant="light"
+                            />
+                          ) : getProfileImageUrl() ? (
+                            <img
+                              src={getProfileImageUrl()}
+                              alt="Profile"
+                              style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                border: "1px solid white",
+                              }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `${process.env.PUBLIC_URL}/default-avatar.png`;
+                              }}
+                            />
+                          ) : (
+                            <FaUserCircle size={28} color="white" />
+                          )
+                        }
+                        id="profile-dropdown"
+                        show={showProfileMenu}
+                        onClick={handleProfileToggle}
+                        ref={profileMenuRef}
+                        align="end"
+                        className="profile-dropdown ms-3"
+                        menuVariant="dark"
+                      >
+                        <div className="dropdown-header d-flex align-items-center px-3 py-2">
+                          <strong>{getUserDisplayName()}</strong>
+                          {profileData?.Emp_ID && (
+                            <small className="ms-2 text-muted">
+                              ({profileData.Emp_ID})
+                            </small>
+                          )}
+                        </div>
                         <NavDropdown.Item
                           onClick={() =>
-                            handleDropdownItemClick(() => navigate("/Dashboards/profile"))
+                            handleDropdownItemClick(() =>
+                              navigate("/Dashboards/profile")
+                            )
                           }
                         >
                           My Profile
@@ -806,4 +828,3 @@ const getUserDisplayName = () => {
 };
 
 export default Header;
-

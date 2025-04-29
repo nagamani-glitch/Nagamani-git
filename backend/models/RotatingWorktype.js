@@ -36,7 +36,26 @@ const rotatingWorktypeSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  isAllocated: {
+  isForReview: {
+    type: Boolean,
+    default: true
+  },
+  // Add userId field to track request ownership
+  userId: {
+    type: String,
+    required: true
+  },
+  // Add reviewer information
+  reviewerName: {
+    type: String,
+    default: null
+  },
+  reviewedAt: {
+    type: Date,
+    default: null
+  },
+  // Add notification tracking
+  notificationSent: {
     type: Boolean,
     default: false
   }
