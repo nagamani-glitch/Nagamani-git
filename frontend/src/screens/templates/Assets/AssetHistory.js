@@ -51,7 +51,6 @@ const getStatusColor = (status) => {
   return "#e2e8f0";
 };
 
-
 const getStatusTextColor = (status) => {
   if (status === "In Use") return "#16a34a";
   if (status === "Available") return "#2563eb";
@@ -170,17 +169,15 @@ const AssetHistory = () => {
     }
   };
 
- 
-
   const fetchAssets = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/assets`);
       console.log("Fetched assets:", response.data);
-      
+
       // Update the assets state with the fresh data
       setAssets(response.data);
-      
+
       setLoading(false);
     } catch (error) {
       console.error("Error fetching asset history:", error);
@@ -255,6 +252,27 @@ const AssetHistory = () => {
       }
     }
   };
+
+  // const handleEditClick = (asset) => {
+  //   setEditingAssetId(asset._id);
+  //   setEditData({
+  //     name: asset.name || "",
+  //     category: asset.category || "",
+  //     status: asset.status || "",
+  //     returnDate: asset.returnDate
+  //       ? new Date(asset.returnDate).toISOString().split("T")[0]
+  //       : "",
+  //     allottedDate: asset.allottedDate
+  //       ? new Date(asset.allottedDate).toISOString().split("T")[0]
+  //       : "",
+  //     currentEmployee: asset.currentEmployee || "",
+  //     previousEmployees: asset.previousEmployees || [],
+  //     batch: asset.batch || "",
+  //   });
+  //   console.log("Editing asset:", asset);
+  //   console.log("Edit data initialized:", editData);
+  // };
+
   const handleEditClick = (asset) => {
     setEditingAssetId(asset._id);
     setEditData({
@@ -268,7 +286,9 @@ const AssetHistory = () => {
         ? new Date(asset.allottedDate).toISOString().split("T")[0]
         : "",
       currentEmployee: asset.currentEmployee || "",
-      previousEmployees: asset.previousEmployees || [],
+      previousEmployees: Array.isArray(asset.previousEmployees)
+        ? asset.previousEmployees
+        : [],
       batch: asset.batch || "",
     });
     console.log("Editing asset:", asset);
@@ -276,15 +296,25 @@ const AssetHistory = () => {
   };
 
   const handlePreviousEmployeesChangeEdit = (e) => {
-    const employees = e.target.value.split(",").map(emp => emp.trim());
+    const employees = e.target.value
+      .split(",")
+      .map((emp) => emp.trim())
+      .filter((emp) => emp !== "");
     console.log("Setting previous employees to:", employees);
-    setEditData(prev => ({
+    setEditData((prev) => ({
       ...prev,
-      previousEmployees: employees
+      previousEmployees: employees,
     }));
   };
 
- 
+  // const handlePreviousEmployeesChangeEdit = (e) => {
+  //   const employees = e.target.value.split(",").map(emp => emp.trim());
+  //   console.log("Setting previous employees to:", employees);
+  //   setEditData(prev => ({
+  //     ...prev,
+  //     previousEmployees: employees
+  //   }));
+  // };
 
   const handleAddAsset = async (e) => {
     e.preventDefault();
@@ -339,56 +369,24 @@ const AssetHistory = () => {
     }
   };
 
-  // const handleUpdate = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     setLoading(true);
-  //     const updatedData = {
-  //       ...editData,
-  //       // Format the allottedDate properly if it exists
-  //       allottedDate: editData.allottedDate ? new Date(editData.allottedDate).toISOString() : null,
-  //       // Format the returnDate properly if it exists
-  //       returnDate: editData.returnDate ? new Date(editData.returnDate).toISOString() : null,
-  //       // Make sure batch is included
-  //       batch: editData.batch || ''
-  //     };
-
-  //     console.log('Updating asset with data:', updatedData); // Add this line to debug
-
-  //     await axios.put(`${API_URL}/api/assets/${editingAssetId}`, updatedData);
-  //     setEditingAssetId(null);
-  //     fetchAssets();
-
-  //     // Notify other components about the update
-  //     const timestamp = Date.now().toString();
-  //     localStorage.setItem('assetsUpdated', timestamp);
-
-  //     const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
-  //     window.dispatchEvent(event);
-  //   } catch (error) {
-  //     console.error('Error updating asset:', error);
-  //     setError('Failed to update asset: ' + error.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
-      
+
       // Log the current state before formatting
       console.log("Current edit data before formatting:", editData);
-      
+
       const updatedData = {
         name: editData.name,
         category: editData.category,
         status: editData.status,
         currentEmployee: editData.currentEmployee,
-        previousEmployees: Array.isArray(editData.previousEmployees) 
-          ? editData.previousEmployees 
-          : (editData.previousEmployees ? editData.previousEmployees.split(',').map(emp => emp.trim()) : []),
+        previousEmployees: Array.isArray(editData.previousEmployees)
+          ? editData.previousEmployees
+          : editData.previousEmployees
+          ? editData.previousEmployees.split(",").map((emp) => emp.trim())
+          : [],
         batch: editData.batch || "",
         // Format the dates
         allottedDate: editData.allottedDate
@@ -402,15 +400,18 @@ const AssetHistory = () => {
       console.log("Updating asset with data:", updatedData);
       console.log("Asset ID being updated:", editingAssetId);
 
-      const response = await axios.put(`${API_URL}/api/assets/${editingAssetId}`, updatedData);
+      const response = await axios.put(
+        `${API_URL}/api/assets/${editingAssetId}`,
+        updatedData
+      );
       console.log("Update response:", response.data);
-      
+
       // Close the edit modal
       setEditingAssetId(null);
-      
+
       // Immediately fetch the updated assets to ensure we have the latest data
       await fetchAssets();
-      
+
       // Show success message
       alert("Asset updated successfully!");
 
@@ -422,8 +423,14 @@ const AssetHistory = () => {
       window.dispatchEvent(event);
     } catch (error) {
       console.error("Error updating asset:", error);
-      console.error("Error details:", error.response ? error.response.data : "No response data");
-      setError("Failed to update asset: " + (error.response ? error.response.data.message : error.message));
+      console.error(
+        "Error details:",
+        error.response ? error.response.data : "No response data"
+      );
+      setError(
+        "Failed to update asset: " +
+          (error.response ? error.response.data.message : error.message)
+      );
       alert("Failed to update asset. Please try again.");
     } finally {
       setLoading(false);
@@ -435,9 +442,15 @@ const AssetHistory = () => {
     return assets.filter(
       (asset) =>
         (asset.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-        (asset.status?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-        (asset.category?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-        (asset.currentEmployee?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+        (asset.status?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        ) ||
+        (asset.category?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        ) ||
+        (asset.currentEmployee?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        ) ||
         (asset.batch?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     );
   }, [assets, searchTerm]);
@@ -1234,8 +1247,12 @@ const AssetHistory = () => {
               <TextField
                 label="Previous Employees"
                 name="previousEmployees"
-                value={newAssetData.previousEmployees.join(", ")}
-                onChange={handlePreviousEmployeesChange}
+                value={
+                  Array.isArray(editData.previousEmployees)
+                    ? editData.previousEmployees.join(", ")
+                    : ""
+                }
+                onChange={handlePreviousEmployeesChangeEdit}
                 helperText="Enter names separated by commas"
                 fullWidth
                 multiline
@@ -1445,7 +1462,9 @@ const AssetHistory = () => {
                 >
                   <MenuItem value="Available">Available</MenuItem>
                   <MenuItem value="In Use">In Use</MenuItem>
-                  <MenuItem value="Under Maintenance">Under Maintenance</MenuItem>
+                  <MenuItem value="Under Maintenance">
+                    Under Maintenance
+                  </MenuItem>
                 </Select>
               </FormControl>
               <FormControl
@@ -1491,7 +1510,11 @@ const AssetHistory = () => {
               <TextField
                 label="Previous Employees"
                 name="previousEmployees"
-                value={Array.isArray(editData.previousEmployees) ? editData.previousEmployees.join(", ") : ""}
+                value={
+                  Array.isArray(editData.previousEmployees)
+                    ? editData.previousEmployees.join(", ")
+                    : ""
+                }
                 onChange={handlePreviousEmployeesChangeEdit}
                 helperText="Enter names separated by commas"
                 fullWidth
