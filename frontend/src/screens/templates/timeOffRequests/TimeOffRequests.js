@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { styled } from "@mui/material/styles";
 import {
+  alpha,
   Box,
   Button,
   TextField,
@@ -45,23 +47,62 @@ import {
   Add,
   AccessTime,
 } from "@mui/icons-material";
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import axios from 'axios';
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import axios from "axios";
 import { useNotifications } from "../../../context/NotificationContext";
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.common.white,
+  fontSize: 14,
+  fontWeight: "bold",
+  padding: theme.spacing(2),
+  whiteSpace: "normal",
+  "&.MuiTableCell-body": {
+    color: theme.palette.text.primary,
+    fontSize: 14,
+    borderBottom: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+    padding: { xs: theme.spacing(1.5), sm: theme.spacing(2) },
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.05),
+  },
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.1),
+    transition: "background-color 0.2s ease",
+  },
+  // Hide last border
+  "&:last-child td, &:last-child th": {
+    borderBottom: 0,
+  },
+}));
 
 const TimeOffRequests = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
-  
+
   // Current user state
   const [currentUser, setCurrentUser] = useState(null);
-  const userId = localStorage.getItem('userId');
-  const employeeId = localStorage.getItem('employeeId');
+  const userId = localStorage.getItem("userId");
+  const employeeId = localStorage.getItem("employeeId");
   const { addTimeOffNotification } = useNotifications();
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
@@ -71,13 +112,13 @@ const TimeOffRequests = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+
   const initialFormState = {
     name: "",
     empId: "",
     userId: userId,
     date: new Date(),
-    day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+    day: new Date().toLocaleDateString("en-US", { weekday: "long" }),
     checkIn: "09:00",
     checkOut: "18:00",
     shift: "Morning",
@@ -88,15 +129,15 @@ const TimeOffRequests = () => {
     comment: "",
     status: "Pending",
   };
-  
+
   const [formData, setFormData] = useState(initialFormState);
-  
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
-  
+
   const { addNotification } = useNotifications();
 
   const shiftOptions = ["Morning", "Evening", "Night"];
@@ -107,21 +148,23 @@ const TimeOffRequests = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       if (!userId) return;
-      
+
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5002/api/employees/by-user/${userId}`);
+        const response = await axios.get(
+          `http://localhost:5002/api/employees/by-user/${userId}`
+        );
         if (response.data.success) {
           setCurrentUser(response.data.data);
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        showSnackbar('Error fetching user data', 'error');
+        console.error("Error fetching user data:", error);
+        showSnackbar("Error fetching user data", "error");
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchUserData();
   }, [userId]);
 
@@ -135,7 +178,7 @@ const TimeOffRequests = () => {
         setRequests([]);
         return;
       }
-      
+
       setLoading(true);
       const response = await axios.get(
         `http://localhost:5002/api/time-off-requests/by-user/${userId}?searchTerm=${searchTerm}&status=${filterStatus}`
@@ -149,83 +192,57 @@ const TimeOffRequests = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (!userId) return;
+  useEffect(() => {
+    if (!userId) return;
 
-  //   // Connect to WebSocket
-  //   const socket = io('http://localhost:5002');
-    
-  //   // Join a room specific to this user
-  //   socket.emit('join', { userId });
-    
-  //   // Listen for new notifications related to time off requests
-  //   socket.on('new-notification', (notification) => {
-  //     // If the notification is about a time off request, refresh the requests
-  //     if (notification.type === 'timesheet' && notification.userId === userId) {
-  //       console.log('Received time off request notification:', notification);
-  //       fetchRequests();
-        
-  //       // Show a snackbar with the notification message
-  //       showSnackbar(notification.message, 'info');
-  //     }
-  //   });
-    
-  //   // Clean up on unmount
-  //   return () => {
-  //     socket.disconnect();
-  //   };
-  // }, [userId]);
+    console.log(
+      "Setting up WebSocket connection for time off requests:",
+      userId
+    );
 
+    // Connect to WebSocket
+    const socket = io("http://localhost:5002", {
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
 
+    // Handle connection events for debugging
+    socket.on("connect", () => {
+      console.log("Socket connected successfully in TimeOffRequests");
 
-// Inside the component, update the socket connection useEffect
+      // Join a room specific to this user
+      socket.emit("join", { userId });
+      console.log("Joined room:", userId);
+    });
 
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error in TimeOffRequests:", error);
+    });
 
-useEffect(() => {
-  if (!userId) return;
+    // Listen for new notifications related to time off requests
+    socket.on("new-notification", (notification) => {
+      // If the notification is about a time off request, refresh the requests
+      if (notification.type === "timesheet" && notification.userId === userId) {
+        console.log("Received time off request notification:", notification);
+        fetchRequests();
 
-  console.log('Setting up WebSocket connection for time off requests:', userId);
+        // Show a snackbar with the notification message
+        showSnackbar(
+          notification.message,
+          notification.status === "approved" ? "success" : "error"
+        );
+      }
+    });
 
-  // Connect to WebSocket
-  const socket = io('http://localhost:5002', {
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000,
-  });
-  
-  // Handle connection events for debugging
-  socket.on('connect', () => {
-    console.log('Socket connected successfully in TimeOffRequests');
-    
-    // Join a room specific to this user
-    socket.emit('join', { userId });
-    console.log('Joined room:', userId);
-  });
-  
-  socket.on('connect_error', (error) => {
-    console.error('Socket connection error in TimeOffRequests:', error);
-  });
-  
-  // Listen for new notifications related to time off requests
-  socket.on('new-notification', (notification) => {
-    // If the notification is about a time off request, refresh the requests
-    if (notification.type === 'timesheet' && notification.userId === userId) {
-      console.log('Received time off request notification:', notification);
-      fetchRequests();
-      
-      // Show a snackbar with the notification message
-      showSnackbar(notification.message, notification.status === 'approved' ? 'success' : 'error');
-    }
-  });
-  
-  // Clean up on unmount
-  return () => {
-    console.log('Cleaning up socket connection in TimeOffRequests');
-    socket.disconnect();
-  };
-}, [userId]);
+    // Clean up on unmount
+    return () => {
+      console.log("Cleaning up socket connection in TimeOffRequests");
+      socket.disconnect();
+    };
+  }, [userId]);
 
-// The rest of the component remains the same
+  // The rest of the component remains the same
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
@@ -237,7 +254,7 @@ useEffect(() => {
   };
 
   const handleDateChange = (date) => {
-    const day = date.toLocaleDateString('en-US', { weekday: 'long' });
+    const day = date.toLocaleDateString("en-US", { weekday: "long" });
     setFormData({
       ...formData,
       date,
@@ -263,12 +280,12 @@ useEffect(() => {
         `http://localhost:5002/api/time-off-requests/${id}`
       );
       const requestData = response.data;
-      
+
       setFormData({
         ...requestData,
         date: new Date(requestData.date),
       });
-      
+
       setEditMode(true);
       setSelectedRequest(requestData);
       setCreateOpen(true);
@@ -295,14 +312,16 @@ useEffect(() => {
     if (currentUser && currentUser.personalInfo) {
       setFormData({
         ...initialFormState,
-        name: `${currentUser.personalInfo.firstName || ''} ${currentUser.personalInfo.lastName || ''}`.trim(),
-        empId: currentUser.Emp_ID || employeeId || '',
-        userId: userId
+        name: `${currentUser.personalInfo.firstName || ""} ${
+          currentUser.personalInfo.lastName || ""
+        }`.trim(),
+        empId: currentUser.Emp_ID || employeeId || "",
+        userId: userId,
       });
     } else {
       setFormData({
         ...initialFormState,
-        userId: userId
+        userId: userId,
       });
     }
     setEditMode(false);
@@ -346,7 +365,7 @@ useEffect(() => {
       const response = await axios({
         method: editMode ? "PUT" : "POST",
         url,
-        data: formattedData
+        data: formattedData,
       });
 
       showSnackbar(
@@ -380,137 +399,320 @@ useEffect(() => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+    <Box
+      sx={{
+        p: { xs: 2, sm: 3, md: 4 },
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+      }}
+    >
+      <Box>
+        <Typography
+          variant="h4"
+          sx={{
+            mb: { xs: 2, sm: 3, md: 4 },
+            color: theme.palette.primary.main,
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+          }}
+        >
           My Time Off Requests
-        </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
-          Manage your time off requests and view their status
         </Typography>
       </Box>
 
-      <Card sx={{ mb: 4, borderRadius: 2, boxShadow: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                placeholder="Search requests..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search />
-                    </InputAdornment>
-                  ),
-                }}
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Status Filter</InputLabel>
-                <Select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  label="Status Filter"
-                >
-                  <MenuItem value="all">All Statuses</MenuItem>
-                  <MenuItem value="Pending">Pending</MenuItem>
-                  <MenuItem value="Approved">Approved</MenuItem>
-                  <MenuItem value="Rejected">Rejected</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={5}>
-              <Box sx={{ display: "flex", gap: 2, justifyContent: { xs: "flex-start", md: "flex-end" } }}>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={fetchRequests}
-                  startIcon={<AccessTime />}
-                >
-                  Refresh
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleCreateNew}
-                  startIcon={<Add />}
-                >
-                  New Request
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+      <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box
+          display="flex"
+          flexDirection={{ xs: "column", sm: "row" }}
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          gap={2}
+          sx={{
+            width: "100%",
+            justifyContent: "space-between",
+          }}
+        >
+          <TextField
+            placeholder="Search requests..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="small"
+            sx={{
+              width: { xs: "100%", sm: "300px" },
+              marginRight: { xs: 0, sm: "auto" },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: { xs: 1, sm: 1 },
+              width: { xs: "100%", sm: "auto" },
+            }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleCreateNew}
+              startIcon={<Add />}
+              sx={{
+                height: { xs: "auto", sm: 50 },
+                padding: { xs: "8px 16px", sm: "6px 16px" },
+                width: { xs: "100%", sm: "auto" },
+                background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                color: "white",
+                "&:hover": {
+                  background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                },
+              }}
+            >
+              New Request
+            </Button>
+          </Box>
+        </Box>
+      </StyledPaper>
+      {/* Status Filter buttons */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 1,
+          mb: 2,
+        }}
+      >
+        <Button
+          sx={{
+            color: "green",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() => setFilterStatus("Approved")}
+        >
+          ● Approved
+        </Button>
+        <Button
+          sx={{
+            color: "red",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() => setFilterStatus("Rejected")}
+        >
+          ● Rejected
+        </Button>
+        <Button
+          sx={{
+            color: "orange",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() => setFilterStatus("Pending")}
+        >
+          ● Pending
+        </Button>
+        <Button
+          sx={{
+            color: "gray",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() => setFilterStatus("all")}
+        >
+          ● All
+        </Button>
+      </Box>
+
+      <Divider sx={{ mb: 2 }} />
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-          <CircularProgress />
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            my: 6,
+          }}
+        >
+          <CircularProgress
+            size={40}
+            thickness={4}
+            sx={{ color: theme.palette.primary.main }}
+          />
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+            Loading your time off requests...
+          </Typography>
         </Box>
       ) : (
         <>
           {requests.length > 0 ? (
-            <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
-              <Table>
+            <TableContainer
+              component={Paper}
+              sx={{
+                maxHeight: { xs: 450, sm: 500, md: 550 },
+                overflowY: "auto",
+                overflowX: "auto",
+                mx: 0,
+                borderRadius: 2,
+                boxShadow:
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                mb: 4,
+                "& .MuiTableContainer-root": {
+                  scrollbarWidth: "thin",
+                  "&::-webkit-scrollbar": {
+                    width: 8,
+                    height: 8,
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    backgroundColor: alpha(theme.palette.primary.light, 0.1),
+                    borderRadius: 8,
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                    borderRadius: 8,
+                    "&:hover": {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.3),
+                    },
+                  },
+                },
+              }}
+            >
+              <Table stickyHeader>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
-                    <TableCell sx={{ color: 'white' }}>Date</TableCell>
-                    <TableCell sx={{ color: 'white' }}>Time</TableCell>
-                    <TableCell sx={{ color: 'white' }}>Shift</TableCell>
-                    <TableCell sx={{ color: 'white' }}>Work Type</TableCell>
-                    <TableCell sx={{ color: 'white' }}>Status</TableCell>
-                    <TableCell sx={{ color: 'white' }}>Actions</TableCell>
+                  <TableRow>
+                    <StyledTableCell sx={{ minWidth: 130 }}>
+                      Date
+                    </StyledTableCell>
+                    <StyledTableCell sx={{ minWidth: 120 }}>
+                      Time
+                    </StyledTableCell>
+                    <StyledTableCell sx={{ minWidth: 100 }}>
+                      Shift
+                    </StyledTableCell>
+                    <StyledTableCell sx={{ minWidth: 100 }}>
+                      Work Type
+                    </StyledTableCell>
+                    <StyledTableCell sx={{ minWidth: 100 }}>
+                      Status
+                    </StyledTableCell>
+                    <StyledTableCell
+                      sx={{ minWidth: 120, textAlign: "center" }}
+                    >
+                      Actions
+                    </StyledTableCell>
                   </TableRow>
                 </TableHead>
+
                 <TableBody>
                   {requests.map((request) => (
-                    <TableRow key={request._id} hover>
+                    <StyledTableRow key={request._id} hover>
                       <TableCell>
-                        <Typography variant="body2">
-                          {formatDate(request.date)}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {request.day}
-                        </Typography>
+                        <Box sx={{ display: "flex", flexDirection: "column" }}>
+                          <Typography variant="body2" fontWeight={500}>
+                            {formatDate(request.date)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {request.day}
+                          </Typography>
+                        </Box>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {formatTime(request.checkIn)} - {formatTime(request.checkOut)}
+                          {formatTime(request.checkIn)} -{" "}
+                          {formatTime(request.checkOut)}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
                           label={request.shift}
                           size="small"
-                          sx={{ backgroundColor: '#e3f2fd', color: '#1976d2' }}
+                          sx={{
+                            backgroundColor: alpha(
+                              theme.palette.primary.light,
+                              0.1
+                            ),
+                            color: theme.palette.primary.dark,
+                            fontWeight: 500,
+                            borderRadius: "4px",
+                            "& .MuiChip-label": { px: 1 },
+                          }}
                         />
                       </TableCell>
                       <TableCell>
                         <Chip
                           label={request.workType}
                           size="small"
-                          sx={{ backgroundColor: '#e8f5e9', color: '#2e7d32' }}
+                          sx={{
+                            backgroundColor: alpha(
+                              theme.palette.success.light,
+                              0.1
+                            ),
+                            color: theme.palette.success.dark,
+                            fontWeight: 500,
+                            borderRadius: "4px",
+                            "& .MuiChip-label": { px: 1 },
+                          }}
                         />
                       </TableCell>
                       <TableCell>
-                        <Chip
-                          label={request.status}
-                          color={getStatusColor(request.status)}
-                          size="small"
-                        />
+                        <Box
+                          sx={{
+                            display: "inline-block",
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 1,
+                            fontSize: "0.75rem",
+                            fontWeight: "medium",
+                            backgroundColor:
+                              request.status === "Approved"
+                                ? alpha("#4caf50", 0.1)
+                                : request.status === "Rejected"
+                                ? alpha("#f44336", 0.1)
+                                : alpha("#ff9800", 0.1),
+                            color:
+                              request.status === "Approved"
+                                ? "#2e7d32"
+                                : request.status === "Rejected"
+                                ? "#d32f2f"
+                                : "#e65100",
+                          }}
+                        >
+                          {request.status}
+                        </Box>
                       </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
+                      <TableCell align="center">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: 1,
+                          }}
+                        >
                           <Tooltip title="View Details">
                             <IconButton
                               size="small"
                               onClick={() => handlePreview(request._id)}
                               color="info"
+                              sx={{
+                                backgroundColor: alpha(
+                                  theme.palette.info.main,
+                                  0.1
+                                ),
+                                "&:hover": {
+                                  backgroundColor: alpha(
+                                    theme.palette.info.main,
+                                    0.2
+                                  ),
+                                },
+                              }}
                             >
                               <Visibility fontSize="small" />
                             </IconButton>
@@ -522,6 +724,18 @@ useEffect(() => {
                                   size="small"
                                   onClick={() => handleEdit(request._id)}
                                   color="primary"
+                                  sx={{
+                                    backgroundColor: alpha(
+                                      theme.palette.primary.main,
+                                      0.1
+                                    ),
+                                    "&:hover": {
+                                      backgroundColor: alpha(
+                                        theme.palette.primary.main,
+                                        0.2
+                                      ),
+                                    },
+                                  }}
                                 >
                                   <Edit fontSize="small" />
                                 </IconButton>
@@ -534,6 +748,18 @@ useEffect(() => {
                                     setDeleteOpen(true);
                                   }}
                                   color="error"
+                                  sx={{
+                                    backgroundColor: alpha(
+                                      theme.palette.error.main,
+                                      0.1
+                                    ),
+                                    "&:hover": {
+                                      backgroundColor: alpha(
+                                        theme.palette.error.main,
+                                        0.2
+                                      ),
+                                    },
+                                  }}
                                 >
                                   <Delete fontSize="small" />
                                 </IconButton>
@@ -542,26 +768,99 @@ useEffect(() => {
                           )}
                         </Box>
                       </TableCell>
-                    </TableRow>
+                    </StyledTableRow>
                   ))}
+
+                  {requests.length > 0 &&
+                    requests.filter(
+                      (request) =>
+                        (filterStatus === "all" ||
+                          request.status === filterStatus) &&
+                        (request.name
+                          ?.toLowerCase()
+                          .includes(searchTerm.toLowerCase()) ||
+                          request.empId
+                            ?.toLowerCase()
+                            .includes(searchTerm.toLowerCase()))
+                    ).length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                          <Typography variant="body1" color="text.secondary">
+                            No time off requests found matching your filters.
+                          </Typography>
+                          <Button
+                            variant="text"
+                            color="primary"
+                            onClick={() => {
+                              setSearchTerm("");
+                              setFilterStatus("all");
+                            }}
+                            sx={{ mt: 1 }}
+                          >
+                            Clear filters
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )}
                 </TableBody>
-                </Table>
+              </Table>
             </TableContainer>
           ) : (
-            <Card sx={{ textAlign: 'center', py: 6, borderRadius: 2 }}>
+            <Card
+              sx={{
+                textAlign: "center",
+                py: 6,
+                borderRadius: 2,
+                boxShadow:
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                backdropFilter: "blur(8px)",
+              }}
+            >
               <CardContent>
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  No time off requests found
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  You haven't created any time off requests yet.
-                </Typography>
+                <Box sx={{ mb: 3 }}>
+                  <AccessTime
+                    sx={{
+                      fontSize: 60,
+                      color: alpha(theme.palette.primary.main, 0.2),
+                      mb: 2,
+                    }}
+                  />
+                  <Typography
+                    variant="h5"
+                    color="text.primary"
+                    gutterBottom
+                    fontWeight={600}
+                  >
+                    No time off requests found
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    sx={{ maxWidth: 500, mx: "auto" }}
+                  >
+                    You haven't created any time off requests yet. Create your
+                    first request to get started.
+                  </Typography>
+                </Box>
                 <Button
                   variant="contained"
                   color="primary"
                   onClick={handleCreateNew}
                   startIcon={<Add />}
-                  sx={{ mt: 3 }}
+                  sx={{
+                    mt: 2,
+                    px: 3,
+                    py: 1,
+                    background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+                    boxShadow: `0 3px 5px 2px ${alpha(
+                      theme.palette.primary.main,
+                      0.3
+                    )}`,
+                    "&:hover": {
+                      background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`,
+                    },
+                  }}
                 >
                   Create New Request
                 </Button>
@@ -578,7 +877,13 @@ useEffect(() => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Typography variant="h6">
             {editMode ? "Edit Time Off Request" : "Create New Time Off Request"}
           </Typography>
@@ -618,7 +923,9 @@ useEffect(() => {
                   label="Date"
                   value={formData.date}
                   onChange={handleDateChange}
-                  renderInput={(params) => <TextField {...params} fullWidth required />}
+                  renderInput={(params) => (
+                    <TextField {...params} fullWidth required />
+                  )}
                 />
               </LocalizationProvider>
             </Grid>
@@ -762,7 +1069,13 @@ useEffect(() => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Typography variant="h6">Time Off Request Details</Typography>
           <IconButton onClick={() => setPreviewOpen(false)}>
             <Close />
@@ -772,9 +1085,13 @@ useEffect(() => {
           {selectedRequest && (
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
-                <Card variant="outlined" sx={{ height: '100%' }}>
+                <Card variant="outlined" sx={{ height: "100%" }}>
                   <CardContent>
-                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                    >
                       Employee Information
                     </Typography>
                     <Divider sx={{ mb: 2 }} />
@@ -783,13 +1100,17 @@ useEffect(() => {
                         <Typography variant="body2" color="text.secondary">
                           Name
                         </Typography>
-                        <Typography variant="body1">{selectedRequest.name}</Typography>
+                        <Typography variant="body1">
+                          {selectedRequest.name}
+                        </Typography>
                       </Box>
                       <Box>
                         <Typography variant="body2" color="text.secondary">
                           Employee ID
                         </Typography>
-                        <Typography variant="body1">{selectedRequest.empId}</Typography>
+                        <Typography variant="body1">
+                          {selectedRequest.empId}
+                        </Typography>
                       </Box>
                       <Box>
                         <Typography variant="body2" color="text.secondary">
@@ -807,9 +1128,13 @@ useEffect(() => {
                 </Card>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Card variant="outlined" sx={{ height: '100%' }}>
+                <Card variant="outlined" sx={{ height: "100%" }}>
                   <CardContent>
-                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                    >
                       Time Off Details
                     </Typography>
                     <Divider sx={{ mb: 2 }} />
@@ -819,7 +1144,8 @@ useEffect(() => {
                           Date
                         </Typography>
                         <Typography variant="body1">
-                          {formatDate(selectedRequest.date)} ({selectedRequest.day})
+                          {formatDate(selectedRequest.date)} (
+                          {selectedRequest.day})
                         </Typography>
                       </Box>
                       <Box>
@@ -827,23 +1153,30 @@ useEffect(() => {
                           Time
                         </Typography>
                         <Typography variant="body1">
-                          {formatTime(selectedRequest.checkIn)} - {formatTime(selectedRequest.checkOut)}
+                          {formatTime(selectedRequest.checkIn)} -{" "}
+                          {formatTime(selectedRequest.checkOut)}
                         </Typography>
                       </Box>
                       <Box>
                         <Typography variant="body2" color="text.secondary">
                           Shift & Work Type
                         </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                        <Box sx={{ display: "flex", gap: 1, mt: 0.5 }}>
                           <Chip
                             label={selectedRequest.shift}
                             size="small"
-                            sx={{ backgroundColor: '#e3f2fd', color: '#1976d2' }}
+                            sx={{
+                              backgroundColor: "#e3f2fd",
+                              color: "#1976d2",
+                            }}
                           />
                           <Chip
                             label={selectedRequest.workType}
                             size="small"
-                            sx={{ backgroundColor: '#e8f5e9', color: '#2e7d32' }}
+                            sx={{
+                              backgroundColor: "#e8f5e9",
+                              color: "#2e7d32",
+                            }}
                           />
                         </Box>
                       </Box>
@@ -854,7 +1187,11 @@ useEffect(() => {
               <Grid item xs={12}>
                 <Card variant="outlined">
                   <CardContent>
-                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                    >
                       Additional Information
                     </Typography>
                     <Divider sx={{ mb: 2 }} />
@@ -863,19 +1200,25 @@ useEffect(() => {
                         <Typography variant="body2" color="text.secondary">
                           Minimum Hours
                         </Typography>
-                        <Typography variant="body1">{selectedRequest.minHour} hours</Typography>
+                        <Typography variant="body1">
+                          {selectedRequest.minHour} hours
+                        </Typography>
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <Typography variant="body2" color="text.secondary">
                           At Work
                         </Typography>
-                        <Typography variant="body1">{selectedRequest.atWork} hours</Typography>
+                        <Typography variant="body1">
+                          {selectedRequest.atWork} hours
+                        </Typography>
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <Typography variant="body2" color="text.secondary">
                           Overtime
                         </Typography>
-                        <Typography variant="body1">{selectedRequest.overtime || 0} hours</Typography>
+                        <Typography variant="body1">
+                          {selectedRequest.overtime || 0} hours
+                        </Typography>
                       </Grid>
                       <Grid item xs={12}>
                         <Typography variant="body2" color="text.secondary">
@@ -915,8 +1258,8 @@ useEffect(() => {
         <DialogActions>
           <Button onClick={() => setPreviewOpen(false)}>Close</Button>
           {selectedRequest && selectedRequest.status === "Pending" && (
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               color="primary"
               onClick={() => {
                 setPreviewOpen(false);
@@ -939,7 +1282,8 @@ useEffect(() => {
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <Typography variant="body1">
-            Are you sure you want to delete this time off request? This action cannot be undone.
+            Are you sure you want to delete this time off request? This action
+            cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -966,9 +1310,8 @@ useEffect(() => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Container>
+    </Box>
   );
 };
 
 export default TimeOffRequests;
-

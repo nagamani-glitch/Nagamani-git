@@ -456,63 +456,7 @@ const ShiftRequest = () => {
     setShowSelectionButtons(false);
   };
 
-  // // Update bulk operations similarly
-  // const handleBulkApprove = async () => {
-  //   try {
-  //     await axios.post(`${API_URL}/bulk-approve`, {
-  //       ids: selectedAllocations,
-  //       isForReview: false, // Remove from review after approval
-  //     });
-  //     await loadShiftRequests();
-  //     setSelectedAllocations([]);
-  //     setShowSelectionButtons(false);
-  //     setAnchorEl(null);
-  //     setSnackbar({
-  //       open: true,
-  //       message: "Shift requests approved successfully",
-  //       severity: "success",
-  //     });
-  //   } catch (error) {
-  //     console.error("Error bulk approving shifts:", error);
-  //     setSnackbar({
-  //       open: true,
-  //       message:
-  //         "Error approving shift requests: " +
-  //         (error.response?.data?.message || error.message),
-  //       severity: "error",
-  //     });
-  //   }
-  // };
-
-  // const handleBulkReject = async () => {
-  //   try {
-  //     await axios.post(`${API_URL}/bulk-reject`, {
-  //       ids: selectedAllocations,
-  //       isForReview: false, // Remove from review after rejection
-  //     });
-  //     await loadShiftRequests();
-  //     setSelectedAllocations([]);
-  //     setShowSelectionButtons(false);
-  //     setAnchorEl(null);
-  //     setSnackbar({
-  //       open: true,
-  //       message: "Shift requests rejected successfully",
-  //       severity: "success",
-  //     });
-  //   } catch (error) {
-  //     console.error("Error bulk rejecting shifts:", error);
-  //     setSnackbar({
-  //       open: true,
-  //       message:
-  //         "Error rejecting shift requests: " +
-  //         (error.response?.data?.message || error.message),
-  //       severity: "error",
-  //     });
-  //   }
-  // };
-
-
-  // Update the bulk operations to include reviewer information
+  
   const handleBulkApprove = async () => {
     try {
       const reviewerName = localStorage.getItem("userName") || "Admin";
@@ -575,56 +519,7 @@ const ShiftRequest = () => {
     }
   };
 
-// //handle approve and reject functions
-//   const handleApprove = async (id, e) => {
-//     e.stopPropagation();
-//     try {
-//       await axios.put(`${API_URL}/${id}/approve`, {
-//         isForReview: false, // Remove from review after approval
-//       });
-//       await loadShiftRequests();
-//       setSnackbar({
-//         open: true,
-//         message: "Shift request approved successfully",
-//         severity: "success",
-//       });
-//     } catch (error) {
-//       console.error("Error approving shift:", error);
-//       setSnackbar({
-//         open: true,
-//         message:
-//           "Error approving shift request: " +
-//           (error.response?.data?.message || error.message),
-//         severity: "error",
-//       });
-//     }
-//   };
 
-//   const handleReject = async (id, e) => {
-//     e.stopPropagation();
-//     try {
-//       await axios.put(`${API_URL}/${id}/reject`, {
-//         isForReview: false, // Remove from review after rejection
-//       });
-//       await loadShiftRequests();
-//       setSnackbar({
-//         open: true,
-//         message: "Shift request rejected successfully",
-//         severity: "success",
-//       });
-//     } catch (error) {
-//       console.error("Error rejecting shift:", error);
-//       setSnackbar({
-//         open: true,
-//         message:
-//           "Error rejecting shift request: " +
-//           (error.response?.data?.message || error.message),
-//         severity: "error",
-//       });
-//     }
-//   };
-
-// Update the handleApprove function to include reviewer information
 const handleApprove = async (id, e) => {
   e.stopPropagation();
   try {
@@ -653,7 +548,7 @@ const handleApprove = async (id, e) => {
   }
 };
 
-// Update the handleReject function to include reviewer information
+
 const handleReject = async (id, e) => {
   e.stopPropagation();
   try {
