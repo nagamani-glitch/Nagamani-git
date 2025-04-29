@@ -31,8 +31,8 @@ function AttendanceDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const ATTENDANCE_API_URL = "http://localhost:5000/api/attendance";
-  const TIME_OFF_API_URL = "http://localhost:5000/api/time-off-requests";
+  const ATTENDANCE_API_URL = "http://localhost:5002/api/attendance";
+  const TIME_OFF_API_URL = "http://localhost:5002/api/time-off-requests";
 
   useEffect(() => {
     fetchDashboardData();

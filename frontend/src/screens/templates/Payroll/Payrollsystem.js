@@ -55,7 +55,7 @@ import InfoIcon from "@mui/icons-material/Info";
 
 import "./Payrollsystem.css";
 
-const API_URL = "http://localhost:5000/api/payroll";
+const API_URL = "http://localhost:5002/api/payroll";
 
 const TabPanel = ({ children, value, index }) => (
   <div
@@ -979,7 +979,7 @@ const PayrollSystem = () => {
   const fetchRegisteredEmployees = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/employees/registered"
+        "http://localhost:5002/api/employees/registered"
       );
       setRegisteredEmployees(response.data);
     } catch (error) {

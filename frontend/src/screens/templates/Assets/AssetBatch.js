@@ -8,7 +8,7 @@ import { Dialog, DialogTitle, DialogContent, TableCell, Chip, TableHead, TableRo
 import { motion } from 'framer-motion';
 import { Search, Add, Edit, Delete, Close } from '@mui/icons-material';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
 
 // Styled components for the table
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -110,7 +110,7 @@ function AssetBatch() {
     if (lastUpdate) {
       const currentTimestamp = Date.now();
       const lastUpdateTimestamp = parseInt(lastUpdate, 10);
-      if (currentTimestamp - lastUpdateTimestamp < 5000) {
+      if (currentTimestamp - lastUpdateTimestamp < 5002) {
         fetchAssetBatches();
       }
     }

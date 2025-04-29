@@ -101,7 +101,7 @@ const AddressDetailsForm = ({ nextStep, prevStep, employeeId }) => {
       console.log('Data being sent to API:', addressData);
     
       const response = await axios.post(
-        'http://localhost:5000/api/employees/address-info',
+        'http://localhost:5002/api/employees/address-info',
         addressData,
         {
           headers: {
@@ -455,7 +455,7 @@ export default AddressDetailsForm;
 //       console.log('Data being sent to API:', addressData);
     
 //       const response = await axios.post(
-//         'http://localhost:5000/api/employees/address-info',
+//         'http://localhost:5002/api/employees/address-info',
 //         addressData,
 //         {
 //           headers: {
@@ -499,7 +499,7 @@ export default AddressDetailsForm;
 //   //     };
   
 //   //     const response = await axios.post(
-//   //       'http://localhost:5000/api/employees/address-info',
+//   //       'http://localhost:5002/api/employees/address-info',
 //   //       addressData,
 //   //       {
 //   //         headers: {

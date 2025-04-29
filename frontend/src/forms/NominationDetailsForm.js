@@ -42,7 +42,7 @@ const NominationDetailsForm = ({ onComplete
     const fetchEmployeeData = async () => {
       const employeeId = localStorage.getItem('Emp_ID');
       try {
-        const response = await axios.get(`http://localhost:5000/api/employees/get-employee/${employeeId}`);
+        const response = await axios.get(`http://localhost:5002/api/employees/get-employee/${employeeId}`);
         if (response.data.success && response.data.data) {
           const { familyDetails, addressDetails } = response.data.data;
           
@@ -69,7 +69,7 @@ const NominationDetailsForm = ({ onComplete
       }
   
       const employeeId = localStorage.getItem('Emp_ID');
-      const response = await axios.post('http://localhost:5000/api/employees/nomination-details', {
+      const response = await axios.post('http://localhost:5002/api/employees/nomination-details', {
         employeeId,
         nominationDetails: values.nominees
       });
@@ -86,7 +86,7 @@ const NominationDetailsForm = ({ onComplete
   // const handleSubmit = async (values) => {
   //   try {
   //     const employeeId = localStorage.getItem('Emp_ID');
-  //     const response = await axios.post('http://localhost:5000/api/employees/nomination-details', {
+  //     const response = await axios.post('http://localhost:5002/api/employees/nomination-details', {
   //       employeeId,
   //       nominationDetails: values.nominees.map(nominee => ({
   //         name: nominee.name,

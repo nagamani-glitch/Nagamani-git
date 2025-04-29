@@ -50,7 +50,7 @@ const PersonalInformationForm = ({ nextStep, setEmployeeId, onSave, userEmail, u
       if (userEmail) {
         try {
           // First get the userId
-          const userIdResponse = await axios.post('http://localhost:5000/api/auth/get-user-id', {
+          const userIdResponse = await axios.post('http://localhost:5002/api/auth/get-user-id', {
             email: userEmail
           });
           
@@ -58,7 +58,7 @@ const PersonalInformationForm = ({ nextStep, setEmployeeId, onSave, userEmail, u
             setUserId(userIdResponse.data.userId);
             
             // Then fetch the user details
-            const userDetailsResponse = await axios.get(`http://localhost:5000/api/auth/user/${userIdResponse.data.userId}`);
+            const userDetailsResponse = await axios.get(`http://localhost:5002/api/auth/user/${userIdResponse.data.userId}`);
             
             if (userDetailsResponse.data.success) {
               const user = userDetailsResponse.data.user;
@@ -182,7 +182,7 @@ const PersonalInformationForm = ({ nextStep, setEmployeeId, onSave, userEmail, u
         // If we have userEmail but no userId, try to fetch it
         if (userEmail) {
           try {
-            const response = await axios.post('http://localhost:5000/api/auth/get-user-id', {
+            const response = await axios.post('http://localhost:5002/api/auth/get-user-id', {
               email: userEmail
             });
             
@@ -274,7 +274,7 @@ const PersonalInformationForm = ({ nextStep, setEmployeeId, onSave, userEmail, u
     }
   
     const response = await axios.post(
-      'http://localhost:5000/api/employees/personal-info',
+      'http://localhost:5002/api/employees/personal-info',
       formData,
       {
         headers: {
@@ -721,7 +721,7 @@ const PersonalInformationForm = ({ nextStep, setEmployeeId, onSave, userEmail, u
                         onChange={(event) => {
                           const file = event.currentTarget.files[0];
                           if (file) {
-                            if (file.size > 5000000) {
+                            if (file.size > 5002000) {
                               toast.error('Image size should be less than 5MB');
                               return;
                             }
@@ -802,7 +802,7 @@ export default PersonalInformationForm;
 //     const fetchUserId = async () => {
 //       if (userEmail) {
 //         try {
-//           const response = await axios.post('http://localhost:5000/api/auth/get-user-id', {
+//           const response = await axios.post('http://localhost:5002/api/auth/get-user-id', {
 //             email: userEmail
 //           });
           
@@ -945,7 +945,7 @@ export default PersonalInformationForm;
 //       }
     
 //       const response = await axios.post(
-//         'http://localhost:5000/api/employees/personal-info',
+//         'http://localhost:5002/api/employees/personal-info',
 //         formData,
 //         {
 //           headers: {
@@ -1021,7 +1021,7 @@ export default PersonalInformationForm;
 //   //     }
     
 //   //     const response = await axios.post(
-//   //       'http://localhost:5000/api/employees/personal-info',
+//   //       'http://localhost:5002/api/employees/personal-info',
 //   //       formData,
 //   //       {
 //   //         headers: {
@@ -1456,7 +1456,7 @@ export default PersonalInformationForm;
 //   onChange={(event) => {
 //     const file = event.currentTarget.files[0];
 //     if (file) {
-//       if (file.size > 5000000) {
+//       if (file.size > 5002000) {
 //         toast.error('Image size should be less than 5MB');
 //         return;
 //       }

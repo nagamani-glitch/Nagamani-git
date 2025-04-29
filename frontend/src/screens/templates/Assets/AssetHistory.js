@@ -128,7 +128,7 @@ const AssetHistory = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5002";
 
   const handleAssetNameClick = async (asset) => {
     setSelectedAsset(asset);

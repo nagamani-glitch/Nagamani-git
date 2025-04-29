@@ -90,6 +90,12 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
+<<<<<<< HEAD
+// API URL for current user's employee profile
+const USER_PROFILE_API_URL = "http://localhost:5002/api/employees/by-user";
+
+=======
+>>>>>>> 804de9616ea57755748614f10fa352a108bbc358
 const WorkTypeRequest = () => {
   const theme = useTheme();
   const [tabValue, setTabValue] = useState(0);
@@ -132,8 +138,19 @@ const WorkTypeRequest = () => {
   useEffect(() => {
     const checkUserRole = async () => {
       try {
+<<<<<<< HEAD
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+
+        // Fetch user role from your authentication API
+        const response = await axios.get(
+          `http://localhost:5002/api/users/${userId}`
+        );
+        setIsAdmin(response.data.role === "admin");
+=======
         const userRole = localStorage.getItem("userRole");
         setIsAdmin(userRole === "admin");
+>>>>>>> 804de9616ea57755748614f10fa352a108bbc358
       } catch (error) {
         console.error("Error checking user role:", error);
       }

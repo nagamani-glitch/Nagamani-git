@@ -88,7 +88,7 @@ const TimeOffRequestsAdmin = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5000/api/time-off-requests?searchTerm=${searchTerm}&status=${filterStatus}`
+        `http://localhost:5002/api/time-off-requests?searchTerm=${searchTerm}&status=${filterStatus}`
       );
       setRequests(response.data);
     } catch (error) {
@@ -106,7 +106,7 @@ const TimeOffRequestsAdmin = () => {
   const handlePreview = async (id) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/time-off-requests/${id}`
+        `http://localhost:5002/api/time-off-requests/${id}`
       );
       setSelectedRequest(response.data);
       setPreviewOpen(true);
@@ -129,7 +129,7 @@ const TimeOffRequestsAdmin = () => {
 //     setLoading(true);
     
 //     const response = await axios.put(
-//       `http://localhost:5000/api/time-off-requests/${selectedRequest._id}`,
+//       `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`,
 //       {
 //         ...reviewData,
 //         reviewedBy: currentUserName
@@ -176,7 +176,7 @@ const handleReviewSubmit = async () => {
     setLoading(true);
     
     const response = await axios.put(
-      `http://localhost:5000/api/time-off-requests/${selectedRequest._id}`,
+      `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`,
       {
         ...reviewData,
         reviewedBy: currentUserName

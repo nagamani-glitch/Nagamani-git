@@ -59,7 +59,7 @@ const Interview = () => {
   const confirmDelete = () => {
     if (deleteId) {
       axios
-        .delete(`http://localhost:5000/api/interviews/${deleteId}`)
+        .delete(`http://localhost:5002/api/interviews/${deleteId}`)
         .then(() => {
           setData(data.filter((item) => item._id !== deleteId));
           setSnackbar({
@@ -86,7 +86,7 @@ const Interview = () => {
   }, [statusFilter]);
 
   const fetchInterviews = () => {
-    const url = "http://localhost:5000/api/interviews";
+    const url = "http://localhost:5002/api/interviews";
     axios
       .get(url)
       .then((response) => {
@@ -134,7 +134,7 @@ const Interview = () => {
     if (editMode && selectedRow) {
       axios
         .put(
-          `http://localhost:5000/api/interviews/${selectedRow._id}`,
+          `http://localhost:5002/api/interviews/${selectedRow._id}`,
           interviewData
         )
         .then((response) => {
@@ -148,7 +148,7 @@ const Interview = () => {
         .catch((error) => console.error("Error updating interview:", error));
     } else {
       axios
-        .post("http://localhost:5000/api/interviews", interviewData)
+        .post("http://localhost:5002/api/interviews", interviewData)
         .then((response) => {
           setData([...data, response.data]);
           setOpenDialog(false);

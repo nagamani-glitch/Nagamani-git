@@ -38,12 +38,12 @@ import {
 import { Search, Edit, Delete } from "@mui/icons-material";
 import { io } from 'socket.io-client';
 
-//const API_URL = "http://localhost:5000/api/shift-request/shifts";
-const API_URL = "http://localhost:5000/api/shift-request/shifts";
+//const API_URL = "http://localhost:5002/api/shift-request/shifts";
+const API_URL = "http://localhost:5002/api/shift-request/shifts";
 const USER_API_URL = (userId) =>
-  `http://localhost:5000/api/shift-request/shifts/user/${userId}`;
+  `http://localhost:5002/api/shift-request/shifts/user/${userId}`;
 
-const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/registered";
+const EMPLOYEES_API_URL = "http://localhost:5002/api/employees/registered";
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -192,7 +192,7 @@ const ShiftRequest = () => {
       }
 
       const response = await axios.get(
-        `http://localhost:5000/api/employees/by-user/${userId}`
+        `http://localhost:5002/api/employees/by-user/${userId}`
       );
 
       if (response.data.success) {

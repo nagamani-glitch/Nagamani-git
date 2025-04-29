@@ -37,9 +37,14 @@ import {
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
 import { io } from 'socket.io-client';
 
+<<<<<<< HEAD
+const API_URL = "http://localhost:5002/api/rotating-shift";
+const EMPLOYEES_API_URL = "http://localhost:5002/api/employees/registered";
+=======
 const API_URL = "http://localhost:5000/api/rotating-shift/shifts";
 const USER_API_URL = (userId) =>
   `http://localhost:5000/api/rotating-shift/shifts/user/${userId}`;
+>>>>>>> 804de9616ea57755748614f10fa352a108bbc358
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),

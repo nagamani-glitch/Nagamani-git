@@ -93,8 +93,8 @@ const COLORS = [
   "#ffc658",
 ];
 
-const API_URL = "http://localhost:5000/api/leave-requests";
-const EMPLOYEE_API_URL = "http://localhost:5000/api/employees";
+const API_URL = "http://localhost:5002/api/leave-requests";
+const EMPLOYEE_API_URL = "http://localhost:5002/api/employees";
 
 const MyLeaveRequests = () => {
   const theme = useTheme();

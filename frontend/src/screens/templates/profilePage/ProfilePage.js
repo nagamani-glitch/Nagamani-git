@@ -18,7 +18,7 @@ import Resignation from './resignation/Resignation';
 import { updateContract, getContractsByEmployeeId, deleteContract } from '../../../services/contractServices';
 import './ProfilePage.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
 
 
 
@@ -58,13 +58,15 @@ const updateWorkInfo = async () => {
       // Create the data object with the values from your form
       const workInfoData = {
         shiftType: workInfo.shiftType,
-        workType: workInfo.workType
+        workType: workInfo.workType,
+        uanNumber: workInfo.uanNumber,
+        pfNumber: workInfo.pfNumber
       };
       
       console.log('Sending work info update:', workInfoData, 'to employee ID:', id);
       
       const response = await axios.put(
-        `http://localhost:5000/api/employees/work-info/${id}`,
+        `http://localhost:5002/api/employees/work-info/${id}`,
         workInfoData,
         {
           headers: {
@@ -84,7 +86,9 @@ const updateWorkInfo = async () => {
           joiningDetails: {
             ...prev.joiningDetails,
             shiftType: workInfo.shiftType,
-            workType: workInfo.workType
+            workType: workInfo.workType,
+            uanNumber: workInfo.uanNumber,
+            pfNumber: workInfo.pfNumber
           }
         }));
       } else {
@@ -113,7 +117,7 @@ const updateWorkInfo = async () => {
     setLoading(true);
     try {
       // Use the get-employee endpoint from employeesRouter.js
-      const response = await axios.get(`http://localhost:5000/api/employees/get-employee/${id}`);
+      const response = await axios.get(`http://localhost:5002/api/employees/get-employee/${id}`);
       
       if (response.data.success) {
         const employeeData = response.data.data;
@@ -157,12 +161,14 @@ const updateWorkInfo = async () => {
           dateOfAppointment: employeeData.joiningDetails?.dateOfAppointment || '',
           modeOfRecruitment: employeeData.joiningDetails?.modeOfRecruitment || '',
           shiftType: employeeData.joiningDetails?.shiftType || '',
-          workType: employeeData.joiningDetails?.workType || ''
+          workType: employeeData.joiningDetails?.workType || '',
+          uanNumber: employeeData.joiningDetails?.uanNumber || '',
+          pfNumber: employeeData.joiningDetails?.pfNumber || ''
         });
 
         // Set profile image
         const imageUrl = employeeData.personalInfo?.employeeImage 
-          ? `http://localhost:5000${employeeData.personalInfo.employeeImage}` 
+          ? `http://localhost:5002${employeeData.personalInfo.employeeImage}` 
           : null;
         setProfileImage(imageUrl);
         
@@ -181,7 +187,7 @@ const updateWorkInfo = async () => {
 const fetchProfileByUserId = async (userId) => {
   setLoading(true);
   try {
-    const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
+    const response = await axios.get(`http://localhost:5002/api/employees/by-user/${userId}`);
     
     if (response.data.success) {
       const employeeData = response.data.data;
@@ -216,12 +222,14 @@ const fetchProfileByUserId = async (userId) => {
         dateOfAppointment: employeeData.joiningDetails?.dateOfAppointment || '',
         modeOfRecruitment: employeeData.joiningDetails?.modeOfRecruitment || '',
         shiftType: employeeData.joiningDetails?.shiftType || '',
-        workType: employeeData.joiningDetails?.workType || ''
+        workType: employeeData.joiningDetails?.workType || '',
+        uanNumber: employeeData.joiningDetails?.uanNumber || '',
+        pfNumber: employeeData.joiningDetails?.pfNumber || ''
       });
 
       // Set profile image
       const imageUrl = employeeData.personalInfo?.employeeImage 
-        ? `http://localhost:5000${employeeData.personalInfo.employeeImage}` 
+        ? `http://localhost:5002${employeeData.personalInfo.employeeImage}` 
         : null;
       setProfileImage(imageUrl);
       
@@ -391,7 +399,7 @@ const updateBankInfo = async () => {
     // Validate bank info before submitting
     if (editMode && bankInfo.accountNumber) {
       const response = await axios.put(
-        `http://localhost:5000/api/employees/bank-info/${id}`,
+        `http://localhost:5002/api/employees/bank-info/${id}`,
         bankInfo,
         {
           headers: {
@@ -803,6 +811,34 @@ const updateBankInfo = async () => {
             <ListGroup.Item>
               <strong>Employee Type:</strong> {personalInfo.joiningDetails?.employeeType}
             </ListGroup.Item>
+            <ListGroup.Item>
+  <strong>UAN Number:</strong>
+  {editWorkInfoMode ? (
+    <Form.Control
+      type="text"
+      name="uanNumber"
+      value={workInfo.uanNumber || personalInfo.joiningDetails?.uanNumber || ''}
+      onChange={(e) => handleInputChange(e, 'work')}
+      placeholder="Enter UAN Number"
+    />
+  ) : (
+    personalInfo.joiningDetails?.uanNumber || 'Not Available'
+  )}
+</ListGroup.Item>
+<ListGroup.Item>
+  <strong>PF Number:</strong>
+  {editWorkInfoMode ? (
+    <Form.Control
+      type="text"
+      name="pfNumber"
+      value={workInfo.pfNumber || personalInfo.joiningDetails?.pfNumber || ''}
+      onChange={(e) => handleInputChange(e, 'work')}
+      placeholder="Enter PF Number"
+    />
+  ) : (
+    personalInfo.joiningDetails?.pfNumber || 'Not Available'
+  )}
+</ListGroup.Item>
             <ListGroup.Item>
               <strong>Shift Type:</strong>
               {editWorkInfoMode ? (

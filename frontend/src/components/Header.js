@@ -80,10 +80,15 @@ const Header = () => {
       try {
         setProfileLoading(true);
         // Use the by-user endpoint from employeesRouter.js
+<<<<<<< HEAD
+        const response = await axios.get(`http://localhost:5002/api/employees/by-user/${userId}`);
+        
+=======
         const response = await axios.get(
           `http://localhost:5000/api/employees/by-user/${userId}`
         );
 
+>>>>>>> 804de9616ea57755748614f10fa352a108bbc358
         if (response.data.success) {
           setProfileData(response.data.data);
 
@@ -103,6 +108,15 @@ const Header = () => {
   }, []);
 
   // Get profile image URL
+<<<<<<< HEAD
+const getProfileImageUrl = () => {
+  if (profileData?.personalInfo?.employeeImage) {
+    const imagePath = profileData.personalInfo.employeeImage;
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    } else {
+      return `http://localhost:5002${imagePath}`;
+=======
   const getProfileImageUrl = () => {
     if (profileData?.personalInfo?.employeeImage) {
       const imagePath = profileData.personalInfo.employeeImage;
@@ -111,6 +125,7 @@ const Header = () => {
       } else {
         return `http://localhost:5000${imagePath}`;
       }
+>>>>>>> 804de9616ea57755748614f10fa352a108bbc358
     }
     return null;
   };

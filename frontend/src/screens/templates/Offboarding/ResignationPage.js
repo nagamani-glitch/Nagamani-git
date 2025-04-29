@@ -139,7 +139,7 @@ const { addResignationNotification } = useNotifications();
   //   try {
   //     setLoading(true);
   //     await axios.put(
-  //       `http://localhost:5000/api/resignations/${selectedItem._id}`,
+  //       `http://localhost:5002/api/resignations/${selectedItem._id}`,
   //       {
   //         status: newStatus,
   //       }
@@ -180,7 +180,7 @@ const handleStatusChange = async (newStatus) => {
   try {
     setLoading(true);
     await axios.put(
-      `http://localhost:5000/api/resignations/${selectedItem._id}`,
+      `http://localhost:5002/api/resignations/${selectedItem._id}`,
       {
         status: newStatus,
       }
@@ -250,11 +250,11 @@ const handleStatusChange = async (newStatus) => {
       if (userRole && (userRole.includes("admin") || userRole.includes("hr"))) {
         // Admin or HR can see all resignations
         console.log("Fetching all resignations for admin/HR");
-        url = "http://localhost:5000/api/resignations";
+        url = "http://localhost:5002/api/resignations";
       } else {
         // Regular users can only see their own resignations
         console.log("Fetching resignations for user:", userId);
-        url = `http://localhost:5000/api/resignations/user/${userId}`;
+        url = `http://localhost:5002/api/resignations/user/${userId}`;
       }
 
       const response = await axios.get(url);
@@ -285,7 +285,7 @@ const handleStatusChange = async (newStatus) => {
 
           // Fetch user details
           const response = await axios.get(
-            `http://localhost:5000/api/employees/by-user/${userId}`
+            `http://localhost:5002/api/employees/by-user/${userId}`
           );
           const userData = response.data.data;
 
@@ -346,7 +346,7 @@ const handleStatusChange = async (newStatus) => {
     try {
       setLoading(true);
       await axios.delete(
-        `http://localhost:5000/api/resignations/${itemToDelete._id}`
+        `http://localhost:5002/api/resignations/${itemToDelete._id}`
       );
       await fetchResignations();
       setDeleteDialogOpen(false);
@@ -409,7 +409,7 @@ const handleStatusChange = async (newStatus) => {
 
   const handleSendEmail = async (employee) => {
     try {
-      await axios.post("http://localhost:5000/api/resignations/email", {
+      await axios.post("http://localhost:5002/api/resignations/email", {
         name: employee.name,
         email: employee.email,
         position: employee.position,
@@ -547,7 +547,7 @@ const handleStatusChange = async (newStatus) => {
 
       if (isEditing) {
         await axios.put(
-          `http://localhost:5000/api/resignations/${currentId}`,
+          `http://localhost:5002/api/resignations/${currentId}`,
           resignationData
         );
         setSnackbar({
@@ -557,7 +557,7 @@ const handleStatusChange = async (newStatus) => {
         });
       } else {
         await axios.post(
-          "http://localhost:5000/api/resignations",
+          "http://localhost:5002/api/resignations",
           resignationData
         );
         setSnackbar({
@@ -2445,7 +2445,7 @@ const handleStatusChange = async (newStatus) => {
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={5000}
+        autoHideDuration={5002}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         TransitionComponent={Fade}

@@ -45,8 +45,8 @@ ChartJS.register(
   ArcElement
 );
 
-const API_URL = "http://localhost:5000/api/payroll";
-const CONTRACTS_API_URL = "http://localhost:5000/api/contracts";
+const API_URL = "http://localhost:5002/api/payroll";
+const CONTRACTS_API_URL = "http://localhost:5002/api/contracts";
 
 const PayrollDashboard = () => {
   // State variables

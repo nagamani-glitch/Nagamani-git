@@ -178,7 +178,7 @@ const Contract = () => {
     try {
       setLoading(true);
       const response = await axios.delete(
-        `http://localhost:5000/api/payroll-contracts/${contractToDelete._id}`
+        `http://localhost:5002/api/payroll-contracts/${contractToDelete._id}`
       );
 
       if (response.data.success) {
@@ -258,7 +258,7 @@ const Contract = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        "http://localhost:5000/api/payroll-contracts"
+        "http://localhost:5002/api/payroll-contracts"
       );
       if (response.data.success) {
         setContracts(response.data.data);
@@ -280,7 +280,7 @@ const Contract = () => {
           startDate: "2023-01-01",
           endDate: "2024-01-01",
           wageType: "Monthly",
-          basicSalary: 5000,
+          basicSalary: 5002,
           filingStatus: "Filed",
           contractStatus: "Active",
         },
@@ -306,7 +306,7 @@ const Contract = () => {
     try {
       setLoadingEmployees(true);
       const response = await axios.get(
-        "http://localhost:5000/api/employees/registered"
+        "http://localhost:5002/api/employees/registered"
       );
       if (response.data) {
         setEmployees(response.data);
@@ -328,7 +328,7 @@ const Contract = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5000/api/employees/get-employee/${employeeId}`
+        `http://localhost:5002/api/employees/get-employee/${employeeId}`
       );
 
       if (response.data.success) {
@@ -361,7 +361,7 @@ const Contract = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        "http://localhost:5000/api/payroll-contracts/dashboard"
+        "http://localhost:5002/api/payroll-contracts/dashboard"
       );
       if (response.data.success) {
         setDashboardStats(response.data.data);
@@ -560,7 +560,7 @@ const Contract = () => {
   //       formDataWithFile.append("document", formData.contractDocument);
 
   //       // Upload file first (this would be a separate endpoint in a real app)
-  //       // const uploadResponse = await axios.post('http://localhost:5000/api/upload', formDataWithFile);
+  //       // const uploadResponse = await axios.post('http://localhost:5002/api/upload', formDataWithFile);
   //       // contractData.documentUrl = uploadResponse.data.url;
   //     }
 
@@ -569,7 +569,7 @@ const Contract = () => {
   //     if (editingId) {
   //       // Update existing contract
   //       response = await axios.put(
-  //         `http://localhost:5000/api/payroll-contracts/${editingId}`,
+  //         `http://localhost:5002/api/payroll-contracts/${editingId}`,
   //         contractData
   //       );
 
@@ -592,7 +592,7 @@ const Contract = () => {
   //     } else {
   //       // Create new contract
   //       response = await axios.post(
-  //         "http://localhost:5000/api/payroll-contracts",
+  //         "http://localhost:5002/api/payroll-contracts",
   //         contractData
   //       );
 
@@ -746,7 +746,7 @@ const Contract = () => {
         formDataWithFile.append("document", formData.contractDocument);
 
         // Upload file first (this would be a separate endpoint in a real app)
-        // const uploadResponse = await axios.post('http://localhost:5000/api/upload', formDataWithFile);
+        // const uploadResponse = await axios.post('http://localhost:5002/api/upload', formDataWithFile);
         // contractData.documentUrl = uploadResponse.data.url;
       }
 
@@ -755,7 +755,7 @@ const Contract = () => {
       if (editingId) {
         // Update existing contract
         response = await axios.put(
-          `http://localhost:5000/api/payroll-contracts/${editingId}`,
+          `http://localhost:5002/api/payroll-contracts/${editingId}`,
           contractData
         );
 
@@ -778,7 +778,7 @@ const Contract = () => {
       } else {
         // Create new contract
         response = await axios.post(
-          "http://localhost:5000/api/payroll-contracts",
+          "http://localhost:5002/api/payroll-contracts",
           contractData
         );
 
@@ -816,7 +816,7 @@ const Contract = () => {
   //   try {
   //     setLoading(true);
   //     const response = await axios.put(
-  //       `http://localhost:5000/api/payroll-contracts/${editedData._id}`,
+  //       `http://localhost:5002/api/payroll-contracts/${editedData._id}`,
   //       {
   //         contract: editedData.contract,
   //         employee: editedData.employee,
@@ -856,7 +856,7 @@ const Contract = () => {
     try {
       setLoading(true);
       const response = await axios.put(
-        `http://localhost:5000/api/payroll-contracts/${editedData._id}`,
+        `http://localhost:5002/api/payroll-contracts/${editedData._id}`,
         {
           contract: editedData.contract,
           employee: editedData.employee,
@@ -897,7 +897,7 @@ const Contract = () => {
     try {
       setLoading(true);
       const response = await axios.delete(
-        `http://localhost:5000/api/payroll-contracts/${id}`
+        `http://localhost:5002/api/payroll-contracts/${id}`
       );
       if (response.data.success) {
         toast.success("Contract deleted successfully");
@@ -1018,7 +1018,7 @@ const Contract = () => {
 
       // Make the API request with the filter parameters
       const response = await axios.get(
-        "http://localhost:5000/api/payroll-contracts/filter",
+        "http://localhost:5002/api/payroll-contracts/filter",
         { params: filterParams }
       );
 

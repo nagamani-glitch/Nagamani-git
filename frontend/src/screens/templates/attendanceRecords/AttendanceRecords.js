@@ -148,8 +148,8 @@ const AttendanceRecords = () => {
     averageWorkHours: 0,
   });
 
-  const API_URL = "http://localhost:5000/api/timesheet";
-  const EMPLOYEES_API_URL = "http://localhost:5000/api/employees";
+  const API_URL = "http://localhost:5002/api/timesheet";
+  const EMPLOYEES_API_URL = "http://localhost:5002/api/employees";
 
   useEffect(() => {
     const loadData = async () => {

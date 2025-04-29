@@ -110,7 +110,7 @@ const TimeOffRequests = () => {
       
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/api/employees/by-user/${userId}`);
+        const response = await axios.get(`http://localhost:5002/api/employees/by-user/${userId}`);
         if (response.data.success) {
           setCurrentUser(response.data.data);
         }
@@ -138,7 +138,7 @@ const TimeOffRequests = () => {
       
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5000/api/time-off-requests/by-user/${userId}?searchTerm=${searchTerm}&status=${filterStatus}`
+        `http://localhost:5002/api/time-off-requests/by-user/${userId}?searchTerm=${searchTerm}&status=${filterStatus}`
       );
       setRequests(response.data);
     } catch (error) {
@@ -153,7 +153,7 @@ const TimeOffRequests = () => {
   //   if (!userId) return;
 
   //   // Connect to WebSocket
-  //   const socket = io('http://localhost:5000');
+  //   const socket = io('http://localhost:5002');
     
   //   // Join a room specific to this user
   //   socket.emit('join', { userId });
@@ -187,7 +187,7 @@ useEffect(() => {
   console.log('Setting up WebSocket connection for time off requests:', userId);
 
   // Connect to WebSocket
-  const socket = io('http://localhost:5000', {
+  const socket = io('http://localhost:5002', {
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
@@ -248,7 +248,7 @@ useEffect(() => {
   const handlePreview = async (id) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/time-off-requests/${id}`
+        `http://localhost:5002/api/time-off-requests/${id}`
       );
       setSelectedRequest(response.data);
       setPreviewOpen(true);
@@ -260,7 +260,7 @@ useEffect(() => {
   const handleEdit = async (id) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/time-off-requests/${id}`
+        `http://localhost:5002/api/time-off-requests/${id}`
       );
       const requestData = response.data;
       
@@ -280,7 +280,7 @@ useEffect(() => {
   const handleDelete = async () => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/time-off-requests/${selectedRequest._id}`
+        `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`
       );
       showSnackbar("Request deleted successfully");
       fetchRequests();
@@ -340,8 +340,8 @@ useEffect(() => {
       };
 
       const url = editMode
-        ? `http://localhost:5000/api/time-off-requests/${selectedRequest._id}`
-        : "http://localhost:5000/api/time-off-requests";
+        ? `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`
+        : "http://localhost:5002/api/time-off-requests";
 
       const response = await axios({
         method: editMode ? "PUT" : "POST",
