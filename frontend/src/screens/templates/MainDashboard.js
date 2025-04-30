@@ -1542,7 +1542,7 @@ const fetchUserLeaveData = async () => {
                 variant="outlined"
                 size="small"
                 sx={{ mt: 2, textTransform: "none" }}
-                onClick={() => window.location.href = '/dashboards/apply-leave'}
+                onClick={() => window.location.href = '/dashboards/my-leave-requests'}
               >
                 Apply for Leave
               </Button>
