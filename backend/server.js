@@ -33,6 +33,11 @@ import hiredEmployeeRoutes from './routes/hiredEmployeeRoutes.js';
 import timesheetRoutes from './routes/timesheetRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 
+import companyRoutes from './routes/companyRoutes.js';
+import roleRoutes from './routes/roleRoutes.js';
+import { authenticate, companyFilter } from './middleware/companyAuth.js';
+
+
 
 
 import { fileURLToPath } from 'url';
@@ -196,6 +201,11 @@ app.use('/api/leave-requests', leaveRequestRoutes);
 
 // After creating the io instance
 app.set('io', io);
+
+app.use('/api/roles', roleRoutes);
+app.use('/api/companies', companyRoutes);
+
+
 
 
 

@@ -17,6 +17,14 @@ import ForgotPassword from './screens/authScreens/forgotPassword/ForgotPassword'
 import ResetPassword from './screens/authScreens/resetPassword/ResetPassword';
 import Settings from './screens/Settings';
 import { NotificationProvider } from './context/NotificationContext';
+import RegisterCompanyPage from './screens/authScreens/registerScreen/RegisterCompanyPage.js';
+import CompanySettings from './screens/authScreens/auth/CompanySettings.js';
+
+// Add this to debug route rendering
+console.log('App rendering, checking localStorage:', {
+  hasToken: !!localStorage.getItem('token'),
+  hasUser: !!localStorage.getItem('user')
+});
 
 
   function App() {
@@ -33,12 +41,13 @@ import { NotificationProvider } from './context/NotificationContext';
                 <Route path='/reset-password/:token' element={<ResetPassword />} />
                 <Route path='/register' element={<RegisterPage />} />
                 <Route path='/verifyOtp' element={<VerifyOtpPage />} />
+                <Route path='/verify-email' element={<VerifyOtpPage />} />
             
                 <Route element={<PrivateRoute />}>
                   <Route path='/home' element={<HomeScreen />} />
                   <Route path='/Dashboards/*' element={<Dashboard />} />
 
-
+                  <Route path="/admin/company-settings" element={<CompanySettings />} />
                   <Route path="/settings" element={<Settings />} />
                 </Route>
               </Routes>

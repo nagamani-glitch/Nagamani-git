@@ -49,18 +49,41 @@ const transporter = nodemailer.createTransport({
 );
  
 // Function to send OTP email
-export const sendOtpEmail = async (email, otp) => {
+export const sendOtpEmail = async (email, otp, userData = {}) => {
   try {
     const verifyLink = `${process.env.CLIENT_URL}/verify?email=${email}&otp=${otp}`;
-   
+    
+    // Get company name if available
+    const companyName = userData.companyName || 'HRMS';
+    const userName = userData.name || 'Admin';
+    
     const mailOptions = {
-      from: process.env.USER || `rickyharish30@gmail.com`, // Fix: Remove extra quotes
+      from: process.env.USER || `rickyharish30@gmail.com`,
       to: email,
-      subject: 'OTP Verification',
+      subject: 'Account Verification - OTP Code',
       html: `
-        <p>Thank you for registering with us. Please use the OTP below to verify your email:</p>
-        <h3>${otp}</h3>
-        <p>This OTP will expire in 10 minutes.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #4a90e2;">HRMS Account Verification</h2>
+          </div>
+          
+          <p style="margin-bottom: 15px;">Hello ${userName},</p>
+          
+          <p style="margin-bottom: 15px;">Thank you for registering with our HRMS platform${companyName !== 'HRMS' ? ` for ${companyName}` : ''}. To complete your registration and verify your email address, please use the following One-Time Password (OTP):</p>
+          
+          <div style="background-color: #f5f5f5; padding: 15px; text-align: center; margin: 20px 0; border-radius: 5px;">
+            <h2 style="margin: 0; color: #333; letter-spacing: 5px; font-size: 24px;">${otp}</h2>
+          </div>
+          
+          <p style="margin-bottom: 15px;"><strong>Important:</strong> This OTP will expire in 10 minutes for security reasons.</p>
+          
+          <p style="margin-bottom: 15px;">If you did not request this verification, please ignore this email or contact our support team if you have any concerns.</p>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #777; font-size: 12px;">
+            <p>This is an automated email. Please do not reply to this message.</p>
+            <p>&copy; ${new Date().getFullYear()} HRMS. All rights reserved.</p>
+          </div>
+        </div>
       `
     };
    
@@ -86,6 +109,7 @@ export const sendOtpEmail = async (email, otp) => {
     throw new Error(`Email sending failed: ${error.message}`);
   }
 };
+
 
 // Function to send password reset email
 export const sendResetEmail = async (email, resetToken) => {
