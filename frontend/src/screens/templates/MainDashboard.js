@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -23,6 +24,7 @@ import {
   InputLabel,
   Chip,
 } from "@mui/material";
+import { ArrowForward, EventAvailable, EventBusy } from "@mui/icons-material";
 import { Doughnut, Bar } from "react-chartjs-2";
 import {
   Chart,
@@ -85,6 +87,12 @@ const MainDashboard = () => {
     departmentData: [],
     employeeData: [],
   });
+  const [userLeaveData, setUserLeaveData] = useState({
+    upcomingLeaves: [],
+    leaveBalance: null,
+    loading: true,
+    error: null
+  });
   const [timeRange, setTimeRange] = useState("6m");
   const [recentJoins, setRecentJoins] = useState([]);
 
@@ -97,7 +105,76 @@ const MainDashboard = () => {
     fetchDashboardData();
     fetchRecentJoins();
     fetchAllAnnouncements();
+    fetchUserLeaveData(); // Add this line
   }, [timeRange]);
+
+// Add this function to fetch user leave data
+const fetchUserLeaveData = async () => {
+  try {
+    // Get the user ID from localStorage
+    const userId = localStorage.getItem('userId');
+    
+    if (!userId) {
+      console.log("No user ID found in localStorage");
+      return;
+    }
+    
+    // First get the employee data using the user ID
+    const employeeResponse = await axios.get(`${apiBaseURL}/api/employees/by-user/${userId}`);
+    
+    if (!employeeResponse.data.success || !employeeResponse.data.data) {
+      console.log("No employee data found for this user");
+      return;
+    }
+    
+    const employeeData = employeeResponse.data.data;
+    const employeeCode = employeeData.Emp_ID;
+    
+    if (!employeeCode) {
+      console.log("No employee code found");
+      return;
+    }
+    
+    // Now fetch leave requests for this employee
+    const leaveRequestsResponse = await axios.get(`${apiBaseURL}/api/leave-requests/employee/${employeeCode}`);
+    
+    // Fetch leave balance
+    const leaveBalanceResponse = await axios.get(`${apiBaseURL}/api/leave-requests/balance/${employeeCode}`);
+    
+    // Fetch leave statistics
+    const leaveStatsResponse = await axios.get(`${apiBaseURL}/api/leave-requests/statistics/${employeeCode}`);
+    
+    // Get upcoming leaves (pending or approved)
+    const upcomingLeaves = leaveRequestsResponse.data
+      .filter(leave => {
+        // Filter for pending or approved leaves that are in the future
+        const isRelevantStatus = leave.status === 'pending' || leave.status === 'approved';
+        const leaveStartDate = new Date(leave.startDate);
+        const today = new Date();
+        return isRelevantStatus && leaveStartDate >= today;
+      })
+      .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+      .slice(0, 3); // Get only the next 3 upcoming leaves
+    
+    setUserLeaveData({
+      upcomingLeaves,
+      leaveBalance: leaveBalanceResponse.data,
+      leaveStats: leaveStatsResponse.data,
+      loading: false,
+      error: null
+    });
+    
+  } catch (error) {
+    console.error("Error fetching user leave data:", error);
+    setUserLeaveData({
+      upcomingLeaves: [],
+      leaveBalance: null,
+      leaveStats: null,
+      loading: false,
+      error: "Failed to load leave data"
+    });
+  }
+};
 
   // Function to fetch all types of announcements
   const fetchAllAnnouncements = async () => {
@@ -167,37 +244,6 @@ const MainDashboard = () => {
       setLoadingAnnouncements(false);
     }
   };
-  // const fetchDashboardData = async () => {
-  //   setLoading(true);
-  //   setError(null);
-  //   try {
-  //     const response = await axios.get(`${apiBaseURL}/api/employees/report?period=${timeRange}`);
-
-  //     // Get the original data
-  //     const dashData = response.data.data;
-
-  //     // Fetch all employees to get gender information
-  //     const employeesResponse = await axios.get(`${apiBaseURL}/api/employees/registered`);
-
-  //     // Extract gender information
-  //     const genderData = employeesResponse.data.map(emp => ({
-  //       gender: emp.personalInfo?.gender || 'Other'
-  //     }));
-
-  //     // Add gender data to dashboard data
-  //     setDashboardData({
-  //       ...dashData,
-  //       genderData: genderData
-  //     });
-  //   } catch (err) {
-  //     console.error("Error fetching dashboard data:", err);
-  //     setError("Failed to load dashboard data. Please try again later.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // In the fetchDashboardData function, add this code to fetch offboarding data
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -301,6 +347,7 @@ const MainDashboard = () => {
         ],
       };
     }
+
 
     return {
       labels: dashboardData.departmentData.map((item) => item.name),
@@ -796,6 +843,7 @@ const MainDashboard = () => {
             </Box>
           </Paper>
         </Grid>
+        
 
         {/* Recent Joins */}
         <Grid item xs={12} md={6}>
@@ -1085,6 +1133,190 @@ const MainDashboard = () => {
             )}
           </Paper>
         </Grid>
+<Grid item xs={12} md={6}>
+  <Paper
+    sx={{
+      p: 3,
+      borderRadius: 2,
+      boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+      height: "100%",
+    }}
+  >
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        mb: 2,
+      }}
+    >
+      <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+        My Leave Status
+      </Typography>
+      <Button
+        variant="text"
+        size="small"
+        onClick={() => window.location.href = '/dashboards/my-leave-requests'}
+        endIcon={<ArrowForward />}
+      >
+        View All
+      </Button>
+    </Box>
+    <Divider sx={{ mb: 2 }} />
+    
+    {userLeaveData.loading ? (
+      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+        <CircularProgress size={30} />
+      </Box>
+    ) : userLeaveData.error ? (
+      <Typography color="error" sx={{ p: 2 }}>
+        {userLeaveData.error}
+      </Typography>
+    ) : (
+      <>
+        {/* Leave Balance Summary */}
+        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+          Leave Balance
+        </Typography>
+        <Box sx={{ mb: 3 }}>
+          {userLeaveData.leaveBalance ? (
+            <Grid container spacing={2}>
+              {Object.entries(userLeaveData.leaveBalance).slice(0, 3).map(([type, balance]) => {
+                const total = balance.total || 0;
+                const used = balance.used || 0;
+                const pending = balance.pending || 0;
+                const available = total - used - pending;
+                const usedPercentage = (used / total) * 100;
+                const pendingPercentage = (pending / total) * 100;
+                
+                // Get leave type label
+                const getLeaveTypeLabel = (type) => {
+                  const labels = {
+                    annual: "Annual Leave",
+                    sick: "Sick Leave",
+                    personal: "Personal Leave",
+                    casual: "Casual Leave",
+                    earned: "Earned Leave",
+                    maternity: "Maternity Leave",
+                    paternity: "Paternity Leave"
+                  };
+                  return labels[type] || type;
+                };
+                
+                return (
+                  <Grid item xs={12} sm={4} key={type}>
+                    <Box sx={{ mb: 1 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+                          {getLeaveTypeLabel(type)}
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: "0.8rem", fontWeight: 600 }}>
+                          {available}/{total}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ position: "relative", height: 6, bgcolor: "#eee", borderRadius: 1 }}>
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            height: "100%",
+                            width: `${usedPercentage}%`,
+                            bgcolor: "#f44336",
+                            borderRadius: "4px 0 0 4px",
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            left: `${usedPercentage}%`,
+                            top: 0,
+                            height: "100%",
+                            width: `${pendingPercentage}%`,
+                            bgcolor: "#ff9800",
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+              No leave balance data available
+            </Typography>
+          )}
+        </Box>
+        
+        {/* Upcoming Leaves */}
+        <Typography variant="subtitle1" sx={{ mb: 1, mt: 2, fontWeight: 600 }}>
+          Upcoming Leaves
+        </Typography>
+        {userLeaveData.upcomingLeaves && userLeaveData.upcomingLeaves.length > 0 ? (
+          <List sx={{ p: 0 }}>
+            {userLeaveData.upcomingLeaves.map((leave) => (
+              <ListItem
+                key={leave._id}
+                sx={{
+                  px: 0,
+                  py: 1,
+                  borderBottom: "1px solid #f0f0f0",
+                  "&:last-child": { borderBottom: "none" },
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar
+                    sx={{
+                      bgcolor: 
+                        leave.status === "approved" 
+                          ? "rgba(76, 175, 80, 0.1)" 
+                          : "rgba(255, 152, 0, 0.1)",
+                      color: 
+                        leave.status === "approved" 
+                          ? "#4caf50" 
+                          : "#ff9800",
+                    }}
+                  >
+                    {leave.status === "approved" ? <EventAvailable /> : <EventBusy />}
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {leave.leaveType.charAt(0).toUpperCase() + leave.leaveType.slice(1)} Leave
+                    </Typography>
+                  }
+                  secondary={
+                    <>
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+                      </Typography>
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        {leave.numberOfDays} day{leave.numberOfDays !== 1 ? 's' : ''} • 
+                        <Chip 
+                          size="small" 
+                          label={leave.status.charAt(0).toUpperCase() + leave.status.slice(1)} 
+                          color={leave.status === "approved" ? "success" : "warning"}
+                          sx={{ ml: 1, height: 20, fontSize: '0.6rem' }}
+                        />
+                      </Typography>
+                    </>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+            No upcoming leaves
+          </Typography>
+        )}
+      </>
+    )}
+  </Paper>
+</Grid>
+
       </Grid>
     </Box>
   );
