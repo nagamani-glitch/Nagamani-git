@@ -30,9 +30,12 @@ function AttendanceDashboard() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [employees, setEmployees] = useState([]);
 
-  const ATTENDANCE_API_URL = "http://localhost:5002/api/attendance";
+  // Updated API URLs to match the ones used in AttendanceRecords.js and TimeOffRequests.js
+  const TIMESHEET_API_URL = "http://localhost:5002/api/timesheet";
   const TIME_OFF_API_URL = "http://localhost:5002/api/time-off-requests";
+  const EMPLOYEES_API_URL = "http://localhost:5002/api/employees/registered";
 
   useEffect(() => {
     fetchDashboardData();
@@ -42,34 +45,54 @@ function AttendanceDashboard() {
     try {
       setLoading(true);
 
-      // Fetch all attendance records
-      const attendanceResponse = await axios.get(ATTENDANCE_API_URL);
-      const attendanceData = attendanceResponse.data;
+      // Fetch all employees first
+      const employeesResponse = await axios.get(EMPLOYEES_API_URL);
+      const employeeData = employeesResponse.data;
+      setEmployees(employeeData);
+      
+      // Fetch all timesheet records (attendance)
+      let timesheetResponse;
+      try {
+        // Try the /all endpoint first as used in AttendanceRecords.js
+        timesheetResponse = await axios.get(`${TIMESHEET_API_URL}/all`);
+      } catch (error) {
+        console.log("Error fetching from /all endpoint, trying alternative endpoint");
+        // If /all endpoint fails, try the base endpoint
+        timesheetResponse = await axios.get(TIMESHEET_API_URL);
+      }
+      
+      const timesheetData = Array.isArray(timesheetResponse.data) 
+        ? timesheetResponse.data 
+        : timesheetResponse.data.timesheets || timesheetResponse.data.data || [];
 
       // Fetch time-off requests
       const timeOffResponse = await axios.get(TIME_OFF_API_URL);
-      const timeOffData = timeOffResponse.data;
+      const timeOffData = Array.isArray(timeOffResponse.data)
+        ? timeOffResponse.data
+        : timeOffResponse.data.requests || timeOffResponse.data.data || [];
 
       // Get today's date in ISO format (YYYY-MM-DD)
       const today = new Date().toISOString().split("T")[0];
 
       // Calculate statistics
-      const totalEmployees = getUniqueEmployeeCount(attendanceData);
-      const todayRecords = attendanceData.filter(
-        (record) => new Date(record.date).toISOString().split("T")[0] === today
+      const totalEmployees = employeeData.length;
+      
+      // Process timesheet data for today
+      const todayRecords = timesheetData.filter(
+        (record) => new Date(record.checkInTime).toISOString().split("T")[0] === today
       );
 
-      const presentToday = todayRecords.filter(
-        (record) => record.checkIn && record.checkIn !== "-"
-      ).length;
+      const presentToday = todayRecords.length;
 
       const lateToday = todayRecords.filter((record) => {
-        if (!record.checkIn || record.checkIn === "-") return false;
+        if (!record.checkInTime) return false;
 
-        // Consider employees late if they check in after 9:30 AM
-        const checkInTime = record.checkIn;
-        const [hours, minutes] = checkInTime.split(":").map(Number);
-        return hours > 9 || (hours === 9 && minutes > 30);
+        // Consider employees late if they check in after 9:15 AM (matching AttendanceRecords.js logic)
+        const checkInTime = new Date(record.checkInTime);
+        return (
+          checkInTime.getHours() > 9 ||
+          (checkInTime.getHours() === 9 && checkInTime.getMinutes() > 15)
+        );
       }).length;
 
       // Get employees on leave from time-off requests
@@ -85,15 +108,12 @@ function AttendanceDashboard() {
           : 0;
 
       // Calculate average working hours
-      const workingRecords = attendanceData.filter(
-        (record) =>
-          record.atWork &&
-          record.atWork !== "-" &&
-          !isNaN(parseFloat(record.atWork))
+      const workingRecords = timesheetData.filter(
+        (record) => record.duration && !isNaN(parseFloat(record.duration))
       );
 
       const totalWorkHours = workingRecords.reduce(
-        (sum, record) => sum + parseFloat(record.atWork),
+        (sum, record) => sum + (parseFloat(record.duration) / 3600),
         0
       );
 
@@ -103,34 +123,91 @@ function AttendanceDashboard() {
           : 0;
 
       // Combine attendance records and time-off requests for recent activity
-      const combinedRecords = [
-        ...attendanceData.map((record) => ({
-          id: record._id,
-          name: record.name,
-          empId: record.empId,
-          date: new Date(record.date),
-          status: getAttendanceStatus(record),
-          time: record.checkIn !== "-" ? record.checkIn : "-",
+      const enhancedTimesheetData = timesheetData.map(timesheet => {
+        // Find the employee for this timesheet
+        const employee = employeeData.find(emp => 
+          emp._id === timesheet.employeeId || 
+          emp.Emp_ID === timesheet.employeeId
+        );
+        
+        // Get employee name
+        let employeeName = "Unknown Employee";
+        if (employee) {
+          if (employee.name) {
+            employeeName = employee.name;
+          } else if (employee.personalInfo) {
+            employeeName = `${employee.personalInfo.firstName || ''} ${employee.personalInfo.lastName || ''}`.trim();
+          }
+        }
+        
+        // Determine status
+        let status = "Absent";
+        if (timesheet.checkInTime) {
+          const checkInTime = new Date(timesheet.checkInTime);
+          if (
+            checkInTime.getHours() > 9 ||
+            (checkInTime.getHours() === 9 && checkInTime.getMinutes() > 15)
+          ) {
+            status = "Late";
+          } else if (!timesheet.checkOutTime) {
+            status = "Checked In";
+          } else {
+            status = "Present";
+          }
+        }
+        
+        return {
+          id: timesheet._id,
+          name: employeeName,
+          empId: timesheet.employeeId,
+          date: new Date(timesheet.checkInTime || new Date()),
+          status: status,
+          time: timesheet.checkInTime ? new Date(timesheet.checkInTime).toLocaleTimeString() : "-",
           type: "attendance",
-          workType: record.workType || "-",
-          shift: record.shift || "-",
-        })),
-        ...timeOffData.map((request) => ({
+          workType: timesheet.workType || "-",
+          shift: timesheet.shift || "-",
+        };
+      });
+      
+      const enhancedTimeOffData = timeOffData.map(request => {
+        // Find the employee for this request
+        const employee = employeeData.find(emp => 
+          emp._id === request.employeeId || 
+          emp.Emp_ID === request.employeeId || 
+          emp._id === request.userId ||
+          emp.Emp_ID === request.userId
+        );
+        
+        // Get employee name
+        let employeeName = request.name || "Unknown Employee";
+        if (employee && !request.name) {
+          if (employee.name) {
+            employeeName = employee.name;
+          } else if (employee.personalInfo) {
+            employeeName = `${employee.personalInfo.firstName || ''} ${employee.personalInfo.lastName || ''}`.trim();
+          }
+        }
+        
+        return {
           id: request._id,
-          name: request.name,
+          name: employeeName,
           empId: request.empId,
           date: new Date(request.date),
-          status:
-            request.status === "Approved"
-              ? "On Leave"
-              : request.status === "Pending"
-              ? "Leave Pending"
-              : "Leave Rejected",
+          status: request.status === "Approved"
+            ? "On Leave"
+            : request.status === "Pending"
+            ? "Leave Pending"
+            : "Leave Rejected",
           time: request.checkIn || "-",
           type: "timeoff",
           workType: request.workType || "-",
           shift: request.shift || "-",
-        })),
+        };
+      });
+
+      const combinedRecords = [
+        ...enhancedTimesheetData,
+        ...enhancedTimeOffData
       ];
 
       // Sort by date (most recent first) and take the first 10
@@ -183,37 +260,6 @@ function AttendanceDashboard() {
 
       setLoading(false);
     }
-  };
-
-  // Helper function to get unique employee count
-  const getUniqueEmployeeCount = (records) => {
-    const uniqueEmployees = new Set();
-    records.forEach((record) => {
-      if (record.empId) {
-        uniqueEmployees.add(record.empId);
-      }
-    });
-    return uniqueEmployees.size;
-  };
-
-  // Helper function to determine attendance status
-  const getAttendanceStatus = (record) => {
-    if (!record.checkIn || record.checkIn === "-") {
-      return record.comment && record.comment.toLowerCase().includes("leave")
-        ? "On Leave"
-        : "Absent";
-    }
-
-    // Check if employee was late
-    const checkInTime = record.checkIn;
-    if (checkInTime) {
-      const [hours, minutes] = checkInTime.split(":").map(Number);
-      if (hours > 9 || (hours === 9 && minutes > 30)) {
-        return "Late";
-      }
-    }
-
-    return "Present";
   };
 
   // Render mobile view for attendance records
@@ -344,7 +390,7 @@ function AttendanceDashboard() {
           <Col lg={3} md={6} sm={6} xs={12}>
             <Card className="stat-card improved-card late-card">
               <Card.Body>
-                <div className="stat-icon-container">
+              <div className="stat-icon-container">
                   <FontAwesomeIcon
                     icon={faUserClock}
                     className="stat-icon-improved"
@@ -377,32 +423,86 @@ function AttendanceDashboard() {
         </Row>
 
         <Row className="mt-4">
-          <Col lg={6} md={6} sm={12} xs={12}>
-            <Card className="mb-4 mb-lg-0">
-              <Card.Header>Attendance Rate</Card.Header>
+          <Col lg={6} md={12} sm={12} xs={12}>
+            <Card className="dashboard-card">
+              <Card.Header className="card-header-improved">
+                <h5 className="mb-0">Attendance Rate</h5>
+              </Card.Header>
               <Card.Body>
-                <div className="attendance-rate">
-                  <div
-                    className="rate-circle"
-                    style={{ "--rate": attendanceStats.attendanceRate }}
-                  >
-                    <span className="rate-percentage">
-                      {attendanceStats.attendanceRate}%
-                    </span>
+                <div className="attendance-rate-container">
+                  <div className="attendance-rate-circle">
+                    <div className="attendance-rate-inner">
+                      <h2 className="attendance-rate-number">
+                        {attendanceStats.attendanceRate}%
+                      </h2>
+                    </div>
                   </div>
-                  <p>Average attendance rate this month</p>
+                  <div className="attendance-rate-details">
+                    <div className="attendance-detail">
+                      <span className="detail-label">Present:</span>
+                      <span className="detail-value">
+                        {attendanceStats.presentToday}
+                      </span>
+                    </div>
+                    <div className="attendance-detail">
+                      <span className="detail-label">Total:</span>
+                      <span className="detail-value">
+                        {attendanceStats.totalEmployees}
+                      </span>
+                    </div>
+                    <div className="attendance-detail">
+                      <span className="detail-label">On Leave:</span>
+                      <span className="detail-value">
+                        {attendanceStats.onLeave}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </Card.Body>
             </Card>
           </Col>
 
-          <Col lg={6} md={6} sm={12} xs={12}>
-            <Card>
-              <Card.Header>Average Working Hours</Card.Header>
+          <Col lg={6} md={12} sm={12} xs={12}>
+            <Card className="dashboard-card">
+              <Card.Header className="card-header-improved">
+                <h5 className="mb-0">Working Hours</h5>
+              </Card.Header>
               <Card.Body>
-                <div className="working-hours">
-                  <h3>{attendanceStats.averageWorkHours} hrs</h3>
-                  <p>Average working hours per day this month</p>
+                <div className="working-hours-container">
+                  <div className="working-hours-circle">
+                    <div className="working-hours-inner">
+                      <h2 className="working-hours-number">
+                        {attendanceStats.averageWorkHours}
+                      </h2>
+                      <p className="hours-label">hours</p>
+                    </div>
+                  </div>
+                  <div className="working-hours-details">
+                    <p className="working-hours-description">
+                      Average working hours per employee
+                    </p>
+                    <div className="working-hours-stats">
+                      <div className="hours-stat">
+                        <span className="hours-stat-label">Target:</span>
+                        <span className="hours-stat-value">8.0 hours</span>
+                      </div>
+                      <div className="hours-stat">
+                        <span className="hours-stat-label">Variance:</span>
+                        <span
+                          className={`hours-stat-value ${
+                            parseFloat(attendanceStats.averageWorkHours) >= 8
+                              ? "text-success"
+                              : "text-danger"
+                          }`}
+                        >
+                          {(
+                            parseFloat(attendanceStats.averageWorkHours) - 8
+                          ).toFixed(1)}{" "}
+                          hours
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </Card.Body>
             </Card>
@@ -410,115 +510,62 @@ function AttendanceDashboard() {
         </Row>
 
         <Row className="mt-4">
-          <Col md={12}>
-            <Card>
-              <Card.Header className="d-flex justify-content-between align-items-center flex-wrap">
-                <span className="recent-attendance-title">
-                  Recent Attendance & Time-Off Requests
-                </span>
-                <button
-                  className="btn btn-sm btn-outline-primary mt-2 mt-sm-0"
-                  onClick={fetchDashboardData}
-                >
-                  Refresh
-                </button>
+          <Col xs={12}>
+            <Card className="dashboard-card">
+              <Card.Header className="card-header-improved">
+                <h5 className="mb-0">Recent Attendance</h5>
               </Card.Header>
-
-              <Card.Body className="p-0 p-sm-3">
-                {/* Table view for tablet and desktop */}
-                <div className={`table-responsive ${isMobile ? "d-none" : ""}`}>
-                  <table className="table table-hover">
-                    <thead>
-                      <tr>
-                        <th
-                          style={{ backgroundColor: "#1976d2", color: "white" }}
-                        >
-                          Employee
-                        </th>
-                        <th
-                          style={{ backgroundColor: "#1976d2", color: "white" }}
-                        >
-                          Employee ID
-                        </th>
-                        <th
-                          style={{ backgroundColor: "#1976d2", color: "white" }}
-                        >
-                          Date
-                        </th>
-                        <th
-                          style={{ backgroundColor: "#1976d2", color: "white" }}
-                        >
-                          Status
-                        </th>
-                        <th
-                          className={isDesktop ? "" : "d-none"}
-                          style={{ backgroundColor: "#1976d2", color: "white" }}
-                        >
-                          Time
-                        </th>
-                        <th
-                          className={isDesktop ? "" : "d-none"}
-                          style={{ backgroundColor: "#1976d2", color: "white" }}
-                        >
-                          Shift
-                        </th>
-                        <th
-                          className={isDesktop ? "" : "d-none"}
-                          style={{ backgroundColor: "#1976d2", color: "white" }}
-                        >
-                          Work Type
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {attendanceStats.recentAttendance.length > 0 ? (
-                        attendanceStats.recentAttendance.map((record) => (
-                          <tr key={record.id}>
-                            <td>{record.name}</td>
-                            <td>{record.empId}</td>
-                            <td>{record.date}</td>
-                            <td>
-                              <span
-                                className={`status-badge status-${record.status
-                                  .toLowerCase()
-                                  .replace(/\s+/g, "-")}`}
-                              >
-                                {record.status}
-                              </span>
-                            </td>
-                            <td className={isDesktop ? "" : "d-none"}>
-                              {record.time}
-                            </td>
-                            <td className={isDesktop ? "" : "d-none"}>
-                              {record.shift}
-                            </td>
-                            <td className={isDesktop ? "" : "d-none"}>
-                              {record.workType}
+              <Card.Body>
+                {isMobile ? (
+                  <div className="mobile-attendance-list">
+                    {renderMobileAttendanceCards()}
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-hover attendance-table">
+                      <thead>
+                        <tr>
+                          <th>Employee</th>
+                          <th>ID</th>
+                          <th>Date</th>
+                          <th>Time</th>
+                          <th>Status</th>
+                          {isDesktop && <th>Work Type</th>}
+                          {isDesktop && <th>Shift</th>}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {attendanceStats.recentAttendance.length > 0 ? (
+                          attendanceStats.recentAttendance.map((record) => (
+                            <tr key={record.id}>
+                              <td>{record.name}</td>
+                              <td>{record.empId}</td>
+                              <td>{record.date}</td>
+                              <td>{record.time}</td>
+                              <td>
+                                <span
+                                  className={`status-badge status-${record.status
+                                    .toLowerCase()
+                                    .replace(/\s+/g, "-")}`}
+                                >
+                                  {record.status}
+                                </span>
+                              </td>
+                              {isDesktop && <td>{record.workType}</td>}
+                              {isDesktop && <td>{record.shift}</td>}
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={isDesktop ? 7 : 5} className="text-center">
+                              No recent attendance records found
                             </td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan={isDesktop ? 7 : 4}
-                            className="text-center"
-                          >
-                            No recent attendance records found
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Card view for mobile */}
-                <div
-                  className={`mobile-attendance-cards ${
-                    isMobile ? "" : "d-none"
-                  }`}
-                >
-                  {renderMobileAttendanceCards()}
-                </div>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           </Col>
@@ -529,3 +576,4 @@ function AttendanceDashboard() {
 }
 
 export default AttendanceDashboard;
+
