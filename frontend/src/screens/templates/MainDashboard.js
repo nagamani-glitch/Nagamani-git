@@ -24,7 +24,15 @@ import {
   InputLabel,
   Chip,
 } from "@mui/material";
-import { ArrowForward, EventAvailable, EventBusy } from "@mui/icons-material";
+import { 
+  ArrowForward, 
+  EventAvailable, 
+  EventBusy, 
+  CalendarToday, 
+  Event, 
+  Refresh as RefreshIcon
+} from "@mui/icons-material";
+import { alpha } from "@mui/material";
 import { Doughnut, Bar } from "react-chartjs-2";
 import {
   Chart,
@@ -42,11 +50,11 @@ import {
   Person,
   Business,
   Announcement,
-  CalendarToday,
+  // CalendarToday,
   TrendingUp,
   TrendingDown,
   Info,
-  Event,
+  // Event,
   Block,
   Weekend,
 } from "@mui/icons-material";
@@ -494,7 +502,7 @@ const fetchUserLeaveData = async () => {
         </Alert>
         <Button
           variant="contained"
-          startIcon={<Refresh />}
+          startIcon={<RefreshIcon />}
           onClick={handleRefresh}
         >
           Try Again
@@ -1133,189 +1141,421 @@ const fetchUserLeaveData = async () => {
             )}
           </Paper>
         </Grid>
-<Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6}>
   <Paper
     sx={{
-      p: 3,
+      p: 0,
       borderRadius: 2,
-      boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+      overflow: "hidden",
       height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      background: "linear-gradient(to bottom, #ffffff, #f9fafc)",
     }}
   >
+    {/* Header with gradient background */}
     <Box
       sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        mb: 2,
+        p: 3,
+        background: "linear-gradient(45deg, #3f51b5, #5c6bc0)",
+        color: "white",
+        position: "relative",
       }}
     >
-      <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-        My Leave Status
-      </Typography>
-      <Button
-        variant="text"
-        size="small"
-        onClick={() => window.location.href = '/dashboards/my-leave-requests'}
-        endIcon={<ArrowForward />}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
       >
-        View All
-      </Button>
-    </Box>
-    <Divider sx={{ mb: 2 }} />
-    
-    {userLeaveData.loading ? (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-        <CircularProgress size={30} />
+        <Typography variant="h6" sx={{ fontWeight: "bold", zIndex: 1 }}>
+          My Leave Status
+        </Typography>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => window.location.href = '/dashboards/my-leave-requests'}
+          endIcon={<ArrowForward />}
+          sx={{
+            backgroundColor: "rgba(255,255,255,0.15)",
+            backdropFilter: "blur(4px)",
+            "&:hover": {
+              backgroundColor: "rgba(255,255,255,0.25)",
+            },
+            textTransform: "none",
+            boxShadow: "none",
+            zIndex: 1,
+          }}
+        >
+          View All
+        </Button>
       </Box>
-    ) : userLeaveData.error ? (
-      <Typography color="error" sx={{ p: 2 }}>
-        {userLeaveData.error}
-      </Typography>
-    ) : (
-      <>
-        {/* Leave Balance Summary */}
-        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-          Leave Balance
-        </Typography>
-        <Box sx={{ mb: 3 }}>
-          {userLeaveData.leaveBalance ? (
-            <Grid container spacing={2}>
-              {Object.entries(userLeaveData.leaveBalance).slice(0, 3).map(([type, balance]) => {
-                const total = balance.total || 0;
-                const used = balance.used || 0;
-                const pending = balance.pending || 0;
-                const available = total - used - pending;
-                const usedPercentage = (used / total) * 100;
-                const pendingPercentage = (pending / total) * 100;
-                
-                // Get leave type label
-                const getLeaveTypeLabel = (type) => {
-                  const labels = {
-                    annual: "Annual Leave",
-                    sick: "Sick Leave",
-                    personal: "Personal Leave",
-                    casual: "Casual Leave",
-                    earned: "Earned Leave",
-                    maternity: "Maternity Leave",
-                    paternity: "Paternity Leave"
-                  };
-                  return labels[type] || type;
-                };
-                
-                return (
-                  <Grid item xs={12} sm={4} key={type}>
-                    <Box sx={{ mb: 1 }}>
-                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
-                        <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
-                          {getLeaveTypeLabel(type)}
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontSize: "0.8rem", fontWeight: 600 }}>
-                          {available}/{total}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ position: "relative", height: 6, bgcolor: "#eee", borderRadius: 1 }}>
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            left: 0,
-                            top: 0,
-                            height: "100%",
-                            width: `${usedPercentage}%`,
-                            bgcolor: "#f44336",
-                            borderRadius: "4px 0 0 4px",
-                          }}
-                        />
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            left: `${usedPercentage}%`,
-                            top: 0,
-                            height: "100%",
-                            width: `${pendingPercentage}%`,
-                            bgcolor: "#ff9800",
-                          }}
-                        />
-                      </Box>
-                    </Box>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          ) : (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-              No leave balance data available
-            </Typography>
-          )}
+      
+      {/* Decorative circles in the background */}
+      <Box
+        sx={{
+          position: "absolute",
+          width: 150,
+          height: 150,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)",
+          top: -50,
+          right: -50,
+        }}
+      />
+      <Box
+        sx={{
+          position: "absolute",
+          width: 100,
+          height: 100,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)",
+          bottom: -20,
+          left: 20,
+        }}
+      />
+    </Box>
+
+    {/* Content area */}
+    <Box sx={{ p: 3, flexGrow: 1, display: "flex", flexDirection: "column" }}>
+      {userLeaveData.loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: 1 }}>
+          <CircularProgress size={40} sx={{ color: "#3f51b5" }} />
         </Box>
-        
-        {/* Upcoming Leaves */}
-        <Typography variant="subtitle1" sx={{ mb: 1, mt: 2, fontWeight: 600 }}>
-          Upcoming Leaves
-        </Typography>
-        {userLeaveData.upcomingLeaves && userLeaveData.upcomingLeaves.length > 0 ? (
-          <List sx={{ p: 0 }}>
-            {userLeaveData.upcomingLeaves.map((leave) => (
-              <ListItem
-                key={leave._id}
-                sx={{
-                  px: 0,
-                  py: 1,
-                  borderBottom: "1px solid #f0f0f0",
-                  "&:last-child": { borderBottom: "none" },
+      ) : userLeaveData.error ? (
+        <Box
+          sx={{
+            p: 3,
+            textAlign: "center",
+            backgroundColor: "rgba(244, 67, 54, 0.05)",
+            borderRadius: 2,
+            border: "1px solid rgba(244, 67, 54, 0.1)",
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          <Typography color="error" variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
+            {userLeaveData.error}
+          </Typography>
+          <Button 
+            variant="outlined" 
+            color="error" 
+            size="small" 
+            onClick={fetchUserLeaveData}
+            startIcon={<RefreshIcon />}
+            sx={{ alignSelf: "center", mt: 1 }}
+          >
+            Retry
+          </Button>
+        </Box>
+      ) : (
+        <>
+          {/* Leave Balance Summary with enhanced styling */}
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              mb: 2, 
+              fontWeight: 600, 
+              color: "#3f51b5",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <CalendarToday fontSize="small" sx={{ mr: 1 }} />
+            Leave Balance
+          </Typography>
+          
+          <Box sx={{ mb: 3 }}>
+            {userLeaveData.leaveBalance ? (
+              <Grid container spacing={2}>
+                {Object.entries(userLeaveData.leaveBalance).slice(0, 3).map(([type, balance]) => {
+                  const total = balance.total || 0;
+                  const used = balance.used || 0;
+                  const pending = balance.pending || 0;
+                  const available = total - used - pending;
+                  const usedPercentage = total > 0 ? (used / total) * 100 : 0;
+                  const pendingPercentage = total > 0 ? (pending / total) * 100 : 0;
+                  const availablePercentage = 100 - usedPercentage - pendingPercentage;
+                  
+                  // Get leave type label and color
+                  const getLeaveTypeInfo = (type) => {
+                    const info = {
+                      annual: { label: "Annual Leave", color: "#4caf50" },
+                      sick: { label: "Sick Leave", color: "#f44336" },
+                      personal: { label: "Personal Leave", color: "#9c27b0" },
+                      casual: { label: "Casual Leave", color: "#ff9800" },
+                      earned: { label: "Earned Leave", color: "#2196f3" },
+                      maternity: { label: "Maternity Leave", color: "#e91e63" },
+                      paternity: { label: "Paternity Leave", color: "#3f51b5" }
+                    };
+                    return info[type] || { label: type, color: "#757575" };
+                  };
+                  
+                  const { label, color } = getLeaveTypeInfo(type);
+                  
+                  return (
+                    <Grid item xs={12} sm={4} key={type}>
+                      <Box 
+                        sx={{ 
+                          mb: 1, 
+                          p: 1.5, 
+                          borderRadius: 2, 
+                          backgroundColor: alpha(color, 0.05),
+                          border: `1px solid ${alpha(color, 0.1)}`,
+                          height: "100%",
+                        }}
+                      >
+                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              fontSize: "0.8rem", 
+                              fontWeight: 600,
+                              color: color,
+                            }}
+                          >
+                            {label}
+                          </Typography>
+                          <Box 
+                            sx={{ 
+                              display: "flex", 
+                              alignItems: "center", 
+                              backgroundColor: alpha(color, 0.1),
+                              borderRadius: 5,
+                              px: 1,
+                              py: 0.25,
+                            }}
+                          >
+                            <Typography 
+                              variant="body2" 
+                              sx={{ 
+                                fontSize: "0.8rem", 
+                                fontWeight: 700,
+                                color: color,
+                              }}
+                            >
+                              {available}/{total}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
+                        {/* Enhanced progress bar */}
+                        <Box sx={{ position: "relative", height: 8, bgcolor: alpha(color, 0.1), borderRadius: 4, mb: 1 }}>
+                          {/* Used leave */}
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              left: 0,
+                              top: 0,
+                              height: "100%",
+                              width: `${usedPercentage}%`,
+                              bgcolor: alpha(color, 0.7),
+                              borderRadius: "4px 0 0 4px",
+                              transition: "width 1s ease-in-out",
+                            }}
+                          />
+                          {/* Pending leave */}
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              left: `${usedPercentage}%`,
+                              top: 0,
+                              height: "100%",
+                              width: `${pendingPercentage}%`,
+                              bgcolor: alpha(color, 0.4),
+                              transition: "width 1s ease-in-out",
+                            }}
+                          />
+                        </Box>
+                        
+                        {/* Legend */}
+                        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Box 
+                              sx={{ 
+                                width: 8, 
+                                height: 8, 
+                                borderRadius: "50%", 
+                                bgcolor: alpha(color, 0.7),
+                                mr: 0.5 
+                              }} 
+                            />
+                            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                              Used
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Box 
+                              sx={{ 
+                                width: 8, 
+                                height: 8, 
+                                borderRadius: "50%", 
+                                bgcolor: alpha(color, 0.4),
+                                mr: 0.5 
+                              }} 
+                            />
+                            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                              Pending
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            ) : (
+              <Box 
+                sx={{ 
+                  py: 2, 
+                  px: 3, 
+                  borderRadius: 2, 
+                  backgroundColor: "#f5f5f5",
+                  textAlign: "center" 
                 }}
               >
-                <ListItemAvatar>
-                  <Avatar
+                <Typography variant="body2" color="text.secondary">
+                  No leave balance data available
+                </Typography>
+              </Box>
+            )}
+          </Box>
+          
+          {/* Upcoming Leaves with enhanced styling */}
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              mb: 2, 
+              mt: 1, 
+              fontWeight: 600, 
+              color: "#3f51b5",
+              display: "flex",
+              alignItems: "center", 
+            }}
+          >
+            <Event fontSize="small" sx={{ mr: 1 }} />
+            Upcoming Leaves
+          </Typography>
+          
+          {userLeaveData.upcomingLeaves && userLeaveData.upcomingLeaves.length > 0 ? (
+            <Box sx={{ flexGrow: 1, overflow: "auto" }}>
+              <List sx={{ p: 0 }}>
+                {userLeaveData.upcomingLeaves.map((leave, index) => (
+                  <ListItem
+                    key={leave._id}
                     sx={{
-                      bgcolor: 
+                      px: 2,
+                      py: 1.5,
+                      borderRadius: 2,
+                      mb: index < userLeaveData.upcomingLeaves.length - 1 ? 1.5 : 0,
+                      backgroundColor: leave.status === "approved" 
+                        ? "rgba(76, 175, 80, 0.05)" 
+                        : "rgba(255, 152, 0, 0.05)",
+                      border: `1px solid ${
                         leave.status === "approved" 
                           ? "rgba(76, 175, 80, 0.1)" 
-                          : "rgba(255, 152, 0, 0.1)",
-                      color: 
-                        leave.status === "approved" 
-                          ? "#4caf50" 
-                          : "#ff9800",
+                          : "rgba(255, 152, 0, 0.1)"
+                      }`,
+                      transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+                      "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                      },
                     }}
                   >
-                    {leave.status === "approved" ? <EventAvailable /> : <EventBusy />}
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {leave.leaveType.charAt(0).toUpperCase() + leave.leaveType.slice(1)} Leave
-                    </Typography>
-                  }
-                  secondary={
-                    <>
-                      <Typography variant="caption" display="block" color="text.secondary">
-                        {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
-                      </Typography>
-                      <Typography variant="caption" display="block" color="text.secondary">
-                        {leave.numberOfDays} day{leave.numberOfDays !== 1 ? 's' : ''} • 
-                        <Chip 
-                          size="small" 
-                          label={leave.status.charAt(0).toUpperCase() + leave.status.slice(1)} 
-                          color={leave.status === "approved" ? "success" : "warning"}
-                          sx={{ ml: 1, height: 20, fontSize: '0.6rem' }}
-                        />
-                      </Typography>
-                    </>
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-            No upcoming leaves
-          </Typography>
-        )}
-      </>
-    )}
+                    <ListItemAvatar>
+                      <Avatar
+                        sx={{
+                          bgcolor: 
+                            leave.status === "approved" 
+                              ? "rgba(76, 175, 80, 0.1)" 
+                              : "rgba(255, 152, 0, 0.1)",
+                          color: 
+                            leave.status === "approved" 
+                              ? "#4caf50" 
+                              : "#ff9800",
+                        }}
+                      >
+                        {leave.status === "approved" ? <EventAvailable /> : <EventBusy />}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {leave.leaveType.charAt(0).toUpperCase() + leave.leaveType.slice(1)} Leave
+                        </Typography>
+                      }
+                      secondary={
+                        <Box sx={{ mt: 0.5 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                            <CalendarToday sx={{ fontSize: 14, mr: 0.5, color: "text.secondary" }} />
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <Typography variant="caption" color="text.secondary">
+                              {leave.numberOfDays} day{leave.numberOfDays !== 1 ? 's' : ''}
+                            </Typography>
+                            <Chip 
+                              size="small" 
+                              label={leave.status.charAt(0).toUpperCase() + leave.status.slice(1)} 
+                              color={leave.status === "approved" ? "success" : "warning"}
+                              sx={{ 
+                                height: 20, 
+                                fontSize: '0.65rem',
+                                fontWeight: 600,
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          ) : (
+            <Box 
+              sx={{ 
+                py: 3, 
+                px: 3, 
+                borderRadius: 2, 
+                backgroundColor: "#f5f5f5",
+                textAlign: "center",
+                flexGrow: 1,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+                            <CalendarToday sx={{ fontSize: 40, color: "#bdbdbd", mb: 1 }} />
+              <Typography variant="body2" color="text.secondary">
+                No upcoming leaves scheduled
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ mt: 2, textTransform: "none" }}
+                onClick={() => window.location.href = '/dashboards/apply-leave'}
+              >
+                Apply for Leave
+              </Button>
+            </Box>
+          )}
+        </>
+      )}
+    </Box>
   </Paper>
 </Grid>
+
+
+
 
       </Grid>
     </Box>
