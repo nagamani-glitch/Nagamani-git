@@ -259,6 +259,7 @@ const EmployeeListing = ({ onNavigate }) => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [profiles, setProfiles] = useState([]);
   const [filteredEmployeesList, setFilteredEmployeesList] = useState([]);
+  const [departments, setDepartments] = useState(["All"]);
   //const itemsPerPage = 10;
 
   const [loading, setLoading] = useState(false);
@@ -365,47 +366,124 @@ const EmployeeListing = ({ onNavigate }) => {
   //   });
   // }, []);
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await axios.get("/api/employees/registered");
-        console.log("Employee data from API:", response.data); // Add this for debugging
+  // useEffect(() => {
+  //   const fetchEmployees = async () => {
+  //     try {
+  //       const response = await axios.get("/api/employees/registered");
+  //       console.log("Employee data from API:", response.data); // Add this for debugging
 
-        const employeeData = response.data.map((employee) => ({
-          _id: employee.Emp_ID || "",
-          name: employee.personalInfo
-            ? `${employee.personalInfo.firstName || ""} ${
-                employee.personalInfo.lastName || ""
-              }`.trim()
-            : "",
-          email: employee.personalInfo?.email || "",
-          phone: employee.personalInfo?.mobileNumber || "",
-          department: employee.joiningDetails?.department || "Not Assigned",
-          role: employee.joiningDetails?.initialDesignation || "Not Assigned",
-          location:
-            employee.addressDetails?.presentAddress?.city || "Not Specified",
-          // Use the correct field name (employeeImage instead of profileImage)
-          profileImage: employee.personalInfo?.employeeImage
-            ? `http://localhost:5002${employee.personalInfo.employeeImage}`
-            : null,
-        }));
+  //       const employeeData = response.data.map((employee) => ({
+  //         _id: employee.Emp_ID || "",
+  //         name: employee.personalInfo
+  //           ? `${employee.personalInfo.firstName || ""} ${
+  //               employee.personalInfo.lastName || ""
+  //             }`.trim()
+  //           : "",
+  //         email: employee.personalInfo?.email || "",
+  //         phone: employee.personalInfo?.mobileNumber || "",
+  //         department: employee.joiningDetails?.department || "Not Assigned",
+  //         role: employee.joiningDetails?.initialDesignation || "Not Assigned",
+  //         location:
+  //           employee.addressDetails?.presentAddress?.city || "Not Specified",
+  //         // Use the correct field name (employeeImage instead of profileImage)
+  //         profileImage: employee.personalInfo?.employeeImage
+  //           ? `http://localhost:5002${employee.personalInfo.employeeImage}`
+  //           : null,
+  //       }));
 
-        console.log("Processed employee data:", employeeData); // Add this for debugging
-        setProfiles(employeeData);
-        setFilteredEmployeesList(employeeData);
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-      }
-    };
-    fetchEmployees();
+  //       console.log("Processed employee data:", employeeData); // Add this for debugging
+  //       setProfiles(employeeData);
+  //       setFilteredEmployeesList(employeeData);
+  //     } catch (error) {
+  //       console.error("Error fetching employees:", error);
+  //     }
+  //   };
+  //   fetchEmployees();
 
-    gsap.from(".search-container", {
-      y: -50,
-      opacity: 0,
-      duration: 1,
-      ease: "power3.out",
-    });
-  }, []);
+  //   gsap.from(".search-container", {
+  //     y: -50,
+  //     opacity: 0,
+  //     duration: 1,
+  //     ease: "power3.out",
+  //   });
+  // }, []);
+
+  // First, modify the useEffect where you fetch employees to extract unique departments
+useEffect(() => {
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("/api/employees/registered");
+      console.log("Employee data from API:", response.data);
+
+      const employeeData = response.data.map((employee) => ({
+        _id: employee.Emp_ID || "",
+        name: employee.personalInfo
+          ? `${employee.personalInfo.firstName || ""} ${
+              employee.personalInfo.lastName || ""
+            }`.trim()
+          : "",
+        email: employee.personalInfo?.email || "",
+        phone: employee.personalInfo?.mobileNumber || "",
+        department: employee.joiningDetails?.department || "Not Assigned",
+        role: employee.joiningDetails?.initialDesignation || "Not Assigned",
+        location:
+          employee.addressDetails?.presentAddress?.city || "Not Specified",
+        profileImage: employee.personalInfo?.employeeImage
+          ? `http://localhost:5002${employee.personalInfo.employeeImage}`
+          : null,
+      }));
+
+      console.log("Processed employee data:", employeeData);
+      
+      // Extract unique departments for the filter dropdown
+      const uniqueDepartments = [...new Set(employeeData.map(emp => emp.department))].filter(Boolean);
+      setDepartments(["All", ...uniqueDepartments]);
+      
+      setProfiles(employeeData);
+      setFilteredEmployeesList(employeeData);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      setLoading(false);
+    }
+  };
+  fetchEmployees();
+
+  gsap.from(".search-container", {
+    y: -50,
+    opacity: 0,
+    duration: 1,
+    ease: "power3.out",
+  });
+}, []);
+
+
+// Then update the useEffect that handles filtering when searchText, statusFilter, or departmentFilter changes
+useEffect(() => {
+  let filtered = [...profiles];
+  
+  // Filter by search text
+  if (searchText) {
+    filtered = filtered.filter(employee => 
+      employee.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      employee.email.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }
+  
+  // Filter by status (if you have status data)
+  if (statusFilter && statusFilter !== "All") {
+    filtered = filtered.filter(employee => employee.status === statusFilter);
+  }
+  
+  // Filter by department
+  if (departmentFilter && departmentFilter !== "All") {
+    filtered = filtered.filter(employee => employee.department === departmentFilter);
+  }
+  
+  setFilteredEmployeesList(filtered);
+  setCurrentPage(1); // Reset to first page when filters change
+}, [searchText, statusFilter, departmentFilter, profiles]);
 
   const handleEmployeeClick = (employeeId) => {
     onNavigate(`/Dashboards/profile/${employeeId}`);
@@ -806,7 +884,7 @@ const EmployeeListing = ({ onNavigate }) => {
                 width: { xs: "100%", sm: "auto" },
               }}
             >
-              <Button
+              {/* <Button
                 variant="contained"
                 startIcon={<Add />}
                 onClick={() => onNavigate("/Dashboards/onboarding")}
@@ -822,7 +900,7 @@ const EmployeeListing = ({ onNavigate }) => {
                 }}
               >
                 Add New Employee
-              </Button>
+              </Button> */}
             </Box>
           </Box>
         </StyledPaper>
@@ -902,7 +980,7 @@ const EmployeeListing = ({ onNavigate }) => {
         >
           Filter
         </Button> */}
-        <FormControl
+        {/* <FormControl
           variant="outlined"
           style={{ minWidth: 200, zIndex: 1, visibility: "visible" }}
         >
@@ -918,7 +996,25 @@ const EmployeeListing = ({ onNavigate }) => {
             <MenuItem value="Marketing">Marketing</MenuItem>
             <MenuItem value="Finance">Finance</MenuItem>
           </Select>
-        </FormControl>
+        </FormControl> */}
+        <FormControl
+  variant="outlined"
+  style={{ minWidth: 200, zIndex: 1, visibility: "visible" }}
+>
+  <InputLabel>Department</InputLabel>
+  <Select
+    value={departmentFilter || "All"}
+    onChange={(e) => setDepartmentFilter(e.target.value)}
+    label="Department"
+  >
+    {departments.map((dept) => (
+      <MenuItem key={dept} value={dept}>
+        {dept}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
       </Box>
 
       {viewMode === "grid" ? (
