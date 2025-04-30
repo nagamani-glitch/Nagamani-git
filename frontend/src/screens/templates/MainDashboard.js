@@ -479,7 +479,7 @@ const MainDashboard = () => {
             fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" }, // Smaller on mobile
           }}
         >
-          HR Dashboard
+          Dashboard
         </Typography>
 
         <Box
