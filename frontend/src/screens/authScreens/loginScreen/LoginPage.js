@@ -571,7 +571,7 @@ const handleSubmit = useCallback(async (e) => {
     }}
   >
     Don't have an account?{' '}
-    <Link to="/register-company" style={{ color: '#4a90e2', textDecoration: 'none' }}>
+    <Link to="/register" style={{ color: '#4a90e2', textDecoration: 'none' }}>
       Sign up
     </Link>
   </Typography>

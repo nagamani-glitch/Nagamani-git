@@ -39,7 +39,7 @@ console.log('App rendering, checking localStorage:', {
                 <Route path='/login' element={<LoginPage />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path='/reset-password/:token' element={<ResetPassword />} />
-                <Route path='/register' element={<RegisterPage />} />
+                <Route path='/register' element={<RegisterCompanyPage />} />
                 <Route path='/verifyOtp' element={<VerifyOtpPage />} />
                 <Route path='/verify-email' element={<VerifyOtpPage />} />
             
