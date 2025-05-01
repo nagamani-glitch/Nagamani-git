@@ -56,7 +56,6 @@ import {
   Home,
   Dashboard,
   Assessment,
-  
   Close,
   Menu as MenuIcon,
 } from "@mui/icons-material";
@@ -131,6 +130,7 @@ const Objectives = () => {
   const [loadingEmployees, setLoadingEmployees] = useState(false);
 
   // State for key results
+  const [keyResultDateError, setKeyResultDateError] = useState(null);
   const [keyResultInput, setKeyResultInput] = useState({
     title: "",
     description: "",
@@ -178,22 +178,30 @@ const Objectives = () => {
 
   useEffect(() => {
     // Get the current user ID from localStorage or your auth system
-    const userId = localStorage.getItem('userId'); // Adjust this based on how you store user info
+    const userId = localStorage.getItem("userId"); // Adjust this based on how you store user info
     setCurrentUserId(userId);
-    
+
     // Only load objectives if we have a userId
     if (userId) {
       loadObjectives();
     }
-    
+
     fetchEmployees();
   }, []);
 
-  useEffect(() => {
-    if (currentUserId) {
-      loadObjectives();
-    }
-  }, [currentUserId]);
+// Update the useEffect to avoid conflicts with tab changes
+useEffect(() => {
+  console.log("useEffect triggered with selectedTab:", selectedTab);
+  
+  // Only load objectives if:
+  // 1. We have a currentUserId
+  // 2. We're not in the middle of a tab change
+  if (currentUserId && !window.isChangingTab) {
+    console.log("Loading objectives from useEffect");
+    fetchObjectivesForTab(selectedTab);
+  }
+}, [selectedTab, currentUserId]);
+
 
   // Fetch employees data
   const fetchEmployees = async () => {
@@ -219,49 +227,31 @@ const Objectives = () => {
     }
   };
 
-// Update the loadObjectives function to handle the case when currentUserId is not yet available
-const loadObjectives = async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    let url = API_URL;
-    const params = {
-      searchTerm,
-      archived: filter.archived || undefined,
-    };
-    
-    // For self tab, only fetch the current user's objectives
-    if (selectedTab === "self" && currentUserId) {
-      params.userId = currentUserId;
-      params.objectiveType = "self"; // Only get self objectives
-    } else if (selectedTab === "all") {
-      // For all tab, we want all team objectives and the current user's self objectives
-      // If currentUserId is available, we'll filter on the client side
-      // If not, we'll just get all objectives and let the frontend handle it
-    }
-    
-    const response = await axios.get(url, { params });
-    
-    // If we're in the "all" tab and have a currentUserId, filter out other users' self objectives
-    if (selectedTab === "all" && currentUserId) {
-      const filteredData = response.data.filter(obj => 
-        obj.objectiveType !== "self" || obj.userId === currentUserId
-      );
-      setObjectives(filteredData);
-      setTotalObjectives(filteredData.length);
-    } else {
-      // Otherwise, just use all the data
-      setObjectives(response.data);
-      setTotalObjectives(response.data.length);
-    }
-    
-    setLoading(false);
-  } catch (error) {
-    console.error("Error loading objectives:", error);
-    setError("Failed to load objectives. Please try again.");
-    setLoading(false);
+// Update the useEffect to avoid conflicts with tab changes
+useEffect(() => {
+  console.log("useEffect triggered with selectedTab:", selectedTab);
+  
+  // Only load objectives if:
+  // 1. We have a currentUserId
+  // 2. We're not in the middle of a tab change
+  if (currentUserId && !window.isChangingTab) {
+    console.log("Loading objectives from useEffect");
+    fetchObjectivesForTab(selectedTab);
   }
+}, [selectedTab, currentUserId]);
+
+// Keep the original loadObjectives for other cases (search, filter, etc.)
+const loadObjectives = async () => {
+  if (window.isChangingTab) {
+    console.log("Skipping loadObjectives during tab change");
+    return;
+  }
+  
+  console.log("Regular loadObjectives called");
+  fetchObjectivesForTab(selectedTab);
 };
+
+
 
   // Handle sorting
   const handleSort = (key) => {
@@ -274,23 +264,54 @@ const loadObjectives = async () => {
     }));
   };
 
-// Update the filteredObjectives logic to handle the case when currentUserId is not yet available
+//   // Update the filteredObjectives logic to ensure it's not filtering out team objectives
+// const filteredObjectives = objectives.filter((obj) => {
+//   // For self tab, only show objectives created by the current user
+//   if (selectedTab === "self") {
+//     if (!currentUserId) return false; // If no userId yet, don't show anything in self tab
+//     return obj.userId === currentUserId;
+//   }
+
+//   // For all tab, show team objectives and the current user's self objectives
+//   if (selectedTab === "all") {
+//     // Show all team objectives
+//     if (obj.objectiveType === "all") return true;
+    
+//     // Show only the current user's self objectives
+//     if (obj.objectiveType === "self") {
+//       return currentUserId && obj.userId === currentUserId;
+//     }
+//   }
+
+//   // Apply other filters
+//   return (
+//     (searchTerm === "" ||
+//       obj.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       obj.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
+//     (filter.managers === "" ||
+//       (Array.isArray(obj.managers)
+//         ? obj.managers.length.toString() === filter.managers
+//         : obj.managers.toString() === filter.managers)) &&
+//     (filter.assignees === "" ||
+//       (Array.isArray(obj.assignees)
+//         ? obj.assignees.length.toString() === filter.assignees
+//         : obj.assignees.toString() === filter.assignees)) &&
+//     (filter.keyResults === "" ||
+//       obj.keyResults.toString() === filter.keyResults) &&
+//     (filter.duration === "" || obj.duration.includes(filter.duration)) &&
+//     (filter.archived === "" || obj.archived.toString() === filter.archived)
+//   );
+// });
+
+// Simplify the filteredObjectives logic
 const filteredObjectives = objectives.filter((obj) => {
-  // For self tab, only show objectives created by the current user
-  if (selectedTab === "self") {
-    if (!currentUserId) return false; // If no userId yet, don't show anything in self tab
-    if (obj.userId !== currentUserId) return false;
-  }
-  
-  // For all tab, don't show other users' self objectives
-  if (selectedTab === "all" && obj.objectiveType === "self" && currentUserId && obj.userId !== currentUserId) {
-    return false;
-  }
-  
-  return (
-    (searchTerm === "" ||
-      obj.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      obj.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
+  // Apply search and other filters
+  const matchesSearch = 
+    searchTerm === "" ||
+    obj.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    obj.description.toLowerCase().includes(searchTerm.toLowerCase());
+    
+  const matchesFilters =
     (filter.managers === "" ||
       (Array.isArray(obj.managers)
         ? obj.managers.length.toString() === filter.managers
@@ -302,10 +323,10 @@ const filteredObjectives = objectives.filter((obj) => {
     (filter.keyResults === "" ||
       obj.keyResults.toString() === filter.keyResults) &&
     (filter.duration === "" || obj.duration.includes(filter.duration)) &&
-    (filter.archived === "" || obj.archived.toString() === filter.archived)
-  );
+    (filter.archived === "" || obj.archived.toString() === filter.archived);
+  
+  return matchesSearch && matchesFilters;
 });
-
 
 
   // Handle filter changes
@@ -337,13 +358,10 @@ const filteredObjectives = objectives.filter((obj) => {
     setSearchTerm(e.target.value);
   };
 
- 
   const handleDeleteClick = (objective) => {
     setItemToDelete(objective);
     setDeleteDialogOpen(true);
   };
-
-
 
   const handleConfirmDelete = async () => {
     try {
@@ -428,60 +446,60 @@ const filteredObjectives = objectives.filter((obj) => {
     setIsCreateModalOpen(true);
   };
 
-// Update the handleCreateSubmit function to include userId for new objectives
-const handleCreateSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    setLoading(true);
-    // Format the data according to the schema
-    const objectiveData = {
-      title: currentObjective.title,
-      managers: Array.isArray(currentObjective.managers)
-        ? currentObjective.managers
-        : [],
-      keyResults: Number(currentObjective.keyResults) || 0,
-      keyResultsData: Array.isArray(currentObjective.keyResultsData)
-        ? currentObjective.keyResultsData
-        : [],
-      assignees: Array.isArray(currentObjective.assignees)
-        ? currentObjective.assignees
-        : [],
-      duration: currentObjective.duration,
-      description: currentObjective.description,
-      objectiveType: currentObjective.objectiveType || "all",
-      archived: false,
-      userId: currentUserId, // Add the userId to associate with the creator
-    };
+  // Update the handleCreateSubmit function to include userId for new objectives
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      // Format the data according to the schema
+      const objectiveData = {
+        title: currentObjective.title,
+        managers: Array.isArray(currentObjective.managers)
+          ? currentObjective.managers
+          : [],
+        keyResults: Number(currentObjective.keyResults) || 0,
+        keyResultsData: Array.isArray(currentObjective.keyResultsData)
+          ? currentObjective.keyResultsData
+          : [],
+        assignees: Array.isArray(currentObjective.assignees)
+          ? currentObjective.assignees
+          : [],
+        duration: currentObjective.duration,
+        description: currentObjective.description,
+        objectiveType: currentObjective.objectiveType || "all",
+        archived: false,
+        userId: currentUserId, // Add the userId to associate with the creator
+      };
 
-    const response = await axios.post(API_URL, objectiveData, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+      const response = await axios.post(API_URL, objectiveData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    setObjectives([...objectives, response.data]);
-    setIsCreateModalOpen(false);
-    setCurrentObjective(null);
-    setSelectedTab(response.data.objectiveType);
-    setNotification({
-      open: true,
-      message: "Objective created successfully",
-      severity: "success",
-    });
-    setLoading(false);
-    
-    // Reload objectives to ensure we have the latest data
-    loadObjectives();
-  } catch (error) {
-    console.error("Error creating objective:", error);
-    setNotification({
-      open: true,
-      message: "Failed to create objective",
-      severity: "error",
-    });
-    setLoading(false);
-  }
-};
+      setObjectives([...objectives, response.data]);
+      setIsCreateModalOpen(false);
+      setCurrentObjective(null);
+      setSelectedTab(response.data.objectiveType);
+      setNotification({
+        open: true,
+        message: "Objective created successfully",
+        severity: "success",
+      });
+      setLoading(false);
+
+      // Reload objectives to ensure we have the latest data
+      loadObjectives();
+    } catch (error) {
+      console.error("Error creating objective:", error);
+      setNotification({
+        open: true,
+        message: "Failed to create objective",
+        severity: "error",
+      });
+      setLoading(false);
+    }
+  };
   // Handle edit
   const handleEdit = (objective) => {
     setCurrentObjective({ ...objective });
@@ -530,47 +548,85 @@ const handleCreateSubmit = async (e) => {
     }));
   };
 
-// // Update the handleTabChange function to reload objectives when switching tabs
-// const handleTabChange = (event, newValue) => {
-//   setTabValue(newValue);
-//   const newTab = newValue === 0 ? "all" : newValue === 1 ? "self" : "all";
-//   setSelectedTab(newTab);
-  
-//   // We need to reload objectives when tab changes
-//   setTimeout(() => {
-//     loadObjectives();
-//   }, 0);
-// };
-
-
-// Update the handleTabChange function to immediately filter objectives
+// Completely revamp the handleTabChange function
 const handleTabChange = (event, newValue) => {
-  setTabValue(newValue);
-  const newTab = newValue === 0 ? "all" : newValue === 1 ? "self" : "all";
+  console.log("Tab changed to:", newValue);
   
-  // First set the selected tab
+  // Determine the new tab
+  const newTab = newValue === 0 ? "all" : newValue === 1 ? "self" : "all";
+  console.log("Setting selectedTab to:", newTab);
+  
+  // Update state
+  setTabValue(newValue);
   setSelectedTab(newTab);
   
-  // Then immediately filter the existing objectives based on the new tab
-  // This prevents the flash of unfiltered content
-  if (newTab === "self" && currentUserId) {
-    // For self tab, only show the current user's self objectives
-    const filteredSelfObjectives = objectives.filter(
-      obj => obj.userId === currentUserId && obj.objectiveType === "self"
-    );
-    setObjectives(filteredSelfObjectives);
-  } else if (newTab === "all") {
-    // For all tab, show team objectives and only the current user's self objectives
-    // We'll reload from the server to get all team objectives
+  // Clear any existing timeouts
+  if (window.tabChangeTimeout) {
+    clearTimeout(window.tabChangeTimeout);
   }
   
-  // Finally, reload from the server to ensure we have the latest data
-  setTimeout(() => {
-    loadObjectives();
-  }, 0);
+  // Set a flag to indicate we're in the middle of a tab change
+  window.isChangingTab = true;
+  
+  // Use a direct approach instead of setTimeout
+  fetchObjectivesForTab(newTab);
 };
 
-  // Handle notification close
+// Create a new function specifically for fetching objectives for a tab
+const fetchObjectivesForTab = async (tabName) => {
+  console.log("Fetching objectives specifically for tab:", tabName);
+  
+  setLoading(true);
+  setError(null);
+  
+  try {
+    let url = API_URL;
+    const params = {
+      searchTerm,
+      archived: filter.archived || undefined,
+    };
+
+    // For self tab, only fetch the current user's objectives
+    if (tabName === "self" && currentUserId) {
+      params.userId = currentUserId;
+      params.objectiveType = "self"; // Only get self objectives
+    }
+    
+    const response = await axios.get(url, { params });
+    console.log(`Received ${response.data.length} objectives for tab:`, tabName);
+
+    // Process based on tab
+    if (tabName === "all" && currentUserId) {
+      // For "all" tab: show team objectives and current user's self objectives
+      const filteredData = response.data.filter(obj => 
+        obj.objectiveType === "all" || (obj.objectiveType === "self" && obj.userId === currentUserId)
+      );
+      console.log(`Filtered to ${filteredData.length} objectives for 'all' tab`);
+      setObjectives(filteredData);
+      setTotalObjectives(filteredData.length);
+    } else if (tabName === "self") {
+      // For "self" tab: only show current user's self objectives
+      setObjectives(response.data);
+      setTotalObjectives(response.data.length);
+    } else {
+      // For other tabs
+      setObjectives(response.data);
+      setTotalObjectives(response.data.length);
+    }
+    
+    setLoading(false);
+    
+    // Clear the tab change flag
+    window.isChangingTab = false;
+  } catch (error) {
+    console.error("Error fetching objectives for tab:", error);
+    setError("Failed to load objectives. Please try again.");
+    setLoading(false);
+    window.isChangingTab = false;
+  }
+};
+
+
   const handleNotificationClose = () => {
     setNotification({ ...notification, open: false });
   };
@@ -644,18 +700,76 @@ const handleTabChange = (event, newValue) => {
     }));
   };
 
+  // const handleKeyResultDateChange = (newDate) => {
+  //   setKeyResultInput((prev) => ({
+  //     ...prev,
+  //     dueDate: newDate,
+  //   }));
+  // };
+
+  // const handleAddKeyResult = () => {
+  //   if (keyResultInput.title.trim() === "") {
+  //     setNotification({
+  //       open: true,
+  //       message: "Key result title is required",
+  //       severity: "error",
+  //     });
+  //     return;
+  //   }
+
+  //   setCurrentObjective((prev) => ({
+  //     ...prev,
+  //     keyResultsData: Array.isArray(prev.keyResultsData)
+  //       ? [...prev.keyResultsData, keyResultInput]
+  //       : [keyResultInput],
+  //     keyResults: Array.isArray(prev.keyResultsData)
+  //       ? prev.keyResultsData.length + 1
+  //       : 1,
+  //   }));
+
+  //   // Reset the input
+  //   setKeyResultInput({
+  //     title: "",
+  //     description: "",
+  //     targetValue: "",
+  //     unit: "",
+  //     dueDate: null,
+  //   });
+  // };
+
+  // Update the handleKeyResultDateChange function to include validation
+
   const handleKeyResultDateChange = (newDate) => {
+    // Check if the date is valid
+    if (newDate && isNaN(new Date(newDate).getTime())) {
+      setKeyResultDateError("Please enter a valid date");
+    } else if (newDate && new Date(newDate) < new Date()) {
+      setKeyResultDateError("Due date cannot be in the past");
+    } else {
+      setKeyResultDateError(null);
+    }
+
     setKeyResultInput((prev) => ({
       ...prev,
       dueDate: newDate,
     }));
   };
 
+  // Update the handleAddKeyResult function to check for date errors
   const handleAddKeyResult = () => {
     if (keyResultInput.title.trim() === "") {
       setNotification({
         open: true,
         message: "Key result title is required",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (keyResultDateError) {
+      setNotification({
+        open: true,
+        message: keyResultDateError,
         severity: "error",
       });
       return;
@@ -671,7 +785,7 @@ const handleTabChange = (event, newValue) => {
         : 1,
     }));
 
-    // Reset the input
+    // Reset the input and error
     setKeyResultInput({
       title: "",
       description: "",
@@ -679,6 +793,7 @@ const handleTabChange = (event, newValue) => {
       unit: "",
       dueDate: null,
     });
+    setKeyResultDateError(null);
   };
 
   const handleRemoveKeyResult = (index) => {
@@ -1194,7 +1309,6 @@ const handleTabChange = (event, newValue) => {
                 fontSize: "14px",
               }}
             >
-
               <thead>
                 <tr>
                   <th
@@ -1974,6 +2088,8 @@ const handleTabChange = (event, newValue) => {
                               <TextField
                                 {...params}
                                 fullWidth
+                                error={!!keyResultDateError}
+                                helperText={keyResultDateError}
                                 sx={{
                                   "& .MuiOutlinedInput-root": {
                                     backgroundColor: "white",
