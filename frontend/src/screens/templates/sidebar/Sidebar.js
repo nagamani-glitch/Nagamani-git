@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -21,7 +21,46 @@ import "./Sidebar.css";
 
 function Sidebar() {
   const [activeMenu, setActiveMenu] = useState("");
+  const [userRole, setUserRole] = useState(""); // Add state for user role
   const navigate = useNavigate();
+
+  // Fetch user role when component mounts
+  useEffect(() => {
+    // In a real application, you would fetch this from your authentication system
+    // For now, we'll simulate getting the role from localStorage or a mock API
+    const fetchUserRole = () => {
+      // This is a placeholder - replace with your actual authentication logic
+      const role = localStorage.getItem("userRole") || "user"; // Default to "user" if not found
+      setUserRole(role);
+    };
+
+    fetchUserRole();
+  }, []);
+
+    // Add this function after the existing functions
+    const hasPermission = (menuName) => {
+      // Define permissions for each menu
+      const menuPermissions = {
+        dashboard: ["user", "admin", "hr", "manager"],
+        timesheet: ["user", "admin", "hr", "manager"],
+        recruitment: ["admin", "hr"], // Only admin and HR can access recruitment
+        onboarding: ["admin", "hr", "manager"],
+        reports: ["admin", "hr", "manager"],
+        employee: ["user", "admin", "hr", "manager"],
+        attendance: ["user", "admin", "hr", "manager"],
+        leave: ["user", "admin", "hr", "manager"],
+        payroll: ["admin", "hr"],
+        performance: ["user", "admin", "hr", "manager"],
+        offboarding: ["admin", "hr", "manager"],
+        assets: ["admin", "hr", "manager"],
+        helpDesk: ["user", "admin", "hr", "manager"],
+        configuration: ["admin"]
+      };
+  
+      // Check if the current user role has permission for the requested menu
+      return menuPermissions[menuName]?.includes(userRole) || false;
+    };
+  
 
   const handleMainClick = (menu) => {
     setActiveMenu(menu === activeMenu ? "" : menu);
@@ -60,7 +99,7 @@ function Sidebar() {
           </ul>
         )}
 
-        <li onClick={() => handleMainClick("recruitment")}>
+        {/* <li onClick={() => handleMainClick("recruitment")}>
           <FontAwesomeIcon icon={faBullseye} />
           <span>Recruitment</span>
         </li>
@@ -83,6 +122,35 @@ function Sidebar() {
             <li
               onClick={() => handleNavigation("/Dashboards/recruitment-survey")}
             >
+              Recruitment Survey
+            </li>
+            <li onClick={() => handleNavigation("/Dashboards/candidates")}>
+              Candidates
+            </li>
+            <li onClick={() => handleNavigation("/Dashboards/interview")}>
+              Interview
+            </li>
+            <li onClick={() => handleNavigation("/Dashboards/skill-zone")}>
+              Skill Zone
+            </li>
+          </ul>
+        )} */}
+        {/* Recruitment - only for admin and HR */}
+        {hasPermission("recruitment") && (
+          <li onClick={() => handleMainClick("recruitment")}>
+            <FontAwesomeIcon icon={faBullseye} />
+            <span>Recruitment</span>
+          </li>
+        )}
+        {activeMenu === "recruitment" && hasPermission("recruitment") && (
+          <ul className="sub-menu">
+            <li onClick={() => handleNavigation("/Dashboards/recruitment-dashboard")}>
+              Dashboard
+            </li>
+            <li onClick={() => handleNavigation("/Dashboards/recruitment-pipeline")}>
+              Recruitment Pipeline
+            </li>
+            <li onClick={() => handleNavigation("/Dashboards/recruitment-survey")}>
               Recruitment Survey
             </li>
             <li onClick={() => handleNavigation("/Dashboards/candidates")}>
@@ -332,6 +400,7 @@ function Sidebar() {
           </ul>
         )}
 
+        
         <li onClick={() => handleMainClick("configuration")}>
           <FontAwesomeIcon icon={faCogs} />
           <span>Configuration</span>
