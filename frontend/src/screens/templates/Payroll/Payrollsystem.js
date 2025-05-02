@@ -118,6 +118,7 @@ const PayrollSystem = () => {
 
   // Add these state variables for deductions similar to allowances
   const [selectedDeductions, setSelectedDeductions] = useState([]);
+  const [showDeductionSection, setShowDeductionSection] = useState(false);
 
   // First, add a new state variable to track the LPA value
   const [lpaValue, setLpaValue] = useState("");
@@ -283,6 +284,13 @@ const PayrollSystem = () => {
 
   const handleAddMultipleAllowances = async () => {
     try {
+      // First validate the allowance percentages if any allowances are selected
+    if (selectedAllowances.length > 0) {
+      const shouldProceed = validateAllowancePercentages();
+      if (!shouldProceed) {
+        return; // User chose not to proceed
+      }
+    }
       setIsLoading(true);
 
       // Show loading indicator
@@ -508,6 +516,60 @@ const PayrollSystem = () => {
       );
     }
   };
+
+//   // Add this function after your other helper functions
+// const validateAllowancePercentages = () => {
+//   // Calculate total percentage
+//   const totalPercentage = Object.values(allowancePercentages).reduce(
+//     (sum, percentage) => sum + parseFloat(percentage || 0),
+//     0
+//   );
+  
+//   // Check if total is not 100%
+//   if (totalPercentage !== 100) {
+//     // Show alert with option to proceed anyway
+//     const message = totalPercentage > 100 
+//       ? `Warning: Total allowance percentage (${totalPercentage}%) exceeds 100%.`
+//       : `Warning: Total allowance percentage (${totalPercentage}%) is less than 100%. Some of the employee's pay will not be allocated.`;
+      
+//     // Use the browser's confirm dialog to allow the user to proceed anyway
+//     return window.confirm(`${message}\n\nDo you want to proceed anyway?`);
+//   }
+  
+//   // If total is exactly 100%, no alert needed
+//   return true;
+// };
+
+// Update the validation function with a tolerance range
+const validateAllowancePercentages = () => {
+  // Calculate total percentage
+  const totalPercentage = Object.values(allowancePercentages).reduce(
+    (sum, percentage) => sum + parseFloat(percentage || 0),
+    0
+  );
+  
+  // Define a small tolerance (e.g., 0.1%)
+  const tolerance = 0.1;
+  
+  // Check if total is within acceptable range (99.9% to 100.1%)
+  if (totalPercentage < (100 - tolerance) || totalPercentage > (100 + tolerance)) {
+    // Show alert with option to proceed anyway
+    const message = totalPercentage > (100 + tolerance)
+      ? `Warning: Total allowance percentage (${totalPercentage.toFixed(2)}%) exceeds 100%. This may result in incorrect calculations.`
+      : `Warning: Total allowance percentage (${totalPercentage.toFixed(2)}%) is less than 100%. Some of the employee's pay will not be allocated.`;
+      
+    // Use the browser's confirm dialog to allow the user to proceed anyway
+    return window.confirm(`${message}\n\nDo you want to proceed anyway?`);
+  }
+  
+  // If total is within acceptable range, no alert needed
+  return true;
+};
+
+const isPercentageWithinRange = (percentage) => {
+  const tolerance = 0.1;
+  return percentage >= (100 - tolerance) && percentage <= (100 + tolerance);
+};
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
@@ -1173,6 +1235,7 @@ const PayrollSystem = () => {
     setSelectedDeductions([]);
     setManualDeductionAmounts({});
     setIsEligibleForDeductions(false);
+    setShowDeductionSection(false); // Reset the checkbox
     setIsLoading(false);
     setNewAllowance({
       empId: "",
@@ -1375,6 +1438,26 @@ const PayrollSystem = () => {
       return false;
     }
   };
+
+//   // Add this function to calculate the current total percentage
+//   const calculateTotalAllowancePercentage = () => {
+//   return Object.values(allowancePercentages).reduce(
+//     (sum, percentage) => sum + parseFloat(percentage || 0),
+//     0
+//   );
+// };
+
+// Update the calculate total function to handle floating-point precision
+const calculateTotalAllowancePercentage = () => {
+  const total = Object.values(allowancePercentages).reduce(
+    (sum, percentage) => sum + parseFloat(percentage || 0),
+    0
+  );
+  
+  // Return with 2 decimal places for display
+  return parseFloat(total.toFixed(2));
+};
+
 
   // Helper function to delete a deduction
   const handleDeleteDeduction = async (empId, name) => {
@@ -1867,6 +1950,9 @@ const PayrollSystem = () => {
                                 );
                                 setSelectedDeductions(deductionNames);
                                 setIsEligibleForDeductions(true);
+                                 
+                                // Set the deduction section visibility based on whether the employee has deductions
+                                setShowDeductionSection(employeeDeductions.length > 0);
 
                                 // Open the dialog in edit mode
                                 setEditMode(true); // Set to true to indicate we're in edit mode
@@ -3705,6 +3791,7 @@ const PayrollSystem = () => {
                                 />
                               </TableCell>
                             </TableRow>
+                            
                           ))}
                         </TableBody>
                       </Table>
@@ -3775,10 +3862,83 @@ const PayrollSystem = () => {
                         Add
                       </Button>
                     </Box>
+                    {/* <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+  <Typography variant="body2">
+    Total Percentage: 
+    <Box component="span" sx={{ 
+      fontWeight: 'bold',
+      color: calculateTotalAllowancePercentage() === 100 ? 'green' : 'orange'
+    }}>
+      {' '}{calculateTotalAllowancePercentage()}%
+    </Box>
+  </Typography>
+  
+  {calculateTotalAllowancePercentage() !== 100 && (
+    <Typography variant="caption" color="warning.main">
+      {calculateTotalAllowancePercentage() > 100 
+        ? "Warning: Total exceeds 100%" 
+        : "Warning: Total is less than 100%"}
+    </Typography>
+  )}
+</Box> */}
+<Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+  <Typography variant="body2">
+    Total Percentage: 
+    <Box component="span" sx={{ 
+      fontWeight: 'bold',
+      color: isPercentageWithinRange(calculateTotalAllowancePercentage()) ? 'green' : 'orange'
+    }}>
+      {' '}{calculateTotalAllowancePercentage().toFixed(2)}%
+    </Box>
+  </Typography>
+  
+  {!isPercentageWithinRange(calculateTotalAllowancePercentage()) && (
+    <Typography variant="caption" color="warning.main">
+      {calculateTotalAllowancePercentage() > (100 + 0.1)
+        ? "Warning: Total exceeds 100%" 
+        : "Warning: Total is less than 100%"}
+    </Typography>
+  )}
+</Box>
                   </Paper>
                 </Grid>
+                {/* Deduction Eligibility Checkbox */}
+<Grid item xs={12}>
+  <Paper
+    elevation={0}
+    sx={{
+      p: 2,
+      mb: 2,
+      bgcolor: "#f8f9fa",
+      borderRadius: 2,
+      border: "1px solid #e0e0e0",
+    }}
+  >
+    <FormControlLabel
+      control={
+        <Checkbox
+          checked={showDeductionSection}
+          onChange={(e) => setShowDeductionSection(e.target.checked)}
+          color="primary"
+        />
+      }
+      label={
+        <Box>
+          <Typography variant="subtitle2">
+            Is this employee eligible for deductions?
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Check this box to enable adding deductions for this employee
+          </Typography>
+        </Box>
+      }
+    />
+  </Paper>
+</Grid>
+
 
                 {/* Deductions Section */}
+                {showDeductionSection && (
                 <Grid item xs={12}>
                   <Typography
                     variant="subtitle1"
@@ -4142,6 +4302,7 @@ const PayrollSystem = () => {
                     </Paper>
                   )}
                 </Grid>
+                )}
 
                 {/* Summary Section - Show in both Add and Edit modes */}
                 {(selectedAllowances.length > 0 ||
