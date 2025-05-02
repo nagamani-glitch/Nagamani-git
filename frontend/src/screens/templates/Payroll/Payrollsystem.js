@@ -222,66 +222,64 @@ const PayrollSystem = () => {
   };
 
   // Modify the handleRegisteredEmployeeSelect function
-const handleRegisteredEmployeeSelect = (empId) => {
-  if (!empId) {
-    setSelectedRegisteredEmployee("");
-    return;
-  }
-
-  setSelectedRegisteredEmployee(empId);
-
-  // Find the selected employee
-  const selectedEmp = registeredEmployees.find((emp) => emp.Emp_ID === empId);
-
-  if (selectedEmp) {
-    // Map the fields from registered employee to payroll employee
-    const basicPay = selectedEmp.joiningDetails?.salary || 0;
-    const lpa = (parseFloat(basicPay) * 12) / 100000;
-
-    // Format the date of joining if it exists
-    let formattedDateOfJoining = "";
-    if (selectedEmp.joiningDetails?.dateOfJoining) {
-      const dateObj = new Date(selectedEmp.joiningDetails.dateOfJoining);
-      formattedDateOfJoining = dateObj.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+  const handleRegisteredEmployeeSelect = (empId) => {
+    if (!empId) {
+      setSelectedRegisteredEmployee("");
+      return;
     }
 
-    // Get PAN, UAN, and PF numbers from the correct locations
-    const panNo = selectedEmp.personalInfo?.panNumber || "";
-    const uanNo = selectedEmp.joiningDetails?.uanNumber || "";
-    const pfNo = selectedEmp.joiningDetails?.pfNumber || "";
-    
-    // Get bank information
-    const bankName = selectedEmp.bankInfo?.bankName || "";
-    const bankAccountNo = selectedEmp.bankInfo?.accountNumber || "";
+    setSelectedRegisteredEmployee(empId);
 
-    setNewEmployee({
-      ...newEmployee,
-      empId: selectedEmp.Emp_ID || "",
-      empName: `${selectedEmp.personalInfo?.firstName || ""} ${
-        selectedEmp.personalInfo?.lastName || ""
-      }`,
-      department: selectedEmp.joiningDetails?.department || "",
-      designation: selectedEmp.joiningDetails?.initialDesignation || "",
-      email: selectedEmp.personalInfo?.email || "",
-      basicPay: basicPay,
-      dateOfJoining: formattedDateOfJoining,
-      // Add the PAN, UAN, and PF numbers from the correct locations
-      panNo: panNo,
-      uanNo: uanNo,
-      pfNo: pfNo,
-      // Add bank information
-      bankName: bankName,
-      bankAccountNo: bankAccountNo,
-      // Keep other fields as they are since they might not have direct mappings
-    });
+    // Find the selected employee
+    const selectedEmp = registeredEmployees.find((emp) => emp.Emp_ID === empId);
 
-    setLpaValue(lpa.toFixed(2));
+    if (selectedEmp) {
+      // Map the fields from registered employee to payroll employee
+      const basicPay = selectedEmp.joiningDetails?.salary || 0;
+      const lpa = (parseFloat(basicPay) * 12) / 100000;
 
-    showAlert("Employee data loaded successfully", "success");
-  }
-};
+      // Format the date of joining if it exists
+      let formattedDateOfJoining = "";
+      if (selectedEmp.joiningDetails?.dateOfJoining) {
+        const dateObj = new Date(selectedEmp.joiningDetails.dateOfJoining);
+        formattedDateOfJoining = dateObj.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      }
 
+      // Get PAN, UAN, and PF numbers from the correct locations
+      const panNo = selectedEmp.personalInfo?.panNumber || "";
+      const uanNo = selectedEmp.joiningDetails?.uanNumber || "";
+      const pfNo = selectedEmp.joiningDetails?.pfNumber || "";
 
+      // Get bank information
+      const bankName = selectedEmp.bankInfo?.bankName || "";
+      const bankAccountNo = selectedEmp.bankInfo?.accountNumber || "";
+
+      setNewEmployee({
+        ...newEmployee,
+        empId: selectedEmp.Emp_ID || "",
+        empName: `${selectedEmp.personalInfo?.firstName || ""} ${
+          selectedEmp.personalInfo?.lastName || ""
+        }`,
+        department: selectedEmp.joiningDetails?.department || "",
+        designation: selectedEmp.joiningDetails?.initialDesignation || "",
+        email: selectedEmp.personalInfo?.email || "",
+        basicPay: basicPay,
+        dateOfJoining: formattedDateOfJoining,
+        // Add the PAN, UAN, and PF numbers from the correct locations
+        panNo: panNo,
+        uanNo: uanNo,
+        pfNo: pfNo,
+        // Add bank information
+        bankName: bankName,
+        bankAccountNo: bankAccountNo,
+        // Keep other fields as they are since they might not have direct mappings
+      });
+
+      setLpaValue(lpa.toFixed(2));
+
+      showAlert("Employee data loaded successfully", "success");
+    }
+  };
 
   const handleAddMultipleAllowances = async () => {
     try {
@@ -825,6 +823,13 @@ const handleRegisteredEmployeeSelect = (empId) => {
     return adjustedAllowanceAmount * attendanceRatio;
   };
 
+  // Add this function for calculating allowance amount in the summary section
+  const calculateEstimatedAllowanceAmount = (employee, percentage) => {
+    if (!employee) return 0;
+    const basicPay = parseFloat(employee.basicPay) || 0;
+    return (basicPay * percentage) / 100;
+  };
+
   const calculateDeductionAmount = (basicPay, percentage) => {
     const pay = parseFloat(basicPay) || 0;
     const pct = parseFloat(percentage) || 0;
@@ -1353,25 +1358,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
     }
   };
 
-  // Add this function to calculate net impact (total allowances - total deductions)
-  const calculateNetImpact = (empId) => {
-    const employee = employeeData.find((e) => e.empId === empId);
-    if (!employee) return 0;
-
-    // Calculate total allowances
-    const totalAllowances = selectedAllowances.reduce((sum, name) => {
-      const percentage = allowancePercentages[name] || 0;
-      return sum + calculateAllowanceAmount(employee.basicPay, percentage);
-    }, 0);
-
-    // Calculate total deductions
-    const totalDeductions = selectedDeductions.reduce((sum, name) => {
-      return sum + parseFloat(manualDeductionAmounts[name] || 0);
-    }, 0);
-
-    // Return the net impact
-    return totalAllowances - totalDeductions;
-  };
+ 
 
   // Helper function to delete an allowance
   const handleDeleteAllowance = async (empId, name) => {
@@ -1711,9 +1698,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                   <TableCell className="table-cell" data-priority="1">
                     Total Pay
                   </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    Net Impact
-                  </TableCell>
+                  
                   <TableCell
                     className="table-cell action-column"
                     data-priority="1"
@@ -1780,7 +1765,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                   );
 
                   // Calculate net impact
-                  const netImpact = totalAllowanceAmount - totalDeductionAmount;
+                  // const netImpact = totalAllowanceAmount - totalDeductionAmount;
 
                   return (
                     <TableRow key={employee.empId} className="table-row">
@@ -1807,18 +1792,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                           LPA
                         </Typography>
                       </TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="subtitle1"
-                          sx={{
-                            fontWeight: "bold",
-                            color: netImpact >= 0 ? "#4caf50" : "#f44336",
-                          }}
-                        >
-                          {netImpact >= 0 ? "+" : ""}
-                          {netImpact.toFixed(2)}
-                        </Typography>
-                      </TableCell>
+                   
 
                       <TableCell align="center">
                         <Tooltip title="Preview">
@@ -3112,38 +3086,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                   </Paper>
                 </Grid>
 
-                {/* Net Impact */}
-                <Grid item xs={12}>
-                  <Paper sx={{ p: 2, borderRadius: 2, bgcolor: "#f8f9fa" }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Typography variant="subtitle1">
-                        Net Impact on Salary
-                      </Typography>
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: "bold",
-                          color:
-                            calculateNetImpact(previewEmployee.empId) >= 0
-                              ? "#4caf50"
-                              : "#f44336",
-                        }}
-                      >
-                        {calculateNetImpact(previewEmployee.empId) >= 0
-                          ? "+"
-                          : ""}
-                        Rs.{" "}
-                        {calculateNetImpact(previewEmployee.empId).toFixed(2)}
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Grid>
+              
               </Grid>
             </DialogContent>
           )}
@@ -3152,7 +3095,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
             <Button onClick={handleCloseAllowancePreview} variant="outlined">
               Close
             </Button>
-            <Button
+            {/* <Button
               variant="contained"
               startIcon={<EditIcon />}
               onClick={() => {
@@ -3163,7 +3106,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
               }}
             >
               Manage Allowances & Deductions
-            </Button>
+            </Button> */}
           </DialogActions>
         </Dialog>
 
@@ -4237,13 +4180,12 @@ const handleRegisteredEmployeeSelect = (empId) => {
                                   const employee = employeeData.find(
                                     (e) => e.empId === bulkEmployeeId
                                   );
-                                  // Fix: Use the correct function to calculate allowance amount
-                                  const estimatedAmount = employee
-                                    ? calculateAllowanceAmount(
-                                        employee.empId,
-                                        percentage
-                                      )
-                                    : 0;
+                                
+                                  const estimatedAmount =
+                                    calculateEstimatedAllowanceAmount(
+                                      employee,
+                                      percentage
+                                    );
 
                                   return (
                                     <Box
@@ -4287,6 +4229,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                                     }}
                                   >
                                     Rs.{" "}
+
                                     {selectedAllowances
                                       .reduce((sum, name) => {
                                         const percentage =
@@ -4294,13 +4237,12 @@ const handleRegisteredEmployeeSelect = (empId) => {
                                         const employee = employeeData.find(
                                           (e) => e.empId === bulkEmployeeId
                                         );
-                                        // Fix: Use the correct function to calculate allowance amount
-                                        const estimatedAmount = employee
-                                          ? calculateAllowanceAmount(
-                                              employee.empId,
-                                              percentage
-                                            )
-                                          : 0;
+                                        // Use the new function here
+                                        const estimatedAmount =
+                                          calculateEstimatedAllowanceAmount(
+                                            employee,
+                                            percentage
+                                          );
                                         return sum + estimatedAmount;
                                       }, 0)
                                       .toFixed(2)}
@@ -4399,39 +4341,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                         </Grid>
                       </Grid>
 
-                      <Box
-                        sx={{
-                          mt: 2,
-                          p: 2,
-                          bgcolor: "#ffffff",
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Typography variant="subtitle2">
-                            Net Impact on Salary:
-                          </Typography>
-                          <Typography
-                            variant="subtitle1"
-                            sx={{
-                              fontWeight: "bold",
-                              color:
-                                calculateNetImpact(bulkEmployeeId) >= 0
-                                  ? "#4caf50"
-                                  : "#f44336",
-                            }}
-                          >
-                            {calculateNetImpact(bulkEmployeeId) >= 0 ? "+" : ""}
-                            Rs. {calculateNetImpact(bulkEmployeeId).toFixed(2)}
-                          </Typography>
-                        </Box>
-                      </Box>
+                      
                     </Paper>
                   </Grid>
                 )}
@@ -4630,3 +4540,4 @@ const handleRegisteredEmployeeSelect = (empId) => {
 };
 
 export default PayrollSystem;
+

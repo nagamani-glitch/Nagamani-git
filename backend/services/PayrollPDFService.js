@@ -1,9 +1,8 @@
-
-
 import fs from 'fs';
 import path from 'path';
-import PDFDocument from 'pdfkit';
 import { fileURLToPath } from 'url';
+import PDFDocument from 'pdfkit';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -112,38 +111,7 @@ export class PayrollPDFService {
         const pageWidth = doc.page.width - 80;
         const colWidth = pageWidth / 2;
         
-        // Define employee details in a structured format for the table
         
-        // const employeeDetails = [
-        //   [
-        //     { label: 'Employee ID', value: empId },
-        //     { label: 'Bank Name', value: bankDetails?.bankName }
-        //   ],
-        //   [
-        //     { label: 'Employee Name', value: empName },
-        //     { label: 'Bank A/C No.', value: bankDetails?.accountNo }
-        //   ],
-        //   [
-        //     { label: 'Date of Joining', value: dateOfJoining ? new Date(dateOfJoining).toLocaleDateString() : 'N/A' },
-            
-        //     { label: 'PAN Number', value: panNo },
-        //     { label: 'UAN Number', value: uanNo || 'N/A' }
-        //   ],
-        //   [
-        //     { label: 'Department', value: department },
-        //     { label: 'Working Days', value: workingDays.toString() },
-        //   ],
-        //   [
-        //     { label: 'Designation', value: designation },
-            
-        //     { label: 'LOP Days', value: lopDays.toString() },
-        //   ],
-        //   [
-        //     { label: 'PF Number', value: pfNo },
-            
-        //     { label: 'Payable Days', value: effectiveWorkingDays.toString() }
-        //   ]
-        // ];
 
         const employeeDetails = [
           [
@@ -187,7 +155,7 @@ export class PayrollPDFService {
             // Draw label cell
             drawTableCell(
               x, currentY, colWidth / 2, rowHeight,
-              cell.label + ':',
+              cell.label + '',
               { 
                 font: 'Helvetica-Bold',
                 fillColor: '#f5f5f5'
@@ -300,7 +268,7 @@ export class PayrollPDFService {
               40, earningsY + (i * rowHeight), 
               (pageWidth / 2) * 0.4, rowHeight,
               earnings[i].name,
-              { font: 'Helvetica-Bold' }
+              { font: 'Helvetica-Bold', fontSize: 9 }
             );
             
             // Actual amount
