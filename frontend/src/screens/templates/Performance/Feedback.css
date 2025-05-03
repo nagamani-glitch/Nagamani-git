@@ -701,3 +701,166 @@ a:focus {
     display: none;
   }
 }
+
+/* Add these styles to the end of your existing Feedback.css file */
+
+/* Export button styles */
+.export-button {
+  background-color: #ffffff;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.export-button:hover:not(:disabled) {
+  background-color: #e3f2fd;
+}
+
+.export-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #ccc;
+  color: #999;
+}
+
+/* Export button tooltip */
+.export-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.export-tooltip .tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+}
+
+.export-tooltip .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+.export-tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Export options menu */
+.export-menu {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.export-menu-item {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.export-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.export-menu-item-icon {
+  color: #1976d2;
+}
+
+.export-menu-item-text {
+  font-size: 14px;
+}
+
+/* Responsive styles for export button */
+@media (max-width: 768px) {
+  .export-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .export-tooltip .tooltip-text {
+    width: 160px;
+  }
+}
+
+/* Export button loading state */
+.export-button.loading {
+  position: relative;
+  color: transparent;
+}
+
+.export-button.loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-top: -8px;
+  margin-left: -8px;
+  border-radius: 50%;
+  border: 2px solid #1976d2;
+  border-color: #1976d2 transparent #1976d2 transparent;
+  animation: export-button-loading 1.2s linear infinite;
+}
+
+@keyframes export-button-loading {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Success and error states for export */
+.export-success {
+  background-color: #e6f4ea;
+  color: #1b5e20;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.export-error {
+  background-color: #fdeded;
+  color: #c62828;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}

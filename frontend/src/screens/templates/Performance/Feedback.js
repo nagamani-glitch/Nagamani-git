@@ -33,8 +33,6 @@ import {
   ListItemIcon,
   ListItemText,
   Alert,
-  
-  
   Grid,
   Autocomplete,
   Avatar,
@@ -46,6 +44,7 @@ import {
   Drawer,
   Divider,
   InputAdornment,
+  Tooltip,
 } from "@mui/material";
 
 import {
@@ -65,14 +64,12 @@ import {
   Delete,
   Close,
   History as HistoryIcon,
-  
   CheckCircle as CheckCircleIcon,
   GetApp as GetAppIcon,
   Description as DescriptionIcon,
   PictureAsPdf as PictureAsPdfIcon,
   TableChart as TableChartIcon,
   BarChart as BarChartIcon,
-  
   Menu as MenuIcon,
 } from "@mui/icons-material";
 
@@ -305,8 +302,6 @@ const Feedback = () => {
       checkOverdueFeedbacks();
     }
   }, [feedbackData]);
-
-  
 
   const fetchFeedbacks = async () => {
     try {
@@ -548,6 +543,12 @@ const Feedback = () => {
 
   // Export handler with working Excel and PDF exports
   const handleExport = (format) => {
+    if (filteredFeedbackData.length === 0) {
+      setError("No data available to export");
+      setExportOptions(null);
+      return;
+    }
+
     const dataToExport = filteredFeedbackData.map((item) => ({
       Employee: item.employee,
       Title: item.title,
@@ -787,8 +788,6 @@ const Feedback = () => {
 
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
-
-
 
   const renderMobileCard = (item) => (
     <Card
@@ -1079,7 +1078,7 @@ const Feedback = () => {
                 Analytics
               </Button>
 
-              <Button
+              {/* <Button
                 onClick={(e) => setExportOptions(e.currentTarget)}
                 startIcon={<GetAppIcon />}
                 sx={{
@@ -1091,7 +1090,26 @@ const Feedback = () => {
                 variant="outlined"
               >
                 Export
-              </Button>
+              </Button> */}
+              <div className="export-tooltip">
+                <button
+                  className={`export-button ${loading ? "loading" : ""}`}
+                  onClick={(e) =>
+                    filteredFeedbackData.length > 0
+                      ? setExportOptions(e.currentTarget)
+                      : null
+                  }
+                  disabled={filteredFeedbackData.length === 0}
+                >
+                  {!loading && <GetAppIcon fontSize="small" />}
+                  Export
+                </button>
+                {filteredFeedbackData.length === 0 && (
+                  <span className="tooltip-text">
+                    No data available to export
+                  </span>
+                )}
+              </div>
 
               <Button
                 variant="contained"
@@ -1232,18 +1250,34 @@ const Feedback = () => {
             >
               Analytics
             </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<GetAppIcon />}
-              onClick={(e) => {
-                setExportOptions(e.currentTarget);
-                setMobileMenuOpen(false);
-              }}
-              sx={{ justifyContent: "flex-start", textTransform: "none" }}
+            <Tooltip
+              title={
+                filteredFeedbackData.length === 0
+                  ? "No data available to export"
+                  : "Export data"
+              }
+              arrow
             >
-              Export
-            </Button>
+              <span>
+                <button
+                  className={`export-button ${loading ? "loading" : ""}`}
+                  onClick={(e) => {
+                    if (filteredFeedbackData.length > 0) {
+                      setExportOptions(e.currentTarget);
+                      setMobileMenuOpen(false);
+                    } else {
+                      setError("No data available to export");
+                      setTimeout(() => setError(null), 3000);
+                    }
+                  }}
+                  disabled={filteredFeedbackData.length === 0}
+                  style={{ width: "100%", justifyContent: "flex-start" }}
+                >
+                  {!loading && <GetAppIcon fontSize="small" />}
+                  Export
+                </button>
+              </span>
+            </Tooltip>
           </Stack>
         </Box>
       </Drawer>
@@ -1569,7 +1603,6 @@ const Feedback = () => {
       </Box>
 
       {/* Filter Popover */}
-     
 
       <Popover
         open={Boolean(filterAnchorEl)}
@@ -2337,7 +2370,6 @@ const Feedback = () => {
             )}
           </Box>
         ) : (
-
           // Table View for Tablet and Desktop
           <Box sx={{ overflowX: "auto" }}>
             <Table sx={{ minWidth: 650 }}>
