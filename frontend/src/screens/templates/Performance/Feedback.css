@@ -705,17 +705,22 @@ a:focus {
 /* Add these styles to the end of your existing Feedback.css file */
 
 /* Export button styles */
-.export-button {
-  background-color: #ffffff;
-  color: #1976d2;
+.feedback-export-button {
+  background-color: #1976d2 !important;
+  color:white;
   border: 1px solid #1976d2;
   padding: 8px 12px;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
   transition: all 0.2s ease;
+}
+
+
+.feedback-export-button:hover {
+  background-color: #1565c0 !important;
 }
 
 .export-button:hover:not(:disabled) {
