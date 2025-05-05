@@ -95,12 +95,12 @@
 //     try {
 //       // Fetch objectives data - using the actual endpoint from objectiveController.js
 //       const objectivesResponse = await axios.get(
-//         "http://localhost:5000/api/objectives"
+//         "http://localhost:5002/api/objectives"
 //       );
 
 //       // Fetch feedback data - using the actual endpoint from feedbackController.js
 //       const feedbackResponse = await axios.get(
-//         "http://localhost:5000/api/feedback"
+//         "http://localhost:5002/api/feedback"
 //       );
 
 //       // Process objectives data
@@ -1299,10 +1299,10 @@ const PerformanceDashboard = () => {
     setError(null);
     try {
       // Fetch objectives data
-      const objectivesResponse = await axios.get('http://localhost:5000/api/objectives');
+      const objectivesResponse = await axios.get('http://localhost:5002/api/objectives');
       
       // Fetch feedback data
-      const feedbackResponse = await axios.get('http://localhost:5000/api/feedback');
+      const feedbackResponse = await axios.get('http://localhost:5002/api/feedback');
       
       // Process objectives data
       const objectives = objectivesResponse.data;

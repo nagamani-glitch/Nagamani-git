@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/holidays';
+const API_URL = 'http://localhost:5002/api/holidays';
 
 // Fetch all holidays
 export const fetchHolidays = () => axios.get(API_URL);
@@ -34,7 +34,7 @@ export const fetchFilteredHolidays = (fromDate, toDate, recurring) => {
 // // api/holiday.js
 // import axios from 'axios';
 
-// const API_URL = 'http://localhost:5000/api/holidays';
+// const API_URL = 'http://localhost:5002/api/holidays';
 
 // // Fetch all holidays
 // export const fetchHolidays = () => axios.get(API_URL);

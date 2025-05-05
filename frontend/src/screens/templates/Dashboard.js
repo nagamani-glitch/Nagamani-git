@@ -28,6 +28,7 @@ import RotatingWorktypeAssign from "./rotatingWorktypeAssign/RotatingWorktypeAss
 import AttendanceDashboard from '../dashboards/AttendanceDashboard';
 import AttendanceRecords from "./attendanceRecords/AttendanceRecords";
 import TimeOffRequests from "./timeOffRequests/TimeOffRequests";
+import TimeOffRequestsAdmin from './timeOffRequests/TimeOffRequestsAdmin';
 import ProfilePage from "./profilePage/ProfilePage";
 import MyLeaveRequests from "./myLeaveRequests/MyLeaveRequests";
 import LeaveRequests from "./leaveRequests/LeaveRequests";
@@ -46,6 +47,7 @@ import Feedback from "./Performance/Feedback";
 import CreateFeedback from "./Performance/CreateFeedback";
 import ExitPage from "./Offboarding/ExitPage";
 import ResignationPage from "./Offboarding/ResignationPage";
+import ResignationReview from "./Offboarding/ResignationReview";
 import PayrollSystem from "./Payroll/Payrollsystem";
 import Contract from './Payroll/Contract';
 import EmployeeReport from './reports/EmployeeReport';
@@ -110,6 +112,7 @@ function Dashboard() {
           <Route path="/attendance-dashboard" element={<AttendanceDashboard />} />
           <Route path="/attendance-records" element={<AttendanceRecords />} />
           <Route path="/time-off-requests" element={<TimeOffRequests />} />
+          <Route path="/time-off-requests-admin" element={<TimeOffRequestsAdmin />} />
           <Route path="/leave-requests" element={<LeaveRequests />} />
           <Route path="/my-leave-requests" element={<MyLeaveRequests />} />
           <Route path="/assets-dashboard" element={<AssetDashboard />} />
@@ -127,6 +130,7 @@ function Dashboard() {
           <Route path="/create-feedback" element={<CreateFeedback />} />
           <Route path="/exit-process" element={<ExitPage />} />
           <Route path="/resignation-letter" element={<ResignationPage />} />
+          <Route path="/resignation-review" element={<ResignationReview />} />
           <Route path="/payroll-system" element={<PayrollSystem />} />
           <Route path="/contract" element={<Contract />} />
           <Route path="/employee-report" element={<EmployeeReport />} />

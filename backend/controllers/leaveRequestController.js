@@ -166,3 +166,52 @@ export const getEmployeeLeaveRequests = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Approve leave request
+export const approveLeaveRequest = async (req, res) => {
+  try {
+    const leaveRequest = await LeaveRequest.findByIdAndUpdate(
+      req.params.id,
+      { status: 'approved' },
+      { new: true }
+    );
+    
+    if (!leaveRequest) {
+      return res.status(404).json({ message: 'Leave request not found' });
+    }
+    
+    res.status(200).json(leaveRequest);
+  } catch (error) {
+    console.error("Error in approveLeaveRequest:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Reject leave request
+export const rejectLeaveRequest = async (req, res) => {
+  try {
+    const { rejectionReason } = req.body;
+    
+    if (!rejectionReason) {
+      return res.status(400).json({ message: 'Rejection reason is required' });
+    }
+    
+    const leaveRequest = await LeaveRequest.findByIdAndUpdate(
+      req.params.id,
+      { 
+        status: 'rejected',
+        rejectionReason 
+      },
+      { new: true }
+    );
+    
+    if (!leaveRequest) {
+      return res.status(404).json({ message: 'Leave request not found' });
+    }
+    
+    res.status(200).json(leaveRequest);
+  } catch (error) {
+    console.error("Error in rejectLeaveRequest:", error);
+    res.status(500).json({ message: error.message });
+  }
+};

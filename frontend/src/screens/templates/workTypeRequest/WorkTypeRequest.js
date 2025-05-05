@@ -12,8 +12,8 @@ import {
   TableHead,
   TableRow,
   Tabs,
-  Menu,
   Tab,
+  Menu,
   Checkbox,
   Typography,
   Paper,
@@ -31,19 +31,16 @@ import {
   alpha,
   CircularProgress,
   Alert,
-  Autocomplete,
-  Tooltip,
+  Snackbar,
 } from "@mui/material";
 
-import { Search, Add, Edit, Delete } from "@mui/icons-material";
-import {
-  fetchWorkTypeRequests,
-  createWorkTypeRequest,
-  updateWorkTypeRequest,
-  deleteWorkTypeRequest,
-  approveWorkTypeRequest,
-  rejectWorkTypeRequest,
-} from "../api/workTypeRequestApi";
+import { Search, Edit, Delete } from "@mui/icons-material";
+import { io } from 'socket.io-client';
+
+// Updated API URLs to match the backend routes
+const API_URL = "http://localhost:5002/api/work-type-requests";
+const USER_API_URL = (employeeCode) =>
+  `http://localhost:5002/api/work-type-requests/employee/${employeeCode}`;
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -70,11 +67,12 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   fontSize: 14,
   fontWeight: "bold",
   padding: theme.spacing(2),
-  whiteSpace: "nowrap",
+  whiteSpace: "normal", // Changed from nowrap to normal to allow wrapping
   "&.MuiTableCell-body": {
     color: theme.palette.text.primary,
     fontSize: 14,
     borderBottom: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+    padding: { xs: theme.spacing(1.5), sm: theme.spacing(2) }, // Reduce padding on mobile
   },
 }));
 
@@ -92,35 +90,22 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const employees = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  name: `Employee ${i + 1}`,
-  employeeCode: `#EMP${i + 1}`,
-  requestedShift: i % 2 === 0 ? "First Shift" : "Second Shift",
-  currentShift: "Regular Shift",
-  requestedDate: "Nov. 7, 2024",
-  requestedTill: "Nov. 9, 2024",
-  status: i % 2 === 0 ? "Approved" : "Rejected",
-  description: "Request for shift adjustment",
-  comment: "Needs urgent consideration",
-}));
-
-// Add this constant for the API URL
-const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/registered";
-
 const WorkTypeRequest = () => {
   const theme = useTheme();
   const [tabValue, setTabValue] = useState(0);
   const [selectedAllocations, setSelectedAllocations] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingWorktype, setEditingWorktype] = useState(null);
   const [isPermanentRequest, setIsPermanentRequest] = useState(false);
   const [showSelectionButtons, setShowSelectionButtons] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [shiftRequests, setShiftRequests] = useState([]);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingShift, setEditingShift] = useState(null);
+  const [worktypeRequests, setWorktypeRequests] = useState([]);
+  const [reviewRequests, setReviewRequests] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+
   const [formData, setFormData] = useState({
     employee: "",
     employeeCode: "",
@@ -130,166 +115,154 @@ const WorkTypeRequest = () => {
     description: "",
   });
 
-  // Add these state variables for employee selection
-  const [registeredEmployees, setRegisteredEmployees] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [loadingEmployees, setLoadingEmployees] = useState(false);
-
-  // Add these state variables at the top of the component with other state declarations
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteType, setDeleteType] = useState(""); // "single" or "bulk"
+  const [deleteType, setDeleteType] = useState(""); // "worktype" or "bulk"
   const [itemToDelete, setItemToDelete] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Replace the existing handleDelete function with this:
-  const handleDeleteClick = (shift, e) => {
-    if (e) e.stopPropagation();
-    setDeleteType("single");
-    setItemToDelete(shift);
-    setDeleteDialogOpen(true);
-  };
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loadingCurrentUser, setLoadingCurrentUser] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
-  // Add a function for bulk delete confirmation
-  const handleBulkDeleteClick = () => {
-    setDeleteType("bulk");
-    setItemToDelete({
-      count: selectedAllocations.length,
-      ids: [...selectedAllocations],
-    });
-    setDeleteDialogOpen(true);
-    setAnchorEl(null);
-  };
-
-  // Add this function to close the delete dialog
-  const handleCloseDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-    setItemToDelete(null);
-  };
-
-  // Add this function to handle the confirmed deletion
-  const handleConfirmDelete = async () => {
-    try {
-      setLoading(true);
-
-      if (deleteType === "single" && itemToDelete) {
-        await deleteWorkTypeRequest(itemToDelete._id);
-        setShiftRequests((prevRequests) =>
-          prevRequests.filter((req) => req._id !== itemToDelete._id)
-        );
-        showSnackbar("Work type request deleted successfully");
-      } else if (
-        deleteType === "bulk" &&
-        itemToDelete &&
-        itemToDelete.ids.length > 0
-      ) {
-        const promises = itemToDelete.ids.map((id) =>
-          deleteWorkTypeRequest(id)
-        );
-        await Promise.all(promises);
-        setShiftRequests((prevRequests) =>
-          prevRequests.filter((req) => !itemToDelete.ids.includes(req._id))
-        );
-        setSelectedAllocations([]);
-        setShowSelectionButtons(false);
-        showSnackbar(`${itemToDelete.count} requests deleted successfully`);
-      }
-
-      handleCloseDeleteDialog();
-    } catch (error) {
-      console.error(`Error deleting ${deleteType}:`, error);
-      showSnackbar(
-        `Error deleting ${deleteType === "single" ? "request" : "requests"}`,
-        "error"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Add a showSnackbar function if it doesn't exist
-  const showSnackbar = (message, severity = "success") => {
-    // Implement snackbar functionality here if needed
-    console.log(`${severity}: ${message}`);
-  };
-
-  const fetchRegisteredEmployees = async () => {
-    try {
-      setLoadingEmployees(true);
-      const response = await axios.get(EMPLOYEES_API_URL);
-
-      // Format the employee data for the dropdown
-      const formattedEmployees = response.data.map((emp) => ({
-        id: emp.Emp_ID,
-        name: `${emp.personalInfo?.firstName || ""} ${
-          emp.personalInfo?.lastName || ""
-        }`,
-        employeeCode: emp.Emp_ID,
-        department: emp.joiningDetails?.department || "Not Assigned",
-        currentShift: emp.joiningDetails?.shift || "Regular Shift",
-        currentWorkType: emp.joiningDetails?.workType || "Full Time", // Make sure this field exists in your API response
-      }));
-
-      setRegisteredEmployees(formattedEmployees);
-    } catch (error) {
-      console.error("Error fetching registered employees:", error);
-    } finally {
-      setLoadingEmployees(false);
-    }
-  };
-
-  const handleEmployeeSelect = (event, employee) => {
-    setSelectedEmployee(employee);
-    if (employee) {
-      // Auto-fill form data with selected employee information
-      setFormData((prev) => ({
-        ...prev,
-        employee: employee.name,
-        employeeCode: employee.employeeCode,
-        currentShift: employee.currentShift || "Regular Shift",
-        currentWorkType: employee.currentWorkType || "Full Time", // Add this line
-      }));
-    }
-  };
-
+  // Check if user is admin
   useEffect(() => {
-    loadWorkTypeRequests();
-    fetchRegisteredEmployees(); // Add this line to fetch employees when component mounts
+    const checkUserRole = async () => {
+      try {
+        const userRole = localStorage.getItem("userRole");
+        setIsAdmin(userRole === "admin");
+      } catch (error) {
+        console.error("Error checking user role:", error);
+      }
+    };
+
+    checkUserRole();
   }, []);
 
-  const loadWorkTypeRequests = async () => {
+  // Initialize data
+  useEffect(() => {
+    const initializeData = async () => {
+      await fetchCurrentUser();
+      await loadWorktypeRequests();
+    };
+
+    initializeData();
+  }, [tabValue]);
+
+  // Set up WebSocket connection for real-time notifications
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    // Connect to the WebSocket server
+    const socket = io('http://localhost:5002', {
+      query: { userId }
+    });
+
+    // Listen for new notifications
+    socket.on('new-notification', (notification) => {
+      console.log('Received notification:', notification);
+      
+      // Show a snackbar with the notification
+      setSnackbar({
+        open: true,
+        message: notification.message,
+        severity: notification.status === 'approved' ? 'success' : 'error'
+      });
+      
+      // Reload the worktype requests to reflect the changes
+      loadWorktypeRequests();
+    });
+
+    // Join a room specific to this user
+    socket.emit('join', userId);
+
+    // Cleanup on component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  const fetchCurrentUser = async () => {
     try {
-      const response = await fetchWorkTypeRequests();
-      setShiftRequests(response.data);
+      setLoadingCurrentUser(true);
+      const userId = localStorage.getItem("userId");
+
+      if (!userId) {
+        console.error("No user ID found in localStorage");
+        setSnackbar({
+          open: true,
+          message: "User ID not found. Please log in again.",
+          severity: "error",
+        });
+        return;
+      }
+
+      const response = await axios.get(
+        `http://localhost:5002/api/employees/by-user/${userId}`
+      );
+
+      if (response.data.success) {
+        const userData = response.data.data;
+
+        // Set the current user
+        setCurrentUser(userData);
+
+        // Pre-fill the form with the current user's details
+        setFormData((prev) => ({
+          ...prev,
+          employee: `${userData.personalInfo?.firstName || ""} ${
+            userData.personalInfo?.lastName || ""
+          }`,
+          employeeCode: userData.Emp_ID,
+          currentWorktype: userData.joiningDetails?.workType || "Full Time",
+        }));
+
+        console.log("Current user loaded successfully:", userData.Emp_ID);
+        return userData; // Return the user data for chaining
+      } else {
+        throw new Error("Failed to load user data");
+      }
     } catch (error) {
-      console.error("Error loading work type requests:", error);
+      console.error("Error fetching current user:", error);
+      setSnackbar({
+        open: true,
+        message: "Error loading user data: " + error.message,
+        severity: "error",
+      });
+      return null;
+    } finally {
+      setLoadingCurrentUser(false);
     }
   };
 
-  const handleBulkApprove = async () => {
+  const loadWorktypeRequests = async () => {
     try {
-      const promises = selectedAllocations.map((id) =>
-        approveWorkTypeRequest(id)
-      );
-      await Promise.all(promises);
-      await loadWorkTypeRequests();
-      setSelectedAllocations([]);
-      setShowSelectionButtons(false);
+      if (tabValue === 0) {
+        // For Work Type Requests tab, only show the current user's requests if we have their employee code
+        if (currentUser && currentUser.Emp_ID) {
+          const response = await axios.get(USER_API_URL(currentUser.Emp_ID));
+          setWorktypeRequests(response.data);
+        } else {
+          // If no current user, fetch all requests (this will be filtered on the backend)
+          const response = await axios.get(API_URL);
+          setWorktypeRequests(response.data);
+        }
+      } else {
+        // For Review tab, show all requests
+        const response = await axios.get(API_URL);
+        setReviewRequests(response.data);
+      }
     } catch (error) {
-      console.error("Error bulk approving requests:", error);
-    }
-  };
-
-  const handleBulkReject = async () => {
-    try {
-      const promises = selectedAllocations.map((id) =>
-        rejectWorkTypeRequest(id)
-      );
-      await Promise.all(promises);
-      await loadWorkTypeRequests();
-      setSelectedAllocations([]);
-      setShowSelectionButtons(false);
-    } catch (error) {
-      console.error("Error bulk rejecting requests:", error);
+      console.error("Error loading worktype requests:", error);
+      setSnackbar({
+        open: true,
+        message: "Error loading worktype requests: " + error.message,
+        severity: "error",
+      });
     }
   };
 
@@ -298,8 +271,17 @@ const WorkTypeRequest = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleRowClick = (id) => {
+    const newSelected = selectedAllocations.includes(id)
+      ? selectedAllocations.filter((item) => item !== id)
+      : [...selectedAllocations, id];
+    setSelectedAllocations(newSelected);
+    setShowSelectionButtons(newSelected.length > 0);
+  };
+
   const handleSelectAll = () => {
-    const allIds = shiftRequests.map((req) => req._id);
+    const currentData = tabValue === 0 ? worktypeRequests : reviewRequests;
+    const allIds = currentData.map((req) => req._id);
     setSelectedAllocations(allIds);
     setShowSelectionButtons(true);
   };
@@ -309,114 +291,348 @@ const WorkTypeRequest = () => {
     setShowSelectionButtons(false);
   };
 
-  const handleApprove = async (id) => {
-    try {
-      const response = await approveWorkTypeRequest(id);
-      setShiftRequests((prevRequests) =>
-        prevRequests.map((req) => (req._id === id ? response.data : req))
-      );
-    } catch (error) {
-      console.error("Error approving work type request:", error);
-    }
+  const handleDeleteClick = (worktype, e) => {
+    e.stopPropagation();
+    setDeleteType("worktype");
+    setItemToDelete(worktype);
+    setDeleteDialogOpen(true);
   };
 
-  const handleReject = async (id) => {
-    try {
-      const response = await rejectWorkTypeRequest(id);
-      setShiftRequests((prevRequests) =>
-        prevRequests.map((req) => (req._id === id ? response.data : req))
-      );
-    } catch (error) {
-      console.error("Error rejecting work type request:", error);
-    }
-  };
-
-  const resetFormData = () => {
-    setFormData({
-      employee: "",
-      employeeCode: "",
-      requestWorktype: "",
-      requestedDate: "",
-      requestedTill: "",
-      description: "",
+  const handleBulkDeleteClick = () => {
+    setDeleteType("bulk");
+    setItemToDelete({
+      count: selectedAllocations.length,
+      type: tabValue === 0 ? "requests" : "allocations",
     });
-    setIsPermanentRequest(false);
-    setSelectedEmployee(null);
+    setDeleteDialogOpen(true);
+    setAnchorEl(null);
   };
 
-  const handleCreateShift = async () => {
-    try {
-      // Use the selected employee data if available, otherwise use the form data
-      const employeeData = selectedEmployee || {
-        name: formData.employee,
-        employeeCode: formData.employeeCode,
-        currentWorkType: "Full Time",
-      };
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+  };
 
-      const requestData = {
-        employee: formData.employee,
-        employeeCode: employeeData.employeeCode,
-        requestedShift: formData.requestWorktype,
-        currentWorktype: employeeData.currentWorkType || "Full Time", // This field is actually storing the work type
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true);
+
+      if (deleteType === "worktype" && itemToDelete) {
+        await axios.delete(`${API_URL}/${itemToDelete._id}`);
+        await loadWorktypeRequests();
+        setSnackbar({
+          open: true,
+          message: "Work type request deleted successfully",
+          severity: "success",
+        });
+      } else if (deleteType === "bulk" && selectedAllocations.length > 0) {
+        await Promise.all(
+          selectedAllocations.map((id) =>
+            axios.delete(`${API_URL}/${id}`)
+          )
+        );
+        await loadWorktypeRequests();
+        setSelectedAllocations([]);
+        setShowSelectionButtons(false);
+        setSnackbar({
+          open: true,
+          message: `${selectedAllocations.length} ${itemToDelete.type} deleted successfully`,
+          severity: "success",
+        });
+      }
+
+      handleCloseDeleteDialog();
+    } catch (error) {
+      console.error(`Error deleting ${deleteType}:`, error);
+      setSnackbar({
+        open: true,
+        message: `Error deleting ${deleteType}: ${
+          error.response?.data?.message || error.message
+        }`,
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    try {
+      const reviewerName = localStorage.getItem("userName") || "Admin";
+      
+      await axios.put(`${API_URL}/bulk-approve`, {
+        ids: selectedAllocations
+      });
+      
+      await loadWorktypeRequests();
+      setSelectedAllocations([]);
+      setShowSelectionButtons(false);
+      setAnchorEl(null);
+      setSnackbar({
+        open: true,
+        message: "Work type requests approved successfully",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error bulk approving worktypes:", error);
+      setSnackbar({
+        open: true,
+        message:
+          "Error approving work type requests: " +
+          (error.response?.data?.message || error.message),
+        severity: "error",
+      });
+    }
+  };
+
+  const handleBulkReject = async () => {
+    try {
+      const reviewerName = localStorage.getItem("userName") || "Admin";
+      
+      await axios.put(`${API_URL}/bulk-reject`, {
+        ids: selectedAllocations
+      });
+      
+      await loadWorktypeRequests();
+      setSelectedAllocations([]);
+      setShowSelectionButtons(false);
+      setAnchorEl(null);
+      setSnackbar({
+        open: true,
+        message: "Work type requests rejected successfully",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error bulk rejecting worktypes:", error);
+      setSnackbar({
+        open: true,
+        message:
+          "Error rejecting work type requests: " +
+          (error.response?.data?.message || error.message),
+        severity: "error",
+      });
+    }
+  };
+
+  const handleApprove = async (id, e) => {
+    e.stopPropagation();
+    try {
+      await axios.put(`${API_URL}/${id}/approve`);
+      
+      await loadWorktypeRequests();
+      setSnackbar({
+        open: true,
+        message: "Work type request approved successfully",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error approving worktype:", error);
+      setSnackbar({
+        open: true,
+        message:
+          "Error approving work type request: " +
+          (error.response?.data?.message || error.message),
+        severity: "error",
+      });
+    }
+  };
+
+  const handleReject = async (id, e) => {
+    e.stopPropagation();
+    try {
+      await axios.put(`${API_URL}/${id}/reject`);
+      
+      await loadWorktypeRequests();
+      setSnackbar({
+        open: true,
+        message: "Work type request rejected successfully",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error rejecting worktype:", error);
+      setSnackbar({
+        open: true,
+        message:
+          "Error rejecting work type request: " +
+          (error.response?.data?.message || error.message),
+        severity: "error",
+      });
+    }
+  };
+
+  const handleCreateWorktype = async () => {
+    try {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        setSnackbar({
+          open: true,
+          message: "Unable to create work type request: User ID not available",
+          severity: "error",
+        });
+        return;
+      }
+
+      // If currentUser is not loaded yet, try to fetch it again
+      let userToUse = currentUser;
+      if (!userToUse) {
+        console.log("Current user not loaded, fetching again...");
+        userToUse = await fetchCurrentUser();
+
+        if (!userToUse) {
+          setSnackbar({
+            open: true,
+            message: "Unable to create work type request: Failed to load user data",
+            severity: "error",
+          });
+          return;
+        }
+      }
+
+      // Validate form data
+      if (!formData.requestWorktype) {
+        setSnackbar({
+          open: true,
+          message: "Please select a work type",
+          severity: "warning",
+        });
+        return;
+      }
+
+      if (!formData.requestedDate) {
+        setSnackbar({
+          open: true,
+          message: "Please select a requested date",
+          severity: "warning",
+        });
+        return;
+      }
+
+      if (!formData.requestedTill) {
+        setSnackbar({
+          open: true,
+          message: "Please select a requested till date",
+          severity: "warning",
+        });
+        return;
+      }
+
+      const worktypeData = {
+        name: `${userToUse.personalInfo?.firstName || ""} ${
+          userToUse.personalInfo?.lastName || ""
+        }`,
+        employeeCode: userToUse.Emp_ID,
+        requestedWorktype: formData.requestWorktype,
+        currentWorktype: userToUse.joiningDetails?.workType || "Full Time",
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
-        description: formData.description,
+        description: formData.description || "",
         isPermanentRequest,
-        status: "Pending",
+        userId: userId,
       };
 
-      const response = await createWorkTypeRequest(requestData);
-      setShiftRequests((prev) => [...prev, response.data]);
+      console.log("Creating work type request with data:", worktypeData);
+
+      const response = await axios.post(API_URL, worktypeData);
+      console.log("Work type request created:", response.data);
+
+      await loadWorktypeRequests();
       setCreateDialogOpen(false);
       resetFormData();
+
+      setSnackbar({
+        open: true,
+        message: "Work type request created successfully and sent for review",
+        severity: "success",
+      });
     } catch (error) {
-      console.error("Error creating work type request:", error);
+      console.error("Error creating work type:", error);
+      setSnackbar({
+        open: true,
+        message:
+          "Error creating work type request: " +
+          (error.response?.data?.message || error.message),
+        severity: "error",
+      });
     }
   };
 
-  const handleEdit = (shift) => {
-    setEditingShift(shift);
+  const handleEdit = (worktype, e) => {
+    e.stopPropagation();
+    setEditingWorktype(worktype);
     setFormData({
-      employee: shift.employee,
-      employeeCode: shift.employeeCode || "",
-      requestShift: shift.requestedShift,
-      requestedDate: shift.requestedDate
-        ? new Date(shift.requestedDate).toISOString().split("T")[0]
-        : "",
-      requestedTill: shift.requestedTill
-        ? new Date(shift.requestedTill).toISOString().split("T")[0]
-        : "",
-      description: shift.description || "",
+      employee: worktype.name,
+      employeeCode: worktype.employeeCode,
+      requestWorktype: worktype.requestedWorktype,
+      requestedDate: new Date(worktype.requestedDate).toISOString().split("T")[0],
+      requestedTill: new Date(worktype.requestedTill).toISOString().split("T")[0],
+      description: worktype.description,
     });
     setEditDialogOpen(true);
   };
 
   const handleSaveEdit = async () => {
     try {
+      const userId = localStorage.getItem("userId");
+
       const updatedData = {
-        employee: formData.employee,
+        name: formData.employee,
         employeeCode: formData.employeeCode,
-        requestedShift: formData.requestShift,
+        requestedWorktype: formData.requestWorktype,
         requestedDate: formData.requestedDate,
         requestedTill: formData.requestedTill,
         description: formData.description,
+        userId: userId, // Include userId for ownership verification
       };
 
-      const response = await updateWorkTypeRequest(
-        editingShift._id,
-        updatedData
-      );
-      setShiftRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req._id === editingShift._id ? response.data : req
-        )
-      );
+      await axios.put(`${API_URL}/${editingWorktype._id}`, updatedData);
+      await loadWorktypeRequests();
       setEditDialogOpen(false);
-      setEditingShift(null);
+      setEditingWorktype(null);
       resetFormData();
+
+      setSnackbar({
+        open: true,
+        message: "Work type request updated successfully",
+        severity: "success",
+      });
     } catch (error) {
-      console.error("Error updating work type request:", error);
+      console.error("Error updating work type:", error);
+      setSnackbar({
+        open: true,
+        message:
+          "Error updating work type request: " +
+          (error.response?.data?.message || error.message),
+        severity: "error",
+      });
     }
+  };
+
+  const resetFormData = () => {
+    // If we have current user data, preserve the employee info
+    if (currentUser) {
+      setFormData({
+        employee: `${currentUser.personalInfo?.firstName || ""} ${
+          currentUser.personalInfo?.lastName || ""
+        }`,
+        employeeCode: currentUser.Emp_ID,
+        currentWorktype: currentUser.joiningDetails?.workType || "Full Time",
+        requestWorktype: "",
+        requestedDate: "",
+        requestedTill: "",
+        description: "",
+      });
+    } else {
+      setFormData({
+        employee: "",
+        employeeCode: "",
+        currentWorktype: "",
+        requestWorktype: "",
+        requestedDate: "",
+        requestedTill: "",
+        description: "",
+      });
+    }
+    setIsPermanentRequest(false);
   };
 
   return (
@@ -438,7 +654,7 @@ const WorkTypeRequest = () => {
             fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
           }}
         >
-          Work Type Requests
+          {tabValue === 0 ? "Work Type Requests" : "Review Requests"}
         </Typography>
 
         <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
@@ -480,7 +696,6 @@ const WorkTypeRequest = () => {
             >
               <Button
                 variant="contained"
-                startIcon={<Add />}
                 onClick={() => setCreateDialogOpen(true)}
                 sx={{
                   height: { xs: "auto", sm: 50 },
@@ -493,7 +708,7 @@ const WorkTypeRequest = () => {
                   },
                 }}
               >
-                Create Request
+                Create {tabValue === 0 ? "Request" : "Review Request"}
               </Button>
             </Box>
           </Box>
@@ -519,7 +734,7 @@ const WorkTypeRequest = () => {
           }}
           onClick={handleSelectAll}
         >
-          Select All Requests
+          Select All {tabValue === 0 ? "Requests" : "Allocations"}
         </Button>
         {showSelectionButtons && (
           <>
@@ -541,7 +756,6 @@ const WorkTypeRequest = () => {
                 borderColor: "maroon",
                 width: { xs: "100%", sm: "auto" },
               }}
-              onClick={(e) => setAnchorEl(e.currentTarget)}
             >
               {selectedAllocations.length} Selected
             </Button>
@@ -562,12 +776,17 @@ const WorkTypeRequest = () => {
           },
         }}
       >
-        <MenuItem onClick={handleBulkApprove} sx={{ py: 1.5 }}>
-          Approve Selected
-        </MenuItem>
-        <MenuItem onClick={handleBulkReject} sx={{ py: 1.5 }}>
-          Reject Selected
-        </MenuItem>
+        {/* Only show approve/reject options in Review tab */}
+        {tabValue === 1 && (
+          <>
+            <MenuItem onClick={handleBulkApprove} sx={{ py: 1.5 }}>
+              Approve Selected
+            </MenuItem>
+            <MenuItem onClick={handleBulkReject} sx={{ py: 1.5 }}>
+              Reject Selected
+            </MenuItem>
+          </>
+        )}
         <MenuItem onClick={handleBulkDeleteClick} sx={{ py: 1.5 }}>
           Delete Selected
         </MenuItem>
@@ -624,13 +843,41 @@ const WorkTypeRequest = () => {
         </Button>
       </Box>
 
+      {/* Tabs */}
+      <Tabs
+        value={tabValue}
+        onChange={(e, newValue) => {
+          setTabValue(newValue);
+          setSelectedAllocations([]);
+          setShowSelectionButtons(false);
+          setFilterStatus("all");
+        }}
+        textColor="primary"
+        indicatorColor="primary"
+        sx={{
+          mb: 2,
+          "& .MuiTabs-flexContainer": {
+            flexDirection: { xs: "column", sm: "row" },
+          },
+          "& .MuiTab-root": {
+            width: { xs: "100%", sm: "auto" },
+            fontSize: { xs: "0.875rem", sm: "0.875rem", md: "1rem" },
+          },
+        }}
+        variant="scrollable"
+        scrollButtons="auto"
+      >
+        <Tab label="Work Type Requests" />
+        <Tab label="Review" />
+      </Tabs>
+
       <Divider sx={{ mb: 2 }} />
 
       {/* Main Table */}
       <TableContainer
         component={Paper}
         sx={{
-          maxHeight: { xs: 350, sm: 400, md: 450 },
+          maxHeight: { xs: 450, sm: 500, md: 550 },
           overflowY: "auto",
           overflowX: "auto",
           mx: 0,
@@ -677,14 +924,19 @@ const WorkTypeRequest = () => {
                     else handleUnselectAll();
                   }}
                   checked={
-                    selectedAllocations.length === shiftRequests.length &&
-                    shiftRequests.length > 0
+                    selectedAllocations.length ===
+                      (tabValue === 0
+                        ? worktypeRequests.length
+                        : reviewRequests.length) &&
+                    (tabValue === 0
+                      ? worktypeRequests.length > 0
+                      : reviewRequests.length > 0)
                   }
                 />
               </StyledTableCell>
-              <StyledTableCell sx={{ minWidth: 180 }}>Employee</StyledTableCell>
+              <StyledTableCell sx={{ minWidth: 200 }}>Employee</StyledTableCell>
               <StyledTableCell sx={{ minWidth: 150 }}>
-                Requested Shift
+                Requested Work Type
               </StyledTableCell>
               <StyledTableCell sx={{ minWidth: 150 }}>
                 Current Work Type
@@ -699,18 +951,21 @@ const WorkTypeRequest = () => {
               <StyledTableCell sx={{ minWidth: 150 }}>
                 Description
               </StyledTableCell>
-              <StyledTableCell sx={{ minWidth: 120, textAlign: "center" }}>
-                Confirmation
-              </StyledTableCell>
+              {/* Only show Confirmation column in Review tab */}
+              {tabValue === 1 && (
+                <StyledTableCell sx={{ minWidth: 120, textAlign: "center" }}>
+                  Confirmation
+                </StyledTableCell>
+              )}
               <StyledTableCell sx={{ minWidth: 100, textAlign: "center" }}>
                 Actions
               </StyledTableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {shiftRequests
+            {(tabValue === 0 ? worktypeRequests : reviewRequests)
               .filter((request) => {
-                const employeeName = request?.employee || "";
+                const employeeName = request?.name || "";
                 return (
                   employeeName
                     .toLowerCase()
@@ -722,15 +977,7 @@ const WorkTypeRequest = () => {
                 <StyledTableRow
                   key={request._id}
                   hover
-                  onClick={() => {
-                    const newSelected = selectedAllocations.includes(
-                      request._id
-                    )
-                      ? selectedAllocations.filter((id) => id !== request._id)
-                      : [...selectedAllocations, request._id];
-                    setSelectedAllocations(newSelected);
-                    setShowSelectionButtons(newSelected.length > 0);
-                  }}
+                  onClick={() => handleRowClick(request._id)}
                   selected={selectedAllocations.includes(request._id)}
                   sx={{
                     cursor: "pointer",
@@ -765,17 +1012,7 @@ const WorkTypeRequest = () => {
                   >
                     <Checkbox
                       checked={selectedAllocations.includes(request._id)}
-                      onChange={() => {
-                        const newSelected = selectedAllocations.includes(
-                          request._id
-                        )
-                          ? selectedAllocations.filter(
-                              (id) => id !== request._id
-                            )
-                          : [...selectedAllocations, request._id];
-                        setSelectedAllocations(newSelected);
-                        setShowSelectionButtons(newSelected.length > 0);
-                      }}
+                      onChange={() => handleRowClick(request._id)}
                       sx={{
                         "&.Mui-checked": {
                           color: theme.palette.primary.main,
@@ -783,8 +1020,9 @@ const WorkTypeRequest = () => {
                       }}
                     />
                   </TableCell>
+
                   <TableCell>
-                    <Box display="flex" alignItems="center" gap={1}>
+                    <Box display="flex" alignItems="flex-start" gap={1}>
                       <Box
                         sx={{
                           width: 32,
@@ -801,13 +1039,22 @@ const WorkTypeRequest = () => {
                           fontWeight: "bold",
                           fontSize: "0.875rem",
                           flexShrink: 0,
+                          mt: 0.5, // Add a small top margin to align with the first line of text
                         }}
                       >
-                        {request.employee?.[0] || "U"}
+                        {request.name?.[0] || "U"}
                       </Box>
                       <Box sx={{ display: "flex", flexDirection: "column" }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {request.employee}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 600,
+                            wordBreak: "break-word", // Allow breaking words to prevent overflow
+                            whiteSpace: "normal", // Allow text to wrap
+                            lineHeight: 1.3, // Tighter line height for wrapped text
+                          }}
+                        >
+                          {request.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {request.employeeCode}
@@ -815,16 +1062,15 @@ const WorkTypeRequest = () => {
                       </Box>
                     </Box>
                   </TableCell>
+
                   <TableCell>
                     <Typography variant="body2">
-                      {request.requestedShift}
+                      {request.requestedWorktype}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {request.currentWorktype ||
-                        request.currentShift ||
-                        "Full Time"}
+                      {request.currentWorktype}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -890,56 +1136,65 @@ const WorkTypeRequest = () => {
                       {request.description}
                     </Typography>
                   </TableCell>
-                  <TableCell align="center">
-                    <Box
-                      sx={{ display: "flex", justifyContent: "center", gap: 1 }}
-                    >
-                      <IconButton
-                        size="small"
-                        color="success"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleApprove(request._id);
-                        }}
-                        disabled={request.status === "Approved"}
+
+                  {/* Only show Confirmation cell in Review tab */}
+                  {tabValue === 1 && (
+                    <TableCell align="center">
+                      <Box
                         sx={{
-                          backgroundColor: alpha("#4caf50", 0.1),
-                          "&:hover": {
-                            backgroundColor: alpha("#4caf50", 0.2),
-                          },
-                          "&.Mui-disabled": {
-                            backgroundColor: alpha("#e0e0e0", 0.3),
-                          },
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: 1,
                         }}
                       >
-                        <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                          ✓
-                        </Typography>
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleReject(request._id);
-                        }}
-                        disabled={request.status === "Rejected"}
-                        sx={{
-                          backgroundColor: alpha("#f44336", 0.1),
-                          "&:hover": {
-                            backgroundColor: alpha("#f44336", 0.2),
-                          },
-                          "&.Mui-disabled": {
-                            backgroundColor: alpha("#e0e0e0", 0.3),
-                          },
-                        }}
-                      >
-                        <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                          ✕
-                        </Typography>
-                      </IconButton>
-                    </Box>
-                  </TableCell>
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={(e) => handleApprove(request._id, e)}
+                          disabled={request.status === "Approved"}
+                          sx={{
+                            backgroundColor: alpha("#4caf50", 0.1),
+                            "&:hover": {
+                              backgroundColor: alpha("#4caf50", 0.2),
+                            },
+                            "&.Mui-disabled": {
+                              backgroundColor: alpha("#e0e0e0", 0.3),
+                            },
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: "bold" }}
+                          >
+                            ✓
+                          </Typography>
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => handleReject(request._id, e)}
+                          disabled={request.status === "Rejected"}
+                          sx={{
+                            backgroundColor: alpha("#f44336", 0.1),
+                            "&:hover": {
+                              backgroundColor: alpha("#f44336", 0.2),
+                            },
+                            "&.Mui-disabled": {
+                              backgroundColor: alpha("#e0e0e0", 0.3),
+                            },
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: "bold" }}
+                          >
+                            ✕
+                          </Typography>
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  )}
+
                   <TableCell align="center">
                     <Box
                       sx={{ display: "flex", justifyContent: "center", gap: 1 }}
@@ -947,10 +1202,7 @@ const WorkTypeRequest = () => {
                       <IconButton
                         size="small"
                         color="primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(request);
-                        }}
+                        onClick={(e) => handleEdit(request, e)}
                         sx={{
                           backgroundColor: alpha(
                             theme.palette.primary.main,
@@ -969,10 +1221,7 @@ const WorkTypeRequest = () => {
                       <IconButton
                         size="small"
                         color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteClick(request);
-                        }}
+                        onClick={(e) => handleDeleteClick(request, e)}
                         sx={{
                           backgroundColor: alpha(theme.palette.error.main, 0.1),
                           "&:hover": {
@@ -989,17 +1238,23 @@ const WorkTypeRequest = () => {
                   </TableCell>
                 </StyledTableRow>
               ))}
-            {shiftRequests.filter((request) => {
-              const employeeName = request?.employee || "";
-              return (
-                employeeName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-                (filterStatus === "all" || request.status === filterStatus)
-              );
-            }).length === 0 && (
+            {/* Empty state message when no records match filters */}
+            {(tabValue === 0 ? worktypeRequests : reviewRequests).filter(
+              (request) => {
+                const employeeName = request?.name || "";
+                return (
+                  employeeName
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase()) &&
+                  (filterStatus === "all" || request.status === filterStatus)
+                );
+              }
+            ).length === 0 && (
               <TableRow>
                 <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
                   <Typography variant="body1" color="text.secondary">
-                    No work type requests found matching your filters.
+                    No {tabValue === 0 ? "work type requests" : "review requests"}{" "}
+                    found matching your filters.
                   </Typography>
                   <Button
                     variant="text"
@@ -1057,7 +1312,7 @@ const WorkTypeRequest = () => {
         >
           <Alert severity="warning" sx={{ mb: 2 }}>
             {deleteType === "bulk"
-              ? `Are you sure you want to delete ${itemToDelete?.count} selected requests?`
+              ? `Are you sure you want to delete ${selectedAllocations.length} selected ${itemToDelete?.type}?`
               : "Are you sure you want to delete this work type request?"}
           </Alert>
           {itemToDelete && (
@@ -1072,8 +1327,8 @@ const WorkTypeRequest = () => {
                     color="text.secondary"
                     sx={{ mt: 1 }}
                   >
-                    You are about to delete {itemToDelete.count} requests. This
-                    action cannot be undone.
+                    You are about to delete {selectedAllocations.length}{" "}
+                    {itemToDelete.type}. This action cannot be undone.
                   </Typography>
                 </>
               ) : (
@@ -1091,10 +1346,10 @@ const WorkTypeRequest = () => {
                       border: "1px solid #e2e8f0",
                     }}
                   >
-                    <strong>Employee:</strong> {itemToDelete.employee} (
+                    <strong>Employee:</strong> {itemToDelete.name} (
                     {itemToDelete.employeeCode})<br />
-                    <strong>Requested Shift:</strong>{" "}
-                    {itemToDelete.requestedShift}
+                    <strong>Requested Work Type:</strong>{" "}
+                    {itemToDelete.requestedWorktype}
                     <br />
                     <strong>Date Range:</strong>{" "}
                     {new Date(itemToDelete.requestedDate).toLocaleDateString()}{" "}
@@ -1160,11 +1415,27 @@ const WorkTypeRequest = () => {
         </DialogActions>
       </Dialog>
 
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
       {/* Create Dialog */}
       <Dialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        fullScreen={window.innerWidth < 600}
+        fullScreen={window.innerWidth < 600} // Full screen on mobile
         PaperProps={{
           sx: {
             width: { xs: "100%", sm: "600px" },
@@ -1184,61 +1455,19 @@ const WorkTypeRequest = () => {
             padding: "24px 32px",
           }}
         >
-          Create Work Request
+          {tabValue === 0 ? "Create Work Type Request" : "Review Request"}
         </DialogTitle>
-
         <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {/* New Autocomplete for selecting registered employees */}
-            <Autocomplete
-              options={registeredEmployees}
-              getOptionLabel={(option) =>
-                `${option.name} (${option.employeeCode})`
-              }
-              value={selectedEmployee}
-              onChange={handleEmployeeSelect}
-              loading={loadingEmployees}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Select Onboarded Employee"
-                  variant="outlined"
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {loadingEmployees ? (
-                          <CircularProgress color="inherit" size={20} />
-                        ) : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: "12px",
-                      "&:hover fieldset": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                  }}
-                />
-              )}
-              renderOption={(props, option) => (
-                <li {...props}>
-                  <Box sx={{ display: "flex", flexDirection: "column" }}>
-                    <Typography variant="body1">{option.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {option.employeeCode} • {option.department}
-                    </Typography>
-                  </Box>
-                </li>
-              )}
-            />
-
-            {/* Display selected employee info if available */}
-            {selectedEmployee && (
+            {/* Current User Information */}
+            {loadingCurrentUser ? (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+                <CircularProgress size={24} />
+                <Typography variant="body2" sx={{ ml: 2 }}>
+                  Loading user data...
+                </Typography>
+              </Box>
+            ) : currentUser ? (
               <Paper
                 elevation={0}
                 sx={{
@@ -1249,84 +1478,37 @@ const WorkTypeRequest = () => {
                 }}
               >
                 <Typography variant="subtitle2" color="primary" gutterBottom>
-                  Selected Employee Details
+                  Your Details
                 </Typography>
                 <Box
                   sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
                 >
                   <Typography variant="body2">
-                    <strong>Name:</strong> {selectedEmployee.name}
+                    <strong>Name:</strong>{" "}
+                    {currentUser.personalInfo?.firstName || ""}{" "}
+                    {currentUser.personalInfo?.lastName || ""}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Employee Code:</strong>{" "}
-                    {selectedEmployee.employeeCode}
+                    <strong>Employee Code:</strong> {currentUser.Emp_ID}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Department:</strong> {selectedEmployee.department}
+                    <strong>Department:</strong>{" "}
+                    {currentUser.joiningDetails?.department || "Not Assigned"}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Current Work Type:</strong>{" "}
-                    {selectedEmployee.currentWorkType || "Full Time"}
+                    {currentUser.joiningDetails?.workType || "Full Time"}
                   </Typography>
                 </Box>
               </Paper>
+            ) : (
+              <Alert severity="warning">
+                Unable to load your employee details. Please try again or
+                contact support.
+              </Alert>
             )}
 
-            {/* Manual employee input fields if no employee is selected */}
-            {!selectedEmployee && (
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <Typography variant="subtitle2" color="primary.dark">
-                  Or Enter Employee Details Manually:
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", sm: "row" },
-                    gap: 2,
-                  }}
-                >
-                  <TextField
-                    label="Employee Name"
-                    name="employee"
-                    fullWidth
-                    value={formData.employee}
-                    onChange={handleFormChange}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                      "& .MuiInputLabel-root.Mui-focused": {
-                        color: "#1976d2",
-                      },
-                    }}
-                  />
-                  <TextField
-                    label="Employee ID"
-                    name="employeeCode"
-                    fullWidth
-                    value={formData.employeeCode || ""}
-                    onChange={handleFormChange}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: "12px",
-                        "&:hover fieldset": {
-                          borderColor: "#1976d2",
-                        },
-                      },
-                      "& .MuiInputLabel-root.Mui-focused": {
-                        color: "#1976d2",
-                      },
-                    }}
-                  />
-                </Box>
-              </Box>
-            )}
-
+            {/* Request Work Type */}
             <TextField
               label="Request Work Type"
               name="requestWorktype"
@@ -1334,6 +1516,15 @@ const WorkTypeRequest = () => {
               onChange={handleFormChange}
               fullWidth
               select
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
             >
               <MenuItem value="Full Time">Full Time</MenuItem>
               <MenuItem value="Part Time">Part Time</MenuItem>
@@ -1342,6 +1533,7 @@ const WorkTypeRequest = () => {
               <MenuItem value="Remote">Remote</MenuItem>
             </TextField>
 
+            {/* Rest of your form fields remain the same */}
             <TextField
               label="Requested Date"
               name="requestedDate"
@@ -1399,15 +1591,17 @@ const WorkTypeRequest = () => {
               }}
             />
 
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={isPermanentRequest}
-                  onChange={(e) => setIsPermanentRequest(e.target.checked)}
-                />
-              }
-              label="Permanent Request"
-            />
+            {tabValue === 0 && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isPermanentRequest}
+                    onChange={(e) => setIsPermanentRequest(e.target.checked)}
+                  />
+                }
+                label="Permanent Request"
+              />
+            )}
           </Box>
         </DialogContent>
 
@@ -1440,14 +1634,13 @@ const WorkTypeRequest = () => {
           >
             Cancel
           </Button>
-
           <Button
-            onClick={handleCreateShift}
             variant="contained"
+            onClick={handleCreateWorktype}
             disabled={
-              (!selectedEmployee && !formData.employee) ||
               !formData.requestWorktype ||
-              !formData.requestedDate
+              !formData.requestedDate ||
+              !formData.requestedTill
             }
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
@@ -1456,6 +1649,7 @@ const WorkTypeRequest = () => {
               padding: "8px 32px",
               borderRadius: "10px",
               boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+              color: "white",
               "&:hover": {
                 background: "linear-gradient(45deg, #1565c0, #42a5f5)",
               },
@@ -1465,17 +1659,18 @@ const WorkTypeRequest = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
+      
       {/* Edit Dialog */}
       <Dialog
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
+        fullScreen={window.innerWidth < 600} // Full screen on mobile
         PaperProps={{
           sx: {
-            width: "600px",
-            borderRadius: "20px",
+            width: { xs: "100%", sm: "600px" },
+            maxWidth: "100%",
+            borderRadius: { xs: 0, sm: "20px" },
+            margin: { xs: 0, sm: 2 },
             overflow: "hidden",
           },
         }}
@@ -1489,7 +1684,7 @@ const WorkTypeRequest = () => {
             padding: "24px 32px",
           }}
         >
-          Edit Work Request
+          {tabValue === 0 ? "Edit Work Type Request" : "Edit Review Request"}
         </DialogTitle>
 
         <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
@@ -1543,8 +1738,8 @@ const WorkTypeRequest = () => {
 
             <TextField
               label="Request Work Type"
-              name="requestShift"
-              value={formData.requestShift}
+              name="requestWorktype"
+              value={formData.requestWorktype}
               onChange={handleFormChange}
               fullWidth
               select
@@ -1558,9 +1753,11 @@ const WorkTypeRequest = () => {
                 },
               }}
             >
-              <MenuItem value="Morning Shift">Morning Shift</MenuItem>
-              <MenuItem value="Evening Shift">Evening Shift</MenuItem>
-              <MenuItem value="Night Shift">Night Shift</MenuItem>
+              <MenuItem value="Full Time">Full Time</MenuItem>
+              <MenuItem value="Part Time">Part Time</MenuItem>
+              <MenuItem value="Contract">Contract</MenuItem>
+              <MenuItem value="Freelance">Freelance</MenuItem>
+              <MenuItem value="Remote">Remote</MenuItem>
             </TextField>
 
             <TextField
@@ -1650,12 +1847,13 @@ const WorkTypeRequest = () => {
           </Button>
 
           <Button
-            onClick={handleSaveEdit}
             variant="contained"
+            onClick={handleSaveEdit}
             disabled={
               !formData.employee ||
-              !formData.requestShift ||
-              !formData.requestedDate
+              !formData.requestWorktype ||
+              !formData.requestedDate ||
+              !formData.requestedTill
             }
             sx={{
               background: "linear-gradient(45deg, #1976d2, #64b5f6)",
@@ -1668,7 +1866,7 @@ const WorkTypeRequest = () => {
                 background: "linear-gradient(45deg, #1565c0, #42a5f5)",
               },
             }}
-          >
+            >
             Save Changes
           </Button>
         </DialogActions>
@@ -1678,3 +1876,7 @@ const WorkTypeRequest = () => {
 };
 
 export default WorkTypeRequest;
+
+
+
+

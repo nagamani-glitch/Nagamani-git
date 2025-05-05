@@ -43,7 +43,7 @@ import {
 import { ToggleButtonGroup, ToggleButton } from "@mui/lab";
 
 const apiBaseURL =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+  process.env.REACT_APP_API_BASE_URL || "http://localhost:5002";
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),

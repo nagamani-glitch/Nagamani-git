@@ -14,7 +14,14 @@ import {
   getFeedbacksOverdue,
   getFeedbacksDueThisWeek,
   bulkUpdateFeedbacks,
-  bulkDeleteFeedbacks
+  bulkDeleteFeedbacks,
+  getFeedbacksByUserId,           
+  updateFeedbackReviewStatus,   
+  completeFeedbackReview,
+  getLinkedFeedback,
+  getFeedbacksToReviewByUser,
+  assignFeedbackForReview,
+  getFeedbackStatsByUser
 } from '../controllers/feedbackController.js';
 
 const router = express.Router();
@@ -47,5 +54,21 @@ router.get('/due/this-week', getFeedbacksDueThisWeek);
 // Bulk operations
 router.put('/bulk/update', bulkUpdateFeedbacks);
 router.delete('/bulk/delete', bulkDeleteFeedbacks);
+
+
+
+// Add these new routes
+router.get('/user/:userId', getFeedbacksByUserId);
+router.put('/:id/review', updateFeedbackReviewStatus);
+
+
+// Add this route at the end of your routes
+router.post('/:id/complete-review', completeFeedbackReview);
+router.get('/:id/linked', getLinkedFeedback);
+router.get('/to-review/:userId', getFeedbacksToReviewByUser);
+router.put('/:id/assign', assignFeedbackForReview);
+router.get('/stats/:userId', getFeedbackStatsByUser);
+
+
 
 export default router;

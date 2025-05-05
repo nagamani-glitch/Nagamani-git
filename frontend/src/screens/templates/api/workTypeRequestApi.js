@@ -1,6 +1,7 @@
+<<<<<<< HEAD
 // import axios from 'axios';
 
-// const API_URL = `http://localhost:5000/api/work-type-requests`;
+// const API_URL = `http://localhost:5002/api/work-type-requests`;
 
 // export const fetchWorkTypeRequests = () => axios.get(API_URL);
 // export const createWorkTypeRequest = (data) => {
@@ -12,9 +13,11 @@
 // export const approveWorkTypeRequest = (id) => axios.put(`${API_URL}/${id}/approve`);
 // export const rejectWorkTypeRequest = (id) => axios.put(`${API_URL}/${id}/reject`);
 
+=======
+>>>>>>> 804de9616ea57755748614f10fa352a108bbc358
 import axios from 'axios';
 
-const API_URL = `http://localhost:5000/api/work-type-requests`;
+const API_URL = `http://localhost:5002/api/work-type-requests`;
 
 export const fetchWorkTypeRequests = () => axios.get(API_URL);
 export const createWorkTypeRequest = (data) => axios.post(API_URL, data);
@@ -24,3 +27,6 @@ export const approveWorkTypeRequest = (id) => axios.put(`${API_URL}/${id}/approv
 export const rejectWorkTypeRequest = (id) => axios.put(`${API_URL}/${id}/reject`);
 export const bulkApproveRequests = (ids) => axios.put(`${API_URL}/bulk-approve`, { ids });
 export const bulkRejectRequests = (ids) => axios.put(`${API_URL}/bulk-reject`, { ids });
+export const fetchWorkTypeRequestsByEmployeeCode = (employeeCode) => 
+    axios.get(`${API_URL}/employee/${employeeCode}`);
+  

@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const shiftRequestSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true
+  },
   name: {
     type: String,
     required: true
@@ -36,9 +40,23 @@ const shiftRequestSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isForReview: {
+    type: Boolean,
+    default: true
+  },
+  // Keep isAllocated for backward compatibility but we'll use isForReview instead
   isAllocated: {
     type: Boolean,
     default: false
+  },
+  // Add fields for tracking who reviewed the request
+  reviewedBy: {
+    type: String,
+    default: null
+  },
+  reviewedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true

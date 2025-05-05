@@ -68,6 +68,7 @@ import {
 } from "@mui/icons-material";
 
 import { LoadingButton } from "@mui/lab";
+import { useNotifications } from "../../../context/NotificationContext";
 
 import "./ResignationPage.css";
 
@@ -92,6 +93,9 @@ const ResignationPage = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState(null);
 
+  // Inside the ResignationPage component, add:
+const { addResignationNotification } = useNotifications();
+
   // Add these state variables for delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -113,6 +117,12 @@ const ResignationPage = () => {
   const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
 
+  // Add these state variables near the top of your component
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserName, setCurrentUserName] = useState("");
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
+  const [currentUserPosition, setCurrentUserPosition] = useState("");
+
   const handleStatusMenuOpen = (event, item) => {
     setStatusMenuAnchorEl(event.currentTarget);
     setSelectedItem(item);
@@ -123,60 +133,132 @@ const ResignationPage = () => {
     setSelectedItem(null);
   };
 
-  const handleStatusChange = async (newStatus) => {
-    if (!selectedItem) return;
+  // const handleStatusChange = async (newStatus) => {
+  //   if (!selectedItem) return;
 
-    try {
-      setLoading(true);
-      await axios.put(
-        `http://localhost:5000/api/resignations/${selectedItem._id}`,
-        {
-          status: newStatus,
-        }
-      );
+  //   try {
+  //     setLoading(true);
+  //     await axios.put(
+  //       `http://localhost:5002/api/resignations/${selectedItem._id}`,
+  //       {
+  //         status: newStatus,
+  //       }
+  //     );
 
-      // Update the local state
-      setData(
-        data.map((item) =>
-          item._id === selectedItem._id ? { ...item, status: newStatus } : item
-        )
-      );
+  //     // Update the local state
+  //     setData(
+  //       data.map((item) =>
+  //         item._id === selectedItem._id ? { ...item, status: newStatus } : item
+  //       )
+  //     );
 
-      setSnackbar({
-        open: true,
-        message: `Status updated to ${newStatus}`,
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error updating status:", error);
-      setSnackbar({
-        open: true,
-        message: "Error updating status",
-        severity: "error",
-      });
-    } finally {
-      setLoading(false);
-      handleStatusMenuClose();
-    }
-  };
-
-  useEffect(() => {
-    fetchResignations();
-  }, []);
+  //     setSnackbar({
+  //       open: true,
+  //       message: `Status updated to ${newStatus}`,
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating status:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error updating status",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //     handleStatusMenuClose();
+  //   }
+  // };
 
   // Set view mode based on screen size when it changes
+ 
+  
+// Then modify the handleStatusChange function:
+const handleStatusChange = async (newStatus) => {
+  if (!selectedItem) return;
+
+  try {
+    setLoading(true);
+    await axios.put(
+      `http://localhost:5002/api/resignations/${selectedItem._id}`,
+      {
+        status: newStatus,
+      }
+    );
+
+    // Update the local state
+    setData(
+      data.map((item) =>
+        item._id === selectedItem._id ? { ...item, status: newStatus } : item
+      )
+    );
+
+    // Send notification to the user who submitted the resignation
+    if (selectedItem.userId && (newStatus === "Approved" || newStatus === "Rejected")) {
+      addResignationNotification(
+        selectedItem.name,
+        newStatus.toLowerCase(), // "approved" or "rejected"
+        selectedItem.userId
+      );
+      
+      console.log(`Sent ${newStatus.toLowerCase()} notification to user ${selectedItem.userId}`);
+    }
+
+    setSnackbar({
+      open: true,
+      message: `Status updated to ${newStatus}`,
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error updating status:", error);
+    setSnackbar({
+      open: true,
+      message: "Error updating status",
+      severity: "error",
+    });
+  } finally {
+    setLoading(false);
+    handleStatusMenuClose();
+  }
+};
+ 
+ 
   useEffect(() => {
     if (isMobile) {
       setViewMode("grid");
     }
   }, [isMobile]);
 
+  // Modify the fetchResignations function to properly handle user roles
   const fetchResignations = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        "http://localhost:5000/api/resignations"
-      );
+
+      // Get the user's role and ID from localStorage
+      const userRole = localStorage.getItem("userRole");
+      const userId = localStorage.getItem("userId");
+
+      if (!userId) {
+        console.error("No user ID found in localStorage");
+        setError("User not authenticated");
+        setLoading(false);
+        return;
+      }
+
+      // Determine which API endpoint to use based on user role
+      let url;
+      if (userRole && (userRole.includes("admin") || userRole.includes("hr"))) {
+        // Admin or HR can see all resignations
+        console.log("Fetching all resignations for admin/HR");
+        url = "http://localhost:5002/api/resignations";
+      } else {
+        // Regular users can only see their own resignations
+        console.log("Fetching resignations for user:", userId);
+        url = `http://localhost:5002/api/resignations/user/${userId}`;
+      }
+
+      const response = await axios.get(url);
+      console.log("Fetched resignations:", response.data);
       setData(response.data);
       setError(null);
     } catch (err) {
@@ -186,6 +268,50 @@ const ResignationPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (currentUserId) {
+      fetchResignations();
+    }
+  }, [currentUserId]);
+
+  // Modify the useEffect that fetches user data to also fetch resignations
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+          setCurrentUserId(userId);
+
+          // Fetch user details
+          const response = await axios.get(
+            `http://localhost:5002/api/employees/by-user/${userId}`
+          );
+          const userData = response.data.data;
+
+          if (userData) {
+            // Set user information
+            setCurrentUserName(
+              `${userData.personalInfo?.firstName || ""} ${
+                userData.personalInfo?.lastName || ""
+              }`
+            );
+            setCurrentUserEmail(userData.personalInfo?.email || "");
+            setCurrentUserPosition(
+              userData.joiningDetails?.initialDesignation || ""
+            );
+          }
+
+          // Fetch resignations after user data is loaded
+          await fetchResignations();
+        }
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const [showCreatePopup, setShowCreatePopup] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -220,7 +346,7 @@ const ResignationPage = () => {
     try {
       setLoading(true);
       await axios.delete(
-        `http://localhost:5000/api/resignations/${itemToDelete._id}`
+        `http://localhost:5002/api/resignations/${itemToDelete._id}`
       );
       await fetchResignations();
       setDeleteDialogOpen(false);
@@ -247,18 +373,18 @@ const ResignationPage = () => {
     setItemToDelete(null);
   };
 
+  // Modify the handleCreateClick function to pre-fill user information
   const handleCreateClick = () => {
     setShowCreatePopup(true);
     setIsEditing(false);
     setNewResignation({
-      name: "",
-      email: "",
-      title: "",
+      name: currentUserName || "",
+      email: currentUserEmail || "",
+      title: currentUserPosition || "",
       status: "Requested",
       description: "",
     });
   };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewResignation((prev) => ({ ...prev, [name]: value }));
@@ -283,7 +409,7 @@ const ResignationPage = () => {
 
   const handleSendEmail = async (employee) => {
     try {
-      await axios.post("http://localhost:5000/api/resignations/email", {
+      await axios.post("http://localhost:5002/api/resignations/email", {
         name: employee.name,
         email: employee.email,
         position: employee.position,
@@ -398,17 +524,30 @@ const ResignationPage = () => {
 
     try {
       setIsSaving(true);
+      const userId = localStorage.getItem("userId");
+
+      if (!userId) {
+        setSnackbar({
+          open: true,
+          message: "User not authenticated",
+          severity: "error",
+        });
+        setIsSaving(false);
+        return;
+      }
+
       const resignationData = {
         name: newResignation.name,
         email: newResignation.email,
         position: newResignation.title,
         status: newResignation.status,
         description: newResignation.description,
+        userId: userId, // Ensure userId is included
       };
 
       if (isEditing) {
         await axios.put(
-          `http://localhost:5000/api/resignations/${currentId}`,
+          `http://localhost:5002/api/resignations/${currentId}`,
           resignationData
         );
         setSnackbar({
@@ -418,7 +557,7 @@ const ResignationPage = () => {
         });
       } else {
         await axios.post(
-          "http://localhost:5000/api/resignations",
+          "http://localhost:5002/api/resignations",
           resignationData
         );
         setSnackbar({
@@ -903,7 +1042,14 @@ const ResignationPage = () => {
                             </Avatar>
                             <Typography
                               variant="body2"
-                              sx={{ fontWeight: 600 }}
+                              sx={{
+                                fontWeight: 600,
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                lineHeight: 1.3,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
                             >
                               {item.name}
                             </Typography>
@@ -1064,20 +1210,44 @@ const ResignationPage = () => {
                           <Box>
                             <Typography
                               variant="body1"
-                              sx={{ fontWeight: 600 }}
+                              sx={{
+                                fontWeight: 600,
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                lineHeight: 1.3,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
                             >
                               {item.name}
                             </Typography>
                             <Typography
                               variant="caption"
-                              sx={{ color: "#64748b" }}
+                              sx={{
+                                color: "#64748b",
+                                fontWeight: 600,
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                lineHeight: 1.3,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
                             >
                               {item.email}
                             </Typography>
                           </Box>
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ py: 2 }}>{item.position}</TableCell>
+                      <TableCell
+                        sx={{
+                          py: 2,
+                          textOverflow: "ellipsis",
+                          whiteSpace: "normal",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {item.position}
+                      </TableCell>
                       <TableCell sx={{ py: 2 }}>
                         <Chip
                           icon={getStatusColor(item.status).icon}
@@ -1260,14 +1430,29 @@ const ResignationPage = () => {
                           <Box>
                             <Typography
                               variant="body1"
-                              sx={{ fontWeight: 600 }}
+                              sx={{
+                                fontWeight: 600,
+                                whiteSpace: "normal",
+                                lineHeight: 1.3,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
                             >
                               {item.name}
                             </Typography>
                           </Box>
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ py: 2 }}>{item.position}</TableCell>
+                      <TableCell
+                        sx={{
+                          py: 2,
+                          textOverflow: "ellipsis",
+                          whiteSpace: "normal",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {item.position}
+                      </TableCell>
                       <TableCell sx={{ py: 2 }}>{item.email}</TableCell>
                       <TableCell sx={{ py: 2 }}>
                         <Chip
@@ -1490,9 +1675,14 @@ const ResignationPage = () => {
                       sx={{ color: "#64748b", mr: 1 }}
                     />
                     <Typography variant="body2" sx={{ color: "#334155" }}>
-                      {new Date(item.date).toLocaleDateString()}
+                      {item.date
+                        ? new Date(item.date).toLocaleDateString()
+                        : item.createdAt
+                        ? new Date(item.createdAt).toLocaleDateString()
+                        : "Date not available"}
                     </Typography>
                   </Box>
+
                   {item.reason && (
                     <Box sx={{ display: "flex", alignItems: "flex-start" }}>
                       <Info
@@ -1772,66 +1962,6 @@ const ResignationPage = () => {
                 }}
               />
             </Grid>
-            {/* <Grid item xs={12} md={6}>
-              <FormControl fullWidth margin="normal" variant="outlined">
-                <InputLabel id="status-label">Status</InputLabel>
-                <Select
-                  labelId="status-label"
-                  name="status"
-                  value={newResignation.status}
-                  onChange={handleInputChange}
-                  label="Status"
-                  sx={{
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      "&:hover": {
-                        borderColor: "#1976d2",
-                      },
-                    },
-                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "#1976d2",
-                      borderWidth: "2px",
-                    },
-                  }}
-                >
-                  <MenuItem value="Requested">
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Email
-                        fontSize="small"
-                        sx={{ mr: 1, color: "#2f54eb" }}
-                      />
-                      Requested
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="Approved">
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <CheckCircle
-                        fontSize="small"
-                        sx={{ mr: 1, color: "#1890ff" }}
-                      />
-                      Approved
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="Rejected">
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Cancel
-                        fontSize="small"
-                        sx={{ mr: 1, color: "#ff4d4f" }}
-                      />
-                      Rejected
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="Pending">
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <AccessTime
-                        fontSize="small"
-                        sx={{ mr: 1, color: "#fa8c16" }}
-                      />
-                      Pending
-                    </Box>
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </Grid> */}
 
             {/* Status Change Menu */}
             <Menu
@@ -2315,7 +2445,7 @@ const ResignationPage = () => {
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={5000}
+        autoHideDuration={5002}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         TransitionComponent={Fade}

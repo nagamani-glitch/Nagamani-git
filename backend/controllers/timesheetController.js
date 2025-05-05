@@ -1,9 +1,34 @@
 import Timesheet from '../models/Timesheet.js';
  
+// // Check-in handler
+// export const checkIn = async (req, res) => {
+//     try {
+//         const { employeeId } = req.body;
+       
+//         const existingActiveTimesheet = await Timesheet.findOne({
+//             employeeId,
+//             status: 'active'
+//         });
+ 
+//         if (existingActiveTimesheet) {
+//             return res.status(400).json({ message: 'Already checked in' });
+//         }
+ 
+//         const timesheet = await Timesheet.create({
+//             employeeId,
+//             checkInTime: new Date()
+//         });
+ 
+//         res.status(201).json(timesheet);
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// };
+ 
 // Check-in handler
 export const checkIn = async (req, res) => {
     try {
-        const { employeeId } = req.body;
+        const { employeeId, employeeName } = req.body;
        
         const existingActiveTimesheet = await Timesheet.findOne({
             employeeId,
@@ -16,6 +41,7 @@ export const checkIn = async (req, res) => {
  
         const timesheet = await Timesheet.create({
             employeeId,
+            employeeName,
             checkInTime: new Date()
         });
  
@@ -24,7 +50,7 @@ export const checkIn = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
- 
+
 // // Check-out handler
 // export const checkOut = async (req, res) => {
 //     try {

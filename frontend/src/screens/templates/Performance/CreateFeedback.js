@@ -3,7 +3,7 @@ import axios from 'axios';
 import './CreateFeedback.css';
 import { Autocomplete, TextField, Box, Avatar, Typography, CircularProgress } from '@mui/material';
 
-const CreateFeedback = ({ addFeedback, editData, onClose }) => {
+const CreateFeedback = ({ addFeedback, editData, onClose, feedbackType, currentUser }) => {
   const [formData, setFormData] = useState(editData || {
     title: '',
     employee: '',
@@ -29,7 +29,7 @@ const CreateFeedback = ({ addFeedback, editData, onClose }) => {
     const fetchEmployees = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:5000/api/employees/registered');
+        const response = await axios.get('http://localhost:5002/api/employees/registered');
         
         // Transform the data to the format we need
         const formattedEmployees = response.data.map(emp => ({
@@ -51,6 +51,20 @@ const CreateFeedback = ({ addFeedback, editData, onClose }) => {
 
     fetchEmployees();
   }, []);
+
+
+  // In the CreateFeedback component, add:
+useEffect(() => {
+if (feedbackType === 'selfFeedback' && currentUser) {
+  setFormData(prev => ({
+    ...prev,
+    employee: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
+    employeeId: currentUser.Emp_ID
+  }));
+}
+}, [currentUser, feedbackType]);
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;

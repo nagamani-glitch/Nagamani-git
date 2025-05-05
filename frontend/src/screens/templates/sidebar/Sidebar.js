@@ -210,6 +210,11 @@ function Sidebar() {
             >
               Time Off Requests
             </li>
+            <li
+              onClick={() => handleNavigation("/Dashboards/time-off-requests-admin")}
+            >
+              Time Off Requests Review
+          </li>
           </ul>
         )}
 
@@ -285,6 +290,11 @@ function Sidebar() {
               onClick={() => handleNavigation("/Dashboards/resignation-letter")}
             >
               Resignation Letters
+            </li>
+            <li
+              onClick={() => handleNavigation("/Dashboards/resignation-review")}
+            >
+              Resignation Review
             </li>
           </ul>
         )}

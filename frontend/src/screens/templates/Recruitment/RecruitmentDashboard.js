@@ -46,11 +46,11 @@ const RecruitmentDashboard = () => {
         // Fetch data from all relevant endpoints
         const results = await Promise.allSettled([
           // Fetch candidates from the correct endpoint
-          axios.get('http://localhost:5000/api/recruitment/Recruitment%20Drive'),
-          axios.get('http://localhost:5000/api/recruitment-survey'),
+          axios.get('http://localhost:5002/api/recruitment/Recruitment%20Drive'),
+          axios.get('http://localhost:5002/api/recruitment-survey'),
           // For applicants, we need to check if there's a specific endpoint for hired/not hired
-          axios.get('http://localhost:5000/api/applicantProfiles'),
-          axios.get('http://localhost:5000/api/skill-zone')
+          axios.get('http://localhost:5002/api/applicantProfiles'),
+          axios.get('http://localhost:5002/api/skill-zone')
         ]);
 
         // Process candidates data
@@ -83,7 +83,7 @@ const RecruitmentDashboard = () => {
           console.warn("Failed to fetch skill zones:", results[3].reason);
           // Try alternative endpoint if the first one fails
           try {
-            const skillZoneResponse = await axios.get('http://localhost:5000/api/skillZone');
+            const skillZoneResponse = await axios.get('http://localhost:5002/api/skillZone');
             if (skillZoneResponse.data) {
               setSkillZones(skillZoneResponse.data);
             }

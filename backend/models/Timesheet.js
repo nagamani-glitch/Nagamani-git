@@ -5,6 +5,10 @@ const timesheetSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  employeeName: {
+    type: String,
+    required: true
+  },
   checkInTime: {
     type: Date,
     required: true

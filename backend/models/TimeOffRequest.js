@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const timeOffRequestSchema = new mongoose.Schema({
   name: { type: String, required: true },
   empId: { type: String, required: true },
+  userId: { type: String, required: true }, // Ensure userId is required
   date: { type: Date, required: true },
   day: { type: String, required: true },
   checkIn: { type: String, required: true },
@@ -27,7 +28,10 @@ const timeOffRequestSchema = new mongoose.Schema({
     type: String, 
     enum: ['Pending', 'Approved', 'Rejected'],
     default: 'Pending'
-  }
+  },
+  reviewedBy: { type: String }, // Add reviewer information
+  reviewComment: { type: String }, // Add review comment
+  reviewedAt: { type: Date } // Add review timestamp
 }, { timestamps: true });
 
 export default mongoose.model('TimeOffRequest', timeOffRequestSchema);

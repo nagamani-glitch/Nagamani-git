@@ -36,7 +36,6 @@ import {
   Autocomplete,
   useMediaQuery,
   useTheme,
-  
   Fade,
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
@@ -57,7 +56,6 @@ import {
   Home,
   Dashboard,
   Assessment,
-  
   Close,
   Menu as MenuIcon,
 } from "@mui/icons-material";
@@ -65,8 +63,8 @@ import Popover from "@mui/material/Popover";
 
 import "./Objectives.css";
 
-const API_URL = "http://localhost:5000/api/objectives";
-const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/registered";
+const API_URL = "http://localhost:5002/api/objectives";
+const EMPLOYEES_API_URL = "http://localhost:5002/api/employees/registered";
 
 const Objectives = () => {
   const theme = useTheme();
@@ -94,6 +92,9 @@ const Objectives = () => {
   // Add these state variables for delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+
+  // Add this near the top of your component with other state variables
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   // New state variables for enhanced functionality
   const [loading, setLoading] = useState(false);
@@ -129,6 +130,7 @@ const Objectives = () => {
   const [loadingEmployees, setLoadingEmployees] = useState(false);
 
   // State for key results
+  const [keyResultDateError, setKeyResultDateError] = useState(null);
   const [keyResultInput, setKeyResultInput] = useState({
     title: "",
     description: "",
@@ -174,6 +176,33 @@ const Objectives = () => {
     }
   }, [objectives]);
 
+  useEffect(() => {
+    // Get the current user ID from localStorage or your auth system
+    const userId = localStorage.getItem("userId"); // Adjust this based on how you store user info
+    setCurrentUserId(userId);
+
+    // Only load objectives if we have a userId
+    if (userId) {
+      loadObjectives();
+    }
+
+    fetchEmployees();
+  }, []);
+
+// Update the useEffect to avoid conflicts with tab changes
+useEffect(() => {
+  console.log("useEffect triggered with selectedTab:", selectedTab);
+  
+  // Only load objectives if:
+  // 1. We have a currentUserId
+  // 2. We're not in the middle of a tab change
+  if (currentUserId && !window.isChangingTab) {
+    console.log("Loading objectives from useEffect");
+    fetchObjectivesForTab(selectedTab);
+  }
+}, [selectedTab, currentUserId]);
+
+
   // Fetch employees data
   const fetchEmployees = async () => {
     try {
@@ -198,31 +227,31 @@ const Objectives = () => {
     }
   };
 
-  // Load objectives from API
-  const loadObjectives = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = {
-        searchTerm,
-        objectiveType: selectedTab !== "all" ? selectedTab : undefined,
-        page,
-        limit: rowsPerPage,
-        sortBy: sortConfig.key,
-        sortDirection: sortConfig.direction,
-      };
-      const response = await axios.get(API_URL, { params });
-      setObjectives(response.data);
-      setTotalObjectives(
-        response.headers["x-total-count"] || response.data.length
-      );
-      setLoading(false);
-    } catch (error) {
-      console.error("Error loading objectives:", error);
-      setError("Failed to load objectives. Please try again.");
-      setLoading(false);
-    }
-  };
+// Update the useEffect to avoid conflicts with tab changes
+useEffect(() => {
+  console.log("useEffect triggered with selectedTab:", selectedTab);
+  
+  // Only load objectives if:
+  // 1. We have a currentUserId
+  // 2. We're not in the middle of a tab change
+  if (currentUserId && !window.isChangingTab) {
+    console.log("Loading objectives from useEffect");
+    fetchObjectivesForTab(selectedTab);
+  }
+}, [selectedTab, currentUserId]);
+
+// Keep the original loadObjectives for other cases (search, filter, etc.)
+const loadObjectives = async () => {
+  if (window.isChangingTab) {
+    console.log("Skipping loadObjectives during tab change");
+    return;
+  }
+  
+  console.log("Regular loadObjectives called");
+  fetchObjectivesForTab(selectedTab);
+};
+
+
 
   // Handle sorting
   const handleSort = (key) => {
@@ -235,27 +264,70 @@ const Objectives = () => {
     }));
   };
 
-  // Filter objectives based on criteria
-  const filteredObjectives = objectives.filter((obj) => {
-    return (
-      (selectedTab === "all" ? true : obj.objectiveType === selectedTab) &&
-      (searchTerm === "" ||
-        obj.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        obj.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (filter.managers === "" ||
-        (Array.isArray(obj.managers)
-          ? obj.managers.length.toString() === filter.managers
-          : obj.managers.toString() === filter.managers)) &&
-      (filter.assignees === "" ||
-        (Array.isArray(obj.assignees)
-          ? obj.assignees.length.toString() === filter.assignees
-          : obj.assignees.toString() === filter.assignees)) &&
-      (filter.keyResults === "" ||
-        obj.keyResults.toString() === filter.keyResults) &&
-      (filter.duration === "" || obj.duration.includes(filter.duration)) &&
-      (filter.archived === "" || obj.archived.toString() === filter.archived)
-    );
-  });
+//   // Update the filteredObjectives logic to ensure it's not filtering out team objectives
+// const filteredObjectives = objectives.filter((obj) => {
+//   // For self tab, only show objectives created by the current user
+//   if (selectedTab === "self") {
+//     if (!currentUserId) return false; // If no userId yet, don't show anything in self tab
+//     return obj.userId === currentUserId;
+//   }
+
+//   // For all tab, show team objectives and the current user's self objectives
+//   if (selectedTab === "all") {
+//     // Show all team objectives
+//     if (obj.objectiveType === "all") return true;
+    
+//     // Show only the current user's self objectives
+//     if (obj.objectiveType === "self") {
+//       return currentUserId && obj.userId === currentUserId;
+//     }
+//   }
+
+//   // Apply other filters
+//   return (
+//     (searchTerm === "" ||
+//       obj.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       obj.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
+//     (filter.managers === "" ||
+//       (Array.isArray(obj.managers)
+//         ? obj.managers.length.toString() === filter.managers
+//         : obj.managers.toString() === filter.managers)) &&
+//     (filter.assignees === "" ||
+//       (Array.isArray(obj.assignees)
+//         ? obj.assignees.length.toString() === filter.assignees
+//         : obj.assignees.toString() === filter.assignees)) &&
+//     (filter.keyResults === "" ||
+//       obj.keyResults.toString() === filter.keyResults) &&
+//     (filter.duration === "" || obj.duration.includes(filter.duration)) &&
+//     (filter.archived === "" || obj.archived.toString() === filter.archived)
+//   );
+// });
+
+// Simplify the filteredObjectives logic
+const filteredObjectives = objectives.filter((obj) => {
+  // Apply search and other filters
+  const matchesSearch = 
+    searchTerm === "" ||
+    obj.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    obj.description.toLowerCase().includes(searchTerm.toLowerCase());
+    
+  const matchesFilters =
+    (filter.managers === "" ||
+      (Array.isArray(obj.managers)
+        ? obj.managers.length.toString() === filter.managers
+        : obj.managers.toString() === filter.managers)) &&
+    (filter.assignees === "" ||
+      (Array.isArray(obj.assignees)
+        ? obj.assignees.length.toString() === filter.assignees
+        : obj.assignees.toString() === filter.assignees)) &&
+    (filter.keyResults === "" ||
+      obj.keyResults.toString() === filter.keyResults) &&
+    (filter.duration === "" || obj.duration.includes(filter.duration)) &&
+    (filter.archived === "" || obj.archived.toString() === filter.archived);
+  
+  return matchesSearch && matchesFilters;
+});
+
 
   // Handle filter changes
   const handleFilterChange = (field, value) => {
@@ -286,13 +358,10 @@ const Objectives = () => {
     setSearchTerm(e.target.value);
   };
 
- 
   const handleDeleteClick = (objective) => {
     setItemToDelete(objective);
     setDeleteDialogOpen(true);
   };
-
-
 
   const handleConfirmDelete = async () => {
     try {
@@ -377,7 +446,7 @@ const Objectives = () => {
     setIsCreateModalOpen(true);
   };
 
-  // Handle create submit
+  // Update the handleCreateSubmit function to include userId for new objectives
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -399,6 +468,7 @@ const Objectives = () => {
         description: currentObjective.description,
         objectiveType: currentObjective.objectiveType || "all",
         archived: false,
+        userId: currentUserId, // Add the userId to associate with the creator
       };
 
       const response = await axios.post(API_URL, objectiveData, {
@@ -417,6 +487,9 @@ const Objectives = () => {
         severity: "success",
       });
       setLoading(false);
+
+      // Reload objectives to ensure we have the latest data
+      loadObjectives();
     } catch (error) {
       console.error("Error creating objective:", error);
       setNotification({
@@ -427,7 +500,6 @@ const Objectives = () => {
       setLoading(false);
     }
   };
-
   // Handle edit
   const handleEdit = (objective) => {
     setCurrentObjective({ ...objective });
@@ -476,13 +548,85 @@ const Objectives = () => {
     }));
   };
 
-  // Handle tab change
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-    setSelectedTab(newValue === 0 ? "all" : newValue === 1 ? "self" : "all");
-  };
+// Completely revamp the handleTabChange function
+const handleTabChange = (event, newValue) => {
+  console.log("Tab changed to:", newValue);
+  
+  // Determine the new tab
+  const newTab = newValue === 0 ? "all" : newValue === 1 ? "self" : "all";
+  console.log("Setting selectedTab to:", newTab);
+  
+  // Update state
+  setTabValue(newValue);
+  setSelectedTab(newTab);
+  
+  // Clear any existing timeouts
+  if (window.tabChangeTimeout) {
+    clearTimeout(window.tabChangeTimeout);
+  }
+  
+  // Set a flag to indicate we're in the middle of a tab change
+  window.isChangingTab = true;
+  
+  // Use a direct approach instead of setTimeout
+  fetchObjectivesForTab(newTab);
+};
 
-  // Handle notification close
+// Create a new function specifically for fetching objectives for a tab
+const fetchObjectivesForTab = async (tabName) => {
+  console.log("Fetching objectives specifically for tab:", tabName);
+  
+  setLoading(true);
+  setError(null);
+  
+  try {
+    let url = API_URL;
+    const params = {
+      searchTerm,
+      archived: filter.archived || undefined,
+    };
+
+    // For self tab, only fetch the current user's objectives
+    if (tabName === "self" && currentUserId) {
+      params.userId = currentUserId;
+      params.objectiveType = "self"; // Only get self objectives
+    }
+    
+    const response = await axios.get(url, { params });
+    console.log(`Received ${response.data.length} objectives for tab:`, tabName);
+
+    // Process based on tab
+    if (tabName === "all" && currentUserId) {
+      // For "all" tab: show team objectives and current user's self objectives
+      const filteredData = response.data.filter(obj => 
+        obj.objectiveType === "all" || (obj.objectiveType === "self" && obj.userId === currentUserId)
+      );
+      console.log(`Filtered to ${filteredData.length} objectives for 'all' tab`);
+      setObjectives(filteredData);
+      setTotalObjectives(filteredData.length);
+    } else if (tabName === "self") {
+      // For "self" tab: only show current user's self objectives
+      setObjectives(response.data);
+      setTotalObjectives(response.data.length);
+    } else {
+      // For other tabs
+      setObjectives(response.data);
+      setTotalObjectives(response.data.length);
+    }
+    
+    setLoading(false);
+    
+    // Clear the tab change flag
+    window.isChangingTab = false;
+  } catch (error) {
+    console.error("Error fetching objectives for tab:", error);
+    setError("Failed to load objectives. Please try again.");
+    setLoading(false);
+    window.isChangingTab = false;
+  }
+};
+
+
   const handleNotificationClose = () => {
     setNotification({ ...notification, open: false });
   };
@@ -498,19 +642,6 @@ const Objectives = () => {
     loadObjectives();
   };
 
-  
-
-  // Handle rows per page change
-  // const handleChangeRowsPerPage = (event) => {
-  //   setRowsPerPage(parseInt(event.target.value, 10));
-  //   setPage(1);
-  // };
-
-  // // Handle view mode change
-  // const handleViewModeChange = (mode) => {
-  //   setViewMode(mode);
-  // };
-
   // Calculate progress for an objective (mock function)
   const calculateProgress = (objective) => {
     // In a real application, this would be based on completed key results
@@ -521,15 +652,6 @@ const Objectives = () => {
   const formatDate = (dateString) => {
     return moment(dateString).format("MMM DD, YYYY");
   };
-
-  // // Handlers for managers and assignees
-  // const handleManagerInputChange = (e) => {
-  //   setManagerInput(e.target.value);
-  // };
-
-  // const handleAssigneeInputChange = (e) => {
-  //   setAssigneeInput(e.target.value);
-  // };
 
   const handleAddManager = () => {
     if (managerInput.trim() !== "") {
@@ -569,20 +691,6 @@ const Objectives = () => {
     }));
   };
 
-  // const handleManagerKeyDown = (e) => {
-  //   if (e.key === "Enter") {
-  //     e.preventDefault();
-  //     handleAddManager();
-  //   }
-  // };
-
-  // const handleAssigneeKeyDown = (e) => {
-  //   if (e.key === "Enter") {
-  //     e.preventDefault();
-  //     handleAddAssignee();
-  //   }
-  // };
-
   // Key Results handlers
   const handleKeyResultInputChange = (e) => {
     const { name, value } = e.target;
@@ -592,18 +700,76 @@ const Objectives = () => {
     }));
   };
 
+  // const handleKeyResultDateChange = (newDate) => {
+  //   setKeyResultInput((prev) => ({
+  //     ...prev,
+  //     dueDate: newDate,
+  //   }));
+  // };
+
+  // const handleAddKeyResult = () => {
+  //   if (keyResultInput.title.trim() === "") {
+  //     setNotification({
+  //       open: true,
+  //       message: "Key result title is required",
+  //       severity: "error",
+  //     });
+  //     return;
+  //   }
+
+  //   setCurrentObjective((prev) => ({
+  //     ...prev,
+  //     keyResultsData: Array.isArray(prev.keyResultsData)
+  //       ? [...prev.keyResultsData, keyResultInput]
+  //       : [keyResultInput],
+  //     keyResults: Array.isArray(prev.keyResultsData)
+  //       ? prev.keyResultsData.length + 1
+  //       : 1,
+  //   }));
+
+  //   // Reset the input
+  //   setKeyResultInput({
+  //     title: "",
+  //     description: "",
+  //     targetValue: "",
+  //     unit: "",
+  //     dueDate: null,
+  //   });
+  // };
+
+  // Update the handleKeyResultDateChange function to include validation
+
   const handleKeyResultDateChange = (newDate) => {
+    // Check if the date is valid
+    if (newDate && isNaN(new Date(newDate).getTime())) {
+      setKeyResultDateError("Please enter a valid date");
+    } else if (newDate && new Date(newDate) < new Date()) {
+      setKeyResultDateError("Due date cannot be in the past");
+    } else {
+      setKeyResultDateError(null);
+    }
+
     setKeyResultInput((prev) => ({
       ...prev,
       dueDate: newDate,
     }));
   };
 
+  // Update the handleAddKeyResult function to check for date errors
   const handleAddKeyResult = () => {
     if (keyResultInput.title.trim() === "") {
       setNotification({
         open: true,
         message: "Key result title is required",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (keyResultDateError) {
+      setNotification({
+        open: true,
+        message: keyResultDateError,
         severity: "error",
       });
       return;
@@ -619,7 +785,7 @@ const Objectives = () => {
         : 1,
     }));
 
-    // Reset the input
+    // Reset the input and error
     setKeyResultInput({
       title: "",
       description: "",
@@ -627,6 +793,7 @@ const Objectives = () => {
       unit: "",
       dueDate: null,
     });
+    setKeyResultDateError(null);
   };
 
   const handleRemoveKeyResult = (index) => {
@@ -1142,118 +1309,6 @@ const Objectives = () => {
                 fontSize: "14px",
               }}
             >
-              {/* <thead>
-                <tr
-                  style={{
-                    backgroundColor: "#f8fafc",
-                    borderBottom: "2px solid #e2e8f0",
-                  }}
-                >
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleSort("title")}
-                  >
-                    Title{" "}
-                    {sortConfig.key === "title" &&
-                      (sortConfig.direction === "asc" ? "↑" : "↓")}
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Managers
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Key Results
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Assignees
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleSort("duration")}
-                  >
-                    Duration{" "}
-                    {sortConfig.key === "duration" &&
-                      (sortConfig.direction === "asc" ? "↑" : "↓")}
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                      width: "150px",
-                    }}
-                  >
-                    Progress
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Type
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleSort("createdAt")}
-                  >
-                    Created{" "}
-                    {sortConfig.key === "createdAt" &&
-                      (sortConfig.direction === "asc" ? "↑" : "↓")}
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px",
-                      textAlign: "left",
-                      color: "#475569",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead> */}
               <thead>
                 <tr>
                   <th
@@ -2033,6 +2088,8 @@ const Objectives = () => {
                               <TextField
                                 {...params}
                                 fullWidth
+                                error={!!keyResultDateError}
+                                helperText={keyResultDateError}
                                 sx={{
                                   "& .MuiOutlinedInput-root": {
                                     backgroundColor: "white",
@@ -3668,7 +3725,7 @@ const Objectives = () => {
       {/* Notification Snackbar */}
       <Snackbar
         open={notification.open}
-        autoHideDuration={5000}
+        autoHideDuration={5002}
         onClose={handleNotificationClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >

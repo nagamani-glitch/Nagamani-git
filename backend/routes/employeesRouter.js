@@ -365,10 +365,24 @@ router.get('/list', async (req, res) => {
 });
 
 
+// router.get('/registered', async (req, res) => {
+//   try {
+//     const employees = await Employee.find({})
+//       .select('personalInfo addressDetails joiningDetails Emp_ID')
+//       .sort('-createdAt');
+    
+//     res.json(employees);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error fetching employees', error });
+//   }
+// });
+
+// Bank info routes
+
 router.get('/registered', async (req, res) => {
   try {
     const employees = await Employee.find({})
-      .select('personalInfo addressDetails joiningDetails Emp_ID')
+      .select('personalInfo addressDetails joiningDetails Emp_ID bankInfo')
       .sort('-createdAt');
     
     res.json(employees);
@@ -377,7 +391,7 @@ router.get('/registered', async (req, res) => {
   }
 });
 
-// Bank info routes
+
 router.get('/bank-info/:employeeId', async (req, res) => {
   try {
     const employee = await Employee.findOne({ Emp_ID: req.params.employeeId });
@@ -413,7 +427,9 @@ router.put('/work-info/:employeeId', async (req, res) => {
       { 
         $set: { 
           'joiningDetails.shiftType': shiftType,
-          'joiningDetails.workType': workType
+          'joiningDetails.workType': workType,
+          'joiningDetails.uanNumber': req.body.uanNumber,
+          'joiningDetails.pfNumber': req.body.pfNumber,
         }
       },
       { 

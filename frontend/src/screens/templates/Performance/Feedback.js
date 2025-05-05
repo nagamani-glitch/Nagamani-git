@@ -5,6 +5,7 @@ import { Paper } from "@mui/material";
 
 import CreateFeedback from "./CreateFeedback";
 import {
+  alpha,
   Box,
   Typography,
   Stack,
@@ -32,8 +33,6 @@ import {
   ListItemIcon,
   ListItemText,
   Alert,
-  Switch,
-  FormControlLabel,
   Grid,
   Autocomplete,
   Avatar,
@@ -45,6 +44,7 @@ import {
   Drawer,
   Divider,
   InputAdornment,
+  Tooltip,
 } from "@mui/material";
 
 import {
@@ -64,14 +64,12 @@ import {
   Delete,
   Close,
   History as HistoryIcon,
-  Star as StarIcon,
   CheckCircle as CheckCircleIcon,
   GetApp as GetAppIcon,
   Description as DescriptionIcon,
   PictureAsPdf as PictureAsPdfIcon,
   TableChart as TableChartIcon,
   BarChart as BarChartIcon,
-  MoreVert as MoreVertIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
 
@@ -99,6 +97,37 @@ const SearchTextField = styled(TextField)(({ theme }) => ({
     "&:hover fieldset": {
       borderColor: theme.palette.primary.main,
     },
+  },
+}));
+
+// Add these styled components at the top of your file, after the existing styled components
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.common.white,
+  fontSize: 14,
+  fontWeight: "bold",
+  padding: theme.spacing(2),
+  whiteSpace: "normal",
+  "&.MuiTableCell-body": {
+    color: theme.palette.text.primary,
+    fontSize: 14,
+    borderBottom: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+    padding: { xs: theme.spacing(1.5), sm: theme.spacing(2) },
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.05),
+  },
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.primary.light, 0.1),
+    transition: "background-color 0.2s ease",
+  },
+  // Hide last border
+  "&:last-child td, &:last-child th": {
+    borderBottom: 0,
   },
 }));
 
@@ -156,6 +185,38 @@ const Feedback = () => {
     anonymousFeedback: ["Not Started", "In Progress", "Completed", "Pending"],
   });
 
+  // Add the currentUser state here, inside the component
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Add the fetchCurrentUser function inside the component
+  const fetchCurrentUser = async () => {
+    try {
+      // Get user ID from your auth system (localStorage, context, etc.)
+      const userId = localStorage.getItem("userId"); // Adjust based on your auth implementation
+
+      if (!userId) {
+        console.error("No user ID found in storage");
+        return;
+      }
+
+      const response = await axios.get(
+        `http://localhost:5002/api/employees/by-user/${userId}`
+      );
+      if (response.data.success) {
+        setCurrentUser(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+    }
+  };
+
+  // Modify your existing useEffect to include fetchCurrentUser
+  useEffect(() => {
+    fetchFeedbacks();
+    fetchEmployees();
+    fetchCurrentUser(); // Add this line to your existing useEffect
+  }, []);
+
   // Filter handlers
   const handleFilterClick = (event) => {
     setFilterAnchorEl(event.currentTarget);
@@ -177,7 +238,7 @@ const Feedback = () => {
     try {
       setLoadingEmployees(true);
       const response = await axios.get(
-        "http://localhost:5000/api/employees/registered"
+        "http://localhost:5002/api/employees/registered"
       );
 
       // Transform the data to the format we need
@@ -245,8 +306,27 @@ const Feedback = () => {
   const fetchFeedbacks = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/feedback");
-      setFeedbackData(response.data);
+      const response = await axios.get("http://localhost:5002/api/feedback");
+
+      // Get the current user's employee ID
+      const userId = localStorage.getItem("userId");
+      const currentUserResponse = await axios.get(
+        `http://localhost:5002/api/employees/by-user/${userId}`
+      );
+      const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
+
+      // Filter self-feedback to only show the current user's feedback
+      const feedbackData = response.data;
+
+      // Only filter selfFeedback, keep other tabs as they are
+      const filteredData = {
+        ...feedbackData,
+        selfFeedback: feedbackData.selfFeedback.filter(
+          (feedback) => feedback.employeeId === currentEmployeeId
+        ),
+      };
+
+      setFeedbackData(filteredData);
       setError(null);
     } catch (err) {
       setError("Failed to fetch feedbacks");
@@ -258,19 +338,35 @@ const Feedback = () => {
 
   const handleAddFeedback = async (newFeedback, isEditing) => {
     try {
+      // Get current user's employee ID
+      const userId = localStorage.getItem("userId");
+      const currentUserResponse = await axios.get(
+        `http://localhost:5002/api/employees/by-user/${userId}`
+      );
+      const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
+
       const feedbackData = {
         ...newFeedback,
         feedbackType: activeTab,
+        employeeId: currentEmployeeId, // Add the employee ID
+        createdBy: currentEmployeeId,
       };
 
       if (isEditing) {
         await axios.put(
-          `http://localhost:5000/api/feedback/${newFeedback._id}`,
+          `http://localhost:5002/api/feedback/${newFeedback._id}`,
           feedbackData
         );
       } else {
-        await axios.post("http://localhost:5000/api/feedback", feedbackData);
+        // For new self-feedback, set a flag to indicate it should be reviewed
+        if (activeTab === "selfFeedback") {
+          feedbackData.needsReview = true;
+          feedbackData.reviewStatus = "Pending";
+        }
+
+        await axios.post("http://localhost:5002/api/feedback", feedbackData);
       }
+
       await fetchFeedbacks();
       setIsCreateModalOpen(false);
       setEditingFeedback(null);
@@ -296,7 +392,7 @@ const Feedback = () => {
     try {
       setLoading(true);
       await axios.delete(
-        `http://localhost:5000/api/feedback/${
+        `http://localhost:5002/api/feedback/${
           itemToDelete._id || itemToDelete.id
         }`
       );
@@ -336,7 +432,7 @@ const Feedback = () => {
   // Status change handler
   const handleStatusChange = async (feedbackId, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/feedback/${feedbackId}`, {
+      await axios.put(`http://localhost:5002/api/feedback/${feedbackId}`, {
         status: newStatus,
       });
       await fetchFeedbacks();
@@ -351,7 +447,7 @@ const Feedback = () => {
     try {
       // In a real app, you would fetch the history from the backend
       const response = await axios.get(
-        `http://localhost:5000/api/feedback/${feedbackId}/history`
+        `http://localhost:5002/api/feedback/${feedbackId}/history`
       );
       setSelectedFeedback({
         ...Object.values(feedbackData)
@@ -405,7 +501,7 @@ const Feedback = () => {
     try {
       // In a real app, you would send this to the backend
       await axios.post(
-        `http://localhost:5000/api/feedback/${selectedFeedback._id}/comments`,
+        `http://localhost:5002/api/feedback/${selectedFeedback._id}/comments`,
         {
           comment,
         }
@@ -447,6 +543,12 @@ const Feedback = () => {
 
   // Export handler with working Excel and PDF exports
   const handleExport = (format) => {
+    if (filteredFeedbackData.length === 0) {
+      setError("No data available to export");
+      setExportOptions(null);
+      return;
+    }
+
     const dataToExport = filteredFeedbackData.map((item) => ({
       Employee: item.employee,
       Title: item.title,
@@ -563,13 +665,13 @@ const Feedback = () => {
       if (action === "delete") {
         await Promise.all(
           selectedItems.map((id) =>
-            axios.delete(`http://localhost:5000/api/feedback/${id}`)
+            axios.delete(`http://localhost:5002/api/feedback/${id}`)
           )
         );
       } else if (action === "status") {
         await Promise.all(
           selectedItems.map((id) =>
-            axios.put(`http://localhost:5000/api/feedback/${id}`, {
+            axios.put(`http://localhost:5002/api/feedback/${id}`, {
               status: "Completed",
             })
           )
@@ -592,7 +694,7 @@ const Feedback = () => {
       // Try to fetch analytics from the backend
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/feedback/analytics/summary"
+          "http://localhost:5002/api/feedback/analytics/summary"
         );
         setAnalyticsData(response.data);
         setShowAnalytics(true);
@@ -645,11 +747,11 @@ const Feedback = () => {
     }
   };
 
-  // Handle mobile action menu
-  const handleActionMenuOpen = (event, id) => {
-    setActionMenuAnchorEl(event.currentTarget);
-    setCurrentFeedbackId(id);
-  };
+  // // Handle mobile action menu
+  // const handleActionMenuOpen = (event, id) => {
+  //   setActionMenuAnchorEl(event.currentTarget);
+  //   setCurrentFeedbackId(id);
+  // };
 
   const handleActionMenuClose = () => {
     setActionMenuAnchorEl(null);
@@ -687,7 +789,6 @@ const Feedback = () => {
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
 
-  // Render mobile card view for feedback items
   const renderMobileCard = (item) => (
     <Card
       key={item._id || item.id}
@@ -696,10 +797,48 @@ const Feedback = () => {
         borderRadius: "12px",
         boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
         border: selectedItems.includes(item._id || item.id)
-          ? "2px solid #1976d2"
+          ? `2px solid ${theme.palette.primary.main}`
           : "none",
+        position: "relative",
+        overflow: "visible",
       }}
     >
+      {/* Status indicator */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 0,
+          right: 16,
+          transform: "translateY(-50%)",
+          zIndex: 1,
+        }}
+      >
+        <Chip
+          label={item.status}
+          size="small"
+          sx={{
+            backgroundColor:
+              item.status === "Completed"
+                ? "#e6f4ea"
+                : item.status === "In Progress"
+                ? "#fff8e1"
+                : item.status === "Not Started"
+                ? "#fce4ec"
+                : "#e3f2fd",
+            color:
+              item.status === "Completed"
+                ? "#1b5e20"
+                : item.status === "In Progress"
+                ? "#f57c00"
+                : item.status === "Not Started"
+                ? "#c62828"
+                : "#0277bd",
+            fontWeight: 500,
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        />
+      </Box>
+
       <CardContent>
         <Box
           sx={{
@@ -709,7 +848,7 @@ const Feedback = () => {
             mb: 2,
           }}
         >
-          <Box>
+          <Box sx={{ width: "calc(100% - 48px)" }}>
             <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600 }}>
               {item.title}
             </Typography>
@@ -723,61 +862,77 @@ const Feedback = () => {
               onChange={() => handleSelectItem(item._id || item.id)}
               size="small"
             />
-            <IconButton
-              size="small"
-              onClick={(e) => handleActionMenuOpen(e, item._id || item.id)}
-            >
-              <MoreVertIcon fontSize="small" />
-            </IconButton>
           </Box>
-        </Box>
-
-        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Status:
-          </Typography>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <Select
-              value={item.status}
-              onChange={(e) =>
-                handleStatusChange(item._id || item.id, e.target.value)
-              }
-              size="small"
-              sx={{
-                height: "32px",
-                fontSize: "0.875rem",
-                "& .MuiSelect-select": { padding: "4px 14px" },
-              }}
-            >
-              {statusOptions[activeTab]?.map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
           <Typography variant="body2" color="text.secondary">
             Start Date:
           </Typography>
-          <Typography variant="body2">
+          <Typography variant="body2" fontWeight={500}>
             {new Date(item.startDate).toLocaleDateString()}
           </Typography>
         </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
             Due Date:
           </Typography>
-          <Typography variant="body2">
+          <Typography
+            variant="body2"
+            fontWeight={500}
+            color={
+              new Date(item.dueDate) < new Date() && item.status !== "Completed"
+                ? "error"
+                : "inherit"
+            }
+          >
             {new Date(item.dueDate).toLocaleDateString()}
           </Typography>
+        </Box>
+
+        <Divider sx={{ my: 1.5 }} />
+
+        <Box sx={{ display: "flex", justifyContent: "space-between", pt: 1 }}>
+          <Button
+            size="small"
+            startIcon={<Edit fontSize="small" />}
+            onClick={() => handleEdit(item)}
+          >
+            Edit
+          </Button>
+          <Button
+            size="small"
+            startIcon={<HistoryIcon fontSize="small" />}
+            onClick={() => handleViewHistory(item._id || item.id)}
+          >
+            History
+          </Button>
+          <Button
+            size="small"
+            startIcon={<Delete fontSize="small" />}
+            color="error"
+            onClick={() => handleDeleteClick(item)}
+          >
+            Delete
+          </Button>
         </Box>
       </CardContent>
     </Card>
   );
+
+  // Add this function to your component
+  const clearAllFilters = () => {
+    setFilterCriteria({
+      title: "",
+      employee: "",
+      status: "",
+      manager: "",
+      startDate: "",
+      endDate: "",
+    });
+    setSearchQuery("");
+  };
 
   return (
     <Box
@@ -861,6 +1016,30 @@ const Feedback = () => {
                 ),
               }}
             />
+
+            {filterCriteria.title ||
+            filterCriteria.employee ||
+            filterCriteria.status ||
+            filterCriteria.manager ||
+            filterCriteria.startDate ||
+            filterCriteria.endDate ||
+            searchQuery ? (
+              <Button
+                variant="outlined"
+                color="primary"
+                size="small"
+                onClick={clearAllFilters}
+                startIcon={<Close />}
+                sx={{
+                  ml: { xs: 0, sm: 1 },
+                  mt: { xs: 1, sm: 0 },
+                  height: { sm: 40 },
+                }}
+              >
+                Clear Filters
+              </Button>
+            ) : null}
+
             <Box
               sx={{
                 display: "flex",
@@ -899,7 +1078,7 @@ const Feedback = () => {
                 Analytics
               </Button>
 
-              <Button
+              {/* <Button
                 onClick={(e) => setExportOptions(e.currentTarget)}
                 startIcon={<GetAppIcon />}
                 sx={{
@@ -911,7 +1090,26 @@ const Feedback = () => {
                 variant="outlined"
               >
                 Export
-              </Button>
+              </Button> */}
+              <div className="export-tooltip">
+                <button
+                  className={`export-button ${loading ? "loading" : ""}`}
+                  onClick={(e) =>
+                    filteredFeedbackData.length > 0
+                      ? setExportOptions(e.currentTarget)
+                      : null
+                  }
+                  disabled={filteredFeedbackData.length === 0}
+                >
+                  {!loading && <GetAppIcon fontSize="small" />}
+                  Export
+                </button>
+                {filteredFeedbackData.length === 0 && (
+                  <span className="tooltip-text">
+                    No data available to export
+                  </span>
+                )}
+              </div>
 
               <Button
                 variant="contained"
@@ -1052,21 +1250,235 @@ const Feedback = () => {
             >
               Analytics
             </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<GetAppIcon />}
-              onClick={(e) => {
-                setExportOptions(e.currentTarget);
-                setMobileMenuOpen(false);
-              }}
-              sx={{ justifyContent: "flex-start", textTransform: "none" }}
+            <Tooltip
+              title={
+                filteredFeedbackData.length === 0
+                  ? "No data available to export"
+                  : "Export data"
+              }
+              arrow
             >
-              Export
-            </Button>
+              <span>
+                <button
+                  className={`export-button ${loading ? "loading" : ""}`}
+                  onClick={(e) => {
+                    if (filteredFeedbackData.length > 0) {
+                      setExportOptions(e.currentTarget);
+                      setMobileMenuOpen(false);
+                    } else {
+                      setError("No data available to export");
+                      setTimeout(() => setError(null), 3000);
+                    }
+                  }}
+                  disabled={filteredFeedbackData.length === 0}
+                  style={{ width: "100%", justifyContent: "flex-start" }}
+                >
+                  {!loading && <GetAppIcon fontSize="small" />}
+                  Export
+                </button>
+              </span>
+            </Tooltip>
           </Stack>
         </Box>
       </Drawer>
+
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 2,
+          mb: 2,
+          mt: { xs: 2, sm: 2 },
+        }}
+      >
+        <Button
+          variant="outlined"
+          sx={{
+            color: "green",
+            borderColor: "green",
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={handleSelectAll}
+        >
+          Select All Feedback
+        </Button>
+        {selectedItems.length > 0 && (
+          <>
+            <Button
+              variant="outlined"
+              sx={{
+                color: "grey.500",
+                borderColor: "grey.500",
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={() => setSelectedItems([])}
+            >
+              Unselect All
+            </Button>
+            <Button
+              variant="outlined"
+              sx={{
+                color: "maroon",
+                borderColor: "maroon",
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
+              {selectedItems.length} Selected
+            </Button>
+            <Button
+              variant="outlined"
+              sx={{
+                color: "primary.main",
+                borderColor: "primary.main",
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={(e) => setBulkActionAnchor(e.currentTarget)}
+            >
+              Bulk Actions
+            </Button>
+          </>
+        )}
+      </Box>
+
+      {/* Status Filter Buttons */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 1,
+          mb: 2,
+        }}
+      >
+        <Button
+          sx={{
+            color: "green",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() =>
+            setFilterCriteria((prev) => ({ ...prev, status: "Completed" }))
+          }
+        >
+          ● Completed
+        </Button>
+        <Button
+          sx={{
+            color: "orange",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() =>
+            setFilterCriteria((prev) => ({ ...prev, status: "In Progress" }))
+          }
+        >
+          ● In Progress
+        </Button>
+        <Button
+          sx={{
+            color: "red",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() =>
+            setFilterCriteria((prev) => ({ ...prev, status: "Not Started" }))
+          }
+        >
+          ● Not Started
+        </Button>
+        <Button
+          sx={{
+            color: "blue",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() =>
+            setFilterCriteria((prev) => ({ ...prev, status: "Pending" }))
+          }
+        >
+          ● Pending
+        </Button>
+        <Button
+          sx={{
+            color: "gray",
+            justifyContent: { xs: "flex-start", sm: "center" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+          onClick={() => setFilterCriteria((prev) => ({ ...prev, status: "" }))}
+        >
+          ● All
+        </Button>
+      </Box>
+
+      {(filterCriteria.title ||
+        filterCriteria.employee ||
+        filterCriteria.manager ||
+        filterCriteria.startDate ||
+        filterCriteria.endDate ||
+        searchQuery) && (
+        <Box sx={{ mt: 1, mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Active Filters:
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            {searchQuery && (
+              <Chip
+                label={`Search: ${searchQuery}`}
+                size="small"
+                onDelete={() => setSearchQuery("")}
+              />
+            )}
+            {filterCriteria.title && (
+              <Chip
+                label={`Title: ${filterCriteria.title}`}
+                size="small"
+                onDelete={() =>
+                  setFilterCriteria((prev) => ({ ...prev, title: "" }))
+                }
+              />
+            )}
+            {filterCriteria.employee && (
+              <Chip
+                label={`Employee: ${filterCriteria.employee}`}
+                size="small"
+                onDelete={() =>
+                  setFilterCriteria((prev) => ({ ...prev, employee: "" }))
+                }
+              />
+            )}
+            {filterCriteria.manager && (
+              <Chip
+                label={`Manager: ${filterCriteria.manager}`}
+                size="small"
+                onDelete={() =>
+                  setFilterCriteria((prev) => ({ ...prev, manager: "" }))
+                }
+              />
+            )}
+            {filterCriteria.startDate && (
+              <Chip
+                label={`Start Date: ${new Date(
+                  filterCriteria.startDate
+                ).toLocaleDateString()}`}
+                size="small"
+                onDelete={() =>
+                  setFilterCriteria((prev) => ({ ...prev, startDate: "" }))
+                }
+              />
+            )}
+            {filterCriteria.endDate && (
+              <Chip
+                label={`End Date: ${new Date(
+                  filterCriteria.endDate
+                ).toLocaleDateString()}`}
+                size="small"
+                onDelete={() =>
+                  setFilterCriteria((prev) => ({ ...prev, endDate: "" }))
+                }
+              />
+            )}
+          </Box>
+        </Box>
+      )}
 
       {/* Action Menu for Mobile */}
       <Menu
@@ -1191,6 +1603,7 @@ const Feedback = () => {
       </Box>
 
       {/* Filter Popover */}
+
       <Popover
         open={Boolean(filterAnchorEl)}
         anchorEl={filterAnchorEl}
@@ -1221,11 +1634,17 @@ const Feedback = () => {
             borderTopLeftRadius: "12px",
             borderTopRightRadius: "12px",
             p: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
           <Typography variant="h6" sx={{ color: "white", fontWeight: 600 }}>
             Filter Feedback
           </Typography>
+          <IconButton onClick={handleFilterClose} sx={{ color: "white" }}>
+            <Close />
+          </IconButton>
         </Box>
 
         <Box sx={{ p: 3 }}>
@@ -1237,6 +1656,13 @@ const Feedback = () => {
               value={filterCriteria.title}
               onChange={handleFilterChange}
               size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search fontSize="small" color="action" />
+                  </InputAdornment>
+                ),
+              }}
             />
 
             <Autocomplete
@@ -1285,6 +1711,11 @@ const Feedback = () => {
                   size="small"
                   InputProps={{
                     ...params.InputProps,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search fontSize="small" color="action" />
+                      </InputAdornment>
+                    ),
                     endAdornment: (
                       <>
                         {loadingEmployees ? (
@@ -1305,6 +1736,11 @@ const Feedback = () => {
                 value={filterCriteria.status}
                 onChange={handleFilterChange}
                 label="Status"
+                startAdornment={
+                  <InputAdornment position="start">
+                    <CheckCircleIcon fontSize="small" color="action" />
+                  </InputAdornment>
+                }
               >
                 <MenuItem value="">All</MenuItem>
                 {statusOptions[activeTab]?.map((status) => (
@@ -1361,6 +1797,11 @@ const Feedback = () => {
                   size="small"
                   InputProps={{
                     ...params.InputProps,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search fontSize="small" color="action" />
+                      </InputAdornment>
+                    ),
                     endAdornment: (
                       <>
                         {loadingEmployees ? (
@@ -1374,27 +1815,29 @@ const Feedback = () => {
               )}
             />
 
-            <TextField
-              fullWidth
-              label="Start Date"
-              name="startDate"
-              type="date"
-              value={filterCriteria.startDate}
-              onChange={handleFilterChange}
-              InputLabelProps={{ shrink: true }}
-              size="small"
-            />
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Start Date"
+                name="startDate"
+                type="date"
+                value={filterCriteria.startDate}
+                onChange={handleFilterChange}
+                InputLabelProps={{ shrink: true }}
+                size="small"
+              />
 
-            <TextField
-              fullWidth
-              label="End Date"
-              name="endDate"
-              type="date"
-              value={filterCriteria.endDate}
-              onChange={handleFilterChange}
-              InputLabelProps={{ shrink: true }}
-              size="small"
-            />
+              <TextField
+                fullWidth
+                label="End Date"
+                name="endDate"
+                type="date"
+                value={filterCriteria.endDate}
+                onChange={handleFilterChange}
+                InputLabelProps={{ shrink: true }}
+                size="small"
+              />
+            </Box>
           </Stack>
 
           <Stack
@@ -1404,20 +1847,29 @@ const Feedback = () => {
           >
             <Button
               fullWidth
-              onClick={handleFilterClose}
+              onClick={() => {
+                setFilterCriteria({
+                  title: "",
+                  employee: "",
+                  status: "",
+                  manager: "",
+                  startDate: "",
+                  endDate: "",
+                });
+              }}
               sx={{
-                border: "2px solid #1976d2",
-                color: "#1976d2",
+                border: "2px solid #64748b",
+                color: "#64748b",
                 "&:hover": {
-                  border: "2px solid #64b5f6",
-                  backgroundColor: "#e3f2fd",
+                  border: "2px solid #94a3b8",
+                  backgroundColor: "#f1f5f9",
                 },
                 borderRadius: "8px",
                 py: 1,
                 fontWeight: 600,
               }}
             >
-              Cancel
+              Clear Filters
             </Button>
 
             <Button
@@ -1549,6 +2001,8 @@ const Feedback = () => {
               setEditingFeedback(null);
             }}
             statusOptions={statusOptions[activeTab]}
+            feedbackType={activeTab}
+            currentUser={currentUser} // Add this line
           />
         </DialogContent>
       </Dialog>
@@ -1874,6 +2328,27 @@ const Feedback = () => {
       >
         {isMobile ? (
           // Mobile Card View
+          // <Box sx={{ p: 2 }}>
+          //   {filteredFeedbackData.length > 0 ? (
+          //     filteredFeedbackData.map((item) => renderMobileCard(item))
+          //   ) : (
+          //     <Box sx={{ py: 4, textAlign: "center" }}>
+          //       <Typography variant="body1" color="text.secondary">
+          //         No feedback found. Try adjusting your filters or create a new
+          //         feedback.
+          //       </Typography>
+          //       <Button
+          //         variant="outlined"
+          //         startIcon={<Add />}
+          //         onClick={() => setIsCreateModalOpen(true)}
+          //         sx={{ mt: 2 }}
+          //       >
+          //         Create Feedback
+          //       </Button>
+          //     </Box>
+          //   )}
+          // </Box>
+
           <Box sx={{ p: 2 }}>
             {filteredFeedbackData.length > 0 ? (
               filteredFeedbackData.map((item) => renderMobileCard(item))
@@ -1900,13 +2375,7 @@ const Feedback = () => {
             <Table sx={{ minWidth: 650 }}>
               <TableHead>
                 <TableRow>
-                  <TableCell
-                    padding="checkbox"
-                    sx={{
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                    }}
-                  >
+                  <StyledTableCell padding="checkbox">
                     <Checkbox
                       indeterminate={
                         selectedItems.length > 0 &&
@@ -1922,81 +2391,26 @@ const Feedback = () => {
                         "&.Mui-checked": { color: "white" },
                       }}
                     />
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontWeight: 600,
-                      color: "white",
-                      py: 2,
-                      backgroundColor: "#1976d2",
-                    }}
-                  >
-                    Employee
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontWeight: 600,
-                      color: "white",
-                      py: 2,
-                      backgroundColor: "#1976d2",
-                    }}
-                  >
-                    Title
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontWeight: 600,
-                      color: "white",
-                      py: 2,
-                      backgroundColor: "#1976d2",
-                    }}
-                  >
-                    Status
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontWeight: 600,
-                      color: "white",
-                      py: 2,
-                      backgroundColor: "#1976d2",
-                    }}
-                  >
-                    Start Date
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontWeight: 600,
-                      color: "white",
-                      py: 2,
-                      backgroundColor: "#1976d2",
-                    }}
-                  >
-                    Due Date
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontWeight: 600,
-                      color: "white",
-                      py: 2,
-                      backgroundColor: "#1976d2",
-                    }}
-                  >
-                    Actions
-                  </TableCell>
+                  </StyledTableCell>
+                  <StyledTableCell>Employee</StyledTableCell>
+                  <StyledTableCell>Title</StyledTableCell>
+                  <StyledTableCell>Status</StyledTableCell>
+                  <StyledTableCell>Start Date</StyledTableCell>
+                  <StyledTableCell>Due Date</StyledTableCell>
+                  <StyledTableCell>Actions</StyledTableCell>
                 </TableRow>
               </TableHead>
 
               <TableBody>
                 {filteredFeedbackData.length > 0 ? (
                   filteredFeedbackData.map((item) => (
-                    <TableRow
+                    <StyledTableRow
                       key={item._id || item.id}
                       sx={{
-                        "&:hover": { backgroundColor: "#f8fafc" },
                         backgroundColor: selectedItems.includes(
                           item._id || item.id
                         )
-                          ? "#e3f2fd"
+                          ? alpha(theme.palette.primary.light, 0.15)
                           : "inherit",
                       }}
                     >
@@ -2008,6 +2422,7 @@ const Feedback = () => {
                       </TableCell>
                       <TableCell>{item.employee}</TableCell>
                       <TableCell>{item.title}</TableCell>
+
                       <TableCell>
                         <FormControl size="small" sx={{ minWidth: 120 }}>
                           <Select
@@ -2020,9 +2435,25 @@ const Feedback = () => {
                             }
                             size="small"
                             sx={{
-                              height: "32px",
-                              fontSize: "0.875rem",
-                              "& .MuiSelect-select": { padding: "4px 14px" },
+                              backgroundColor:
+                                item.status === "Completed"
+                                  ? "#e6f4ea"
+                                  : item.status === "In Progress"
+                                  ? "#fff8e1"
+                                  : item.status === "Not Started"
+                                  ? "#fce4ec"
+                                  : "#e3f2fd",
+                              color:
+                                item.status === "Completed"
+                                  ? "#1b5e20"
+                                  : item.status === "In Progress"
+                                  ? "#f57c00"
+                                  : item.status === "Not Started"
+                                  ? "#c62828"
+                                  : "#0277bd",
+                              fontWeight: 500,
+                              minWidth: 100,
+                              textAlign: "center",
                             }}
                           >
                             {statusOptions[activeTab]?.map((status) => (
@@ -2033,6 +2464,7 @@ const Feedback = () => {
                           </Select>
                         </FormControl>
                       </TableCell>
+
                       <TableCell>
                         {new Date(item.startDate).toLocaleDateString()}
                       </TableCell>
@@ -2075,7 +2507,7 @@ const Feedback = () => {
                           </IconButton>
                         </Stack>
                       </TableCell>
-                    </TableRow>
+                    </StyledTableRow>
                   ))
                 ) : (
                   <TableRow>

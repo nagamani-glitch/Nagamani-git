@@ -128,7 +128,7 @@ const AssetHistory = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5002";
 
   const handleAssetNameClick = async (asset) => {
     setSelectedAsset(asset);
@@ -169,27 +169,15 @@ const AssetHistory = () => {
     }
   };
 
-  // In fetchAssets function
-  // const fetchAssets = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await axios.get(`${API_URL}/api/assets`);
-  //     console.log('Fetched assets:', response.data);
-  //     setAssets(response.data);
-  //     setLoading(false);
-  //   } catch (error) {
-  //     console.error('Error fetching asset history:', error);
-  //     setError('Failed to load assets');
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchAssets = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/assets`);
       console.log("Fetched assets:", response.data);
+
+      // Update the assets state with the fresh data
       setAssets(response.data);
+
       setLoading(false);
     } catch (error) {
       console.error("Error fetching asset history:", error);
@@ -198,7 +186,6 @@ const AssetHistory = () => {
     }
   };
 
-  // In fetchBatches function
   const fetchBatches = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/asset-batches`);
@@ -210,6 +197,7 @@ const AssetHistory = () => {
   };
 
   useEffect(() => {
+    // Initial data fetch
     fetchAssets();
     fetchBatches();
 
@@ -264,9 +252,32 @@ const AssetHistory = () => {
       }
     }
   };
+
+  // const handleEditClick = (asset) => {
+  //   setEditingAssetId(asset._id);
+  //   setEditData({
+  //     name: asset.name || "",
+  //     category: asset.category || "",
+  //     status: asset.status || "",
+  //     returnDate: asset.returnDate
+  //       ? new Date(asset.returnDate).toISOString().split("T")[0]
+  //       : "",
+  //     allottedDate: asset.allottedDate
+  //       ? new Date(asset.allottedDate).toISOString().split("T")[0]
+  //       : "",
+  //     currentEmployee: asset.currentEmployee || "",
+  //     previousEmployees: asset.previousEmployees || [],
+  //     batch: asset.batch || "",
+  //   });
+  //   console.log("Editing asset:", asset);
+  //   console.log("Edit data initialized:", editData);
+  // };
+
   const handleEditClick = (asset) => {
     setEditingAssetId(asset._id);
     setEditData({
+      name: asset.name || "",
+      category: asset.category || "",
       status: asset.status || "",
       returnDate: asset.returnDate
         ? new Date(asset.returnDate).toISOString().split("T")[0]
@@ -275,53 +286,34 @@ const AssetHistory = () => {
         ? new Date(asset.allottedDate).toISOString().split("T")[0]
         : "",
       currentEmployee: asset.currentEmployee || "",
+      previousEmployees: Array.isArray(asset.previousEmployees)
+        ? asset.previousEmployees
+        : [],
       batch: asset.batch || "",
     });
+    console.log("Editing asset:", asset);
+    console.log("Edit data initialized:", editData);
   };
 
-  // const handleAddAsset = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     setLoading(true);
-  //     const formattedData = {
-  //       name: newAssetData.name,
-  //       category: newAssetData.category,
-  //       status: newAssetData.status,
-  //       currentEmployee: newAssetData.currentEmployee,
-  //       previousEmployees: newAssetData.previousEmployees || [],
-  //       batch: newAssetData.batch || '',
-  //       allottedDate: newAssetData.allottedDate ? new Date(newAssetData.allottedDate).toISOString() : null,
-  //       returnDate: newAssetData.returnDate ? new Date(newAssetData.returnDate).toISOString() : null
-  //     };
+  const handlePreviousEmployeesChangeEdit = (e) => {
+    const employees = e.target.value
+      .split(",")
+      .map((emp) => emp.trim())
+      .filter((emp) => emp !== "");
+    console.log("Setting previous employees to:", employees);
+    setEditData((prev) => ({
+      ...prev,
+      previousEmployees: employees,
+    }));
+  };
 
-  //     console.log('Sending asset data:', formattedData);
-
-  //     await axios.post(`${API_URL}/api/assets`, formattedData);
-  //     fetchAssets();
-  //     setNewAssetData({
-  //       name: '',
-  //       category: '',
-  //       status: '',
-  //       returnDate: '',
-  //       allottedDate: '',
-  //       currentEmployee: '',
-  //       previousEmployees: [],
-  //       batch: ''
-  //     });
-  //     setIsAddModalOpen(false);
-
-  //     // Notify other components about the update
-  //     const timestamp = Date.now().toString();
-  //     localStorage.setItem('assetsUpdated', timestamp);
-
-  //     const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
-  //     window.dispatchEvent(event);
-  //   } catch (error) {
-  //     console.error('Error adding new asset:', error);
-  //     setError('Failed to add asset: ' + error.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
+  // const handlePreviousEmployeesChangeEdit = (e) => {
+  //   const employees = e.target.value.split(",").map(emp => emp.trim());
+  //   console.log("Setting previous employees to:", employees);
+  //   setEditData(prev => ({
+  //     ...prev,
+  //     previousEmployees: employees
+  //   }));
   // };
 
   const handleAddAsset = async (e) => {
@@ -377,63 +369,51 @@ const AssetHistory = () => {
     }
   };
 
-  // const handleUpdate = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     setLoading(true);
-  //     const updatedData = {
-  //       ...editData,
-  //       // Format the allottedDate properly if it exists
-  //       allottedDate: editData.allottedDate ? new Date(editData.allottedDate).toISOString() : null,
-  //       // Format the returnDate properly if it exists
-  //       returnDate: editData.returnDate ? new Date(editData.returnDate).toISOString() : null,
-  //       // Make sure batch is included
-  //       batch: editData.batch || ''
-  //     };
-
-  //     console.log('Updating asset with data:', updatedData); // Add this line to debug
-
-  //     await axios.put(`${API_URL}/api/assets/${editingAssetId}`, updatedData);
-  //     setEditingAssetId(null);
-  //     fetchAssets();
-
-  //     // Notify other components about the update
-  //     const timestamp = Date.now().toString();
-  //     localStorage.setItem('assetsUpdated', timestamp);
-
-  //     const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
-  //     window.dispatchEvent(event);
-  //   } catch (error) {
-  //     console.error('Error updating asset:', error);
-  //     setError('Failed to update asset: ' + error.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
+
+      // Log the current state before formatting
+      console.log("Current edit data before formatting:", editData);
+
       const updatedData = {
-        ...editData,
-        // Format the allottedDate properly if it exists
+        name: editData.name,
+        category: editData.category,
+        status: editData.status,
+        currentEmployee: editData.currentEmployee,
+        previousEmployees: Array.isArray(editData.previousEmployees)
+          ? editData.previousEmployees
+          : editData.previousEmployees
+          ? editData.previousEmployees.split(",").map((emp) => emp.trim())
+          : [],
+        batch: editData.batch || "",
+        // Format the dates
         allottedDate: editData.allottedDate
           ? new Date(editData.allottedDate).toISOString()
           : null,
-        // Format the returnDate properly if it exists
         returnDate: editData.returnDate
           ? new Date(editData.returnDate).toISOString()
           : null,
-        // Make sure batch is included
-        batch: editData.batch || "",
       };
 
-      console.log("Updating asset with data:", updatedData); // Add this line to debug
+      console.log("Updating asset with data:", updatedData);
+      console.log("Asset ID being updated:", editingAssetId);
 
-      await axios.put(`${API_URL}/api/assets/${editingAssetId}`, updatedData);
+      const response = await axios.put(
+        `${API_URL}/api/assets/${editingAssetId}`,
+        updatedData
+      );
+      console.log("Update response:", response.data);
+
+      // Close the edit modal
       setEditingAssetId(null);
-      fetchAssets();
+
+      // Immediately fetch the updated assets to ensure we have the latest data
+      await fetchAssets();
+
+      // Show success message
+      alert("Asset updated successfully!");
 
       // Notify other components about the update
       const timestamp = Date.now().toString();
@@ -443,24 +423,37 @@ const AssetHistory = () => {
       window.dispatchEvent(event);
     } catch (error) {
       console.error("Error updating asset:", error);
-      setError("Failed to update asset: " + error.message);
+      console.error(
+        "Error details:",
+        error.response ? error.response.data : "No response data"
+      );
+      setError(
+        "Failed to update asset: " +
+          (error.response ? error.response.data.message : error.message)
+      );
+      alert("Failed to update asset. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredAssets = assets.filter(
-    (asset) =>
-      (asset.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (asset.status?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (asset.category?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      ) ||
-      (asset.currentEmployee?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      ) ||
-      (asset.batch?.toLowerCase() || "").includes(searchTerm.toLowerCase()) // Add this line to include batch in search
-  );
+  // Update this whenever assets or searchTerm changes
+  const filteredAssets = React.useMemo(() => {
+    return assets.filter(
+      (asset) =>
+        (asset.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+        (asset.status?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        ) ||
+        (asset.category?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        ) ||
+        (asset.currentEmployee?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        ) ||
+        (asset.batch?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+    );
+  }, [assets, searchTerm]);
 
   const handlePreviousEmployeesChange = (e) => {
     const employees = e.target.value.split(",").map((emp) => emp.trim());
@@ -1254,8 +1247,12 @@ const AssetHistory = () => {
               <TextField
                 label="Previous Employees"
                 name="previousEmployees"
-                value={newAssetData.previousEmployees.join(", ")}
-                onChange={handlePreviousEmployeesChange}
+                value={
+                  Array.isArray(editData.previousEmployees)
+                    ? editData.previousEmployees.join(", ")
+                    : ""
+                }
+                onChange={handlePreviousEmployeesChangeEdit}
                 helperText="Enter names separated by commas"
                 fullWidth
                 multiline
@@ -1399,6 +1396,77 @@ const AssetHistory = () => {
         <DialogContent sx={{ padding: "32px", backgroundColor: "#f8fafc" }}>
           <form onSubmit={handleUpdate}>
             <Stack spacing={3} sx={{ mt: 2 }}>
+              <TextField
+                label="Asset Name"
+                name="name"
+                value={editData.name || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, name: e.target.value })
+                }
+                required
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "8px",
+                  },
+                }}
+              />
+
+              <FormControl
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "8px",
+                  },
+                }}
+              >
+                <InputLabel>Category</InputLabel>
+                <Select
+                  name="category"
+                  value={editData.category || ""}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      category: e.target.value,
+                    })
+                  }
+                  required
+                  label="Category"
+                >
+                  <MenuItem value="Hardware">Hardware</MenuItem>
+                  <MenuItem value="Software">Software</MenuItem>
+                  <MenuItem value="Furniture">Furniture</MenuItem>
+                  <MenuItem value="Office Equipment">Office Equipment</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "8px",
+                  },
+                }}
+              >
+                <InputLabel>Status</InputLabel>
+                <Select
+                  name="status"
+                  value={editData.status || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, status: e.target.value })
+                  }
+                  required
+                  label="Status"
+                >
+                  <MenuItem value="Available">Available</MenuItem>
+                  <MenuItem value="In Use">In Use</MenuItem>
+                  <MenuItem value="Under Maintenance">
+                    Under Maintenance
+                  </MenuItem>
+                </Select>
+              </FormControl>
               <FormControl
                 fullWidth
                 sx={{
@@ -1426,7 +1494,7 @@ const AssetHistory = () => {
               </FormControl>
               <TextField
                 label="Current Employee"
-                value={editData.currentEmployee}
+                value={editData.currentEmployee || ""}
                 onChange={(e) =>
                   setEditData({ ...editData, currentEmployee: e.target.value })
                 }
@@ -1440,9 +1508,30 @@ const AssetHistory = () => {
               />
 
               <TextField
+                label="Previous Employees"
+                name="previousEmployees"
+                value={
+                  Array.isArray(editData.previousEmployees)
+                    ? editData.previousEmployees.join(", ")
+                    : ""
+                }
+                onChange={handlePreviousEmployeesChangeEdit}
+                helperText="Enter names separated by commas"
+                fullWidth
+                multiline
+                rows={2}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "8px",
+                  },
+                }}
+              />
+
+              <TextField
                 type="date"
                 label="Allotted Date"
-                value={editData.allottedDate}
+                value={editData.allottedDate || ""}
                 onChange={(e) =>
                   setEditData({ ...editData, allottedDate: e.target.value })
                 }
@@ -1459,7 +1548,7 @@ const AssetHistory = () => {
               <TextField
                 type="date"
                 label="Return Date"
-                value={editData.returnDate}
+                value={editData.returnDate || ""}
                 onChange={(e) =>
                   setEditData({ ...editData, returnDate: e.target.value })
                 }

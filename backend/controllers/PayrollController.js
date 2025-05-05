@@ -169,62 +169,10 @@ export class PayrollController {
     }
   }
 
-  // // Allowance Management
-  // static async createAllowance(req, res) {
-  //   try {
-  //     const { empId, name, percentage, amount, category, status, isRecurring, isBasicPay } = req.body;
-      
-  //     const employee = await UnifiedPayroll.findOne({ empId });
-  //     if (!employee) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: "Employee not found",
-  //       });
-  //     }
-      
-  //     // Check if allowance already exists
-  //     const existingIndex = employee.allowances.findIndex(a => a.name === name);
-      
-  //     if (existingIndex >= 0) {
-  //       // Update existing allowance
-  //       employee.allowances[existingIndex] = {
-  //         name,
-  //         percentage,
-  //         amount,
-  //         category: category || 'Regular',
-  //         status: status || 'Active',
-  //         isRecurring: isRecurring !== undefined ? isRecurring : true,
-  //         isBasicPay: isBasicPay || name === "BASIC PAY" // Set isBasicPay flag
-  //       };
-  //     } else {
-  //       // Add new allowance
-  //       employee.allowances.push({
-  //         name,
-  //         percentage,
-  //         amount,
-  //         category: category || 'Regular',
-  //         status: status || 'Active',
-  //         isRecurring: isRecurring !== undefined ? isRecurring : true,
-  //         isBasicPay: isBasicPay || name === "BASIC PAY" // Set isBasicPay flag
-  //       });
-  //     }
-      
-  //     await employee.save();
-      
-  //     res.status(201).json({
-  //       success: true,
-  //       data: employee,
-  //       message: "Allowance added successfully",
-  //     });
-  //   } catch (error) {
-  //     res.status(400).json({
-  //       success: false,
-  //       message: error.message,
-  //     });
-  //   }
-  // }
+   // Allowance Management
+  
 
-  // Update the createAllowance method to properly handle the request
+  
 static async createAllowance(req, res) {
   try {
     console.log("Creating allowance:", req.body);
@@ -406,61 +354,7 @@ static async createAllowance(req, res) {
     }
   }
 
-  // // Deduction Management
-  // static async createDeduction(req, res) {
-  //   try {
-  //     const { empId, name, percentage, amount, category, status, isRecurring, isFixedAmount } = req.body;
-      
-  //     const employee = await UnifiedPayroll.findOne({ empId });
-  //     if (!employee) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: "Employee not found",
-  //       });
-  //     }
-      
-  //     // Check if deduction already exists
-  //     const existingIndex = employee.deductions.findIndex(d => d.name === name);
-      
-  //     if (existingIndex >= 0) {
-  //       // Update existing deduction
-  //       employee.deductions[existingIndex] = {
-  //         name,
-  //         percentage,
-  //         amount,
-  //         category: category || 'Tax',
-  //         status: status || 'Active',
-  //         isRecurring: isRecurring !== undefined ? isRecurring : true,
-  //         isFixedAmount: isFixedAmount || percentage === 0 // Set isFixedAmount flag
-  //       };
-  //     } else {
-  //       // Add new deduction
-  //       employee.deductions.push({
-  //         name,
-  //         percentage,
-  //         amount,
-  //         category: category || 'Tax',
-  //         status: status || 'Active',
-  //         isRecurring: isRecurring !== undefined ? isRecurring : true,
-  //         isFixedAmount: isFixedAmount || percentage === 0 // Set isFixedAmount flag
-  //       });
-  //     }
-      
-  //     await employee.save();
-      
-  //     res.status(201).json({
-  //       success: true,
-  //       data: employee,
-  //       message: "Deduction added successfully",
-  //     });
-  //   } catch (error) {
-  //     res.status(400).json({
-  //       success: false,
-  //       message: error.message,
-  //     });
-  //   }
-  // }
-
+ 
   // Update the createDeduction method to properly handle the request
 static async createDeduction(req, res) {
   try {

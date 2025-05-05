@@ -151,7 +151,7 @@ const DisciplinaryActions = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:5000/api/disciplinary-actions/${actionToDelete._id}`,
+        `http://localhost:5002/api/disciplinary-actions/${actionToDelete._id}`,
         {
           method: "DELETE",
         }
@@ -183,7 +183,7 @@ const DisciplinaryActions = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:5000/api/disciplinary-actions?searchQuery=${searchQuery}&status=${filterStatus}`
+        `http://localhost:5002/api/disciplinary-actions?searchQuery=${searchQuery}&status=${filterStatus}`
       );
       if (!response.ok) throw new Error("Failed to fetch actions");
       const data = await response.json();
@@ -199,7 +199,7 @@ const DisciplinaryActions = () => {
     try {
       setLoadingEmployees(true);
       const response = await axios.get(
-        "http://localhost:5000/api/employees/registered"
+        "http://localhost:5002/api/employees/registered"
       );
       setRegisteredEmployees(response.data);
       setLoadingEmployees(false);
@@ -288,8 +288,8 @@ const DisciplinaryActions = () => {
 
       const method = editingAction ? "PUT" : "POST";
       const url = editingAction
-        ? `http://localhost:5000/api/disciplinary-actions/${editingAction._id}`
-        : "http://localhost:5000/api/disciplinary-actions";
+        ? `http://localhost:5002/api/disciplinary-actions/${editingAction._id}`
+        : "http://localhost:5002/api/disciplinary-actions";
 
       const response = await fetch(url, {
         method,
@@ -333,7 +333,7 @@ const DisciplinaryActions = () => {
   const downloadFile = async (filename, originalName) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/disciplinary-actions/download/${filename}`
+        `http://localhost:5002/api/disciplinary-actions/download/${filename}`
       );
       if (!response.ok) throw new Error("Failed to download file");
 

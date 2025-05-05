@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './styles.css'
 
-const API_URL = 'http://localhost:5000/api/employees';
+const API_URL = 'http://localhost:5002/api/employees';
  
 const EducationTrainingDetailsForm = ({ savedEducationDetails, nextStep, prevStep }) => {
 const [educationDetails, setEducationDetails] = useState(savedEducationDetails?.educationDetails || {
@@ -145,7 +145,7 @@ const [educationDetails, setEducationDetails] = useState(savedEducationDetails?.
     console.log('Final payload:', JSON.stringify(payload, null, 2));
   
     try {
-      const response = await axios.post('http://localhost:5000/api/employees/education-details', payload);
+      const response = await axios.post('http://localhost:5002/api/employees/education-details', payload);
       console.log('Server response:', response.data);
       if (response.data.success) {
         console.log('Submission successful, moving to next step');

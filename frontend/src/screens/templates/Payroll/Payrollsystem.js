@@ -39,6 +39,8 @@ import {
 } from "@mui/material";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import SaveIcon from "@mui/icons-material/Save";
+import Divider from "@mui/material/Divider";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -49,9 +51,11 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import PreviewIcon from "@mui/icons-material/Preview";
 import CloseIcon from "@mui/icons-material/Close";
+import InfoIcon from "@mui/icons-material/Info";
+
 import "./Payrollsystem.css";
 
-const API_URL = "http://localhost:5000/api/payroll";
+const API_URL = "http://localhost:5002/api/payroll";
 
 const TabPanel = ({ children, value, index }) => (
   <div
@@ -114,8 +118,7 @@ const PayrollSystem = () => {
 
   // Add these state variables for deductions similar to allowances
   const [selectedDeductions, setSelectedDeductions] = useState([]);
-  const [deductionPercentages, setDeductionPercentages] = useState({});
-  //const [bulkDeductionEmployeeId, setBulkDeductionEmployeeId] = useState("");
+  const [showDeductionSection, setShowDeductionSection] = useState(false);
 
   // First, add a new state variable to track the LPA value
   const [lpaValue, setLpaValue] = useState("");
@@ -123,20 +126,19 @@ const PayrollSystem = () => {
   // First, add state variables to track deduction eligibility
   const [isEligibleForDeductions, setIsEligibleForDeductions] = useState(false);
   const [manualDeductionAmounts, setManualDeductionAmounts] = useState({});
-
+  const [deductionTypes, setDeductionTypes] = useState({}); // Add this new state variable
   // Add state for registered employees
   const [registeredEmployees, setRegisteredEmployees] = useState([]);
   const [selectedRegisteredEmployee, setSelectedRegisteredEmployee] =
     useState("");
 
-  // Add this function to handle multiple deduction selection
   const handleDeductionSelection = (deductionType, isChecked) => {
     if (isChecked) {
       setSelectedDeductions([...selectedDeductions, deductionType]);
-      // Initialize with default percentage if not already set
-      if (!deductionPercentages[deductionType]) {
-        setDeductionPercentages({
-          ...deductionPercentages,
+      // Initialize with default amount if not already set
+      if (!manualDeductionAmounts[deductionType]) {
+        setManualDeductionAmounts({
+          ...manualDeductionAmounts,
           [deductionType]: 0,
         });
       }
@@ -144,29 +146,6 @@ const PayrollSystem = () => {
       setSelectedDeductions(
         selectedDeductions.filter((item) => item !== deductionType)
       );
-
-      // Also clear any manual amounts
-      if (manualDeductionAmounts[deductionType]) {
-        const updatedAmounts = { ...manualDeductionAmounts };
-        delete updatedAmounts[deductionType];
-        setManualDeductionAmounts(updatedAmounts);
-      }
-    }
-  };
-
-  // Add a handler for deduction percentage changes
-  const handleDeductionPercentageChange = (deductionType, value) => {
-    const percentage = Math.max(0, Math.min(100, Number(value)));
-    setDeductionPercentages({
-      ...deductionPercentages,
-      [deductionType]: percentage,
-    });
-
-    // Clear any manual amount when percentage is set
-    if (percentage > 0 && manualDeductionAmounts[deductionType]) {
-      const updatedAmounts = { ...manualDeductionAmounts };
-      delete updatedAmounts[deductionType];
-      setManualDeductionAmounts(updatedAmounts);
     }
   };
 
@@ -243,7 +222,7 @@ const PayrollSystem = () => {
     });
   };
 
-  // Add this function to handle registered employee selection
+  // Modify the handleRegisteredEmployeeSelect function
   const handleRegisteredEmployeeSelect = (empId) => {
     if (!empId) {
       setSelectedRegisteredEmployee("");
@@ -267,6 +246,15 @@ const PayrollSystem = () => {
         formattedDateOfJoining = dateObj.toISOString().split("T")[0]; // Format as YYYY-MM-DD
       }
 
+      // Get PAN, UAN, and PF numbers from the correct locations
+      const panNo = selectedEmp.personalInfo?.panNumber || "";
+      const uanNo = selectedEmp.joiningDetails?.uanNumber || "";
+      const pfNo = selectedEmp.joiningDetails?.pfNumber || "";
+
+      // Get bank information
+      const bankName = selectedEmp.bankInfo?.bankName || "";
+      const bankAccountNo = selectedEmp.bankInfo?.accountNumber || "";
+
       setNewEmployee({
         ...newEmployee,
         empId: selectedEmp.Emp_ID || "",
@@ -278,6 +266,13 @@ const PayrollSystem = () => {
         email: selectedEmp.personalInfo?.email || "",
         basicPay: basicPay,
         dateOfJoining: formattedDateOfJoining,
+        // Add the PAN, UAN, and PF numbers from the correct locations
+        panNo: panNo,
+        uanNo: uanNo,
+        pfNo: pfNo,
+        // Add bank information
+        bankName: bankName,
+        bankAccountNo: bankAccountNo,
         // Keep other fields as they are since they might not have direct mappings
       });
 
@@ -287,33 +282,15 @@ const PayrollSystem = () => {
     }
   };
 
-  // Helper function to calculate base after deductions for the dialog
-  const calculateDialogBaseAfterDeductions = () => {
-    const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
-    if (!employee) return 0;
-
-    const totalPay = parseFloat(employee.basicPay);
-    let totalDeductionAmount = 0;
-
-    if (isEligibleForDeductions) {
-      selectedDeductions.forEach((name) => {
-        if (
-          manualDeductionAmounts[name] &&
-          parseFloat(manualDeductionAmounts[name]) > 0
-        ) {
-          totalDeductionAmount += parseFloat(manualDeductionAmounts[name]);
-        } else {
-          totalDeductionAmount +=
-            totalPay * (parseFloat(deductionPercentages[name] || 0) / 100);
-        }
-      });
-    }
-
-    return totalPay - totalDeductionAmount;
-  };
-
   const handleAddMultipleAllowances = async () => {
     try {
+      // First validate the allowance percentages if any allowances are selected
+    if (selectedAllowances.length > 0) {
+      const shouldProceed = validateAllowancePercentages();
+      if (!shouldProceed) {
+        return; // User chose not to proceed
+      }
+    }
       setIsLoading(true);
 
       // Show loading indicator
@@ -324,9 +301,12 @@ const PayrollSystem = () => {
         transition: Fade,
       });
 
-      if (!bulkEmployeeId || selectedAllowances.length === 0) {
+      if (
+        !bulkEmployeeId ||
+        (selectedAllowances.length === 0 && selectedDeductions.length === 0)
+      ) {
         showAlert(
-          "Please select an employee and at least one allowance",
+          "Please select an employee and at least one allowance or deduction",
           "error"
         );
         setIsLoading(false);
@@ -340,75 +320,152 @@ const PayrollSystem = () => {
         return;
       }
 
-      // Process allowances
-      for (const allowanceName of selectedAllowances) {
-        const percentage = parseFloat(allowancePercentages[allowanceName] || 0);
-        const amount = calculateAllowanceAmount(
-          employee.basicPay,
-          percentage
-        ).toString();
+      // In edit mode, we need to handle updates differently
+      if (editMode) {
+        // First, get current allowances and deductions
+        const currentAllowances = allowanceData.filter(
+          (a) => a.empId === bulkEmployeeId && a.status === "Active"
+        );
+        const currentDeductions = deductions.filter(
+          (d) => d.empId === bulkEmployeeId && d.status === "Active"
+        );
 
-        try {
-          await axios.post(`${API_URL}/allowances`, {
-            empId: bulkEmployeeId,
-            name: allowanceName,
-            percentage,
-            amount,
-            category: "Regular",
-            status: "Active",
-            isRecurring: true,
-          });
-        } catch (error) {
-          console.error(`Error adding allowance ${allowanceName}:`, error);
-          showAlert(`Error adding allowance ${allowanceName}`, "error");
-        }
-      }
+        // For allowances: update existing ones and add new ones
+        for (const allowanceName of selectedAllowances) {
+          const percentage = parseFloat(
+            allowancePercentages[allowanceName] || 0
+          );
+          const amount = calculateAllowanceAmount(
+            employee.basicPay,
+            percentage
+          ).toString();
 
-      // Process deductions
-      if (selectedDeductions.length > 0) {
-        for (const deductionName of selectedDeductions) {
-          let percentage, amount;
+          const existingAllowance = currentAllowances.find(
+            (a) => a.name === allowanceName
+          );
 
-          // Check if there's a manual amount for this deduction
-          if (
-            manualDeductionAmounts[deductionName] &&
-            parseFloat(manualDeductionAmounts[deductionName]) > 0
-          ) {
-            // Use manual amount
-            amount = parseFloat(
-              manualDeductionAmounts[deductionName]
-            ).toString();
-            percentage = 0; // Set percentage to 0 when using manual amount
+          if (existingAllowance) {
+            // Update existing allowance
+            const id = `${bulkEmployeeId}_${allowanceName}`;
+            await axios.put(`${API_URL}/allowances/${id}`, {
+              empId: bulkEmployeeId,
+              name: allowanceName,
+              percentage,
+              amount,
+              category: existingAllowance.category || "Regular",
+              status: "Active",
+              isRecurring: true,
+            });
           } else {
-            // Calculate amount based on percentage
-            percentage = parseFloat(deductionPercentages[deductionName] || 0);
-            amount = calculateDeductionAmount(
-              employee.basicPay,
-              percentage
-            ).toString();
+            // Add new allowance
+            await axios.post(`${API_URL}/allowances`, {
+              empId: bulkEmployeeId,
+              name: allowanceName,
+              percentage,
+              amount,
+              category: "Regular",
+              status: "Active",
+              isRecurring: true,
+            });
           }
+        }
 
-          try {
+        // For deductions: update existing ones and add new ones
+        for (const deductionName of selectedDeductions) {
+          const amount = parseFloat(
+            manualDeductionAmounts[deductionName] || 0
+          ).toString();
+
+          const existingDeduction = currentDeductions.find(
+            (d) => d.name === deductionName
+          );
+
+          if (existingDeduction) {
+            // Update existing deduction
+            const id = `${bulkEmployeeId}_${deductionName}`;
+            await axios.put(`${API_URL}/deductions/${id}`, {
+              empId: bulkEmployeeId,
+              name: deductionName,
+              percentage: 0, // Always 0 for fixed amounts
+              amount,
+              category: existingDeduction.category || "Tax",
+              status: "Active",
+              isRecurring: true,
+              isFixedAmount: true,
+            });
+          } else {
+            // Add new deduction
             await axios.post(`${API_URL}/deductions`, {
               empId: bulkEmployeeId,
               name: deductionName,
-              percentage,
+              percentage: 0, // Always 0 for fixed amounts
               amount,
               category: "Tax",
               status: "Active",
               isRecurring: true,
-              isFixedAmount: percentage === 0,
+              isFixedAmount: true,
             });
-          } catch (error) {
-            console.error(`Error adding deduction ${deductionName}:`, error);
-            showAlert(`Error adding deduction ${deductionName}`, "error");
           }
         }
+
+        showAlert(`Successfully updated allowances and deductions`);
+      } else {
+        // Process allowances in add mode
+        for (const allowanceName of selectedAllowances) {
+          const percentage = parseFloat(
+            allowancePercentages[allowanceName] || 0
+          );
+          const amount = calculateAllowanceAmount(
+            employee.basicPay,
+            percentage
+          ).toString();
+
+          try {
+            await axios.post(`${API_URL}/allowances`, {
+              empId: bulkEmployeeId,
+              name: allowanceName,
+              percentage,
+              amount,
+              category: "Regular",
+              status: "Active",
+              isRecurring: true,
+            });
+          } catch (error) {
+            console.error(`Error adding allowance ${allowanceName}:`, error);
+            showAlert(`Error adding allowance ${allowanceName}`, "error");
+          }
+        }
+
+        // Process deductions in add mode
+        if (selectedDeductions.length > 0) {
+          for (const deductionName of selectedDeductions) {
+            // Use manual amount directly
+            const amount = parseFloat(
+              manualDeductionAmounts[deductionName] || 0
+            ).toString();
+
+            try {
+              await axios.post(`${API_URL}/deductions`, {
+                empId: bulkEmployeeId,
+                name: deductionName,
+                percentage: 0, // Always 0 for fixed amounts
+                amount,
+                category: "Tax",
+                status: "Active",
+                isRecurring: true,
+                isFixedAmount: true,
+              });
+            } catch (error) {
+              console.error(`Error adding deduction ${deductionName}:`, error);
+              showAlert(`Error adding deduction ${deductionName}`, "error");
+            }
+          }
+        }
+
+        showAlert(`Successfully added allowances and deductions`);
       }
 
-      showAlert(`Successfully added allowances and deductions`);
-
-      // Refresh the data after adding allowances and deductions
+      // Refresh the data after adding/updating allowances and deductions
       await Promise.all([fetchAllowances(), fetchDeductions()]);
       handleCloseDialog();
       setIsLoading(false);
@@ -459,6 +516,60 @@ const PayrollSystem = () => {
       );
     }
   };
+
+//   // Add this function after your other helper functions
+// const validateAllowancePercentages = () => {
+//   // Calculate total percentage
+//   const totalPercentage = Object.values(allowancePercentages).reduce(
+//     (sum, percentage) => sum + parseFloat(percentage || 0),
+//     0
+//   );
+  
+//   // Check if total is not 100%
+//   if (totalPercentage !== 100) {
+//     // Show alert with option to proceed anyway
+//     const message = totalPercentage > 100 
+//       ? `Warning: Total allowance percentage (${totalPercentage}%) exceeds 100%.`
+//       : `Warning: Total allowance percentage (${totalPercentage}%) is less than 100%. Some of the employee's pay will not be allocated.`;
+      
+//     // Use the browser's confirm dialog to allow the user to proceed anyway
+//     return window.confirm(`${message}\n\nDo you want to proceed anyway?`);
+//   }
+  
+//   // If total is exactly 100%, no alert needed
+//   return true;
+// };
+
+// Update the validation function with a tolerance range
+const validateAllowancePercentages = () => {
+  // Calculate total percentage
+  const totalPercentage = Object.values(allowancePercentages).reduce(
+    (sum, percentage) => sum + parseFloat(percentage || 0),
+    0
+  );
+  
+  // Define a small tolerance (e.g., 0.1%)
+  const tolerance = 0.1;
+  
+  // Check if total is within acceptable range (99.9% to 100.1%)
+  if (totalPercentage < (100 - tolerance) || totalPercentage > (100 + tolerance)) {
+    // Show alert with option to proceed anyway
+    const message = totalPercentage > (100 + tolerance)
+      ? `Warning: Total allowance percentage (${totalPercentage.toFixed(2)}%) exceeds 100%. This may result in incorrect calculations.`
+      : `Warning: Total allowance percentage (${totalPercentage.toFixed(2)}%) is less than 100%. Some of the employee's pay will not be allocated.`;
+      
+    // Use the browser's confirm dialog to allow the user to proceed anyway
+    return window.confirm(`${message}\n\nDo you want to proceed anyway?`);
+  }
+  
+  // If total is within acceptable range, no alert needed
+  return true;
+};
+
+const isPercentageWithinRange = (percentage) => {
+  const tolerance = 0.1;
+  return percentage >= (100 - tolerance) && percentage <= (100 + tolerance);
+};
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
@@ -675,6 +786,16 @@ const PayrollSystem = () => {
     fetchData();
   }, [tabIndex]); // Re-fetch when tab changes
 
+  // Add this after your existing useEffect hooks
+  useEffect(() => {
+    if (bulkEmployeeId) {
+      const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
+      setIsEligibleForDeductions(!!employee);
+    } else {
+      setIsEligibleForDeductions(false);
+    }
+  }, [bulkEmployeeId, employeeData]);
+
   // Helper functions for calculations
   const calculatePerDayPay = (basicPay, payableDays) => {
     const pay = parseFloat(basicPay) || 0;
@@ -689,7 +810,7 @@ const PayrollSystem = () => {
     return Number((perDayPay * actualPayableDays).toFixed(2));
   };
 
-  // Calculate the base salary after deductions
+  // Update the calculateBaseAfterDeductions function to handle only fixed amount deductions
   const calculateBaseAfterDeductions = (empId) => {
     const employee = employeeData.find((e) => e.empId === empId);
     if (!employee) return 0;
@@ -697,35 +818,78 @@ const PayrollSystem = () => {
     // Start with the total pay
     const totalPay = parseFloat(employee.basicPay);
 
-    // Calculate total deductions
+    // Calculate total deductions - now only fixed amounts
     const totalDeductions = deductions
       .filter((d) => d.empId === empId && d.status === "Active")
       .reduce((sum, item) => {
-        // Check if this is a fixed amount deduction
-        if (item.percentage === 0 && parseFloat(item.amount) > 0) {
-          return sum + parseFloat(item.amount);
-        } else {
-          // Calculate based on percentage of total pay
-          return sum + totalPay * (parseFloat(item.percentage) / 100);
-        }
+        return sum + parseFloat(item.amount || 0);
       }, 0);
 
     // Return the base after deductions
     return totalPay - totalDeductions;
   };
 
-  // Update the allowance amount calculation with attendance adjustment
+  // Update the allowance amount calculation with attendance adjustment and proportional deduction distribution
   const calculateAllowanceAmount = (empId, percentage) => {
     const employee = employeeData.find((e) => e.empId === empId);
     if (!employee) return 0;
 
-    const baseAfterDeductions = calculateBaseAfterDeductions(empId);
-    const amount = baseAfterDeductions * (percentage / 100);
+    // Get all active allowances for this employee
+    const activeAllowances = allowanceData.filter(
+      (a) => a.empId === empId && a.status === "Active"
+    );
+
+    // Calculate total allowance percentage
+    const totalAllowancePercentage = activeAllowances.reduce(
+      (sum, allowance) => sum + parseFloat(allowance.percentage || 0),
+      0
+    );
+
+    // Get all fixed amount deductions for this employee
+    const fixedDeductions = deductions.filter(
+      (d) =>
+        d.empId === empId &&
+        d.status === "Active" &&
+        d.percentage === 0 &&
+        parseFloat(d.amount) > 0
+    );
+
+    // Calculate total fixed deduction amount
+    const totalFixedDeductionAmount = fixedDeductions.reduce(
+      (sum, deduction) => sum + parseFloat(deduction.amount || 0),
+      0
+    );
+
+    // Calculate the base pay after percentage-based deductions
+    const baseAfterPercentageDeductions =
+      calculateBaseAfterDeductions(empId) + totalFixedDeductionAmount;
+
+    // Calculate this allowance's proportion of the total allowance percentage
+    const allowanceProportion = percentage / totalAllowancePercentage;
+
+    // Calculate the amount for this allowance based on its percentage of the base pay
+    const allowanceAmount = baseAfterPercentageDeductions * (percentage / 100);
+
+    // Calculate the proportional fixed deduction amount for this allowance
+    const fixedDeductionForAllowance =
+      totalFixedDeductionAmount * allowanceProportion;
+
+    // Subtract the proportional fixed deduction
+    const adjustedAllowanceAmount =
+      allowanceAmount - fixedDeductionForAllowance;
 
     // Apply attendance adjustment
     const attendanceRatio =
       (employee.payableDays - employee.lop) / employee.payableDays;
-    return amount * attendanceRatio;
+
+    return adjustedAllowanceAmount * attendanceRatio;
+  };
+
+  // Add this function for calculating allowance amount in the summary section
+  const calculateEstimatedAllowanceAmount = (employee, percentage) => {
+    if (!employee) return 0;
+    const basicPay = parseFloat(employee.basicPay) || 0;
+    return (basicPay * percentage) / 100;
   };
 
   const calculateDeductionAmount = (basicPay, percentage) => {
@@ -900,7 +1064,7 @@ const PayrollSystem = () => {
   const fetchRegisteredEmployees = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/employees/registered"
+        "http://localhost:5002/api/employees/registered"
       );
       setRegisteredEmployees(response.data);
     } catch (error) {
@@ -1068,10 +1232,11 @@ const PayrollSystem = () => {
     setSelectedAllowances([]);
     setAllowancePercentages({});
     setBulkEmployeeId("");
-    setSelectedDeductions([]); // Reset deduction selections
-    setDeductionPercentages({}); // Reset deduction percentages
-    setManualDeductionAmounts({}); // Reset manual deduction amounts
-    setIsEligibleForDeductions(false); // Reset deduction eligibility
+    setSelectedDeductions([]);
+    setManualDeductionAmounts({});
+    setIsEligibleForDeductions(false);
+    setShowDeductionSection(false); // Reset the checkbox
+    setIsLoading(false);
     setNewAllowance({
       empId: "",
       name: "",
@@ -1084,7 +1249,6 @@ const PayrollSystem = () => {
     });
   };
 
-  // Payslip Generation and Download
   const generatePayslip = async (empId) => {
     try {
       const employee = employeeData.find((e) => e.empId === empId);
@@ -1257,52 +1421,67 @@ const PayrollSystem = () => {
     }
   };
 
-  // Add this function to calculate net impact (total allowances - total deductions)
-  const calculateNetImpact = (empId) => {
-    const employee = employeeData.find((e) => e.empId === empId);
-    if (!employee) return 0;
+ 
 
-    // Calculate total allowances
-    const totalAllowances = allowanceData
-      .filter((a) => a.empId === empId && a.status === "Active")
-      .reduce((sum, item) => {
-        return sum + calculateAllowanceAmount(empId, item.percentage);
-      }, 0);
-
-    // Calculate total deductions
-    const totalDeductions = deductions
-      .filter((d) => d.empId === empId && d.status === "Active")
-      .reduce((sum, item) => {
-        if (item.percentage === 0 && parseFloat(item.amount) > 0) {
-          return sum + parseFloat(item.amount);
-        } else {
-          return (
-            sum + calculateDeductionAmount(employee.basicPay, item.percentage)
-          );
-        }
-      }, 0);
-
-    // Return the net impact
-    return totalAllowances - totalDeductions;
+  // Helper function to delete an allowance
+  const handleDeleteAllowance = async (empId, name) => {
+    try {
+      const id = `${empId}_${name}`;
+      await axios.delete(`${API_URL}/allowances/${id}`);
+      showAlert("Allowance deleted successfully");
+      return true;
+    } catch (error) {
+      showAlert(
+        error.response?.data?.message || "Error deleting allowance",
+        "error"
+      );
+      return false;
+    }
   };
 
-  // Handle manual deduction amount change
+//   // Add this function to calculate the current total percentage
+//   const calculateTotalAllowancePercentage = () => {
+//   return Object.values(allowancePercentages).reduce(
+//     (sum, percentage) => sum + parseFloat(percentage || 0),
+//     0
+//   );
+// };
+
+// Update the calculate total function to handle floating-point precision
+const calculateTotalAllowancePercentage = () => {
+  const total = Object.values(allowancePercentages).reduce(
+    (sum, percentage) => sum + parseFloat(percentage || 0),
+    0
+  );
+  
+  // Return with 2 decimal places for display
+  return parseFloat(total.toFixed(2));
+};
+
+
+  // Helper function to delete a deduction
+  const handleDeleteDeduction = async (empId, name) => {
+    try {
+      const id = `${empId}_${name}`;
+      await axios.delete(`${API_URL}/deductions/${id}`);
+      showAlert("Deduction deleted successfully");
+      return true;
+    } catch (error) {
+      showAlert(
+        error.response?.data?.message || "Error deleting deduction",
+        "error"
+      );
+      return false;
+    }
+  };
+  // Update the handler for manual deduction amount changes
   const handleManualDeductionAmountChange = (deductionType, value) => {
     const amount = Math.max(0, Number(value));
     setManualDeductionAmounts({
       ...manualDeductionAmounts,
       [deductionType]: amount,
     });
-
-    // Clear percentage when manual amount is set
-    if (amount > 0 && deductionPercentages[deductionType]) {
-      setDeductionPercentages({
-        ...deductionPercentages,
-        [deductionType]: 0,
-      });
-    }
   };
-
   return (
     <Container className="payroll-container">
       <Snackbar
@@ -1602,9 +1781,7 @@ const PayrollSystem = () => {
                   <TableCell className="table-cell" data-priority="1">
                     Total Pay
                   </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    Net Impact
-                  </TableCell>
+                  
                   <TableCell
                     className="table-cell action-column"
                     data-priority="1"
@@ -1671,7 +1848,7 @@ const PayrollSystem = () => {
                   );
 
                   // Calculate net impact
-                  const netImpact = totalAllowanceAmount - totalDeductionAmount;
+                  // const netImpact = totalAllowanceAmount - totalDeductionAmount;
 
                   return (
                     <TableRow key={employee.empId} className="table-row">
@@ -1698,18 +1875,7 @@ const PayrollSystem = () => {
                           LPA
                         </Typography>
                       </TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="subtitle1"
-                          sx={{
-                            fontWeight: "bold",
-                            color: netImpact >= 0 ? "#4caf50" : "#f44336",
-                          }}
-                        >
-                          {netImpact >= 0 ? "+" : ""}
-                          {netImpact.toFixed(2)}
-                        </Typography>
-                      </TableCell>
+                   
 
                       <TableCell align="center">
                         <Tooltip title="Preview">
@@ -1763,21 +1929,12 @@ const PayrollSystem = () => {
                                   }
                                 );
 
-                                // Pre-populate the selected deductions and their percentages
-                                const initialDeductionPercentages = {};
+                                // Pre-populate the selected deductions and their amounts
                                 const initialManualDeductionAmounts = {};
                                 const deductionNames = employeeDeductions.map(
                                   (d) => {
-                                    if (
-                                      d.percentage === 0 &&
-                                      parseFloat(d.amount) > 0
-                                    ) {
-                                      initialManualDeductionAmounts[d.name] =
-                                        parseFloat(d.amount);
-                                    } else {
-                                      initialDeductionPercentages[d.name] =
-                                        d.percentage;
-                                    }
+                                    initialManualDeductionAmounts[d.name] =
+                                      parseFloat(d.amount);
                                     return d.name;
                                   }
                                 );
@@ -1788,19 +1945,17 @@ const PayrollSystem = () => {
                                 setAllowancePercentages(
                                   initialAllowancePercentages
                                 );
-                                setSelectedDeductions(deductionNames);
-                                setDeductionPercentages(
-                                  initialDeductionPercentages
-                                );
                                 setManualDeductionAmounts(
                                   initialManualDeductionAmounts
                                 );
-                                setIsEligibleForDeductions(
-                                  deductionNames.length > 0
-                                );
+                                setSelectedDeductions(deductionNames);
+                                setIsEligibleForDeductions(true);
+                                 
+                                // Set the deduction section visibility based on whether the employee has deductions
+                                setShowDeductionSection(employeeDeductions.length > 0);
 
                                 // Open the dialog in edit mode
-                                setEditMode(false); // We're still using the bulk add dialog, not editing individual items
+                                setEditMode(true); // Set to true to indicate we're in edit mode
                                 setOpenDialog(true);
                               });
                             }}
@@ -3017,38 +3172,7 @@ const PayrollSystem = () => {
                   </Paper>
                 </Grid>
 
-                {/* Net Impact */}
-                <Grid item xs={12}>
-                  <Paper sx={{ p: 2, borderRadius: 2, bgcolor: "#f8f9fa" }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Typography variant="subtitle1">
-                        Net Impact on Salary
-                      </Typography>
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: "bold",
-                          color:
-                            calculateNetImpact(previewEmployee.empId) >= 0
-                              ? "#4caf50"
-                              : "#f44336",
-                        }}
-                      >
-                        {calculateNetImpact(previewEmployee.empId) >= 0
-                          ? "+"
-                          : ""}
-                        Rs.{" "}
-                        {calculateNetImpact(previewEmployee.empId).toFixed(2)}
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Grid>
+              
               </Grid>
             </DialogContent>
           )}
@@ -3057,7 +3181,7 @@ const PayrollSystem = () => {
             <Button onClick={handleCloseAllowancePreview} variant="outlined">
               Close
             </Button>
-            <Button
+            {/* <Button
               variant="contained"
               startIcon={<EditIcon />}
               onClick={() => {
@@ -3068,7 +3192,7 @@ const PayrollSystem = () => {
               }}
             >
               Manage Allowances & Deductions
-            </Button>
+            </Button> */}
           </DialogActions>
         </Dialog>
 
@@ -3373,25 +3497,22 @@ const PayrollSystem = () => {
           className="allowance-dialog"
         >
           <DialogTitle className="dialog-title">
-            {editMode ? "Edit Allowance" : "Add Allowances & Deductions"}
+            {editMode
+              ? "Edit Allowances & Deductions"
+              : "Add Allowances & Deductions"}
           </DialogTitle>
+
           <DialogContent className="allowance-dialog-content">
             {/* Employee Selection - Keep this outside the scrollable area */}
             <FormControl fullWidth required sx={{ mb: 2 }}>
               <InputLabel>Employee</InputLabel>
               <Select
-                value={editMode ? newAllowance.empId : bulkEmployeeId}
+                value={bulkEmployeeId}
                 onChange={(e) => {
-                  if (editMode) {
-                    setNewAllowance({
-                      ...newAllowance,
-                      empId: e.target.value,
-                    });
-                  } else {
-                    setBulkEmployeeId(e.target.value);
-                  }
+                  setBulkEmployeeId(e.target.value);
                 }}
                 label="Employee"
+                disabled={editMode} // Disable in edit mode since we're editing for a specific employee
               >
                 {employeeData.map((emp) => (
                   <MenuItem key={emp.empId} value={emp.empId}>
@@ -3406,769 +3527,1021 @@ const PayrollSystem = () => {
               sx={{
                 overflowY: "auto",
                 maxHeight: { xs: "60vh", sm: "50vh", md: "60vh" },
+                pr: 1,
+                mr: -1,
+                "&::-webkit-scrollbar": {
+                  width: "8px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  background: "#f1f1f1",
+                  borderRadius: "4px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  background: "#888",
+                  borderRadius: "4px",
+                },
+                "&::-webkit-scrollbar-thumb:hover": {
+                  background: "#555",
+                },
               }}
             >
               <Grid container spacing={2}>
-                {editMode ? (
-                  <>
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Allowance Name"
-                        fullWidth
-                        value={newAllowance.name}
-                        onChange={(e) =>
-                          setNewAllowance({
-                            ...newAllowance,
-                            name: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Percentage"
-                        type="number"
-                        fullWidth
-                        value={newAllowance.percentage}
-                        onChange={(e) =>
-                          setNewAllowance({
-                            ...newAllowance,
-                            percentage: Math.max(
-                              0,
-                              Math.min(100, Number(e.target.value))
-                            ),
-                          })
-                        }
-                        required
-                        InputProps={{
-                          inputProps: { min: 0, max: 100 },
-                          endAdornment: (
-                            <InputAdornment position="end">%</InputAdornment>
-                          ),
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <FormControl fullWidth required>
-                        <InputLabel>Category</InputLabel>
-                        <Select
-                          value={newAllowance.category}
-                          onChange={(e) =>
-                            setNewAllowance({
-                              ...newAllowance,
-                              category: e.target.value,
-                            })
-                          }
-                          label="Category"
-                        >
-                          <MenuItem value="Regular">Regular</MenuItem>
-                          <MenuItem value="Travel">Travel</MenuItem>
-                          <MenuItem value="Special">Special</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <FormControl fullWidth required>
-                        <InputLabel>Status</InputLabel>
-                        <Select
-                          value={newAllowance.status}
-                          onChange={(e) =>
-                            setNewAllowance({
-                              ...newAllowance,
-                              status: e.target.value,
-                            })
-                          }
-                          label="Status"
-                        >
-                          <MenuItem value="Active">Active</MenuItem>
-                          <MenuItem value="Inactive">Inactive</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                  </>
-                ) : (
-                  <>
-                    {/* Allowances Section */}
-                    <Grid item xs={12}>
-                      <Typography
-                        variant="subtitle1"
-                        className="dialog-section-title"
-                      >
-                        Select Allowances to Add
+                {/* Allowances Section */}
+                <Grid item xs={12}>
+                  <Typography
+                    variant="subtitle1"
+                    className="dialog-section-title"
+                    sx={{
+                      fontWeight: "bold",
+                      mb: 2,
+                      color: editMode ? "#1976d2" : "inherit",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {editMode ? (
+                      <>
+                        <EditIcon sx={{ mr: 1, fontSize: 20 }} />
+                        Manage Allowances
+                      </>
+                    ) : (
+                      "Add Allowances"
+                    )}
+                  </Typography>
+
+                  {/* Current Allowances in Edit Mode */}
+                  {editMode && selectedAllowances.length > 0 && (
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        mb: 3,
+                        bgcolor: "#f5f5f5",
+                        borderRadius: 2,
+                        border: "1px solid #e0e0e0",
+                      }}
+                    >
+                      <Typography variant="subtitle2" gutterBottom>
+                        Current Allowances
                       </Typography>
-                      <Box
-                        sx={{
-                          mt: 1,
-                          mb: 2,
-                          p: 2,
-                          bgcolor: "#f8f9fa",
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Typography variant="body2" color="textSecondary">
-                          <strong>Note:</strong> Basic Pay is a mandatory
-                          component of the salary structure and typically forms
-                          the base for various statutory calculations.
-                        </Typography>
-                      </Box>
-                      <TableContainer
-                        component={Paper}
-                        className="dialog-table-container"
-                      >
-                        <Table
-                          stickyHeader
-                          size="small"
-                          className="dialog-table"
-                        >
+                      <TableContainer sx={{ maxHeight: 200 }}>
+                        <Table size="small">
                           <TableHead>
                             <TableRow>
-                              <TableCell
-                                padding="checkbox"
-                                className="dialog-table-cell"
-                              >
-                                Select
-                              </TableCell>
-                              <TableCell className="dialog-table-cell">
-                                Allowance Type
-                              </TableCell>
-                              <TableCell className="dialog-table-cell dialog-hide-sm">
-                                Description
-                              </TableCell>
-                              <TableCell className="dialog-table-cell">
-                                Percentage (%)
-                              </TableCell>
+                              <TableCell>Name</TableCell>
+                              <TableCell>Percentage</TableCell>
+                              <TableCell align="right">Amount (Est.)</TableCell>
+                              <TableCell>Actions</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {[
-                              {
-                                name: "BASIC PAY",
-                                desc: "Base component of salary structure",
-                              },
-                              {
-                                name: "TRAVEL ALLOWANCE",
-                                desc: "For travel-related expenses",
-                              },
-                              {
-                                name: "MEDICAL ALLOWANCE",
-                                desc: "For healthcare expenses",
-                              },
-                              {
-                                name: "HOUSE RENT ALLOWANCE",
-                                desc: "For accommodation expenses",
-                              },
-                              {
-                                name: "DEARNESS ALLOWANCE",
-                                desc: "Cost of living adjustment",
-                              },
-                              {
-                                name: "SPECIAL ALLOWANCE",
-                                desc: "Additional benefits",
-                              },
-                              {
-                                name: "CONVEYANCE ALLOWANCE",
-                                desc: "For daily commute expenses",
-                              },
-                              {
-                                name: "EDUCATION ALLOWANCE",
-                                desc: "For educational expenses",
-                              },
-                              {
-                                name: "MEAL ALLOWANCE",
-                                desc: "For food expenses",
-                              },
-                              {
-                                name: "TELEPHONE ALLOWANCE",
-                                desc: "For communication expenses",
-                              },
-                              {
-                                name: "UNIFORM ALLOWANCE",
-                                desc: "For work attire",
-                              },
-                            ].map((allowance) => (
-                              <TableRow
-                                key={allowance.name}
-                                className="dialog-table-row"
-                              >
-                                <TableCell
-                                  padding="checkbox"
-                                  className="dialog-table-cell"
-                                >
-                                  <Checkbox
-                                    checked={selectedAllowances.includes(
-                                      allowance.name
-                                    )}
-                                    onChange={(e) =>
-                                      handleAllowanceSelection(
-                                        allowance.name,
-                                        e.target.checked
-                                      )
-                                    }
-                                  />
-                                </TableCell>
-                                <TableCell className="dialog-table-cell">
-                                  {allowance.name}
-                                </TableCell>
-                                <TableCell className="dialog-table-cell dialog-hide-sm">
-                                  {allowance.desc}
-                                </TableCell>
-                                <TableCell className="dialog-table-cell">
-                                  <TextField
-                                    type="number"
-                                    size="small"
-                                    value={
-                                      allowancePercentages[allowance.name] || 0
-                                    }
-                                    onChange={(e) =>
-                                      handlePercentageChange(
-                                        allowance.name,
-                                        e.target.value
-                                      )
-                                    }
-                                    disabled={
-                                      !selectedAllowances.includes(
-                                        allowance.name
-                                      )
-                                    }
-                                    InputProps={{
-                                      endAdornment: (
-                                        <InputAdornment position="end">
-                                          %
-                                        </InputAdornment>
-                                      ),
-                                      inputProps: {
-                                        min: 0,
-                                        max: 100,
-                                        step: 0.5,
-                                      },
-                                    }}
-                                    className="percentage-input"
-                                  />
-                                </TableCell>
-                              </TableRow>
-                            ))}
+                            {selectedAllowances.map((name) => {
+                              const percentage =
+                                allowancePercentages[name] || 0;
+                              const employee = employeeData.find(
+                                (e) => e.empId === bulkEmployeeId
+                              );
+                              const estimatedAmount = employee
+                                ? calculateAllowanceAmount(
+                                    employee.empId,
+                                    percentage
+                                  )
+                                : 0;
+
+                              return (
+                                <TableRow key={name}>
+                                  <TableCell>{name}</TableCell>
+                                  <TableCell>
+                                    <TextField
+                                      type="number"
+                                      size="small"
+                                      value={percentage}
+                                      onChange={(e) => {
+                                        const newPercentage = Math.max(
+                                          0,
+                                          Math.min(100, Number(e.target.value))
+                                        );
+                                        setAllowancePercentages({
+                                          ...allowancePercentages,
+                                          [name]: newPercentage,
+                                        });
+                                      }}
+                                      InputProps={{
+                                        endAdornment: (
+                                          <InputAdornment position="end">
+                                            %
+                                          </InputAdornment>
+                                        ),
+                                        inputProps: {
+                                          min: 0,
+                                          max: 100,
+                                          step: 0.5,
+                                        },
+                                      }}
+                                      sx={{ width: 100 }}
+                                    />
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    Rs. {estimatedAmount.toFixed(2)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={async () => {
+                                        try {
+                                          await handleDeleteAllowance(
+                                            bulkEmployeeId,
+                                            name
+                                          );
+                                          setSelectedAllowances(
+                                            selectedAllowances.filter(
+                                              (item) => item !== name
+                                            )
+                                          );
+                                          const updatedPercentages = {
+                                            ...allowancePercentages,
+                                          };
+                                          delete updatedPercentages[name];
+                                          setAllowancePercentages(
+                                            updatedPercentages
+                                          );
+                                        } catch (error) {
+                                          console.error(
+                                            "Error deleting allowance:",
+                                            error
+                                          );
+                                        }
+                                      }}
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
                           </TableBody>
                         </Table>
                       </TableContainer>
+                    </Paper>
+                  )}
 
-                      {/* Custom allowance input - restructured for better iPad layout */}
-                      <Box className="custom-allowance-container">
-                        <Typography className="selected-count">
-                          {selectedAllowances.length} allowance(s) selected
-                        </Typography>
-                        <Box className="custom-input-group">
-                          <TextField
-                            label="Custom Allowance"
-                            size="small"
-                            id="custom-allowance"
-                            className="custom-allowance-input"
-                          />
-                          <TextField
-                            label="%"
-                            type="number"
-                            size="small"
-                            InputProps={{
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  %
-                                </InputAdornment>
-                              ),
-                              inputProps: { min: 0, max: 100 },
-                            }}
-                            className="custom-percentage-input"
-                            id="custom-percentage"
-                          />
-                          <Button
-                            size="small"
-                            variant="contained"
-                            className="custom-add-button"
-                            onClick={() => {
-                              const customName =
-                                document.getElementById(
-                                  "custom-allowance"
-                                ).value;
-                              const customPercentage =
-                                document.getElementById(
-                                  "custom-percentage"
-                                ).value;
+                  {/* Add New Allowances Section - Available in both Add and Edit modes */}
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      mb: 2,
+                      bgcolor: "#f8f9fa",
+                      borderRadius: 2,
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <Typography variant="subtitle2" gutterBottom>
+                      {editMode ? "Add New Allowance" : "Select Allowances"}
+                    </Typography>
 
-                              // Check if the custom name is a variation of "Basic Pay"
-                              if (
-                                customName.toLowerCase().includes("basic pay")
-                              ) {
-                                showAlert(
-                                  "Basic Pay already exists as a standard allowance",
-                                  "error"
-                                );
-                                return;
-                              }
+                    {/* Allowance selection table */}
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell padding="checkbox">Select</TableCell>
+                            <TableCell>Allowance Type</TableCell>
+                            <TableCell className="dialog-hide-sm">
+                              Description
+                            </TableCell>
+                            <TableCell>Percentage (%)</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {[
+                            {
+                              name: "BASIC PAY",
+                              desc: "Base component of salary structure",
+                            },
+                            {
+                              name: "TRAVEL ALLOWANCE",
+                              desc: "For travel-related expenses",
+                            },
+                            {
+                              name: "MEDICAL ALLOWANCE",
+                              desc: "For healthcare expenses",
+                            },
+                            {
+                              name: "HOUSE RENT ALLOWANCE",
+                              desc: "For accommodation expenses",
+                            },
+                            {
+                              name: "DEARNESS ALLOWANCE",
+                              desc: "Cost of living adjustment",
+                            },
+                            {
+                              name: "SPECIAL ALLOWANCE",
+                              desc: "Additional benefits",
+                            },
+                          ].map((allowance) => (
+                            <TableRow key={allowance.name}>
+                              <TableCell padding="checkbox">
+                                <Checkbox
+                                  checked={selectedAllowances.includes(
+                                    allowance.name
+                                  )}
+                                  onChange={(e) =>
+                                    handleAllowanceSelection(
+                                      allowance.name,
+                                      e.target.checked
+                                    )
+                                  }
+                                  disabled={
+                                    editMode &&
+                                    selectedAllowances.includes(allowance.name)
+                                  } // Disable if already selected in edit mode
+                                />
+                              </TableCell>
+                              <TableCell>{allowance.name}</TableCell>
+                              <TableCell className="dialog-hide-sm">
+                                {allowance.desc}
+                              </TableCell>
+                              <TableCell>
+                                <TextField
+                                  type="number"
+                                  size="small"
+                                  value={
+                                    allowancePercentages[allowance.name] || 0
+                                  }
+                                  onChange={(e) =>
+                                    handlePercentageChange(
+                                      allowance.name,
+                                      e.target.value
+                                    )
+                                  }
+                                  disabled={
+                                    !selectedAllowances.includes(allowance.name)
+                                  }
+                                  InputProps={{
+                                    endAdornment: (
+                                      <InputAdornment position="end">
+                                        %
+                                      </InputAdornment>
+                                    ),
+                                    inputProps: { min: 0, max: 100, step: 0.5 },
+                                  }}
+                                  sx={{ width: 100 }}
+                                />
+                              </TableCell>
+                            </TableRow>
+                            
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
 
-                              if (
-                                customName &&
-                                !selectedAllowances.includes(customName)
-                              ) {
-                                setSelectedAllowances([
-                                  ...selectedAllowances,
-                                  customName,
-                                ]);
-                                setAllowancePercentages({
-                                  ...allowancePercentages,
-                                  [customName]:
-                                    parseFloat(customPercentage) || 0,
-                                });
-                                document.getElementById(
-                                  "custom-allowance"
-                                ).value = "";
-                                document.getElementById(
-                                  "custom-percentage"
-                                ).value = "";
-                              }
-                            }}
+                    {/* Custom allowance input */}
+                    <Box
+                      sx={{
+                        mt: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <TextField
+                        label="Custom Allowance"
+                        size="small"
+                        id="custom-allowance"
+                        sx={{ flexGrow: 1 }}
+                      />
+                      <TextField
+                        label="%"
+                        type="number"
+                        size="small"
+                        id="custom-allowance-percentage"
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">%</InputAdornment>
+                          ),
+                          inputProps: { min: 0, max: 100 },
+                        }}
+                        sx={{ width: 100 }}
+                      />
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => {
+                          const customName =
+                            document.getElementById("custom-allowance").value;
+                          const percentage = parseFloat(
+                            document.getElementById(
+                              "custom-allowance-percentage"
+                            ).value || 0
+                          );
+
+                          if (
+                            customName &&
+                            !selectedAllowances.includes(customName)
+                          ) {
+                            setSelectedAllowances([
+                              ...selectedAllowances,
+                              customName,
+                            ]);
+                            setAllowancePercentages({
+                              ...allowancePercentages,
+                              [customName]: percentage,
+                            });
+
+                            // Clear inputs
+                            document.getElementById("custom-allowance").value =
+                              "";
+                            document.getElementById(
+                              "custom-allowance-percentage"
+                            ).value = "";
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </Box>
+                    {/* <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+  <Typography variant="body2">
+    Total Percentage: 
+    <Box component="span" sx={{ 
+      fontWeight: 'bold',
+      color: calculateTotalAllowancePercentage() === 100 ? 'green' : 'orange'
+    }}>
+      {' '}{calculateTotalAllowancePercentage()}%
+    </Box>
+  </Typography>
+  
+  {calculateTotalAllowancePercentage() !== 100 && (
+    <Typography variant="caption" color="warning.main">
+      {calculateTotalAllowancePercentage() > 100 
+        ? "Warning: Total exceeds 100%" 
+        : "Warning: Total is less than 100%"}
+    </Typography>
+  )}
+</Box> */}
+<Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+  <Typography variant="body2">
+    Total Percentage: 
+    <Box component="span" sx={{ 
+      fontWeight: 'bold',
+      color: isPercentageWithinRange(calculateTotalAllowancePercentage()) ? 'green' : 'orange'
+    }}>
+      {' '}{calculateTotalAllowancePercentage().toFixed(2)}%
+    </Box>
+  </Typography>
+  
+  {!isPercentageWithinRange(calculateTotalAllowancePercentage()) && (
+    <Typography variant="caption" color="warning.main">
+      {calculateTotalAllowancePercentage() > (100 + 0.1)
+        ? "Warning: Total exceeds 100%" 
+        : "Warning: Total is less than 100%"}
+    </Typography>
+  )}
+</Box>
+                  </Paper>
+                </Grid>
+                {/* Deduction Eligibility Checkbox */}
+<Grid item xs={12}>
+  <Paper
+    elevation={0}
+    sx={{
+      p: 2,
+      mb: 2,
+      bgcolor: "#f8f9fa",
+      borderRadius: 2,
+      border: "1px solid #e0e0e0",
+    }}
+  >
+    <FormControlLabel
+      control={
+        <Checkbox
+          checked={showDeductionSection}
+          onChange={(e) => setShowDeductionSection(e.target.checked)}
+          color="primary"
+        />
+      }
+      label={
+        <Box>
+          <Typography variant="subtitle2">
+            Is this employee eligible for deductions?
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Check this box to enable adding deductions for this employee
+          </Typography>
+        </Box>
+      }
+    />
+  </Paper>
+</Grid>
+
+
+                {/* Deductions Section */}
+                {showDeductionSection && (
+                <Grid item xs={12}>
+                  <Typography
+                    variant="subtitle1"
+                    className="dialog-section-title"
+                    sx={{
+                      fontWeight: "bold",
+                      mb: 2,
+                      color: editMode ? "#1976d2" : "inherit",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {editMode ? (
+                      <>
+                        <EditIcon sx={{ mr: 1, fontSize: 20 }} />
+                        Manage Deductions
+                      </>
+                    ) : (
+                      "Add Deductions (Optional)"
+                    )}
+                  </Typography>
+
+                  {/* Current Deductions in Edit Mode */}
+                  {editMode && selectedDeductions.length > 0 && (
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        mb: 3,
+                        bgcolor: "#f5f5f5",
+                        borderRadius: 2,
+                        border: "1px solid #e0e0e0",
+                      }}
+                    >
+                      <Typography variant="subtitle2" gutterBottom>
+                        Current Deductions
+                      </Typography>
+                      <TableContainer sx={{ maxHeight: 200 }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Name</TableCell>
+                              <TableCell>Amount</TableCell>
+                              <TableCell>Actions</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {selectedDeductions.map((name) => {
+                              const amount = parseFloat(
+                                manualDeductionAmounts[name] || 0
+                              );
+
+                              return (
+                                <TableRow key={name}>
+                                  <TableCell>{name}</TableCell>
+                                  <TableCell>
+                                    <TextField
+                                      type="number"
+                                      size="small"
+                                      value={amount}
+                                      onChange={(e) => {
+                                        const newAmount = Math.max(
+                                          0,
+                                          Number(e.target.value)
+                                        );
+                                        setManualDeductionAmounts({
+                                          ...manualDeductionAmounts,
+                                          [name]: newAmount,
+                                        });
+                                      }}
+                                      InputProps={{
+                                        startAdornment: (
+                                          <InputAdornment position="start">
+                                            Rs.
+                                          </InputAdornment>
+                                        ),
+                                        inputProps: { min: 0, step: 1 },
+                                      }}
+                                      sx={{ width: 150 }}
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={async () => {
+                                        try {
+                                          await handleDeleteDeduction(
+                                            bulkEmployeeId,
+                                            name
+                                          );
+                                          setSelectedDeductions(
+                                            selectedDeductions.filter(
+                                              (item) => item !== name
+                                            )
+                                          );
+                                          const updatedAmounts = {
+                                            ...manualDeductionAmounts,
+                                          };
+                                          delete updatedAmounts[name];
+                                          setManualDeductionAmounts(
+                                            updatedAmounts
+                                          );
+                                        } catch (error) {
+                                          console.error(
+                                            "Error deleting deduction:",
+                                            error
+                                          );
+                                        }
+                                      }}
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+
+                            {/* Total row */}
+                            <TableRow sx={{ bgcolor: "#f0f0f0" }}>
+                              <TableCell sx={{ fontWeight: "bold" }}>
+                                Total Deductions
+                              </TableCell>
+                              <TableCell sx={{ fontWeight: "bold" }}>
+                                Rs.{" "}
+                                {selectedDeductions
+                                  .reduce(
+                                    (sum, name) =>
+                                      sum +
+                                      parseFloat(
+                                        manualDeductionAmounts[name] || 0
+                                      ),
+                                    0
+                                  )
+                                  .toFixed(2)}
+                              </TableCell>
+                              <TableCell></TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Paper>
+                  )}
+
+                  {/* Add New Deductions Section - Available in both Add and Edit modes */}
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      mb: 2,
+                      bgcolor: "#f8f9fa",
+                      borderRadius: 2,
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <Typography variant="subtitle2" gutterBottom>
+                      {editMode ? "Add New Deduction" : "Select Deductions"}
+                    </Typography>
+
+                    {/* Deduction selection table */}
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell padding="checkbox">Select</TableCell>
+                            <TableCell>Deduction Type</TableCell>
+                            <TableCell className="dialog-hide-sm">
+                              Description
+                            </TableCell>
+                            <TableCell>Amount (Rs.)</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {[
+                            {
+                              name: "PROFESSIONAL TAX",
+                              desc: "State-mandated tax on employment",
+                            },
+                            {
+                              name: "INCOME TAX",
+                              desc: "Tax on employee income",
+                            },
+                            {
+                              name: "PROVIDENT FUND",
+                              desc: "Retirement savings contribution",
+                            },
+                            {
+                              name: "HEALTH INSURANCE",
+                              desc: "Medical insurance premium",
+                            },
+                          ].map((deduction) => (
+                            <TableRow key={deduction.name}>
+                              <TableCell padding="checkbox">
+                                <Checkbox
+                                  checked={selectedDeductions.includes(
+                                    deduction.name
+                                  )}
+                                  onChange={(e) =>
+                                    handleDeductionSelection(
+                                      deduction.name,
+                                      e.target.checked
+                                    )
+                                  }
+                                  disabled={
+                                    editMode &&
+                                    selectedDeductions.includes(deduction.name)
+                                  } // Disable if already selected in edit mode
+                                />
+                              </TableCell>
+                              <TableCell>{deduction.name}</TableCell>
+                              <TableCell className="dialog-hide-sm">
+                                {deduction.desc}
+                              </TableCell>
+                              <TableCell>
+                                <TextField
+                                  type="number"
+                                  size="small"
+                                  value={
+                                    manualDeductionAmounts[deduction.name] || 0
+                                  }
+                                  onChange={(e) =>
+                                    handleManualDeductionAmountChange(
+                                      deduction.name,
+                                      e.target.value
+                                    )
+                                  }
+                                  disabled={
+                                    !selectedDeductions.includes(deduction.name)
+                                  }
+                                  InputProps={{
+                                    startAdornment: (
+                                      <InputAdornment position="start">
+                                        Rs.
+                                      </InputAdornment>
+                                    ),
+                                    inputProps: { min: 0, step: 1 },
+                                  }}
+                                  sx={{ width: 150 }}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+
+                    {/* Custom deduction input */}
+                    <Box
+                      sx={{
+                        mt: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <TextField
+                        label="Custom Deduction"
+                        size="small"
+                        id="custom-deduction"
+                        sx={{ flexGrow: 1 }}
+                      />
+                      <TextField
+                        label="Amount"
+                        type="number"
+                        size="small"
+                        id="custom-deduction-amount"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              Rs.
+                            </InputAdornment>
+                          ),
+                          inputProps: { min: 0 },
+                        }}
+                        sx={{ width: 150 }}
+                      />
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => {
+                          const customName =
+                            document.getElementById("custom-deduction").value;
+                          const amount = parseFloat(
+                            document.getElementById("custom-deduction-amount")
+                              .value || 0
+                          );
+
+                          if (
+                            customName &&
+                            !selectedDeductions.includes(customName)
+                          ) {
+                            setSelectedDeductions([
+                              ...selectedDeductions,
+                              customName,
+                            ]);
+                            setManualDeductionAmounts({
+                              ...manualDeductionAmounts,
+                              [customName]: amount,
+                            });
+
+                            // Clear inputs
+                            document.getElementById("custom-deduction").value =
+                              "";
+                            document.getElementById(
+                              "custom-deduction-amount"
+                            ).value = "";
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </Box>
+                  </Paper>
+
+                  {/* Explanation note about fixed amount deductions */}
+                  {selectedDeductions.length > 0 && (
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        mt: 2,
+                        p: 2,
+                        bgcolor: "#f8f9fa",
+                        borderRadius: 2,
+                        border: "1px solid #e0e0e0",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 1,
+                        }}
+                      >
+                        <InfoIcon
+                          sx={{ color: "#1976d2", fontSize: 20, mt: 0.5 }}
+                        />
+                        <Box>
+                          <Typography
+                            variant="subtitle2"
+                            color="#1976d2"
+                            gutterBottom
                           >
-                            Add
-                          </Button>
+                            How Deductions Work
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Deductions are fixed amounts that are subtracted
+                            directly from the employee's total pay. The exact
+                            amount you specify will be deducted from the salary.
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mt: 1 }}
+                          >
+                            <strong>Example:</strong> If you add a deduction of
+                            Rs. 1,000 and the employee's total pay is Rs.
+                            50,000, the net salary will be Rs. 49,000.
+                          </Typography>
                         </Box>
                       </Box>
-                    </Grid>
+                    </Paper>
+                  )}
+                </Grid>
+                )}
 
-                    {selectedAllowances.length > 0 && (
-                      <Grid item xs={12}>
-                        <Paper className="selected-items-preview">
-                          <Typography variant="subtitle2" gutterBottom>
-                            Preview of Allowances to Add:
-                          </Typography>
-                          <TableContainer className="preview-table-container">
-                            <Table size="small" className="preview-table">
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell>Allowance Name</TableCell>
-                                  <TableCell>Percentage</TableCell>
-                                  <TableCell>Amount (Est.)</TableCell>
-                                  <TableCell>Action</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {selectedAllowances.map((name, index) => {
+                {/* Summary Section - Show in both Add and Edit modes */}
+                {(selectedAllowances.length > 0 ||
+                  selectedDeductions.length > 0) && (
+                  <Grid item xs={12}>
+                    <Paper
+                      elevation={1}
+                      sx={{
+                        p: 2,
+                        mt: 2,
+                        bgcolor: "#e3f2fd",
+                        borderRadius: 2,
+                        border: "1px solid #90caf9",
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: "bold", mb: 2 }}
+                      >
+                        Summary of Changes
+                      </Typography>
+
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <Paper
+                            sx={{ p: 2, bgcolor: "#ffffff", height: "100%" }}
+                          >
+                            <Typography variant="subtitle2" gutterBottom>
+                              Allowances ({selectedAllowances.length})
+                            </Typography>
+                            {selectedAllowances.length > 0 ? (
+                              <Box sx={{ mt: 1 }}>
+                                {selectedAllowances.map((name) => {
+                                  const percentage =
+                                    allowancePercentages[name] || 0;
                                   const employee = employeeData.find(
                                     (e) => e.empId === bulkEmployeeId
                                   );
-                                  const estimatedAmount = employee
-                                    ? calculateAllowanceAmount(
-                                        employee.empId,
-                                        allowancePercentages[name] || 0
-                                      )
-                                    : 0;
+                                
+                                  const estimatedAmount =
+                                    calculateEstimatedAllowanceAmount(
+                                      employee,
+                                      percentage
+                                    );
 
                                   return (
-                                    <TableRow key={index}>
-                                      <TableCell>{name}</TableCell>
-                                      <TableCell>
-                                        {allowancePercentages[name] || 0}%
-                                      </TableCell>
-                                      <TableCell>
+                                    <Box
+                                      key={name}
+                                      sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        mb: 1,
+                                      }}
+                                    >
+                                      <Typography variant="body2">
+                                        {name} ({percentage}%)
+                                      </Typography>
+                                      <Typography
+                                        variant="body2"
+                                        sx={{ fontWeight: "bold" }}
+                                      >
                                         Rs. {estimatedAmount.toFixed(2)}
-                                      </TableCell>
-                                      <TableCell>
-                                        <IconButton
-                                          size="small"
-                                          onClick={() =>
-                                            setSelectedAllowances(
-                                              selectedAllowances.filter(
-                                                (item) => item !== name
-                                              )
-                                            )
-                                          }
-                                        >
-                                          <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                      </TableCell>
-                                    </TableRow>
+                                      </Typography>
+                                    </Box>
                                   );
                                 })}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        </Paper>
-                      </Grid>
-                    )}
-
-                    {/* Deductions Section */}
-                    <Grid item xs={12} className="deductions-section">
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", mb: 2 }}
-                      >
-                        <Typography
-                          variant="subtitle1"
-                          className="dialog-section-title deduction-title"
-                        >
-                          Add Deductions (Optional)
-                        </Typography>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={isEligibleForDeductions}
-                              onChange={(e) =>
-                                setIsEligibleForDeductions(e.target.checked)
-                              }
-                            />
-                          }
-                          label="Employee is eligible for deductions"
-                          sx={{ ml: 2 }}
-                        />
-                      </Box>
-
-                      {isEligibleForDeductions && (
-                        <TableContainer
-                          component={Paper}
-                          className="dialog-table-container"
-                        >
-                          <Table
-                            stickyHeader
-                            size="small"
-                            className="dialog-table"
-                          >
-                            <TableHead>
-                              <TableRow>
-                                <TableCell
-                                  padding="checkbox"
-                                  className="dialog-table-cell"
+                                <Divider sx={{ my: 1 }} />
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                  }}
                                 >
-                                  Select
-                                </TableCell>
-                                <TableCell className="dialog-table-cell">
-                                  Deduction Type
-                                </TableCell>
-                                <TableCell className="dialog-table-cell dialog-hide-sm">
-                                  Description
-                                </TableCell>
-                                <TableCell className="dialog-table-cell">
-                                  Amount Type
-                                </TableCell>
-                                <TableCell className="dialog-table-cell">
-                                  Value
-                                </TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {[
-                                {
-                                  name: "PROFESSIONAL TAX",
-                                  desc: "State-mandated tax on employment",
-                                },
-                                {
-                                  name: "INCOME TAX",
-                                  desc: "Tax on employee income",
-                                },
-                                {
-                                  name: "PROVIDENT FUND",
-                                  desc: "Retirement savings contribution",
-                                },
-                                {
-                                  name: "HEALTH INSURANCE",
-                                  desc: "Medical insurance premium",
-                                },
-                              ].map((deduction) => (
-                                <TableRow
-                                  key={deduction.name}
-                                  className="dialog-table-row"
-                                >
-                                  <TableCell
-                                    padding="checkbox"
-                                    className="dialog-table-cell"
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ fontWeight: "bold" }}
                                   >
-                                    <Checkbox
-                                      checked={selectedDeductions.includes(
-                                        deduction.name
-                                      )}
-                                      onChange={(e) =>
-                                        handleDeductionSelection(
-                                          deduction.name,
-                                          e.target.checked
-                                        )
-                                      }
-                                    />
-                                  </TableCell>
-                                  <TableCell className="dialog-table-cell">
-                                    {deduction.name}
-                                  </TableCell>
-                                  <TableCell className="dialog-table-cell dialog-hide-sm">
-                                    {deduction.desc}
-                                  </TableCell>
-                                  <TableCell className="dialog-table-cell">
-                                    <Select
-                                      size="small"
-                                      value={
-                                        deductionPercentages[deduction.name] ===
-                                          0 &&
-                                        manualDeductionAmounts[deduction.name] >
-                                          0
-                                          ? "fixed"
-                                          : "percentage"
-                                      }
-                                      onChange={(e) => {
-                                        if (e.target.value === "fixed") {
-                                          // Switch to fixed amount
-                                          setDeductionPercentages({
-                                            ...deductionPercentages,
-                                            [deduction.name]: 0,
-                                          });
-                                          if (
-                                            !manualDeductionAmounts[
-                                              deduction.name
-                                            ]
-                                          ) {
-                                            setManualDeductionAmounts({
-                                              ...manualDeductionAmounts,
-                                              [deduction.name]: 0,
-                                            });
-                                          }
-                                        } else {
-                                          // Switch to percentage
-                                          setManualDeductionAmounts({
-                                            ...manualDeductionAmounts,
-                                            [deduction.name]: 0,
-                                          });
-                                          if (
-                                            !deductionPercentages[
-                                              deduction.name
-                                            ]
-                                          ) {
-                                            setDeductionPercentages({
-                                              ...deductionPercentages,
-                                              [deduction.name]: 0,
-                                            });
-                                          }
-                                        }
-                                      }}
-                                      disabled={
-                                        !selectedDeductions.includes(
-                                          deduction.name
-                                        )
-                                      }
-                                      sx={{ minWidth: 120 }}
-                                    >
-                                      <MenuItem value="percentage">
-                                        Percentage of Total
-                                      </MenuItem>
-                                      <MenuItem value="fixed">
-                                        Fixed Amount
-                                      </MenuItem>
-                                    </Select>
-                                  </TableCell>
-                                  <TableCell className="dialog-table-cell">
-                                    {deductionPercentages[deduction.name] ===
-                                      0 &&
-                                    manualDeductionAmounts[deduction.name] >
-                                      0 ? (
-                                      <TextField
-                                        type="number"
-                                        size="small"
-                                        value={
-                                          manualDeductionAmounts[
-                                            deduction.name
-                                          ] || 0
-                                        }
-                                        onChange={(e) =>
-                                          handleManualDeductionAmountChange(
-                                            deduction.name,
-                                            e.target.value
-                                          )
-                                        }
-                                        disabled={
-                                          !selectedDeductions.includes(
-                                            deduction.name
-                                          )
-                                        }
-                                        InputProps={{
-                                          startAdornment: (
-                                            <InputAdornment position="start">
-                                              Rs.
-                                            </InputAdornment>
-                                          ),
-                                          inputProps: {
-                                            min: 0,
-                                            step: 1,
-                                          },
-                                        }}
-                                        className="amount-input"
-                                      />
-                                    ) : (
-                                      <TextField
-                                        type="number"
-                                        size="small"
-                                        value={
-                                          deductionPercentages[
-                                            deduction.name
-                                          ] || 0
-                                        }
-                                        onChange={(e) =>
-                                          handleDeductionPercentageChange(
-                                            deduction.name,
-                                            e.target.value
-                                          )
-                                        }
-                                        disabled={
-                                          !selectedDeductions.includes(
-                                            deduction.name
-                                          )
-                                        }
-                                        InputProps={{
-                                          endAdornment: (
-                                            <InputAdornment position="end">
-                                              %
-                                            </InputAdornment>
-                                          ),
-                                          inputProps: {
-                                            min: 0,
-                                            max: 100,
-                                            step: 0.5,
-                                          },
-                                        }}
-                                        className="percentage-input"
-                                      />
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      )}
-                    </Grid>
+                                    Total Allowances
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      color: "#4caf50",
+                                    }}
+                                  >
+                                    Rs.{" "}
 
-                    {isEligibleForDeductions &&
-                      selectedDeductions.length > 0 && (
-                        <Grid item xs={12}>
-                          <Paper className="selected-items-preview deduction-preview">
-                            <Typography
-                              variant="subtitle2"
-                              gutterBottom
-                              className="deduction-preview-title"
-                            >
-                              Selected Deductions:
-                            </Typography>
-                            <TableContainer className="preview-table-container">
-                              <Table size="small" className="preview-table">
-                                <TableHead>
-                                  <TableRow>
-                                    <TableCell>Deduction Name</TableCell>
-                                    <TableCell>Type</TableCell>
-                                    <TableCell>Amount (Est.)</TableCell>
-                                    <TableCell>Action</TableCell>
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {selectedDeductions.map((name, index) => {
-                                    const employee = employeeData.find(
-                                      (e) => e.empId === bulkEmployeeId
-                                    );
-
-                                    let estimatedAmount = 0;
-                                    let deductionType = "";
-
-                                    if (
-                                      deductionPercentages[name] === 0 &&
-                                      manualDeductionAmounts[name] > 0
-                                    ) {
-                                      estimatedAmount =
-                                        manualDeductionAmounts[name];
-                                      deductionType = "Fixed Amount";
-                                    } else {
-                                      estimatedAmount = employee
-                                        ? calculateDeductionAmount(
-                                            employee.basicPay,
-                                            deductionPercentages[name] || 0
-                                          )
-                                        : 0;
-                                      deductionType = `${
-                                        deductionPercentages[name] || 0
-                                      }% of Total Pay`;
-                                    }
-
-                                    return (
-                                      <TableRow key={index}>
-                                        <TableCell>{name}</TableCell>
-                                        <TableCell>{deductionType}</TableCell>
-                                        <TableCell>
-                                          Rs. {estimatedAmount.toFixed(2)}
-                                        </TableCell>
-                                        <TableCell>
-                                          <IconButton
-                                            size="small"
-                                            onClick={() =>
-                                              setSelectedDeductions(
-                                                selectedDeductions.filter(
-                                                  (item) => item !== name
-                                                )
-                                              )
-                                            }
-                                          >
-                                            <DeleteIcon fontSize="small" />
-                                          </IconButton>
-                                        </TableCell>
-                                      </TableRow>
-                                    );
-                                  })}
-                                </TableBody>
-                              </Table>
-                            </TableContainer>
+                                    {selectedAllowances
+                                      .reduce((sum, name) => {
+                                        const percentage =
+                                          allowancePercentages[name] || 0;
+                                        const employee = employeeData.find(
+                                          (e) => e.empId === bulkEmployeeId
+                                        );
+                                        // Use the new function here
+                                        const estimatedAmount =
+                                          calculateEstimatedAllowanceAmount(
+                                            employee,
+                                            percentage
+                                          );
+                                        return sum + estimatedAmount;
+                                      }, 0)
+                                      .toFixed(2)}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            ) : (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                No allowances selected
+                              </Typography>
+                            )}
                           </Paper>
                         </Grid>
-                      )}
-                  </>
+
+                        <Grid item xs={12} md={6}>
+                          <Paper
+                            sx={{ p: 2, bgcolor: "#ffffff", height: "100%" }}
+                          >
+                            <Typography variant="subtitle2" gutterBottom>
+                              Deductions ({selectedDeductions.length})
+                            </Typography>
+                            {selectedDeductions.length > 0 ? (
+                              <Box sx={{ mt: 1 }}>
+                                {selectedDeductions.map((name) => {
+                                  const amount = parseFloat(
+                                    manualDeductionAmounts[name] || 0
+                                  );
+
+                                  return (
+                                    <Box
+                                      key={name}
+                                      sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        mb: 1,
+                                      }}
+                                    >
+                                      <Typography variant="body2">
+                                        {name}
+                                      </Typography>
+                                      <Typography
+                                        variant="body2"
+                                        sx={{ fontWeight: "bold" }}
+                                      >
+                                        Rs. {amount.toFixed(2)}
+                                      </Typography>
+                                    </Box>
+                                  );
+                                })}
+                                <Divider sx={{ my: 1 }} />
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ fontWeight: "bold" }}
+                                  >
+                                    Total Deductions
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      color: "#f44336",
+                                    }}
+                                  >
+                                    Rs.{" "}
+                                    {selectedDeductions
+                                      .reduce(
+                                        (sum, name) =>
+                                          sum +
+                                          parseFloat(
+                                            manualDeductionAmounts[name] || 0
+                                          ),
+                                        0
+                                      )
+                                      .toFixed(2)}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            ) : (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                No deductions selected
+                              </Typography>
+                            )}
+                          </Paper>
+                        </Grid>
+                      </Grid>
+
+                      
+                    </Paper>
+                  </Grid>
                 )}
               </Grid>
             </Box>
           </DialogContent>
-          <DialogActions className="dialog-actions">
+
+          <DialogActions
+            sx={{ p: 2, bgcolor: "#f5f5f5", borderTop: "1px solid #e0e0e0" }}
+          >
             <Button
               onClick={handleCloseDialog}
               color="error"
               variant="outlined"
-              className="dialog-button cancel-button"
-              disabled={isLoading}
+              startIcon={<CloseIcon />}
+              sx={{ mr: 1 }}
             >
               Cancel
             </Button>
-            {editMode ? (
-              <Button
-                onClick={handleAddAllowance}
-                color="primary"
-                variant="contained"
-                className="dialog-button submit-button"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <CircularProgress size={24} />
-                ) : (
-                  "Update Allowance"
-                )}
-              </Button>
-            ) : (
-              <Button
-                onClick={handleAddMultipleAllowances}
-                color="primary"
-                variant="contained"
-                disabled={
-                  isLoading ||
-                  selectedAllowances.length === 0 ||
-                  !bulkEmployeeId
-                }
-                className="dialog-button submit-button"
-              >
-                {isLoading ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  `Add ${selectedAllowances.length} Allowance(s)
-        ${
-          selectedDeductions.length > 0
-            ? ` & ${selectedDeductions.length} Deduction(s)`
-            : ""
-        }`
-                )}
-              </Button>
-            )}
+            <Button
+              onClick={handleAddMultipleAllowances}
+              color="primary"
+              variant="contained"
+              disabled={
+                (!selectedAllowances.length && !selectedDeductions.length) ||
+                !bulkEmployeeId ||
+                isLoading
+              }
+              startIcon={editMode ? <SaveIcon /> : <AddCircleIcon />}
+              sx={{ minWidth: 120 }}
+            >
+              {isLoading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : editMode ? (
+                "Save Changes"
+              ) : (
+                "Add Items"
+              )}
+            </Button>
           </DialogActions>
         </Dialog>
       </Paper>
@@ -4328,3 +4701,4 @@ const PayrollSystem = () => {
 };
 
 export default PayrollSystem;
+

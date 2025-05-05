@@ -75,7 +75,7 @@ const Policies = () => {
   const fetchPolicies = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/policies");
+      const response = await axios.get("http://localhost:5002/api/policies");
       setPolicies(response.data);
     } catch (error) {
       console.error("Error fetching policies:", error);
@@ -118,7 +118,7 @@ const Policies = () => {
     
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:5000/api/policies/${policyToDelete._id}`);
+      await axios.delete(`http://localhost:5002/api/policies/${policyToDelete._id}`);
       setPolicies(policies.filter((policy) => policy._id !== policyToDelete._id));
       showSnackbar("Policy deleted successfully");
     } catch (error) {
@@ -149,7 +149,7 @@ const Policies = () => {
         if (selectedPolicy._id) {
           // Update existing policy
           const response = await axios.put(
-            `http://localhost:5000/api/policies/${selectedPolicy._id}`,
+            `http://localhost:5002/api/policies/${selectedPolicy._id}`,
             selectedPolicy
           );
           setPolicies(
@@ -161,7 +161,7 @@ const Policies = () => {
         } else {
           // Create new policy
           const response = await axios.post(
-            "http://localhost:5000/api/policies",
+            "http://localhost:5002/api/policies",
             selectedPolicy
           );
           setPolicies([...policies, response.data]);

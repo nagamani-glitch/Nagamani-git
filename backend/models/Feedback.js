@@ -61,6 +61,33 @@ const feedbackSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  // Add this field to the feedbackSchema
+reviewAssignedTo: { 
+  type: String 
+}, // Employee ID of the person assigned to review
+
+
+
+  employeeId: { 
+    type: String 
+  }, // Employee ID of the person receiving feedback
+  createdBy: { 
+    type: String 
+  }, // Employee ID of the person creating feedback
+  needsReview: { 
+    type: Boolean, 
+    default: false 
+  },
+  reviewStatus: { 
+    type: String, 
+    enum: ['Pending', 'Approved', 'Rejected'], 
+    default: 'Pending' 
+  },
+  originalFeedbackId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Feedback' 
+  }, // For linked feedback
+
   startDate: { 
     type: Date, 
     required: true 

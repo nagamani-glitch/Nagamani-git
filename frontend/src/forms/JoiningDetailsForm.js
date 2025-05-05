@@ -135,7 +135,7 @@ const AnimatedTextField = ({ field, form, label, ...props }) => {
           },
           '& .MuiInputBase-input:-webkit-autofill': {
             '-webkit-text-fill-color': '#000000',
-            'transition': 'background-color 5000s ease-in-out 0s',
+            'transition': 'background-color 5002s ease-in-out 0s',
           }
         }}
       />
@@ -187,7 +187,7 @@ const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoi
       });
     
       const response = await axios.post(
-        'http://localhost:5000/api/employees/joining-details',
+        'http://localhost:5002/api/employees/joining-details',
         {
           employeeId,
           formData
@@ -625,7 +625,7 @@ export default JoiningDetailsForm;
 //           },
 //           '& .MuiInputBase-input:-webkit-autofill': {
 //             '-webkit-text-fill-color': '#000000',
-//             'transition': 'background-color 5000s ease-in-out 0s',
+//             'transition': 'background-color 5002s ease-in-out 0s',
 //           }
 //         }}
 //       />
@@ -672,7 +672,7 @@ export default JoiningDetailsForm;
 //   //     });
   
 //   //     const response = await axios.post(
-//   //       'http://localhost:5000/api/employees/joining-details',
+//   //       'http://localhost:5002/api/employees/joining-details',
 //   //       {
 //   //         employeeId,
 //   //         joiningDetails: formattedData
@@ -725,7 +725,7 @@ export default JoiningDetailsForm;
 //       });
     
 //       const response = await axios.post(
-//         'http://localhost:5000/api/employees/joining-details',
+//         'http://localhost:5002/api/employees/joining-details',
 //         {
 //           employeeId,
 //           formData
