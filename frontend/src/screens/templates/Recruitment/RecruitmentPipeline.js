@@ -62,6 +62,7 @@ const RecruitmentPipeline = () => {
   const [validationErrors, setValidationErrors] = useState({
     name: "",
     email: "",
+    department: "",
   });
   const [registeredEmployees, setRegisteredEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
@@ -145,6 +146,11 @@ const RecruitmentPipeline = () => {
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const validateDepartment = (department) => {
+    const departmentRegex = /^[a-zA-Z\s]{0,30}$/;
+    return department === "" || departmentRegex.test(department);
   };
 
   const handleTabChange = (event, newValue) => {
@@ -262,12 +268,21 @@ const RecruitmentPipeline = () => {
         email: validateEmail(value) ? "" : "Please enter a valid email address",
       });
     }
+    if (field === "department") {
+      setValidationErrors({
+        ...validationErrors,
+        department: validateDepartment(value)
+          ? ""
+          : "Department should contain only letters and be 0-30 characters long",
+      });
+    }
   };
 
   const handleAddOrEditCandidate = async () => {
     if (
       !validateName(newCandidate.name) ||
-      !validateEmail(newCandidate.email)
+      !validateEmail(newCandidate.email) ||
+      !validateDepartment(newCandidate.department)
     ) {
       return;
     }
@@ -859,11 +874,20 @@ const RecruitmentPipeline = () => {
             helperText={validationErrors.email}
             sx={{ mb: 2 }}
           />
+          {/* <TextField
+            fullWidth
+            label="Department"
+            value={newCandidate.department}
+            onChange={(e) => handleInputChange("department", e.target.value)}
+            sx={{ mb: 2 }}
+          /> */}
           <TextField
             fullWidth
             label="Department"
             value={newCandidate.department}
             onChange={(e) => handleInputChange("department", e.target.value)}
+            error={!!validationErrors.department}
+            helperText={validationErrors.department}
             sx={{ mb: 2 }}
           />
           <TextField
