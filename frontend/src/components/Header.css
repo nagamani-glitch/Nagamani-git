@@ -38,15 +38,67 @@ body {
     height: 80px;
   }
 }
-/* Modify the brand class in the media query */
+
+/* Adjust sizes for different breakpoints */
+@media (min-width: 1200px) {
+  .responsive-logo {
+    height: 50px;
+    max-height: 50px;
+  }
+}
+
+@media (max-width: 992px) {
+  .responsive-logo {
+    height: 35px;
+    max-height: 35px;
+  }
+  
+  .custom-navbar {
+    height: 55px; /* Slightly reduce navbar height */
+  }
+}
+
+
 @media (max-width: 768px) {
   .responsive-logo {
-    height: 60px;
+    height: 30px;
+    max-height: 30px;
+  }
+  
+  .custom-navbar {
+    height: 50px; /* Further reduce navbar height */
   }
   
   .brand {
     display: flex;
-    justify-content: flex-start; /* Change from center to flex-start */
+    justify-content: flex-start;
+    align-items: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .responsive-logo {
+    height: 25px;
+    max-height: 25px;
+  }
+}
+
+
+
+
+/* Modify the brand class in the media query */
+/* @media (max-width: 768px) {
+  .responsive-logo {
+    height: 60px;
+  }
+
+  .custom-navbar {
+    height: 50px; 
+  }
+  
+  .brand {
+    display: flex;
+    justify-content: flex-start; 
     align-items: center;
   }
 }
@@ -55,7 +107,7 @@ body {
   .responsive-logo {
     height: 50px;
   }
-}
+} */
 
 
 .navbar-brand.brand {
