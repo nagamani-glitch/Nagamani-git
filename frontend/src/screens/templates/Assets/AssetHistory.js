@@ -307,14 +307,7 @@ const AssetHistory = () => {
     }));
   };
 
-  // const handlePreviousEmployeesChangeEdit = (e) => {
-  //   const employees = e.target.value.split(",").map(emp => emp.trim());
-  //   console.log("Setting previous employees to:", employees);
-  //   setEditData(prev => ({
-  //     ...prev,
-  //     previousEmployees: employees
-  //   }));
-  // };
+
 
   const handleAddAsset = async (e) => {
     e.preventDefault();
