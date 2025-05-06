@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Container,
   Box,
@@ -13,680 +14,673 @@ import {
   IconButton,
   styled,
   ThemeProvider,
-  createTheme
+  createTheme,
+  useMediaQuery,
+  FormHelperText
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaCheck, FaTimes, FaLock } from 'react-icons/fa';
+import { Velustro } from "uvcanvas";
+import { 
+  resetPassword, 
+  clearError, 
+  setAuthError,
+  selectAuthLoading,
+  selectAuthError
+} from '../../../redux/authSlice';
 import authService from '../../../screens/api/auth';
 
 // Create theme
 const theme = createTheme();
 
-// Styled components
-const ResetContainer = styled(Container)({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
+// Styled components for the background and container
+const PageWrapper = styled('div')({
   minHeight: '100vh',
+  width: '100%',
+  position: 'relative',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
   padding: '20px',
 });
 
-const ResetPaper = styled(Paper)({
+const BackgroundCanvas = styled('div')({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  zIndex: 0,
+});
+
+const ContentContainer = styled(motion.div)(({ theme }) => ({
+  zIndex: 1,
+  width: '100%',
+  maxWidth: '500px',
+  [theme.breakpoints.down('sm')]: {
+    maxWidth: '100%',
+  },
+}));
+
+const ResetPasswordPaper = styled(Paper)(({ theme }) => ({
   padding: '32px',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  maxWidth: '450px',
   width: '100%',
   borderRadius: '15px',
   boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  backgroundColor: 'rgba(255, 255, 255, 0.85)',
   backdropFilter: 'blur(10px)',
+  [theme.breakpoints.down('sm')]: {
+    padding: '24px 16px',
+  },
+}));
+
+const PasswordCriteria = styled(Box)(({ theme }) => ({
+  marginTop: '10px',
+  padding: '16px',
+  backgroundColor: 'rgba(245, 245, 245, 0.9)',
+  borderRadius: '10px',
+  width: '100%',
+  [theme.breakpoints.down('sm')]: {
+    padding: '12px',
+  },
+}));
+
+const CriteriaItem = styled(Box)(({ isValid }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  margin: '5px 0',
+  color: isValid ? 'green' : 'inherit',
+}));
+
+const IconContainer = styled(Box)({
+  display: 'flex',
+  justifyContent: 'center',
+  marginBottom: '24px',
 });
+
+const LockIcon = styled(FaLock)({
+  fontSize: '48px',
+  color: '#4a90e2',
+  padding: '16px',
+  borderRadius: '50%',
+  backgroundColor: 'rgba(74, 144, 226, 0.1)',
+});
+
+const ErrorMessage = styled(FormHelperText)(({ theme }) => ({
+  marginLeft: '14px',
+  marginTop: '4px',
+  marginBottom: '8px',
+  fontSize: '0.75rem',
+  fontWeight: 500,
+  color: theme.palette.error.main,
+}));
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [verifying, setVerifying] = useState(true);
-  const [error, setError] = useState('');
+  const [tokenValid, setTokenValid] = useState(false);
+  const [tokenChecking, setTokenChecking] = useState(true);
   const [success, setSuccess] = useState('');
   const [email, setEmail] = useState('');
   const [companyCode, setCompanyCode] = useState('');
   
-  const navigate = useNavigate();
+  // Form validation errors
+  const [validationErrors, setValidationErrors] = useState({
+    password: '',
+    confirmPassword: ''
+  });
+  
+  // Password strength criteria
+  const [passwordCriteria, setPasswordCriteria] = useState({
+    length: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  });
+  
   const { token } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   
-  // Parse query parameters
+  // Use Redux selectors
+  const loading = useSelector(selectAuthLoading);
+  const error = useSelector(selectAuthError);
+  
+  // Media queries for responsive design
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  
+  // Verify token on mount
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const emailParam = params.get('email');
-    const companyCodeParam = params.get('companyCode');
+    const verifyToken = async () => {
+      try {
+        setTokenChecking(true);
+        
+        // Extract email and companyCode from query parameters
+        const queryParams = new URLSearchParams(location.search);
+        const emailParam = queryParams.get('email');
+        const companyCodeParam = queryParams.get('companyCode');
+        
+        console.log('Token verification with params:', {
+          token,
+          email: emailParam,
+          companyCode: companyCodeParam
+        });
+        
+        if (!emailParam || !companyCodeParam) {
+          console.warn('Missing email or companyCode in reset URL');
+          dispatch(setAuthError('Invalid reset link. Please request a new password reset.'));
+          setTokenValid(false);
+          setTokenChecking(false);
+          return;
+        }
+        
+        setEmail(emailParam);
+        setCompanyCode(companyCodeParam);
+        
+        // Verify token with all required parameters
+        const response = await authService.verifyResetToken({
+          token,
+          email: emailParam,
+          companyCode: companyCodeParam
+        });
+        
+        console.log('Token verification response:', response);
+        setTokenValid(true);
+      } catch (err) {
+        console.error('Token verification error:', err);
+        dispatch(setAuthError('Invalid or expired token. Please request a new password reset.'));
+        setTokenValid(false);
+      } finally {
+        setTokenChecking(false);
+      }
+    };
     
-    if (emailParam) setEmail(emailParam);
-    if (companyCodeParam) setCompanyCode(companyCodeParam);
+    if (token) {
+      verifyToken();
+    } else {
+      setTokenChecking(false);
+      setTokenValid(false);
+      dispatch(setAuthError('No reset token provided.'));
+    }
+  }, [token, location.search, dispatch]);
+  
+  // Check password strength whenever password changes
+  useEffect(() => {
+    const newCriteria = {
+      length: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
     
-        // Verify token on mount
-        if (token && emailParam && companyCodeParam) {
-            verifyToken(token, emailParam, companyCodeParam);
-          } else {
-            setVerifying(false);
-            setError('Missing required parameters. Please use the link from your email.');
-          }
-        }, [location, token]);
-        
-        // Verify reset token
-        const verifyToken = async (token, email, companyCode) => {
-          try {
-            await authService.verifyResetToken({ token, email, companyCode });
-            setVerifying(false);
-          } catch (err) {
-            console.error('Token verification error:', err);
-            setVerifying(false);
-            
-            if (err.response) {
-              setError(err.response.data.message || 'Invalid or expired reset link');
-            } else {
-              setError('Network error. Please try again or request a new reset link.');
-            }
-          }
-        };
-        
-        // Toggle password visibility
-        const togglePasswordVisibility = () => {
-          setShowPassword(!showPassword);
-        };
-        
-        // Toggle confirm password visibility
-        const toggleConfirmPasswordVisibility = () => {
-          setShowConfirmPassword(!showConfirmPassword);
-        };
-        
-        // Validate password
-        const validatePassword = () => {
-          // Password must be at least 8 characters
-          if (password.length < 8) {
-            setError('Password must be at least 8 characters long');
-            return false;
-          }
-          
-          // Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character
-          const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-          if (!passwordRegex.test(password)) {
-            setError('Password must include uppercase, lowercase, number and special character');
-            return false;
-          }
-          
-          // Passwords must match
-          if (password !== confirmPassword) {
-            setError('Passwords do not match');
-            return false;
-          }
-          
-          return true;
-        };
-        
-        // Handle form submission
-        const handleSubmit = async (e) => {
-          e.preventDefault();
-          
-          // Clear previous errors
-          setError('');
-          
-          // Validate form
-          if (!validatePassword()) {
-            return;
-          }
-          
-          setLoading(true);
-          
-          try {
-            // Call API to reset password
-            await authService.resetPassword({
-              token,
-              email,
-              companyCode,
-              password
-            });
-            
-            // Show success message
-            setSuccess('Password has been reset successfully!');
-            
-            // Redirect to login after a short delay
-            setTimeout(() => {
-              navigate('/login');
-            }, 3000);
-          } catch (err) {
-            console.error('Password reset error:', err);
-            
-            if (err.response) {
-              setError(err.response.data.message || 'Failed to reset password');
-            } else {
-              setError('Network error. Please try again.');
-            }
-          } finally {
-            setLoading(false);
-          }
-        };
-        
-        return (
-          <ThemeProvider theme={theme}>
-            <ResetContainer maxWidth="sm">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <ResetPaper elevation={3}>
-                  <Typography variant="h4" component="h1" gutterBottom>
-                    Reset Password
-                  </Typography>
-                  
-                  {verifying ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                      <CircularProgress />
-                      <Typography variant="body1" sx={{ ml: 2 }}>
-                        Verifying your reset link...
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <>
-                      {error && (
-                        <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-                          {error}
-                        </Alert>
-                      )}
-                      
-                      {success && (
-                        <Alert severity="success" sx={{ width: '100%', mb: 2 }}>
-                          {success}
-                        </Alert>
-                      )}
-                      
-                      {!success && (
-                        <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mt: 2 }}>
-                          <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            name="password"
-                            label="New Password"
-                            type={showPassword ? "text" : "password"}
-                            id="password"
-                            autoComplete="new-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            disabled={loading}
-                            InputProps={{
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <IconButton
-                                    onClick={togglePasswordVisibility}
-                                    edge="end"
-                                    aria-label="toggle password visibility"
-                                  >
-                                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                          
-                          <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            name="confirmPassword"
-                            label="Confirm Password"
-                            type={showConfirmPassword ? "text" : "password"}
-                            id="confirmPassword"
-                            autoComplete="new-password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            disabled={loading}
-                            InputProps={{
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <IconButton
-                                    onClick={toggleConfirmPasswordVisibility}
-                                    edge="end"
-                                    aria-label="toggle confirm password visibility"
-                                  >
-                                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                          
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-                            Password must be at least 8 characters long and include uppercase, lowercase, 
-                            number and special character.
-                          </Typography>
-                          
-                          <Button
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            color="primary"
-                            disabled={loading}
-                            sx={{ mt: 2, mb: 2 }}
-                          >
-                            {loading ? <CircularProgress size={24} /> : 'Reset Password'}
-                          </Button>
-                        </Box>
-                      )}
-                      
-                      <Box sx={{ mt: 2, textAlign: 'center' }}>
-                        <Button
-                          variant="text"
-                          color="primary"
-                          onClick={() => navigate('/login')}
-                          sx={{ textTransform: 'none' }}
-                        >
-                          Back to Login
-                        </Button>
-                      </Box>
-                    </>
-                  )}
-                </ResetPaper>
-              </motion.div>
-            </ResetContainer>
-          </ThemeProvider>
-        );
+    setPasswordCriteria(newCriteria);
+    
+    // Clear global error when typing
+    if (error) dispatch(clearError());
+    
+    // Validate password as user types
+    validatePasswordField(password);
+    
+    // If confirm password is not empty, check if passwords match
+    if (confirmPassword) {
+      validateConfirmPasswordField(confirmPassword, password);
+    }
+  }, [password, dispatch, error, confirmPassword]);
+  
+  // Validate password field
+  const validatePasswordField = (value) => {
+    let errorMessage = '';
+    
+    if (!value) {
+      errorMessage = 'Password is required';
+    } else if (value.length < 8) {
+      errorMessage = 'Password must be at least 8 characters long';
+    } else if (!/[A-Z]/.test(value)) {
+      errorMessage = 'Password must include at least one uppercase letter';
+    } else if (!/[a-z]/.test(value)) {
+      errorMessage = 'Password must include at least one lowercase letter';
+    } else if (!/[0-9]/.test(value)) {
+      errorMessage = 'Password must include at least one number';
+    } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+      errorMessage = 'Password must include at least one special character';
+    }
+    
+    setValidationErrors(prev => ({ ...prev, password: errorMessage }));
+    return !errorMessage;
+  };
+  
+  // Validate confirm password field
+  const validateConfirmPasswordField = (value, passwordValue) => {
+    let errorMessage = '';
+    
+    if (!value) {
+      errorMessage = 'Please confirm your password';
+    } else if (value !== passwordValue) {
+      errorMessage = 'Passwords do not match';
+    }
+    
+    setValidationErrors(prev => ({ ...prev, confirmPassword: errorMessage }));
+    return !errorMessage;
+  };
+  
+  // Handle password input change
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    if (success) setSuccess('');
+  };
+  
+  // Handle confirm password input change
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+    validateConfirmPasswordField(e.target.value, password);
+    if (error) dispatch(clearError());
+    if (success) setSuccess('');
+  };
+  
+  // Toggle password visibility
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+  
+  // Toggle confirm password visibility
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+  
+  // Validate form
+  const validateForm = useCallback(() => {
+    // Validate both fields
+    const isPasswordValid = validatePasswordField(password);
+    const isConfirmPasswordValid = validateConfirmPasswordField(confirmPassword, password);
+    
+    // Return true only if both fields are valid
+    return isPasswordValid && isConfirmPasswordValid;
+  }, [password, confirmPassword]);
+  
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Clear any existing errors
+    dispatch(clearError());
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      // If there are validation errors, show them in the form
+      // and prevent submission
+      return;
+    }
+    
+    try {
+      // Include all necessary parameters for reset
+      const resetData = {
+        token,
+        email,
+        companyCode,
+        password
       };
       
-      export default ResetPassword;
+      console.log('Submitting password reset with data:', {
+        ...resetData,
+        password: '[REDACTED]'
+      });
       
-// import React, { useState, useEffect } from 'react';
-// import { useParams, useNavigate } from 'react-router-dom';
-// import axios from 'axios';
-// import { 
-//   Container, Box, Typography, TextField, Button, 
-//   LinearProgress, Alert, InputAdornment, IconButton,
-//   Dialog, DialogContent, CircularProgress
-// } from '@mui/material';
-// import { Visibility, VisibilityOff, CheckCircle } from '@mui/icons-material';
-// import { motion } from 'framer-motion';
-// import { Velustro } from "uvcanvas";
-
-// const ResetPassword = () => {
-//     const { token } = useParams();
-//     const navigate = useNavigate();
-//     const [password, setPassword] = useState('');
-//     const [confirmPassword, setConfirmPassword] = useState('');
-//     const [message, setMessage] = useState('');
-//     const [passwordStrength, setPasswordStrength] = useState(0);
-//     const [passwordFeedback, setPasswordFeedback] = useState('');
-//     const [showPassword, setShowPassword] = useState(false);
-//     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-//     const [openSuccessModal, setOpenSuccessModal] = useState(false);
-//     const [redirectCountdown, setRedirectCountdown] = useState(5); // 5 second countdown
-
-//     // Countdown effect for auto-redirect
-//     useEffect(() => {
-//         let timer;
-//         if (openSuccessModal && redirectCountdown > 0) {
-//             timer = setTimeout(() => {
-//                 setRedirectCountdown(redirectCountdown - 1);
-//             }, 1000);
-//         } else if (openSuccessModal && redirectCountdown === 0) {
-//             navigate('/login');
-//         }
-//         return () => clearTimeout(timer);
-//     }, [openSuccessModal, redirectCountdown, navigate]);
-
-//     // Password strength validation function (copied from RegisterPage)
-//     const checkPasswordStrength = (password) => {
-//         // Initialize strength as 0
-//         let strength = 0;
-//         let feedback = [];
-
-//         // If password is empty, return
-//         if (password.length === 0) {
-//             setPasswordStrength(0);
-//             setPasswordFeedback('');
-//             return;
-//         }
-
-//         // Check length
-//         if (password.length < 8) {
-//             feedback.push("Password should be at least 8 characters");
-//         } else {
-//             strength += 20;
-//         }
-
-//         // Check for lowercase letters
-//         if (password.match(/[a-z]/)) {
-//             strength += 20;
-//         } else {
-//             feedback.push("Include lowercase letters");
-//         }
-
-//         // Check for uppercase letters
-//         if (password.match(/[A-Z]/)) {
-//             strength += 20;
-//         } else {
-//             feedback.push("Include uppercase letters");
-//         }
-
-//         // Check for numbers
-//         if (password.match(/[0-9]/)) {
-//             strength += 20;
-//         } else {
-//             feedback.push("Include numbers");
-//         }
-
-//         // Check for special characters
-//         if (password.match(/[^a-zA-Z0-9]/)) {
-//             strength += 20;
-//         } else {
-//             feedback.push("Include special characters");
-//         }
-
-//         setPasswordStrength(strength);
-//         setPasswordFeedback(feedback.join(', '));
-//     };
-
-//     const getPasswordStrengthColor = () => {
-//         if (passwordStrength < 40) return 'error';
-//         if (passwordStrength < 80) return 'warning';
-//         return 'success';
-//     };
-
-//     // Toggle password visibility
-//     const handleTogglePasswordVisibility = () => {
-//         setShowPassword(!showPassword);
-//     };
-
-//     // Toggle confirm password visibility
-//     const handleToggleConfirmPasswordVisibility = () => {
-//         setShowConfirmPassword(!showConfirmPassword);
-//     };
-
-//     // Update password strength when password changes
-//     useEffect(() => {
-//         checkPasswordStrength(password);
-//     }, [password]);
-
-//     const handleResetPassword = async () => {
-//         // Validate password strength
-//         if (passwordStrength < 60) {
-//             setMessage('Please choose a stronger password');
-//             return;
-//         }
-
-//         if (password !== confirmPassword) {
-//             setMessage('Passwords do not match');
-//             return;
-//         }
-
-//         try {
-//             const response = await axios.post(`http://localhost:5002/api/auth/reset-password/${token}`, { password });
-//             setMessage(response.data.message);
+      const resultAction = await dispatch(resetPassword(resetData));
+      
+      if (resetPassword.fulfilled.match(resultAction)) {
+        setSuccess('Password has been reset successfully. You will be redirected to login page.');
+        // Clear form
+        setPassword('');
+        setConfirmPassword('');
+        
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      }
+    } catch (err) {
+      console.error('Reset password error:', err);
+    }
+  };
+  
+  // If token is being checked, show loading
+  if (tokenChecking) {
+    return (
+      <ThemeProvider theme={theme}>
+        <PageWrapper>
+          <BackgroundCanvas>
+            <Velustro />
+          </BackgroundCanvas>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            zIndex: 1,
+            position: 'relative'
+          }}>
+            <CircularProgress size={isMobile ? 40 : 60} sx={{ color: '#4a90e2' }} />
+          </Box>
+        </PageWrapper>
+      </ThemeProvider>
+    );
+  }
+  
+  // If token is invalid, show error
+  if (!tokenValid) {
+    return (
+      <ThemeProvider theme={theme}>
+        <PageWrapper>
+          <BackgroundCanvas>
+            <Velustro />
+          </BackgroundCanvas>
+          <ContentContainer
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <ResetPasswordPaper elevation={3}>
+              <IconContainer>
+                <LockIcon />
+              </IconContainer>
+              <Typography variant={isMobile ? "h5" : "h4"} component="h1" gutterBottom align="center">
+                Invalid Reset Link
+              </Typography>
+              
+              {error && (
+                <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
+              
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate('/forgot-password')}
+                fullWidth
+                sx={{ 
+                  mt: 2,
+                  py: isMobile ? 1 : 1.5,
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  fontSize: isMobile ? '0.9rem' : '1rem'
+                }}
+              >
+                Request New Reset Link
+              </Button>
+            </ResetPasswordPaper>
+          </ContentContainer>
+        </PageWrapper>
+      </ThemeProvider>
+    );
+  }
+  
+  return (
+    <ThemeProvider theme={theme}>
+      <PageWrapper>
+        <BackgroundCanvas>
+          <Velustro />
+        </BackgroundCanvas>
+        
+        <ContentContainer
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <ResetPasswordPaper elevation={3}>
+            <IconContainer>
+              <LockIcon />
+            </IconContainer>
             
-//             // Show success modal and start countdown
-//             setOpenSuccessModal(true);
-//         } catch (error) {
-//             console.error('Detailed error:', error);
-//             if (error.response) {
-//                 // The request was made and the server responded with a status code
-//                 // that falls out of the range of 2xx
-//                 console.error('Error data:', error.response.data);
-//                 console.error('Error status:', error.response.status);
-//                 console.error('Error headers:', error.response.headers);
-//                 setMessage(error.response.data.message || `Error ${error.response.status}: Bad Request`);
-//             } else if (error.request) {
-//                 // The request was made but no response was received
-//                 console.error('Error request:', error.request);
-//                 setMessage('No response received from server');
-//             } else {
-//                 // Something happened in setting up the request that triggered an Error
-//                 console.error('Error message:', error.message);
-//                 setMessage('Error setting up request: ' + error.message);
-//             }
-//         }
-//     };        
+            <Typography 
+              variant={isMobile ? "h5" : "h4"} 
+              component="h1" 
+              gutterBottom
+              align="center"
+              sx={{ fontWeight: 600 }}
+            >
+              Reset Password
+            </Typography>
+            
+            <Typography 
+              variant="body1" 
+              align="center" 
+              sx={{ 
+                mb: 3, 
+                color: '#555',
+                fontSize: isMobile ? '0.9rem' : '1rem'
+              }}
+            >
+              Create a new password for <strong>{email}</strong>
+            </Typography>
+            
+            {error && (
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  width: '100%', 
+                  mb: 3,
+                  borderRadius: '8px'
+                }}
+              >
+                {error}
+              </Alert>
+            )}
+            
+            {success && (
+              <Alert 
+                severity="success" 
+                sx={{ 
+                  width: '100%', 
+                  mb: 3,
+                  borderRadius: '8px'
+                }}
+              >
+                {success}
+              </Alert>
+            )}
+            
+            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+              <TextField
+                required
+                fullWidth
+                name="password"
+                label="New Password"
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={handlePasswordChange}
+                margin="normal"
+                disabled={loading}
+                error={!!validationErrors.password}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: '8px',
+                  },
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={togglePasswordVisibility}
+                        edge="end"
+                        aria-label="toggle password visibility"
+                        size={isMobile ? "small" : "medium"}
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              {validationErrors.password && (
+                <ErrorMessage>{validationErrors.password}</ErrorMessage>
+              )}
+              
+              <PasswordCriteria>
+                <Typography 
+                  variant="subtitle2" 
+                  gutterBottom
+                  sx={{ 
+                    fontWeight: 600,
+                    fontSize: isMobile ? '0.8rem' : '0.9rem',
+                    color: '#555'
+                  }}
+                >
+                  Password must contain:
+                </Typography>
+                
+                <CriteriaItem isValid={passwordCriteria.length}>
+                  {passwordCriteria.length ? 
+                    <FaCheck style={{ marginRight: '8px', color: '#4caf50' }} /> : 
+                    <FaTimes style={{ marginRight: '8px', color: '#bdbdbd' }} />
+                  }
+                  At least 8 characters
+                </CriteriaItem>
+                
+                <CriteriaItem isValid={passwordCriteria.hasUpperCase}>
+                  {passwordCriteria.hasUpperCase ? 
+                    <FaCheck style={{ marginRight: '8px', color: '#4caf50' }} /> : 
+                    <FaTimes style={{ marginRight: '8px', color: '#bdbdbd' }} />
+                  }
+                  At least one uppercase letter
+                </CriteriaItem>
+                
+                <CriteriaItem isValid={passwordCriteria.hasLowerCase}>
+                  {passwordCriteria.hasLowerCase ? 
+                    <FaCheck style={{ marginRight: '8px', color: '#4caf50' }} /> : 
+                    <FaTimes style={{ marginRight: '8px', color: '#bdbdbd' }} />
+                  }
+                  At least one lowercase letter
+                </CriteriaItem>
+                
+                <CriteriaItem isValid={passwordCriteria.hasNumber}>
+                  {passwordCriteria.hasNumber ? 
+                    <FaCheck style={{ marginRight: '8px', color: '#4caf50' }} /> : 
+                    <FaTimes style={{ marginRight: '8px', color: '#bdbdbd' }} />
+                  }
+                  At least one number
+                </CriteriaItem>
+                
+                <CriteriaItem isValid={passwordCriteria.hasSpecialChar}>
+                  {passwordCriteria.hasSpecialChar ? 
+                    <FaCheck style={{ marginRight: '8px', color: '#4caf50' }} /> : 
+                    <FaTimes style={{ marginRight: '8px', color: '#bdbdbd' }} />
+                  }
+                  At least one special character
+                </CriteriaItem>
+              </PasswordCriteria>
+              
+              <TextField
+                required
+                fullWidth
+                name="confirmPassword"
+                label="Confirm Password"
+                type={showConfirmPassword ? "text" : "password"}
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+                margin="normal"
+                disabled={loading}
+                error={!!validationErrors.confirmPassword}
+                sx={{
+                  mt: 3,
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: '8px',
+                  },
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={toggleConfirmPasswordVisibility}
+                        edge="end"
+                        aria-label="toggle confirm password visibility"
+                        size={isMobile ? "small" : "medium"}
+                      >
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              {validationErrors.confirmPassword && (
+                <ErrorMessage>{validationErrors.confirmPassword}</ErrorMessage>
+              )}
+              
+              <motion.div 
+                whileHover={{ scale: loading ? 1 : 1.02 }} 
+                whileTap={{ scale: loading ? 1 : 0.98 }}
+              >
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  disabled={loading}
+                  sx={{ 
+                    mt: 4, 
+                    mb: 2,
+                    py: isMobile ? 1.2 : 1.5,
+                    backgroundColor: '#4a90e2',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    fontSize: isMobile ? '0.9rem' : '1rem',
+                    boxShadow: '0 4px 10px rgba(74, 144, 226, 0.3)',
+                    '&:hover': {
+                      backgroundColor: loading ? '#4a90e2' : '#357abd',
+                    },
+                    position: 'relative'
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <CircularProgress 
+                        size={24} 
+                        sx={{ 
+                          color: 'white',
+                          position: 'absolute',
+                          left: 'calc(50% - 12px)',
+                          top: 'calc(50% - 12px)'
+                        }} 
+                      />
+                      <span style={{ visibility: 'hidden' }}>Reset Password</span>
+                    </>
+                  ) : 'Reset Password'}
+                </Button>
+              </motion.div>
+              
+              <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Button
+                  variant="text"
+                  color="primary"
+                  onClick={() => navigate('/login')}
+                  sx={{ 
+                    textTransform: 'none',
+                    fontSize: isMobile ? '0.85rem' : '0.9rem'
+                  }}
+                >
+                  Back to Login
+                </Button>
+              </Box>
+            </Box>
+          </ResetPasswordPaper>
+        </ContentContainer>
+      </PageWrapper>
+    </ThemeProvider>
+  );
+};
 
-//     return (
-//         <div className="reset-password-wrapper" style={{
-//             minHeight: '100vh',
-//             position: 'relative',
-//             display: 'flex',
-//             alignItems: 'center',
-//             justifyContent: 'center'
-//         }}>
-//             <div style={{
-//                 position: 'absolute',
-//                 top: 0,
-//                 left: 0,
-//                 right: 0,
-//                 bottom: 0,
-//                 zIndex: 0
-//             }}>
-//                 <Velustro />
-//             </div>
-
-//             <motion.div
-//                 initial={{ opacity: 0 }}
-//                 animate={{ opacity: 1 }}
-//                 transition={{ duration: 0.5 }}
-//             >
-//                 <Container
-//                     component="main"
-//                     maxWidth="xs"
-//                     sx={{
-//                         position: 'relative',
-//                         zIndex: 1,
-//                         mt: 8,
-//                         p: 4,
-//                         boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-//                         borderRadius: '20px',
-//                         backgroundColor: 'rgba(0, 0, 0, 0.75)',
-//                         backdropFilter: 'blur(15px)',
-//                         border: '1px solid rgba(255, 255, 255, 0.18)',
-//                         '& .MuiTextField-root': {
-//                             '& .MuiOutlinedInput-root': {
-//                                 backgroundColor: 'black',
-//                                 '& fieldset': {
-//                                     borderColor: 'rgba(255, 255, 255, 0.3)',
-//                                 },
-//                                 '&:hover fieldset': {
-//                                     borderColor: 'rgba(255, 255, 255, 0.5)',
-//                                 },
-//                                 '& input': {
-//                                     color: 'white',
-//                                     '&::placeholder': {
-//                                         color: 'rgba(255, 255, 255, 0.7)',
-//                                     },
-//                                 '&:-webkit-autofill': {
-//                                         WebkitBoxShadow: '0 0 0 1000px black inset',
-//                                         WebkitTextFillColor: 'white',
-//                                     },
-//                                 '&:-webkit-autofill:hover, &:-webkit-autofill:focus': {
-//                                     WebkitBoxShadow: '0 0 0 1000px black inset',
-//                                     WebkitTextFillColor: 'white',      
-//                                 },
-//                             }
-//                         },
-//                             '& .MuiInputLabel-root': {
-//                                 color: 'rgba(255, 255, 255, 0.7)',
-//                             }
-//                         }
-//                     }}
-//                 >
-//                     <Typography 
-//                         variant="h4" 
-//                         component="h1" 
-//                         gutterBottom 
-//                         align="center"
-//                         sx={{
-//                             color: 'white',
-//                             fontWeight: 600,
-//                             textTransform: 'uppercase',
-//                             letterSpacing: '2px',
-//                             mb: 3
-//                         }}
-//                     >
-//                         Reset Password
-//                     </Typography>
-                    
-//                     {message && !openSuccessModal && (
-//                         <Alert 
-//                             severity={message.includes('success') ? 'success' : 'error'} 
-//                             sx={{ 
-//                                 mb: 2,
-//                                 backgroundColor: 'rgba(0, 0, 0, 0.5)',
-//                                 color: message.includes('match') ? '#ff4444' : 'rgba(255, 255, 255, 0.8)'
-//                             }}
-//                         >
-//                             {message}
-//                         </Alert>
-//                     )}
-                    
-//                     <TextField
-//                         margin="normal"
-//                         required
-//                         fullWidth
-//                         name="password"
-//                         label="New Password"
-//                         type={showPassword ? "text" : "password"}
-//                         id="password"
-//                         value={password}
-//                         onChange={(e) => setPassword(e.target.value)}
-//                         InputProps={{
-//                             endAdornment: (
-//                                 <InputAdornment position="end">
-//                                     <IconButton
-//                                         aria-label="toggle password visibility"
-//                                         onClick={handleTogglePasswordVisibility}
-//                                         edge="end"
-//                                         sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-//                                     >
-//                                         {showPassword ? <VisibilityOff /> : <Visibility />}
-//                                     </IconButton>
-//                                 </InputAdornment>
-//                             )
-//                         }}
-//                         sx={{ mb: 3 }}
-//                     />
-                    
-//                     {password && (
-//                         <>
-//                             <LinearProgress 
-//                                 variant="determinate" 
-//                                 value={passwordStrength} 
-//                                 color={getPasswordStrengthColor()}
-//                                 sx={{ mt: 1, mb: 1 }}
-//                             />
-//                             <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-//                                 Password strength: {passwordStrength < 40 ? 'Weak' : passwordStrength < 80 ? 'Medium' : 'Strong'}
-//                             </Typography>
-//                             {passwordFeedback && (
-//                                 <Typography variant="caption" color="error" display="block">
-//                                     {passwordFeedback}
-//                                 </Typography>
-//                             )}
-//                         </>
-//                     )}
-                    
-//                     <TextField
-//                         margin="normal"
-//                         required
-//                         fullWidth
-//                         name="confirmPassword"
-//                         label="Confirm Password"
-//                         type={showConfirmPassword ? "text" : "password"}
-//                         id="confirmPassword"
-//                         value={confirmPassword}
-//                         onChange={(e) => setConfirmPassword(e.target.value)}
-//                         InputProps={{
-//                             endAdornment: (
-//                                 <InputAdornment position="end">
-//                                     <IconButton
-//                                         aria-label="toggle confirm password visibility"
-//                                         onClick={handleToggleConfirmPasswordVisibility}
-//                                         edge="end"
-//                                         sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-//                                     >
-//                                         {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-//                                     </IconButton>
-//                                 </InputAdornment>
-//                             )
-//                         }}
-//                         sx={{ mb: 3 }}
-//                     />
-                    
-//                     <Button
-//                         fullWidth
-//                         variant="contained"
-//                         color="primary"
-//                         onClick={handleResetPassword}
-//                         sx={{
-//                             backgroundColor: '#4a90e2',
-//                             padding: '12px',
-//                             fontSize: '16px',
-//                             fontWeight: 600,
-//                             '&:hover': {
-//                                 backgroundColor: '#357abd'
-//                             }
-//                         }}
-//                     >
-//                         Reset Password
-//                     </Button>
-//                 </Container>
-//             </motion.div>
-
-//             {/* Auto-redirect Success Modal */}
-//             <Dialog
-//                 open={openSuccessModal}
-//                 aria-labelledby="alert-dialog-title"
-//                 aria-describedby="alert-dialog-description"
-//                 PaperProps={{
-//                     style: {
-//                         backgroundColor: 'rgba(0, 0, 0, 0.85)',
-//                         color: 'white',
-//                         border: '1px solid rgba(255, 255, 255, 0.18)',
-//                         borderRadius: '10px',
-//                         boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-//                         maxWidth: '400px',
-//                         width: '100%',
-//                         padding: '20px'
-//                     }
-//                 }}
-//             >
-//                 <DialogContent sx={{ textAlign: 'center', p: 3 }}>
-//                     <CheckCircle sx={{ fontSize: 60, color: '#4CAF50', mb: 2 }} />
-                    
-//                     <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, color: 'white' }}>
-//                         Password Reset Successful
-//                     </Typography>
-                    
-//                     <Typography variant="body1" sx={{ mb: 3, color: 'rgba(255, 255, 255, 0.8)' }}>
-//                         Your password has been reset successfully. You can now log in with your new password.
-//                     </Typography>
-                    
-//                     {/* Countdown indicator */}
-//                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2 }}>
-//                         <CircularProgress 
-//                             variant="determinate" 
-//                             value={(redirectCountdown / 5) * 100} 
-//                             size={30} 
-//                             thickness={5}
-//                             sx={{ color: '#4a90e2', mr: 2 }}
-//                         />
-//                         <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-//                             Redirecting to login in {redirectCountdown} seconds...
-//                         </Typography>
-//                     </Box>
-//                 </DialogContent>
-//             </Dialog>
-//         </div>
-//     );
-// };
-
-// export default ResetPassword;
+export default ResetPassword;

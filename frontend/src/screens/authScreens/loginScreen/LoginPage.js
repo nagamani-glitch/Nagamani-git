@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { 
   TextField, 
   Button, 
@@ -19,7 +20,16 @@ import { motion } from 'framer-motion';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { Velustro } from "uvcanvas";
 import { debounce } from 'lodash';
-import { useAuth } from '../../../hooks/useAuth';
+import { 
+  loginUser, 
+  clearError, 
+  setAuthError,
+  selectAuthLoading,
+  selectAuthError,
+  selectVerificationNeeded,
+  selectVerificationEmail,
+  logoutUser
+} from '../../../redux/authSlice';
 
 // Create a theme
 const theme = createTheme();
@@ -77,16 +87,13 @@ const LoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const navigate = useNavigate();
-  const { 
-    loading, 
-    error, 
-    login, 
-    verificationNeeded, 
-    verificationEmail,
-    verifyEmail,
-    setError,
-    
-  } = useAuth();
+  const dispatch = useDispatch();
+  
+  // Use Redux selectors
+  const loading = useSelector(selectAuthLoading);
+  const error = useSelector(selectAuthError);
+  const verificationNeeded = useSelector(selectVerificationNeeded);
+  const verificationEmail = useSelector(selectVerificationEmail);
   
   // Use a ref to track if component is mounted
   const isMounted = useRef(true);
@@ -131,6 +138,12 @@ const LoginPage = () => {
     }
   }, []);
 
+  const logout = useCallback(() => {
+    dispatch(logoutUser()).then(() => {
+      navigate('/login');
+    });
+  }, [dispatch, navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     
@@ -151,7 +164,7 @@ const LoginPage = () => {
     }));
     
     // Clear error when user starts typing again
-    if (error) setError('');
+    if (error) dispatch(clearError());
   };
 
   const togglePasswordVisibility = useCallback((e) => {
@@ -166,100 +179,83 @@ const LoginPage = () => {
   const validateForm = useCallback(() => {
     // Basic form validation
     if (!formData.companyCode.trim()) {
-      setError('Company code is required');
+      dispatch(setAuthError('Company code is required'));
       return false;
     }
     if (!formData.email.trim()) {
-      setError('Email is required');
+      dispatch(setAuthError('Email is required'));
       return false;
     }
     if (!formData.password) {
-      setError('Password is required');
+      dispatch(setAuthError('Password is required'));
       return false;
     }
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
+      dispatch(setAuthError('Please enter a valid email address'));
       return false;
     }
     return true;
-  }, [formData, setError]);
+  }, [formData, dispatch]);
 
   // Handle form submission
-const handleSubmit = useCallback(async (e) => {
-  // Prevent default form submission behavior
-  if (e) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-  
-  // Prevent double submission
-  if (isSubmitting || loading) return;
-  
-  // Validate form inputs
-  if (!validateForm()) {
-    return;
-  }
-  
-  // Save current form state to session storage in case of page reload
-  try {
-    sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
-  } catch (error) {
-    console.error('Error saving form data to session storage:', error);
-  }
-  
-  // Set submission state
-  setIsSubmitting(true);
-  
-  try {
-    console.log('Submitting login form with:', {
-      email: formData.email,
-      companyCode: formData.companyCode,
-      passwordProvided: !!formData.password
-    });
-    // Attempt login
-    const response = await login(formData);
-    console.log('Login response in component:', {
-      success: !!response,
-      hasUser: !!response?.user,
-      hasToken: !!response?.token
-    });
+  const handleSubmit = useCallback(async (e) => {
+    // Prevent default form submission behavior
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
-    // Clear pending login on success
-    sessionStorage.removeItem('pendingLogin');
+    // Prevent double submission
+    if (isSubmitting || loading) return;
     
-    // Navigate to dashboard on success
-    if (isMounted.current) {
-      console.log('Navigating to dashboard...');
+    // Validate form inputs
+    if (!validateForm()) {
+      return;
+    }
+    
+    // Save current form state to session storage in case of page reload
+    try {
+      sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
+    } catch (error) {
+      console.error('Error saving form data to session storage:', error);
+    }
+    
+    // Set submission state
+    setIsSubmitting(true);
+    
+    try {
+      console.log('Submitting login form with:', {
+        email: formData.email,
+        companyCode: formData.companyCode,
+        passwordProvided: !!formData.password
+      });
+      
+      // Attempt login using Redux action
+      const resultAction = await dispatch(loginUser(formData));
+      
+      console.log('Login response in component:', {
+        success: loginUser.fulfilled.match(resultAction),
+        payload: resultAction.payload
+      });
+      
+      // Clear pending login on success
+    if (loginUser.fulfilled.match(resultAction)) {
+      sessionStorage.removeItem('pendingLogin');
+      
+      // Navigate to dashboard on success - SIMPLIFIED NAVIGATION
+      console.log('Login successful, navigating to dashboard');
       navigate('/Dashboards');
     }
   } catch (error) {
-    // Error handling is done in the useAuth hook
-    console.log('Login failed, but error is handled in the hook');
-    
-    // // Make sure to reset loading state here
-    // resetLoadingState();
-    
-    // Reset submission state
-    if (isMounted.current) {
-      setIsSubmitting(false);
-    }
+    console.log('Login failed, but error is handled in the reducer');
   } finally {
     if (isMounted.current) {
       setIsSubmitting(false);
-
-      setTimeout(() => {
-        if (isMounted.current) {
-          navigate('/Dashboards');
-          console.log('Navigation triggered');
-        }
-      }, 100);
     }
-    }
-  
-}, [formData, isSubmitting, loading, validateForm, login, navigate]);
-
+  }
+}, [formData, isSubmitting, loading, validateForm, dispatch, navigate]);
   // Handle verification request
   const handleRequestVerification = useCallback(() => {
     if (!verificationEmail) return;
@@ -268,8 +264,8 @@ const handleSubmit = useCallback(async (e) => {
     sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
     
     // Redirect to verification page with email
-    verifyEmail(verificationEmail);
-  }, [verificationEmail, formData, verifyEmail]);
+    navigate(`/verify-otp?email=${encodeURIComponent(verificationEmail)}`);
+  }, [verificationEmail, formData, navigate]);
 
   // Custom text field styling
   const textFieldSx = {
@@ -536,46 +532,46 @@ const handleSubmit = useCallback(async (e) => {
               )}
               
               <Box sx={{ mt: 2, textAlign: 'center' }}>
-  <Typography 
-    variant="body2" 
-    sx={{
-      color: 'rgba(255, 255, 255, 0.8)',
-      fontSize: isMobile ? '12px' : '14px',
-      '& a': {
-        color: '#4a90e2',
-        textDecoration: 'none',
-        '&:hover': {
-          textDecoration: 'underline'
-        }
-      }
-    }}
-  >
-    <Link to='/forgot-password' style={{ marginRight: '10px' }}>
-      Forgot Password?
-    </Link>
-  </Typography>
-  
-  <Typography 
-    variant="body2" 
-    sx={{
-      mt: 1,
-      color: 'rgba(255, 255, 255, 0.8)',
-      fontSize: isMobile ? '12px' : '14px',
-      '& a': {
-        color: '#4a90e2',
-        textDecoration: 'none',
-        '&:hover': {
-          textDecoration: 'underline'
-        }
-      }
-    }}
-  >
-    Don't have an account?{' '}
-    <Link to="/register" style={{ color: '#4a90e2', textDecoration: 'none' }}>
-      Sign up
-    </Link>
-  </Typography>
-</Box>
+                <Typography 
+                  variant="body2" 
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: isMobile ? '12px' : '14px',
+                    '& a': {
+                      color: '#4a90e2',
+                      textDecoration: 'none',
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
+                    }
+                  }}
+                >
+                  <Link to='/forgot-password' style={{ marginRight: '10px' }}>
+                    Forgot Password?
+                  </Link>
+                </Typography>
+                
+                <Typography 
+                  variant="body2" 
+                  sx={{
+                    mt: 1,
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: isMobile ? '12px' : '14px',
+                    '& a': {
+                      color: '#4a90e2',
+                      textDecoration: 'none',
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
+                    }
+                  }}
+                >
+                  Don't have an account?{' '}
+                  <Link to="/register" style={{ color: '#4a90e2', textDecoration: 'none' }}>
+                    Sign up
+                  </Link>
+                </Typography>
+              </Box>
             </Box>
           </LoginFormContainer>
         </LoginContent>
@@ -586,248 +582,5 @@ const handleSubmit = useCallback(async (e) => {
 
 export default LoginPage;
 
-// import { useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
-// import axios from 'axios';
-// import { Link } from 'react-router-dom';
-// import { motion } from 'framer-motion';
-// import { Box, Button, TextField, Typography, Container, IconButton } from '@mui/material';
-// import { FaEye, FaEyeSlash } from 'react-icons/fa';
-// import { Velustro } from "uvcanvas";
-// import "./LoginPage.css";
 
-// const LoginPage = () => {
-//   const [formData, setFormData] = useState({
-//     email: '',
-//     password: '',
-//   });
-//   const [error, setError] = useState('');
-//   const [showPassword, setShowPassword] = useState(false);
 
-//   const navigate = useNavigate();
-
-//   const handleChange = (e) => {
-//     setFormData({ ...formData, [e.target.name]: e.target.value });
-//     setError('');
-//   };
-
-//   const togglePasswordVisibility = () => {
-//     setShowPassword(!showPassword);
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     const config = {
-//       headers: {
-//         'Content-Type': 'application/json'
-//       },
-//       withCredentials: true
-//     };
-
-//     try {
-//       const response = await axios.post(
-//         'http://localhost:5002/api/auth/login',
-//         formData,
-//         config
-//       );
-
-//       localStorage.setItem('token', response.data.token);
-//       localStorage.setItem('userId', response.data.user.userId);
-//       console.log('Token stored in localStorage:', response.data.token);
-//       console.log('UserId stored in localStorage:', response.data.user.userId);
-
-      
-//       navigate('/Dashboards');
-//     } catch (error) {
-//       setError(error.response?.data?.message || 'Login failed. Please try again.');
-//     }
-//   };
-
-//   return (
-//     <div className="login-main-wrapper">
-//       <div className="velustro-container">
-//         <Velustro />
-//       </div>
-//       <motion.div
-//         initial={{ opacity: 0 }}
-//         animate={{ opacity: 1 }}
-//         transition={{ duration: 0.5 }}
-//         className="login-content"
-//       >
-//         <Container
-//           component="main"
-//           maxWidth="xs"
-//           // sx={{
-//           //   mt: 8,
-//           //   p: 4,
-//           //   boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-//           //   borderRadius: '20px',
-//           //   backgroundColor: 'rgba(0, 0, 0, 0.75)',
-//           //   backdropFilter: 'blur(15px)',
-//           //   border: '1px solid rgba(255, 255, 255, 0.18)',
-//           //   '& .MuiTextField-root': {
-//           //     '& .MuiOutlinedInput-root': {
-//           //       '& fieldset': {
-//           //         borderColor: 'rgba(255, 255, 255, 0.3)',
-//           //       },
-//           //       '&:hover fieldset': {
-//           //         borderColor: 'rgba(255, 255, 255, 0.5)',
-//           //       },
-//           //     },
-//           //     '& .MuiInputLabel-root': {
-//           //       color: 'rgba(255, 255, 255, 0.7)',
-//           //     },
-//           //     '& .MuiOutlinedInput-input': {
-//           //       color: 'white',
-//           //       backgroundColor:'#000',
-
-//           //     },
-//           //   },
-//           // }}
-
-//           // Update the Container sx prop styling:
-
-//           sx={{
-//             mt: 8,
-//             p: 4,
-//             boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-//             borderRadius: '20px',
-//             backgroundColor: 'rgba(0, 0, 0, 0.75)',
-//             backdropFilter: 'blur(15px)',
-//             border: '1px solid rgba(255, 255, 255, 0.18)',
-//             '& .MuiTextField-root': {
-//               '& .MuiOutlinedInput-root': {
-//                 backgroundColor: 'black', // Add this line
-//                 '& fieldset': {
-//                   borderColor: 'rgba(255, 255, 255, 0.3)',
-//                 },
-//                 '&:hover fieldset': {
-//                   borderColor: 'rgba(255, 255, 255, 0.5)',
-//                 },
-//                 '& input': { // Add this block
-//                   color: 'white',
-//                   '&::placeholder': {
-//                     color: 'rgba(255, 255, 255, 0.7)',
-//                   },
-//                   '&:-webkit-autofill': {
-//                     WebkitBoxShadow: '0 0 0 1000px black inset',
-//                     WebkitTextFillColor: 'white',
-//                     caretColor: 'white',
-//                     transition: 'background-color 5002s ease-in-out 0s',
-//                   },
-//                   '&:-webkit-autofill:hover, &:-webkit-autofill:focus': {
-//                     WebkitBoxShadow: '0 0 0 1000px black inset',
-//                     WebkitTextFillColor: 'white',
-//                   },
-//                 }
-//               },
-//               '& .MuiInputLabel-root': {
-//                 color: 'rgba(255, 255, 255, 0.7)',
-//               }
-//             }
-//           }}
-
-//         >
-//           <Typography
-//             variant="h4"
-//             component="h1"
-//             sx={{
-//               mb: 2,
-//               textAlign: 'center',
-//               color: 'white',
-//               fontWeight: 600,
-//               textTransform: 'uppercase',
-//               letterSpacing: '2px'
-//             }}
-//           >
-//             Login
-//           </Typography>
-//           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-//             <TextField
-//               margin="normal"
-//               fullWidth
-//               label="Email Address"
-//               name="email"
-//               type="email"
-//               autoComplete="email"
-//               autoFocus
-//               onChange={handleChange}
-//               required
-//             />
-//             <TextField
-//               margin="normal"
-//               fullWidth
-//               label="Password"
-//               name="password"
-//               type={showPassword ? "text" : "password"}
-//               autoComplete="current-password"
-//               onChange={handleChange}
-//               required
-//               InputProps={{
-//                 endAdornment: (
-//                   <IconButton
-//                     onClick={togglePasswordVisibility}
-//                     edge="end"
-//                     aria-label="toggle password visibility"
-//                     sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-//                   >
-//                     {showPassword ? <FaEyeSlash /> : <FaEye />}
-//                   </IconButton>
-//                 ),
-//               }}
-//             />
-//             {error && (
-//               <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-//                 {error}
-//               </Typography>
-//             )}
-//             <motion.div whileHover={{ scale: 1.05 }}>
-//               <Button
-//                 type="submit"
-//                 fullWidth
-//                 variant="contained"
-//                 sx={{
-//                   mt: 3,
-//                   mb: 2,
-//                   backgroundColor: '#4a90e2',
-//                   '&:hover': {
-//                     backgroundColor: '#357abd'
-//                   },
-//                   padding: '12px',
-//                   fontSize: '16px',
-//                   fontWeight: 600
-//                 }}
-//               >
-//                 Login
-//               </Button>
-//             </motion.div>
-//             <Typography
-//               variant="body2"
-//               sx={{
-//                 mt: 2,
-//                 textAlign: 'center',
-//                 color: 'rgba(255, 255, 255, 0.8)',
-//                 '& a': {
-//                   color: '#4a90e2',
-//                   textDecoration: 'none',
-//                   '&:hover': {
-//                     textDecoration: 'underline'
-//                   }
-//                 }
-//               }}
-//             >
-//               <Link to='/forgot-password' style={{ marginRight: '10px' }}>
-//                 Forgot Password?
-//               </Link>
-//               <br />
-//               New user? <Link to='/register'>Register here</Link>
-//             </Typography>
-//           </Box>
-//         </Container>
-//       </motion.div>
-//     </div>
-//   );
-// };
-
-// export default LoginPage;

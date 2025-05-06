@@ -1,108 +1,206 @@
-import Company from '../models/Company.js';
-import User from '../models/User.js';
-import bcrypt from 'bcryptjs/dist/bcrypt.js';
-import jwt from 'jsonwebtoken';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import path from 'path';
+import fs from 'fs';
+import multer from 'multer';
+import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
-import crypto from 'crypto';
+import Company from '../models/Company.js';
+import  User  from '../models/User.js';
 import { sendOtpEmail } from '../utils/mailer.js';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 
 
-// Register a new company with admin user
-export const registerCompany = async (req, res) => {
-  try {
-    console.log('Registration request received:', req.body);
-    
-    const { company, admin } = req.body;
+// Get the current file's path and directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-    console.log('DEBUG - Registration with unhashed password:', {
-      email: admin.email,
-      companyCode: company.companyCode,
-      rawPassword: admin.password // This logs the actual password - SECURITY RISK!
-    });
-    
-    // Check if company code already exists
-    const existingCompany = await Company.findOne({ companyCode: company.companyCode });
-    if (existingCompany) {
-      return res.status(400).json({ message: 'Company with this code already exists' });
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    const uploadsDir = path.join(__dirname, '../uploads/company-logos');
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
     }
-    
-    // Check if admin email already exists
-    const existingAdmin = await User.findOne({ email: admin.email });
-    if (existingAdmin) {
-      return res.status(400).json({ message: 'Admin email is already registered' });
-    }
-    
-    // Create new company
-    const newCompany = new Company(company);
-    await newCompany.save();
-    console.log('Company created:', newCompany);
-    
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP as string
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-      // Log password before hashing for debugging
-      console.log('Admin registration - Email:', admin.email);
-      console.log('Admin registration - Password (first 3 chars):', admin.password.substring(0, 3));
-      console.log('Admin registration - Password length:', admin.password.length);
-    
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(admin.password, salt);
-    
-    // Create admin user with provided name components
-const newAdmin = new User({
-  firstName: admin.firstName,
-  middleName: admin.middleName || '',
-  lastName: admin.lastName,
-  name: admin.name || `${admin.firstName} ${admin.lastName}`,
-  email: admin.email,
-  password: admin.password,
-  role: 'admin',
-  companyCode: company.companyCode,
-  isActive: true,
-  otp: otp, // Store OTP
-  otpExpires: otpExpires, // Store OTP expiration
-  isVerified: false // Set to false until OTP verification
-});
-    
-    console.log('Generated OTP:', otp);
-    console.log('OTP expires at:', otpExpires);
-    console.log('Admin user created:', newAdmin);
-    // Log the OTP for debugging (remove in production)
-    console.log('Generated OTP for', admin.email, ':', otp);
-
-    // Assign permissions based on role
-    newAdmin.assignPermissions();
-    
-    await newAdmin.save();
-    console.log('Admin created:', newAdmin);
-    
-    
-    // Send OTP email to admin
-    await sendOtpEmail(admin.email, otp, {
-      name: newAdmin.name,
-      companyName: company.name
-    });
-    
-    res.status(201).json({
-      success: true,
-      message: 'Company registered successfully. Please verify your email with the OTP sent.',
-      company: {
-        id: newCompany._id,
-        name: newCompany.name,
-        companyCode: newCompany.companyCode
-      },
-      email: admin.email // Send back email for redirection to OTP verification page
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ 
-      message: 'Server error during registration',
-      error: error.message 
-    });
+    cb(null, uploadsDir);
+  },
+  filename: function(req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'logo-' + uniqueSuffix + path.extname(file.originalname));
   }
+});
+
+// File filter for logo uploads
+const fileFilter = (req, file, cb) => {
+  // Accept only image files
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed!'), false);
+  }
+};
+
+// Create multer upload instance
+const upload = multer({ 
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024 // 2MB limit
+  }
+}).single('logo');
+
+export {upload};
+
+// Update the registerCompany function to handle file uploads
+export const registerCompany = async (req, res) => {
+  // Use multer to handle file upload
+  upload(req, res, async (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        // A Multer error occurred when uploading
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ message: 'File size too large. Maximum size is 2MB.' });
+        }
+        return res.status(400).json({ message: `Upload error: ${err.message}` });
+      } else {
+        // An unknown error occurred
+        return res.status(400).json({ message: err.message });
+      }
+    }
+    
+    try {
+      console.log('Registration request received');
+      console.log('Request body keys:', Object.keys(req.body));
+      
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({ message: 'Company logo is required' });
+      }
+      
+      console.log('File received:', req.file);
+      
+      // Parse JSON data from form fields
+      let company, admin;
+      try {
+        company = JSON.parse(req.body.company);
+        admin = JSON.parse(req.body.admin);
+      } catch (error) {
+        return res.status(400).json({ message: 'Invalid JSON data in form fields' });
+      }
+      
+      // Add logo URL to company data
+      const logoUrl = `/uploads/company-logos/${req.file.filename}`;
+      company.logo = logoUrl;
+      
+      console.log('Processing registration with data:', {
+        companyCode: company.companyCode,
+        adminEmail: admin.email,
+        logoUrl
+      });
+      
+      // Check if company code already exists
+      const existingCompany = await Company.findOne({ companyCode: company.companyCode });
+      if (existingCompany) {
+        return res.status(400).json({ message: 'Company with this code already exists' });
+      }
+      
+      // Check if admin email already exists
+      const existingAdmin = await User.findOne({ email: admin.email });
+      if (existingAdmin) {
+        return res.status(400).json({ message: 'Admin email is already registered' });
+      }
+      
+      // Generate OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP as string
+      const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(admin.password, salt);
+
+      let finalPasswordHash;
+      
+      const isAlreadyHashed = admin.password.startsWith('$2a$');
+      
+      console.log('Password check:', {
+        email: admin.email,
+        passwordLength: admin.password.length,
+        isAlreadyHashed: isAlreadyHashed
+      });
+      
+      // Only hash the password if it's not already hashed
+      if (!isAlreadyHashed) {
+        const salt = await bcrypt.genSalt(10);
+        finalPasswordHash = await bcrypt.hash(admin.password, salt);
+        console.log('Password hashed for new user:', {
+          email: admin.email,
+          originalLength: admin.password.length,
+          hashedLength: finalPasswordHash.length
+        });
+      } else {
+        console.log('Password already hashed, using as-is');
+        finalPasswordHash = admin.password;
+      }
+      
+      // Create admin user with provided name components
+      const newAdmin = new User({
+        firstName: admin.firstName,
+        middleName: admin.middleName || '',
+        lastName: admin.lastName,
+        name: admin.name || `${admin.firstName} ${admin.lastName}`,
+        email: admin.email.toLowerCase(),
+        password: finalPasswordHash, // Use finalPasswordHash here
+        role: 'admin',
+        companyCode: company.companyCode.toUpperCase(),
+        isActive: true,
+        isVerified: false,
+        otp,
+        otpExpires
+      });
+      
+      await newAdmin.save();
+      console.log('Admin user created:', {
+        id: newAdmin._id,
+        email: newAdmin.email,
+        role: newAdmin.role
+      });
+      
+      // Create new company but mark it as pending verification
+      const newCompany = new Company({
+        ...company,
+        isActive: false, // Set company as inactive until verification
+        adminUserId: newAdmin._id,
+        pendingVerification: true // Add a flag to indicate pending verification
+      });
+      
+      await newCompany.save();
+      console.log('Company created with pending verification:', newCompany);
+      
+      // Send OTP email
+      try {
+        await sendOtpEmail(admin.email, otp, {
+          name: newAdmin.name,
+          companyName: company.name
+        });
+        console.log(`OTP sent to ${admin.email}: ${otp}`);
+      } catch (emailError) {
+        console.error('Error sending OTP email:', emailError);
+        // Continue with the response even if email fails
+      }
+      
+      res.status(201).json({
+        success: true,
+        message: 'Registration initiated. Please verify your email with the OTP sent to complete registration.',
+        email: admin.email
+      });
+    } catch (error) {
+      console.warn('Registration error:', error);
+      return res.status(400).json({ message: error.message });
+    }
+  });
 };
 
 // Add a new controller function to verify OTP
@@ -155,9 +253,24 @@ export const verifyOtp = async (req, res) => {
     await user.save();
     console.log('User verified successfully:', user.email);
     
+    // Now activate the company if this is an admin user
+    if (user.role === 'admin') {
+      const company = await Company.findOne({ 
+        companyCode: user.companyCode,
+        adminUserId: user._id
+      });
+      
+      if (company) {
+        company.isActive = true;
+        company.pendingVerification = false;
+        await company.save();
+        console.log('Company activated:', company.name);
+      }
+    }
+    
     res.status(200).json({
       success: true,
-      message: 'Email verified successfully',
+      message: 'Email verified successfully. Your company registration is now complete.',
       user: {
         id: user._id,
         name: user.name,
@@ -714,4 +827,5 @@ export const resendOtp = async (req, res) => {
       error: error.message 
     });
   }
+
 };
