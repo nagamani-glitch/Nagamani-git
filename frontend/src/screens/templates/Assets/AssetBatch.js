@@ -10,7 +10,6 @@ import { Search, Add, Edit, Delete, Close } from '@mui/icons-material';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
 
-// Styled components for the table
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   backgroundColor: theme.palette.primary.main,
   color: theme.palette.common.white,
@@ -33,7 +32,6 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     backgroundColor: alpha(theme.palette.primary.light, 0.1),
     transition: "background-color 0.2s ease",
   },
-  // Hide last border
   // Hide last border
   "&:last-child td, &:last-child th": {
     borderBottom: 0,
@@ -73,14 +71,33 @@ function AssetBatch() {
   };
 
   const handleSearch = async (e) => {
-    setSearchQuery(e.target.value);
-    try {
-      const response = await axios.get(`${API_URL}/api/asset-batches/search?q=${e.target.value}`);
-      setAssetBatches(response.data);
-    } catch (err) {
-      console.error('Error during search:', err.message);
-      setError('Failed to fetch search results.');
+    const searchValue = e.target.value;
+    setSearchQuery(searchValue);
+    
+    if (searchValue.trim() === '') {
+      // If search is empty, fetch all batches
+      fetchAssetBatches();
+      return;
     }
+    
+    // Filter the existing batches client-side without making an API call
+    const filteredBatches = assetBatches.filter(batch => 
+      batch.batchNumber.toLowerCase().includes(searchValue.toLowerCase()) ||
+      batch.description.toLowerCase().includes(searchValue.toLowerCase())
+    );
+    
+    // Sort the results to prioritize matches at the beginning of the text
+    filteredBatches.sort((a, b) => {
+      const aStartsWithQuery = a.batchNumber.toLowerCase().startsWith(searchValue.toLowerCase());
+      const bStartsWithQuery = b.batchNumber.toLowerCase().startsWith(searchValue.toLowerCase());
+      
+      if (aStartsWithQuery && !bStartsWithQuery) return -1;
+      if (!aStartsWithQuery && bStartsWithQuery) return 1;
+      return 0;
+    });
+    
+    setAssetBatches(filteredBatches);
+    setError(null); // Clear any previous errors
   };
 
   const toSentenceCase = (str) => {
