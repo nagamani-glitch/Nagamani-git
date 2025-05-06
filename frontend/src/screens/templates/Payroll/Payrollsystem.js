@@ -118,6 +118,7 @@ const PayrollSystem = () => {
 
   // Add these state variables for deductions similar to allowances
   const [selectedDeductions, setSelectedDeductions] = useState([]);
+  const [showDeductionSection, setShowDeductionSection] = useState(false);
 
   // First, add a new state variable to track the LPA value
   const [lpaValue, setLpaValue] = useState("");
@@ -222,69 +223,74 @@ const PayrollSystem = () => {
   };
 
   // Modify the handleRegisteredEmployeeSelect function
-const handleRegisteredEmployeeSelect = (empId) => {
-  if (!empId) {
-    setSelectedRegisteredEmployee("");
-    return;
-  }
-
-  setSelectedRegisteredEmployee(empId);
-
-  // Find the selected employee
-  const selectedEmp = registeredEmployees.find((emp) => emp.Emp_ID === empId);
-
-  if (selectedEmp) {
-    // Map the fields from registered employee to payroll employee
-    const basicPay = selectedEmp.joiningDetails?.salary || 0;
-    const lpa = (parseFloat(basicPay) * 12) / 100000;
-
-    // Format the date of joining if it exists
-    let formattedDateOfJoining = "";
-    if (selectedEmp.joiningDetails?.dateOfJoining) {
-      const dateObj = new Date(selectedEmp.joiningDetails.dateOfJoining);
-      formattedDateOfJoining = dateObj.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+  const handleRegisteredEmployeeSelect = (empId) => {
+    if (!empId) {
+      setSelectedRegisteredEmployee("");
+      return;
     }
 
-    // Get PAN, UAN, and PF numbers from the correct locations
-    const panNo = selectedEmp.personalInfo?.panNumber || "";
-    const uanNo = selectedEmp.joiningDetails?.uanNumber || "";
-    const pfNo = selectedEmp.joiningDetails?.pfNumber || "";
-    
-    // Get bank information
-    const bankName = selectedEmp.bankInfo?.bankName || "";
-    const bankAccountNo = selectedEmp.bankInfo?.accountNumber || "";
+    setSelectedRegisteredEmployee(empId);
 
-    setNewEmployee({
-      ...newEmployee,
-      empId: selectedEmp.Emp_ID || "",
-      empName: `${selectedEmp.personalInfo?.firstName || ""} ${
-        selectedEmp.personalInfo?.lastName || ""
-      }`,
-      department: selectedEmp.joiningDetails?.department || "",
-      designation: selectedEmp.joiningDetails?.initialDesignation || "",
-      email: selectedEmp.personalInfo?.email || "",
-      basicPay: basicPay,
-      dateOfJoining: formattedDateOfJoining,
-      // Add the PAN, UAN, and PF numbers from the correct locations
-      panNo: panNo,
-      uanNo: uanNo,
-      pfNo: pfNo,
-      // Add bank information
-      bankName: bankName,
-      bankAccountNo: bankAccountNo,
-      // Keep other fields as they are since they might not have direct mappings
-    });
+    // Find the selected employee
+    const selectedEmp = registeredEmployees.find((emp) => emp.Emp_ID === empId);
 
-    setLpaValue(lpa.toFixed(2));
+    if (selectedEmp) {
+      // Map the fields from registered employee to payroll employee
+      const basicPay = selectedEmp.joiningDetails?.salary || 0;
+      const lpa = (parseFloat(basicPay) * 12) / 100000;
 
-    showAlert("Employee data loaded successfully", "success");
-  }
-};
+      // Format the date of joining if it exists
+      let formattedDateOfJoining = "";
+      if (selectedEmp.joiningDetails?.dateOfJoining) {
+        const dateObj = new Date(selectedEmp.joiningDetails.dateOfJoining);
+        formattedDateOfJoining = dateObj.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      }
 
+      // Get PAN, UAN, and PF numbers from the correct locations
+      const panNo = selectedEmp.personalInfo?.panNumber || "";
+      const uanNo = selectedEmp.joiningDetails?.uanNumber || "";
+      const pfNo = selectedEmp.joiningDetails?.pfNumber || "";
 
+      // Get bank information
+      const bankName = selectedEmp.bankInfo?.bankName || "";
+      const bankAccountNo = selectedEmp.bankInfo?.accountNumber || "";
+
+      setNewEmployee({
+        ...newEmployee,
+        empId: selectedEmp.Emp_ID || "",
+        empName: `${selectedEmp.personalInfo?.firstName || ""} ${
+          selectedEmp.personalInfo?.lastName || ""
+        }`,
+        department: selectedEmp.joiningDetails?.department || "",
+        designation: selectedEmp.joiningDetails?.initialDesignation || "",
+        email: selectedEmp.personalInfo?.email || "",
+        basicPay: basicPay,
+        dateOfJoining: formattedDateOfJoining,
+        // Add the PAN, UAN, and PF numbers from the correct locations
+        panNo: panNo,
+        uanNo: uanNo,
+        pfNo: pfNo,
+        // Add bank information
+        bankName: bankName,
+        bankAccountNo: bankAccountNo,
+        // Keep other fields as they are since they might not have direct mappings
+      });
+
+      setLpaValue(lpa.toFixed(2));
+
+      showAlert("Employee data loaded successfully", "success");
+    }
+  };
 
   const handleAddMultipleAllowances = async () => {
     try {
+      // First validate the allowance percentages if any allowances are selected
+    if (selectedAllowances.length > 0) {
+      const shouldProceed = validateAllowancePercentages();
+      if (!shouldProceed) {
+        return; // User chose not to proceed
+      }
+    }
       setIsLoading(true);
 
       // Show loading indicator
@@ -510,6 +516,60 @@ const handleRegisteredEmployeeSelect = (empId) => {
       );
     }
   };
+
+//   // Add this function after your other helper functions
+// const validateAllowancePercentages = () => {
+//   // Calculate total percentage
+//   const totalPercentage = Object.values(allowancePercentages).reduce(
+//     (sum, percentage) => sum + parseFloat(percentage || 0),
+//     0
+//   );
+  
+//   // Check if total is not 100%
+//   if (totalPercentage !== 100) {
+//     // Show alert with option to proceed anyway
+//     const message = totalPercentage > 100 
+//       ? `Warning: Total allowance percentage (${totalPercentage}%) exceeds 100%.`
+//       : `Warning: Total allowance percentage (${totalPercentage}%) is less than 100%. Some of the employee's pay will not be allocated.`;
+      
+//     // Use the browser's confirm dialog to allow the user to proceed anyway
+//     return window.confirm(`${message}\n\nDo you want to proceed anyway?`);
+//   }
+  
+//   // If total is exactly 100%, no alert needed
+//   return true;
+// };
+
+// Update the validation function with a tolerance range
+const validateAllowancePercentages = () => {
+  // Calculate total percentage
+  const totalPercentage = Object.values(allowancePercentages).reduce(
+    (sum, percentage) => sum + parseFloat(percentage || 0),
+    0
+  );
+  
+  // Define a small tolerance (e.g., 0.1%)
+  const tolerance = 0.1;
+  
+  // Check if total is within acceptable range (99.9% to 100.1%)
+  if (totalPercentage < (100 - tolerance) || totalPercentage > (100 + tolerance)) {
+    // Show alert with option to proceed anyway
+    const message = totalPercentage > (100 + tolerance)
+      ? `Warning: Total allowance percentage (${totalPercentage.toFixed(2)}%) exceeds 100%. This may result in incorrect calculations.`
+      : `Warning: Total allowance percentage (${totalPercentage.toFixed(2)}%) is less than 100%. Some of the employee's pay will not be allocated.`;
+      
+    // Use the browser's confirm dialog to allow the user to proceed anyway
+    return window.confirm(`${message}\n\nDo you want to proceed anyway?`);
+  }
+  
+  // If total is within acceptable range, no alert needed
+  return true;
+};
+
+const isPercentageWithinRange = (percentage) => {
+  const tolerance = 0.1;
+  return percentage >= (100 - tolerance) && percentage <= (100 + tolerance);
+};
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
@@ -823,6 +883,13 @@ const handleRegisteredEmployeeSelect = (empId) => {
       (employee.payableDays - employee.lop) / employee.payableDays;
 
     return adjustedAllowanceAmount * attendanceRatio;
+  };
+
+  // Add this function for calculating allowance amount in the summary section
+  const calculateEstimatedAllowanceAmount = (employee, percentage) => {
+    if (!employee) return 0;
+    const basicPay = parseFloat(employee.basicPay) || 0;
+    return (basicPay * percentage) / 100;
   };
 
   const calculateDeductionAmount = (basicPay, percentage) => {
@@ -1168,6 +1235,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
     setSelectedDeductions([]);
     setManualDeductionAmounts({});
     setIsEligibleForDeductions(false);
+    setShowDeductionSection(false); // Reset the checkbox
     setIsLoading(false);
     setNewAllowance({
       empId: "",
@@ -1353,25 +1421,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
     }
   };
 
-  // Add this function to calculate net impact (total allowances - total deductions)
-  const calculateNetImpact = (empId) => {
-    const employee = employeeData.find((e) => e.empId === empId);
-    if (!employee) return 0;
-
-    // Calculate total allowances
-    const totalAllowances = selectedAllowances.reduce((sum, name) => {
-      const percentage = allowancePercentages[name] || 0;
-      return sum + calculateAllowanceAmount(employee.basicPay, percentage);
-    }, 0);
-
-    // Calculate total deductions
-    const totalDeductions = selectedDeductions.reduce((sum, name) => {
-      return sum + parseFloat(manualDeductionAmounts[name] || 0);
-    }, 0);
-
-    // Return the net impact
-    return totalAllowances - totalDeductions;
-  };
+ 
 
   // Helper function to delete an allowance
   const handleDeleteAllowance = async (empId, name) => {
@@ -1388,6 +1438,26 @@ const handleRegisteredEmployeeSelect = (empId) => {
       return false;
     }
   };
+
+//   // Add this function to calculate the current total percentage
+//   const calculateTotalAllowancePercentage = () => {
+//   return Object.values(allowancePercentages).reduce(
+//     (sum, percentage) => sum + parseFloat(percentage || 0),
+//     0
+//   );
+// };
+
+// Update the calculate total function to handle floating-point precision
+const calculateTotalAllowancePercentage = () => {
+  const total = Object.values(allowancePercentages).reduce(
+    (sum, percentage) => sum + parseFloat(percentage || 0),
+    0
+  );
+  
+  // Return with 2 decimal places for display
+  return parseFloat(total.toFixed(2));
+};
+
 
   // Helper function to delete a deduction
   const handleDeleteDeduction = async (empId, name) => {
@@ -1711,9 +1781,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                   <TableCell className="table-cell" data-priority="1">
                     Total Pay
                   </TableCell>
-                  <TableCell className="table-cell" data-priority="1">
-                    Net Impact
-                  </TableCell>
+                  
                   <TableCell
                     className="table-cell action-column"
                     data-priority="1"
@@ -1780,7 +1848,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                   );
 
                   // Calculate net impact
-                  const netImpact = totalAllowanceAmount - totalDeductionAmount;
+                  // const netImpact = totalAllowanceAmount - totalDeductionAmount;
 
                   return (
                     <TableRow key={employee.empId} className="table-row">
@@ -1807,18 +1875,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                           LPA
                         </Typography>
                       </TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="subtitle1"
-                          sx={{
-                            fontWeight: "bold",
-                            color: netImpact >= 0 ? "#4caf50" : "#f44336",
-                          }}
-                        >
-                          {netImpact >= 0 ? "+" : ""}
-                          {netImpact.toFixed(2)}
-                        </Typography>
-                      </TableCell>
+                   
 
                       <TableCell align="center">
                         <Tooltip title="Preview">
@@ -1893,6 +1950,9 @@ const handleRegisteredEmployeeSelect = (empId) => {
                                 );
                                 setSelectedDeductions(deductionNames);
                                 setIsEligibleForDeductions(true);
+                                 
+                                // Set the deduction section visibility based on whether the employee has deductions
+                                setShowDeductionSection(employeeDeductions.length > 0);
 
                                 // Open the dialog in edit mode
                                 setEditMode(true); // Set to true to indicate we're in edit mode
@@ -3112,38 +3172,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                   </Paper>
                 </Grid>
 
-                {/* Net Impact */}
-                <Grid item xs={12}>
-                  <Paper sx={{ p: 2, borderRadius: 2, bgcolor: "#f8f9fa" }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Typography variant="subtitle1">
-                        Net Impact on Salary
-                      </Typography>
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          fontWeight: "bold",
-                          color:
-                            calculateNetImpact(previewEmployee.empId) >= 0
-                              ? "#4caf50"
-                              : "#f44336",
-                        }}
-                      >
-                        {calculateNetImpact(previewEmployee.empId) >= 0
-                          ? "+"
-                          : ""}
-                        Rs.{" "}
-                        {calculateNetImpact(previewEmployee.empId).toFixed(2)}
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Grid>
+              
               </Grid>
             </DialogContent>
           )}
@@ -3152,7 +3181,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
             <Button onClick={handleCloseAllowancePreview} variant="outlined">
               Close
             </Button>
-            <Button
+            {/* <Button
               variant="contained"
               startIcon={<EditIcon />}
               onClick={() => {
@@ -3163,7 +3192,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
               }}
             >
               Manage Allowances & Deductions
-            </Button>
+            </Button> */}
           </DialogActions>
         </Dialog>
 
@@ -3762,6 +3791,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                                 />
                               </TableCell>
                             </TableRow>
+                            
                           ))}
                         </TableBody>
                       </Table>
@@ -3832,10 +3862,83 @@ const handleRegisteredEmployeeSelect = (empId) => {
                         Add
                       </Button>
                     </Box>
+                    {/* <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+  <Typography variant="body2">
+    Total Percentage: 
+    <Box component="span" sx={{ 
+      fontWeight: 'bold',
+      color: calculateTotalAllowancePercentage() === 100 ? 'green' : 'orange'
+    }}>
+      {' '}{calculateTotalAllowancePercentage()}%
+    </Box>
+  </Typography>
+  
+  {calculateTotalAllowancePercentage() !== 100 && (
+    <Typography variant="caption" color="warning.main">
+      {calculateTotalAllowancePercentage() > 100 
+        ? "Warning: Total exceeds 100%" 
+        : "Warning: Total is less than 100%"}
+    </Typography>
+  )}
+</Box> */}
+<Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+  <Typography variant="body2">
+    Total Percentage: 
+    <Box component="span" sx={{ 
+      fontWeight: 'bold',
+      color: isPercentageWithinRange(calculateTotalAllowancePercentage()) ? 'green' : 'orange'
+    }}>
+      {' '}{calculateTotalAllowancePercentage().toFixed(2)}%
+    </Box>
+  </Typography>
+  
+  {!isPercentageWithinRange(calculateTotalAllowancePercentage()) && (
+    <Typography variant="caption" color="warning.main">
+      {calculateTotalAllowancePercentage() > (100 + 0.1)
+        ? "Warning: Total exceeds 100%" 
+        : "Warning: Total is less than 100%"}
+    </Typography>
+  )}
+</Box>
                   </Paper>
                 </Grid>
+                {/* Deduction Eligibility Checkbox */}
+<Grid item xs={12}>
+  <Paper
+    elevation={0}
+    sx={{
+      p: 2,
+      mb: 2,
+      bgcolor: "#f8f9fa",
+      borderRadius: 2,
+      border: "1px solid #e0e0e0",
+    }}
+  >
+    <FormControlLabel
+      control={
+        <Checkbox
+          checked={showDeductionSection}
+          onChange={(e) => setShowDeductionSection(e.target.checked)}
+          color="primary"
+        />
+      }
+      label={
+        <Box>
+          <Typography variant="subtitle2">
+            Is this employee eligible for deductions?
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Check this box to enable adding deductions for this employee
+          </Typography>
+        </Box>
+      }
+    />
+  </Paper>
+</Grid>
+
 
                 {/* Deductions Section */}
+                {showDeductionSection && (
                 <Grid item xs={12}>
                   <Typography
                     variant="subtitle1"
@@ -4199,6 +4302,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                     </Paper>
                   )}
                 </Grid>
+                )}
 
                 {/* Summary Section - Show in both Add and Edit modes */}
                 {(selectedAllowances.length > 0 ||
@@ -4237,13 +4341,12 @@ const handleRegisteredEmployeeSelect = (empId) => {
                                   const employee = employeeData.find(
                                     (e) => e.empId === bulkEmployeeId
                                   );
-                                  // Fix: Use the correct function to calculate allowance amount
-                                  const estimatedAmount = employee
-                                    ? calculateAllowanceAmount(
-                                        employee.empId,
-                                        percentage
-                                      )
-                                    : 0;
+                                
+                                  const estimatedAmount =
+                                    calculateEstimatedAllowanceAmount(
+                                      employee,
+                                      percentage
+                                    );
 
                                   return (
                                     <Box
@@ -4287,6 +4390,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                                     }}
                                   >
                                     Rs.{" "}
+
                                     {selectedAllowances
                                       .reduce((sum, name) => {
                                         const percentage =
@@ -4294,13 +4398,12 @@ const handleRegisteredEmployeeSelect = (empId) => {
                                         const employee = employeeData.find(
                                           (e) => e.empId === bulkEmployeeId
                                         );
-                                        // Fix: Use the correct function to calculate allowance amount
-                                        const estimatedAmount = employee
-                                          ? calculateAllowanceAmount(
-                                              employee.empId,
-                                              percentage
-                                            )
-                                          : 0;
+                                        // Use the new function here
+                                        const estimatedAmount =
+                                          calculateEstimatedAllowanceAmount(
+                                            employee,
+                                            percentage
+                                          );
                                         return sum + estimatedAmount;
                                       }, 0)
                                       .toFixed(2)}
@@ -4399,39 +4502,7 @@ const handleRegisteredEmployeeSelect = (empId) => {
                         </Grid>
                       </Grid>
 
-                      <Box
-                        sx={{
-                          mt: 2,
-                          p: 2,
-                          bgcolor: "#ffffff",
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Typography variant="subtitle2">
-                            Net Impact on Salary:
-                          </Typography>
-                          <Typography
-                            variant="subtitle1"
-                            sx={{
-                              fontWeight: "bold",
-                              color:
-                                calculateNetImpact(bulkEmployeeId) >= 0
-                                  ? "#4caf50"
-                                  : "#f44336",
-                            }}
-                          >
-                            {calculateNetImpact(bulkEmployeeId) >= 0 ? "+" : ""}
-                            Rs. {calculateNetImpact(bulkEmployeeId).toFixed(2)}
-                          </Typography>
-                        </Box>
-                      </Box>
+                      
                     </Paper>
                   </Grid>
                 )}
@@ -4630,3 +4701,4 @@ const handleRegisteredEmployeeSelect = (empId) => {
 };
 
 export default PayrollSystem;
+

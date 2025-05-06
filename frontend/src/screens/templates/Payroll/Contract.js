@@ -15,7 +15,7 @@ import {
   FaFileCsv,
   FaFileExcel,
   FaFilePdf,
-  FaPrint,
+  //FaPrint,
   FaChartBar,
   FaCalendarAlt,
   FaCheckCircle,
@@ -432,8 +432,22 @@ const Contract = () => {
     }
   };
 
+  // // Toggle dashboard view
+  // const toggleDashboard = () => {
+  //   setShowDashboard(!showDashboard);
+  //   if (!showDashboard) {
+  //     setDashboardOrientation("landscape");
+  //     fetchDashboardStats();
+  //   }
+  // };
+
   // Toggle dashboard view
   const toggleDashboard = () => {
+    if (filteredContracts.length === 0 && !showDashboard) {
+      toast.warning("No data available to display in dashboard");
+      return;
+    }
+
     setShowDashboard(!showDashboard);
     if (!showDashboard) {
       setDashboardOrientation("landscape");
@@ -1158,12 +1172,97 @@ const Contract = () => {
 
   // Export to CSV
   const handleExportCSV = () => {
+    if (filteredContracts.length === 0) {
+      toast.warning("No data available to export");
+      return;
+    }
     // CSV Link component will handle the actual export
     csvLink.current.link.click();
   };
 
+  // // Export to PDF
+  // const exportToPDF = () => {
+  //   try {
+  //     const doc = new jsPDF();
+
+  //     // Add title
+  //     doc.setFontSize(18);
+  //     doc.text("Contracts Report", 14, 22);
+
+  //     // Add date
+  //     doc.setFontSize(11);
+  //     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+
+  //     // Define table columns
+  //     const tableColumn = [
+  //       "Contract",
+  //       "Employee",
+  //       "Start Date",
+  //       "End Date",
+  //       "Wage Type",
+  //       "Basic Salary",
+  //       "Status",
+  //     ];
+
+  //     // Define table rows
+  //     const tableRows = [];
+
+  //     // Add data to rows
+  //     const contractsToExport =
+  //       selectedContracts.length > 0
+  //         ? filteredContracts.filter((contract) =>
+  //             selectedContracts.includes(contract._id)
+  //           )
+  //         : filteredContracts;
+
+  //     contractsToExport.forEach((contract) => {
+  //       const contractData = [
+  //         contract.contract,
+  //         contract.employee,
+  //         contract.startDate,
+  //         contract.endDate || "N/A",
+  //         contract.wageType,
+  //         contract.basicSalary,
+  //         contract.contractStatus || "Active",
+  //       ];
+  //       tableRows.push(contractData);
+  //     });
+
+  //     // Generate the table
+  //     doc.autoTable({
+  //       head: [tableColumn],
+  //       body: tableRows,
+  //       startY: 40,
+  //       styles: {
+  //         fontSize: 10,
+  //         cellPadding: 3,
+  //         overflow: "linebreak",
+  //       },
+  //       headStyles: {
+  //         fillColor: [41, 128, 185],
+  //         textColor: 255,
+  //         fontStyle: "bold",
+  //       },
+  //       alternateRowStyles: {
+  //         fillColor: [245, 245, 245],
+  //       },
+  //     });
+
+  //     // Save the PDF
+  //     doc.save("contracts_report.pdf");
+  //     toast.success("PDF exported successfully");
+  //   } catch (error) {
+  //     console.error("PDF export error:", error);
+  //     toast.error("Failed to export PDF");
+  //   }
+  // };
   // Export to PDF
   const exportToPDF = () => {
+    if (filteredContracts.length === 0) {
+      toast.warning("No data available to export");
+      return;
+    }
+
     try {
       const doc = new jsPDF();
 
@@ -1239,16 +1338,53 @@ const Contract = () => {
     }
   };
 
-  // Handle print
-  const handlePrint = () => {
-    window.print();
-  };
+  // // Handle print
+  // const handlePrint = () => {
+  //   window.print();
+  // };
 
   // Handle bulk action change
   const handleBulkActionChange = (e) => {
     setBulkAction(e.target.value);
   };
 
+  // // Apply bulk action
+  // const handleApplyBulkAction = () => {
+  //   if (!bulkAction || selectedContracts.length === 0) {
+  //     toast.warning("Please select an action and at least one contract");
+  //     return;
+  //   }
+
+  //   switch (bulkAction) {
+  //     case "delete":
+  //       if (
+  //         window.confirm(
+  //           `Are you sure you want to delete ${selectedContracts.length} contracts?`
+  //         )
+  //       ) {
+  //         Promise.all(selectedContracts.map((id) => handleDelete(id)))
+  //           .then(() => {
+  //             toast.success(`${selectedContracts.length} contracts deleted`);
+  //             setSelectedContracts([]);
+  //             setSelectAll(false);
+  //           })
+  //           .catch((error) => {
+  //             console.error("Bulk delete error:", error);
+  //             toast.error("Failed to delete some contracts");
+  //           });
+  //       }
+  //       break;
+  //     case "export":
+  //       exportToPDF();
+  //       break;
+  //     case "status":
+  //       setShowBulkUpdateModal(true);
+  //       setBulkUpdateData({ field: "contractStatus", value: "Active" });
+  //       break;
+  //     default:
+  //       toast.warning("Invalid action selected");
+  //   }
+  // };
   // Apply bulk action
   const handleApplyBulkAction = () => {
     if (!bulkAction || selectedContracts.length === 0) {
@@ -1276,9 +1412,17 @@ const Contract = () => {
         }
         break;
       case "export":
+        if (selectedContracts.length === 0) {
+          toast.warning("No contracts selected for export");
+          return;
+        }
         exportToPDF();
         break;
       case "status":
+        if (selectedContracts.length === 0) {
+          toast.warning("No contracts selected for status update");
+          return;
+        }
         setShowBulkUpdateModal(true);
         setBulkUpdateData({ field: "contractStatus", value: "Active" });
         break;
@@ -1872,13 +2016,15 @@ const Contract = () => {
   return (
     <div className="contract-page">
       {/* Hidden CSV Link for export */}
-      <CSVLink
-        data={csvData}
-        headers={csvHeaders}
-        filename="contracts_export.csv"
-        className="hidden"
-        ref={csvLink}
-      />
+      {filteredContracts.length > 0 && (
+        <CSVLink
+          data={csvData}
+          headers={csvHeaders}
+          filename="contracts_export.csv"
+          className="hidden"
+          ref={csvLink}
+        />
+      )}
 
       {/* Toast notifications */}
       <ToastContainer position="top-right" autoClose={3000} />
@@ -1970,7 +2116,7 @@ const Contract = () => {
       <Divider sx={{ mb: 2 }} />
 
       {/* Export toolbar - Styled version */}
-      <Paper
+      {/* <Paper
         elevation={0}
         sx={{
           backgroundColor: "#f8fafc",
@@ -2018,14 +2164,14 @@ const Contract = () => {
           >
             PDF
           </Button>
-          <Button
+          {/* <Button
             size="small"
             startIcon={<FaPrint />}
             onClick={handlePrint}
             sx={{ color: "#475569" }}
           >
             Print
-          </Button>
+          </Button> 
           <Button
             size="small"
             startIcon={<FaChartBar />}
@@ -2035,7 +2181,72 @@ const Contract = () => {
             {showDashboard ? "Hide Dashboard" : "Show Dashboard"}
           </Button>
         </Stack>
-      </Paper>
+      </Paper> */}
+      {/* Export toolbar - Only show when data exists */}
+      {filteredContracts.length > 0 && (
+        <Paper
+          elevation={0}
+          sx={{
+            backgroundColor: "#f8fafc",
+            borderRadius: "8px",
+            padding: "12px 16px",
+            marginBottom: "24px",
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" },
+            gap: 2,
+          }}
+        >
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
+              color: "#475569",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <FaFileExport style={{ marginRight: "8px" }} />
+            Export & Reports:
+          </Typography>
+
+          <Stack
+            direction="row"
+            spacing={1}
+            flexWrap="wrap"
+            sx={{ "& button": { minWidth: "auto" } }}
+          >
+            <Button
+              size="small"
+              startIcon={<FaFileExcel />}
+              onClick={handleExportCSV}
+              sx={{ color: "#16a34a" }}
+              disabled={filteredContracts.length === 0}
+            >
+              Excel
+            </Button>
+            <Button
+              size="small"
+              startIcon={<FaFilePdf />}
+              onClick={exportToPDF}
+              sx={{ color: "#ef4444" }}
+              disabled={filteredContracts.length === 0}
+            >
+              PDF
+            </Button>
+            <Button
+              size="small"
+              startIcon={<FaChartBar />}
+              onClick={toggleDashboard}
+              sx={{ color: "#1976d2" }}
+              disabled={filteredContracts.length === 0}
+            >
+              {showDashboard ? "Hide Dashboard" : "Show Dashboard"}
+            </Button>
+          </Stack>
+        </Paper>
+      )}
+
       {/* Status Filter Buttons */}
       <Box
         sx={{
@@ -2401,7 +2612,7 @@ const Contract = () => {
       )}
 
       {/* Options bar for bulk actions */}
-      {selectedContracts.length > 0 && (
+      {selectedContracts.length > 0 && filteredContracts.length > 0 && (
         <Paper
           elevation={1}
           sx={{
