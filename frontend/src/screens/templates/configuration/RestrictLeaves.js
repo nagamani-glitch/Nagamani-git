@@ -51,6 +51,10 @@ function RestrictLeaves() {
     jobPosition: "",
     description: "",
   });
+  const [validationErrors, setValidationErrors] = useState({
+    title: "",
+    endDate: "",
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -95,17 +99,104 @@ function RestrictLeaves() {
     return `${day}-${month}-${year}`;
   };
 
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   // Apply sentence case only for text fields
+  //   const transformedValue = ["title", "description"].includes(name)
+  //     ? toSentenceCase(value)
+  //     : value;
+  //   setFormData({ ...formData, [name]: transformedValue });
+  // };
+
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   // Apply sentence case only for text fields
+  //   const transformedValue = ["title", "description"].includes(name)
+  //     ? toSentenceCase(value)
+  //     : value;
+
+  //   setFormData({ ...formData, [name]: transformedValue });
+
+  //   // Add validation for title field
+  //   if (name === "title" && value) {
+  //     if (!validateTitle(value)) {
+  //       setValidationErrors({
+  //         ...validationErrors,
+  //         title: "Title should contain only letters and spaces",
+  //       });
+  //     } else {
+  //       setValidationErrors({
+  //         ...validationErrors,
+  //         title: "",
+  //       });
+  //     }
+  //   }
+  // };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     // Apply sentence case only for text fields
     const transformedValue = ["title", "description"].includes(name)
       ? toSentenceCase(value)
       : value;
+
     setFormData({ ...formData, [name]: transformedValue });
+
+    // Add validation for title field
+    if (name === "title" && value) {
+      if (!validateTitle(value)) {
+        setValidationErrors({
+          ...validationErrors,
+          title: "Title should contain only letters and spaces",
+        });
+      } else {
+        setValidationErrors({
+          ...validationErrors,
+          title: "",
+        });
+      }
+    }
+
+    // Add validation for date fields
+    if (name === "startDate" || name === "endDate") {
+      const startDate = name === "startDate" ? value : formData.startDate;
+      const endDate = name === "endDate" ? value : formData.endDate;
+
+      if (startDate && endDate) {
+        if (!validateEndDate(startDate, endDate)) {
+          setValidationErrors({
+            ...validationErrors,
+            endDate: "End date must be equal to or after start date",
+          });
+        } else {
+          setValidationErrors({
+            ...validationErrors,
+            endDate: "",
+          });
+        }
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Check for validation errors
+    if (validationErrors.title) {
+      showSnackbar(validationErrors.title, "error");
+      return;
+    }
+
+    // Check for validation errors
+    if (validationErrors.title || validationErrors.endDate) {
+      showSnackbar(validationErrors.title || validationErrors.endDate, "error");
+      return;
+    }
+
+    // Additional validation for dates
+    if (!validateEndDate(formData.startDate, formData.endDate)) {
+      showSnackbar("End date must be equal to or after start date", "error");
+      return;
+    }
     setLoading(true);
 
     // Format dates before submitting
@@ -140,6 +231,7 @@ function RestrictLeaves() {
       });
       setIsEditing(false);
       setEditId(null);
+      setValidationErrors({ title: "", endDate: "" });
     } catch (err) {
       console.error("Error creating/updating restricted leave:", err);
       showSnackbar("Error saving restricted leave", "error");
@@ -160,6 +252,23 @@ function RestrictLeaves() {
     setEditId(leave._id);
     setIsEditing(true);
     setIsAddModalOpen(true);
+    setValidationErrors({ title: "", endDate: "" });
+  };
+
+  // Add this function to validate title (only letters and spaces)
+  const validateTitle = (title) => {
+    const titleRegex = /^[a-zA-Z\s]+$/;
+    return titleRegex.test(title);
+  };
+
+  // Add this function to validate end date
+  const validateEndDate = (startDate, endDate) => {
+    if (!startDate || !endDate) return true;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    return end >= start;
   };
 
   // Function to format date for input type="date"
@@ -694,7 +803,7 @@ function RestrictLeaves() {
           <DialogContent sx={{ padding: isMobile ? "20px" : "32px" }}>
             <form onSubmit={handleSubmit}>
               <Stack spacing={3} sx={{ mt: 2 }}>
-                <TextField
+                {/* <TextField
                   fullWidth
                   label="Title"
                   name="title"
@@ -706,8 +815,57 @@ function RestrictLeaves() {
                       borderRadius: "8px",
                     },
                   }}
+                /> */}
+                <TextField
+                  fullWidth
+                  label="Title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  error={!!validationErrors.title}
+                  helperText={validationErrors.title}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "8px",
+                    },
+                  }}
                 />
 
+                {/* <Stack direction={isMobile ? "column" : "row"} spacing={2}>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    label="Start Date"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    InputLabelProps={{ shrink: true }}
+                    required
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "8px",
+                      },
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    type="date"
+                    label="End Date"
+                    name="endDate"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                    InputLabelProps={{ shrink: true }}
+                    required
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "8px",
+                      },
+                      mt: isMobile ? 0 : undefined,
+                    }}
+                  />
+                </Stack> */}
                 <Stack direction={isMobile ? "column" : "row"} spacing={2}>
                   <TextField
                     fullWidth
@@ -734,6 +892,8 @@ function RestrictLeaves() {
                     onChange={handleChange}
                     InputLabelProps={{ shrink: true }}
                     required
+                    error={!!validationErrors.endDate}
+                    helperText={validationErrors.endDate}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "8px",

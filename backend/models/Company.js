@@ -18,37 +18,77 @@ const companySchema = new mongoose.Schema({
     city: String,
     state: String,
     country: String,
-    zipCode: String
+    zipCode: {
+      type: String,
+      validate: {
+        validator: function(v) {
+          return !v || /^\d{6}$/.test(v);
+        },
+        message: props => 'Zip code must be exactly 6 digits'
+      }
+    }
   },
+  // address: {
+  //   street: {
+  //     type: String,
+  //     required: true,
+  //     trim: true
+  //   },
+  //   city: {
+  //     type: String,
+  //     required: true,
+  //     trim: true
+  //   },
+  //   state: {
+  //     type: String,
+  //     required: true,
+  //     trim: true
+  //   },
+  //   country: {
+  //     type: String,
+  //     required: true,
+  //     trim: true
+  //   },
+  //   zipCode: {
+  //     type: String,
+  //     required: true,
+  //     trim: true,
+  //     match: [/^\d{6}$/, 'Postal code must be exactly 6 digits']
+  //   }
+  // },
   contactEmail: {
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter a valid email address']
+  },
+  contactPhone: {
+    type: String,
+    trim: true,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^\d{10}$/.test(v);
+      },
+      message: props => 'Phone number must be exactly 10 digits'
+    }
+  },
+  // contactPhone: {
+  //   type: String,
+  //   required: true,
+  //   trim: true,
+  //   match: [/^\d{10}$/, 'Phone number must be exactly 10 digits']
+  // },
+  logo: {
+    type: String, // URL to company logo
+    required: true
+  },
+  industry: {
     type: String,
     required: true,
     trim: true
   },
-  contactPhone: {
-    type: String,
-    trim: true
-  },
-  logo: {
-    type: String // URL to company logo
-  },
-  industry: {
-    type: String,
-    trim: true
-  },
-//   subscriptionPlan: {
-//     type: String,
-//     enum: ['free', 'basic', 'premium', 'enterprise'],
-//     default: 'free'
-//   },
-//   subscriptionStatus: {
-//     type: String,
-//     enum: ['active', 'trial', 'expired', 'cancelled'],
-//     default: 'trial'
-//   },
-//   trialEndsAt: {
-//     type: Date
-//   },
   isActive: {
     type: Boolean,
     default: true
@@ -85,6 +125,10 @@ const companySchema = new mongoose.Schema({
       return `REG-${this.companyCode}-${Date.now()}`;
     },
     unique: true
+  },
+  pendingVerification: {
+    type: Boolean,
+    default: true
   }
   
 }, {

@@ -370,13 +370,17 @@ const RecruitmentCandidate = () => {
     message: "",
     severity: "success",
   });
+  const [validationErrors, setValidationErrors] = useState({
+    name: "",
+    email: "",
+    position: "",
+  });
   const [registeredEmployees, setRegisteredEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const [newCandidate, setNewCandidate] = useState({
     name: "",
-
     email: "",
     position: "",
     status: "Not-Hired",
@@ -388,6 +392,22 @@ const RecruitmentCandidate = () => {
     fetchCandidates();
     fetchRegisteredEmployees();
   }, []);
+
+  // Add these validation functions before the useEffect hooks
+  const validateName = (name) => {
+    const nameRegex = /^[a-zA-Z\s]{2,30}$/;
+    return nameRegex.test(name);
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePosition = (position) => {
+    const positionRegex = /^[a-zA-Z\s]{0,30}$/;
+    return position === "" || positionRegex.test(position);
+  };
 
   const fetchCandidates = async () => {
     try {
@@ -415,23 +435,127 @@ const RecruitmentCandidate = () => {
     }
   };
 
+  // const handleEmployeeSelect = (event, employee) => {
+  //   setSelectedEmployee(employee);
+  //   if (employee) {
+  //     // Populate the candidate form with employee data
+  //     setNewCandidate({
+  //       ...newCandidate,
+  //       name: `${employee.personalInfo?.firstName || ""} ${
+  //         employee.personalInfo?.lastName || ""
+  //       }`.trim(),
+  //       email: employee.personalInfo?.email || "",
+  //       position: employee.joiningDetails?.initialDesignation || "",
+  //       employeeId: employee.Emp_ID || "",
+  //     });
+  //   }
+  // };
+
+  // const handleCreateSubmit = async () => {
+  //   try {
+  //     const response = await axios.post(
+  //       "http://localhost:5002/api/applicantProfiles",
+  //       newCandidate
+  //     );
+  //     setCandidates([...candidates, response.data]);
+  //     setCreateDialogOpen(false);
+  //     resetNewCandidate();
+  //     showSnackbar("Candidate created successfully");
+  //   } catch (error) {
+  //     showSnackbar("Error creating candidate", "error");
+  //   }
+  // };
+
+  // Update the handleCreateSubmit function to check all validations
+
   const handleEmployeeSelect = (event, employee) => {
     setSelectedEmployee(employee);
     if (employee) {
-      // Populate the candidate form with employee data
+      const name = `${employee.personalInfo?.firstName || ""} ${
+        employee.personalInfo?.lastName || ""
+      }`.trim();
+      const email = employee.personalInfo?.email || "";
+      const position = employee.joiningDetails?.initialDesignation || "";
+
+      // Update the candidate form with employee data
       setNewCandidate({
         ...newCandidate,
-        name: `${employee.personalInfo?.firstName || ""} ${
-          employee.personalInfo?.lastName || ""
-        }`.trim(),
-        email: employee.personalInfo?.email || "",
-        position: employee.joiningDetails?.initialDesignation || "",
+        name,
+        email,
+        position,
         employeeId: employee.Emp_ID || "",
+      });
+
+      // Validate the fields
+      setValidationErrors({
+        name: validateName(name)
+          ? ""
+          : "Name should contain only letters and be 2-30 characters long",
+        email: validateEmail(email) ? "" : "Please enter a valid email address",
+        position: validatePosition(position)
+          ? ""
+          : "Position should contain only letters and spaces",
       });
     }
   };
 
+  // const handleCreateSubmit = async () => {
+  //   if (
+  //     !validateName(newCandidate.name) ||
+  //     !validateEmail(newCandidate.email) ||
+  //     !validatePosition(newCandidate.position)
+  //   ) {
+  //     showSnackbar("Please fix the validation errors", "error");
+  //     return;
+  //   }
+
+  //   try {
+  //     const response = await axios.post(
+  //       "http://localhost:5002/api/applicantProfiles",
+  //       newCandidate
+  //     );
+  //     setCandidates([...candidates, response.data]);
+  //     setCreateDialogOpen(false);
+  //     resetNewCandidate();
+  //     showSnackbar("Candidate created successfully");
+  //   } catch (error) {
+  //     showSnackbar("Error creating candidate", "error");
+  //   }
+  // };
+
+  // Update the handleCreateSubmit function to check for duplicates
   const handleCreateSubmit = async () => {
+    if (
+      !validateName(newCandidate.name) ||
+      !validateEmail(newCandidate.email) ||
+      !validatePosition(newCandidate.position)
+    ) {
+      showSnackbar("Please fix the validation errors", "error");
+      return;
+    }
+
+    // Check for duplicate email
+    const duplicateEmail = candidates.find(
+      (candidate) =>
+        candidate.email.toLowerCase() === newCandidate.email.toLowerCase()
+    );
+
+    if (duplicateEmail) {
+      showSnackbar("A candidate with this email already exists", "error");
+      return;
+    }
+
+    // Check for duplicate name (optional, depending on your requirements)
+    const duplicateName = candidates.find(
+      (candidate) =>
+        candidate.name.toLowerCase() === newCandidate.name.toLowerCase()
+    );
+
+    if (duplicateName) {
+      showSnackbar("A candidate with this name already exists", "error");
+      return;
+    }
+
     try {
       const response = await axios.post(
         "http://localhost:5002/api/applicantProfiles",
@@ -454,6 +578,91 @@ const RecruitmentCandidate = () => {
       showSnackbar("Candidate deleted successfully");
     } catch (error) {
       showSnackbar("Error deleting candidate", "error");
+    }
+  };
+
+  // // Add this function to handle input changes with validation
+  // const handleInputChange = (field, value) => {
+  //   setNewCandidate({ ...newCandidate, [field]: value });
+
+  //   if (field === "name") {
+  //     setValidationErrors({
+  //       ...validationErrors,
+  //       name: validateName(value)
+  //         ? ""
+  //         : "Name should contain only letters and be 2-30 characters long",
+  //     });
+  //   }
+
+  //   if (field === "email") {
+  //     setValidationErrors({
+  //       ...validationErrors,
+  //       email: validateEmail(value) ? "" : "Please enter a valid email address",
+  //     });
+  //   }
+
+  //   if (field === "position") {
+  //     setValidationErrors({
+  //       ...validationErrors,
+  //       position: validatePosition(value)
+  //         ? ""
+  //         : "Position should contain only letters and spaces",
+  //     });
+  //   }
+  // };
+  // Update the handleInputChange function to check for duplicates in real-time
+  const handleInputChange = (field, value) => {
+    setNewCandidate({ ...newCandidate, [field]: value });
+
+    if (field === "name") {
+      // Validate name format
+      const nameError = validateName(value)
+        ? ""
+        : "Name should contain only letters and be 2-30 characters long";
+
+      // Check for duplicate name
+      const duplicateName =
+        value &&
+        candidates.find(
+          (candidate) => candidate.name.toLowerCase() === value.toLowerCase()
+        );
+
+      setValidationErrors({
+        ...validationErrors,
+        name:
+          nameError ||
+          (duplicateName ? "A candidate with this name already exists" : ""),
+      });
+    }
+
+    if (field === "email") {
+      // Validate email format
+      const emailError = validateEmail(value)
+        ? ""
+        : "Please enter a valid email address";
+
+      // Check for duplicate email
+      const duplicateEmail =
+        value &&
+        candidates.find(
+          (candidate) => candidate.email.toLowerCase() === value.toLowerCase()
+        );
+
+      setValidationErrors({
+        ...validationErrors,
+        email:
+          emailError ||
+          (duplicateEmail ? "A candidate with this email already exists" : ""),
+      });
+    }
+
+    if (field === "position") {
+      setValidationErrors({
+        ...validationErrors,
+        position: validatePosition(value)
+          ? ""
+          : "Position should contain only letters and spaces",
+      });
     }
   };
 
@@ -862,7 +1071,7 @@ const RecruitmentCandidate = () => {
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
             >
-              <TextField
+              {/* <TextField
                 label="Name"
                 fullWidth
                 value={newCandidate.name}
@@ -888,7 +1097,35 @@ const RecruitmentCandidate = () => {
                   setNewCandidate({ ...newCandidate, position: e.target.value })
                 }
                 sx={styles.formField}
+              /> */}
+              <TextField
+                label="Name"
+                fullWidth
+                value={newCandidate.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                error={!!validationErrors.name}
+                helperText={validationErrors.name}
+                sx={styles.formField}
               />
+              <TextField
+                label="Email"
+                fullWidth
+                value={newCandidate.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                error={!!validationErrors.email}
+                helperText={validationErrors.email}
+                sx={styles.formField}
+              />
+              <TextField
+                label="Position"
+                fullWidth
+                value={newCandidate.position}
+                onChange={(e) => handleInputChange("position", e.target.value)}
+                error={!!validationErrors.position}
+                helperText={validationErrors.position}
+                sx={styles.formField}
+              />
+
               <FormControl fullWidth sx={styles.formField}>
                 <InputLabel>Status</InputLabel>
                 <Select
@@ -960,11 +1197,25 @@ const RecruitmentCandidate = () => {
             >
               Cancel
             </Button>
-            <Button
+            {/* <Button
               onClick={handleCreateSubmit}
               variant="contained"
               sx={styles.submitButton}
               disabled={!newCandidate.name || !newCandidate.email}
+            >
+              Create
+            </Button> */}
+            <Button
+              onClick={handleCreateSubmit}
+              variant="contained"
+              sx={styles.submitButton}
+              disabled={
+                !newCandidate.name ||
+                !newCandidate.email ||
+                !!validationErrors.name ||
+                !!validationErrors.email ||
+                !!validationErrors.position
+              }
             >
               Create
             </Button>

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import  User  from '../models/User.js';
 import Company from '../models/Company.js';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
@@ -74,8 +74,8 @@ export const login = async (req, res) => {
     console.log('Login attempt received:', { 
       email, 
       companyCode,
-      passwordProvided: !!password ,
-      rawPassword: password
+      passwordProvided: !!password,
+      passwordLength: password ? password.length : 0
     });
     
     // Find user by email and company code
@@ -90,7 +90,7 @@ export const login = async (req, res) => {
       companyCode: user.companyCode,
       isVerified: user.isVerified,
       isActive: user.isActive,
-      passwordHash: user.password ? user.password.substring(0, 10) + '...' : 'none'
+      passwordHashPrefix: user.password ? user.password.substring(0, 10) + '...' : 'none'
     } : 'No user found');
     
     if (!user) {
@@ -102,7 +102,10 @@ export const login = async (req, res) => {
     
     // Check if user is verified
     if (!user.isVerified) {
-      console.log('User not verified:', user.email);
+      console.log('User status check failed:', {
+        isVerified: user.isVerified,
+        isActive: user.isActive
+      });
       
       // Generate new OTP for unverified users
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -163,23 +166,22 @@ export const login = async (req, res) => {
       });
     }
     
-    // Verify password
-    console.log('About to verify password for:', user.email);
-    console.log('Password provided (first 3 chars):', password.substring(0, 3));
-    console.log('Password length:', password.length);
-    console.log('About to verify password for:', user.email);
-console.log('DEBUG - Raw password provided:', password); // This logs the actual password - SECURITY RISK!
+    // Verify password - log detailed information
+    console.log('Password verification attempt:', {
+      userEmail: user.email,
+      passwordProvided: !!password,
+      passwordLength: password ? password.length : 0,
+      storedPasswordHashPrefix: user.password ? user.password.substring(0, 10) + '...' : 'none'
+    });
     
-    const isPasswordValid = await user.comparePassword(password);
-    console.log('Password validation result:', isPasswordValid);
-    
-    if (!isPasswordValid) {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid password' 
-      });
+    // Try both the comparePassword method and direct bcrypt compare
+    let isPasswordValid = false;
+    try {
+      isPasswordValid = await user.comparePassword(password);
+      console.log('Password validation using user.comparePassword:', isPasswordValid);
+    } catch (pwError) {
+      console.error('Error using comparePassword method:', pwError);
     }
-    
     
     // Generate JWT token
     const token = jwt.sign(

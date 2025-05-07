@@ -461,30 +461,30 @@ export class PayrollPDFService {
             .text('** If you received this in error please destroy it along with any copies and notify the sender immediately **', 
                   40, disclaimerY + 30, { align: 'center' });
 
-          // At the very end, before ending the document, add the watermark if we have logo data
-          if (logoData) {
-            // Save the current state of the document
-            doc.save();
+          // // At the very end, before ending the document, add the watermark if we have logo data
+          // if (logoData) {
+          //   // Save the current state of the document
+          //   doc.save();
             
-            // Add watermark with higher opacity so it shows through colored elements
-            const watermarkWidth = 700;
-            const watermarkHeight = 700;
-            const watermarkX = (doc.page.width - watermarkWidth) / 2;
-            const watermarkY = (doc.page.height - watermarkHeight) / 2;
+          //   // Add watermark with higher opacity so it shows through colored elements
+          //   const watermarkWidth = 700;
+          //   const watermarkHeight = 700;
+          //   const watermarkX = (doc.page.width - watermarkWidth) / 2;
+          //   const watermarkY = (doc.page.height - watermarkHeight) / 2;
             
-            // Use a higher opacity value (0.15 instead of 0.08)
-            doc.opacity(0.15);
+          //   // Use a higher opacity value (0.15 instead of 0.08)
+          //   doc.opacity(0.15);
             
-            // Add the watermark
-            doc.image(logoData, watermarkX, watermarkY, {
-              width: watermarkWidth,
-              height: watermarkHeight,
+          //   // Add the watermark
+          //   doc.image(logoData, watermarkX, watermarkY, {
+          //     width: watermarkWidth,
+          //     height: watermarkHeight,
 
-            });
+          //   });
             
-            // Restore the document state
-            doc.restore();
-          }
+          //   // Restore the document state
+          //   doc.restore();
+          // }
 
           doc.end();
         };
