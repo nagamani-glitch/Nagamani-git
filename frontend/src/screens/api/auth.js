@@ -1,3 +1,288 @@
+// import axios from 'axios';
+
+// const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
+
+// // Configure axios with base URL
+// axios.defaults.baseURL = API_URL;
+
+// // Create API instance with base configuration
+// const api = axios.create({
+//   baseURL: API_URL + '/api',
+//   headers: {
+//     'Content-Type': 'application/json'
+//   }
+// });
+
+// // Add request interceptor to include token in requests
+// api.interceptors.request.use(
+//   (config) => {
+//     const token = localStorage.getItem('token');
+//     if (token) {
+//       config.headers.Authorization = `Bearer ${token}`;
+//     }
+//     return config;
+//   },
+//   (error) => Promise.reject(error)
+// );
+
+// // Add response interceptor to handle common errors
+// api.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     // Handle session expiration
+//     if (error.response && error.response.status === 401) {
+//       // Clear local storage and redirect to login if token is invalid
+//       if (error.response.data.message === 'Invalid token') {
+//         localStorage.clear();
+//         window.location.href = '/login';
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
+
+// const authService = {
+//   // Register a new company
+//   // Update the registerCompany method in the authService object
+// registerCompany: async (formData) => {
+//   try {
+//     // Check if formData is an instance of FormData
+//     const isFormData = formData instanceof FormData;
+    
+//     // Log form data contents for debugging
+//     if (isFormData) {
+//       console.log('FormData contents:');
+//       for (let pair of formData.entries()) {
+//         if (pair[0] === 'logo') {
+//           console.log(pair[0], 'File:', pair[1].name, 'Size:', pair[1].size, 'Type:', pair[1].type);
+//         } else {
+//           console.log(pair[0], pair[1]);
+//         }
+//       }
+      
+//       const response = await api.post('/companies/register', formData, {
+//         headers: {
+//           'Content-Type': 'multipart/form-data'
+//         }
+//       });
+//       return response.data;
+//     } else {
+//       // Handle regular JSON data
+//       const response = await api.post('/companies/register', formData);
+//       return response.data;
+//     }
+//   } catch (error) {
+//     console.error('Registration error details:', error.response?.data || error.message);
+//     throw error;
+//   }
+// },
+
+  
+//   // // Login user
+//   // login: async (credentials) => {
+//   //   try {
+//   //     console.log('Auth service: Making login request with:', {
+//   //       companyCode: credentials.companyCode.toUpperCase(),
+//   //       email: credentials.email.toLowerCase(),
+//   //       passwordProvided: !!credentials.password
+//   //     });
+      
+//   //     // Trim the password to remove any accidental whitespace
+//   //     const trimmedPassword = credentials.password.trim();
+      
+//   //     const response = await api.post('/companies/login', {
+//   //       companyCode: credentials.companyCode.toUpperCase(),
+//   //       email: credentials.email.toLowerCase(),
+//   //       // Use trimmedPassword (with capital P) instead of trimmedpassword
+//   //       password: trimmedPassword
+//   //     });
+  
+//   //     console.log('Auth service: Login response received:', {
+//   //       success: response.data.success,
+//   //       hasToken: !!response.data.token,
+//   //       hasUser: !!response.data.user
+//   //     });
+      
+//   //     // Store auth data in localStorage only on successful login
+//   //     if (response.data.success && response.data.token) {
+//   //       localStorage.setItem('token', response.data.token);
+//   //       localStorage.setItem('user', JSON.stringify(response.data.user));
+//   //       localStorage.setItem('userId', response.data.user._id || response.data.user.id);
+//   //       localStorage.setItem('companyCode', credentials.companyCode.toUpperCase());
+//   //       console.log('Auth service: User data stored in localStorage');
+//   //     }
+      
+//   //     return response.data;
+//   //   } catch (error) {
+//   //     console.error('Login error in auth service:', error);
+//   //     throw error;
+//   //   }
+//   // },
+
+//   // Login user
+// login: async (credentials) => {
+//   try {
+//     console.log('Auth service: Making login request with:', {
+//       companyCode: credentials.companyCode.toUpperCase(),
+//       email: credentials.email.toLowerCase(),
+//       passwordProvided: !!credentials.password
+//     });
+    
+//     // Trim the password to remove any accidental whitespace
+//     const trimmedPassword = credentials.password.trim();
+    
+//     const response = await api.post('/companies/login', {
+//       companyCode: credentials.companyCode.toUpperCase(),
+//       email: credentials.email.toLowerCase(),
+//       password: trimmedPassword
+//     });
+    
+//     // If login is successful, store token and user info
+//     if (response.data.success) {
+//       localStorage.setItem('token', response.data.token);
+//       localStorage.setItem('user', JSON.stringify(response.data.user));
+//       localStorage.setItem('companyCode', response.data.user.companyCode);
+//       localStorage.setItem('userId', response.data.user.id);
+      
+//       // Set the default Authorization header for future requests
+//       api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      
+//       console.log('Login successful, token stored');
+//       return response.data;
+//     } else {
+//       console.log('Login failed with response:', response.data);
+//       throw new Error(response.data.message || 'Login failed');
+//     }
+//   } catch (error) {
+//     console.log('Login error in auth service:', error);
+    
+//     // Provide more detailed error information
+//     if (error.response) {
+//       // The request was made and the server responded with a status code
+//       // that falls out of the range of 2xx
+//       console.error('Error response data:', error.response.data);
+//       console.error('Error response status:', error.response.status);
+      
+//       // Return the error message from the server if available
+//       throw new Error(error.response.data.message || 'Authentication failed');
+//     } else if (error.request) {
+//       // The request was made but no response was received
+//       console.error('No response received:', error.request);
+//       throw new Error('No response from server. Please check your connection.');
+//     } else {
+//       // Something happened in setting up the request that triggered an Error
+//       console.error('Request setup error:', error.message);
+//       throw error;
+//     }
+//   }
+// },
+
+  
+//   // Logout user
+//   logout: () => {
+//     localStorage.removeItem('token');
+//     localStorage.removeItem('user');
+//     localStorage.removeItem('userId');
+//     localStorage.removeItem('companyCode');
+//   },
+  
+//   // Get current user from localStorage
+//   getCurrentUser: () => {
+//     const user = localStorage.getItem('user');
+//     return user ? JSON.parse(user) : null;
+//   },
+  
+//   // Check if user is authenticated
+//   isAuthenticated: () => {
+//     return !!localStorage.getItem('token');
+//   },
+  
+//   // Verify OTP
+//   verifyOtp: async (email, otp) => {
+//     try {
+//       const response = await api.post('/companies/verify-otp', { email, otp });
+//       return response.data;
+//     } catch (error) {
+//       console.error('OTP verification error:', error);
+//       throw error;
+//     }
+//   },
+  
+//   // Resend OTP
+//   resendOtp: async (email) => {
+//     try {
+//       const response = await api.post('/companies/resend-otp', { email });
+//       return response.data;
+//     } catch (error) {
+//       console.error('Resend OTP error:', error);
+//       throw error;
+//     }
+//   },
+  
+//   // Request password reset
+//   forgotPassword: async (data) => {
+//     try {
+//       const response = await api.post('/companies/forgot-password', data);
+//       return response.data;
+//     } catch (error) {
+//       console.error('Forgot password error:', error);
+//       throw error;
+//     }
+//   },
+  
+//   // Verify reset token
+//   verifyResetToken: async (data) => {
+//     try {
+//       const response = await api.post('/companies/verify-reset-token', data);
+//       return response.data;
+//     } catch (error) {
+//       console.error('Verify reset token error:', error);
+//       throw error;
+//     }
+//   },
+  
+//   // Reset password
+//   resetPassword: async (data) => {
+//     try {
+//       console.log('Auth service: Sending reset password request with:', {
+//         token: data.token,
+//         email: data.email,
+//         companyCode: data.companyCode,
+//         passwordProvided: !!data.password
+//       });
+      
+//       const response = await api.post('/companies/reset-password', {
+//         token: data.token,
+//         email: data.email,
+//         companyCode: data.companyCode,
+//         password: data.password
+//       });
+      
+//       console.log('Auth service: Reset password response received:', {
+//         success: response.data.success
+//       });
+      
+//       return response.data;
+//     } catch (error) {
+//       console.error('Reset password error in auth service:', error);
+//       throw error;
+//     }
+//   },
+  
+//   // Change password (for authenticated users)
+//   changePassword: async (data) => {
+//     try {
+//       const response = await api.post('/companies/change-password', data);
+//       return response.data;
+//     } catch (error) {
+//       console.error('Change password error:', error);
+//       throw error;
+//     }
+//   }
+// };
+
+// export default authService;
+
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
@@ -13,8 +298,16 @@ const api = axios.create({
   }
 });
 
-// Add request interceptor to include token in requests
-api.interceptors.request.use(
+// Create a separate instance for authenticated requests
+const authApi = axios.create({
+  baseURL: API_URL + '/api',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Add request interceptor to include token in requests for authApi only
+authApi.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -26,157 +319,120 @@ api.interceptors.request.use(
 );
 
 // Add response interceptor to handle common errors
+const handleResponseError = (error) => {
+  // Handle session expiration
+  if (error.response && error.response.status === 401) {
+    // Clear local storage and redirect to login if token is invalid
+    if (error.response.data.message === 'Invalid token') {
+      localStorage.clear();
+      window.location.href = '/login';
+    }
+  }
+  return Promise.reject(error);
+};
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Handle session expiration
-    if (error.response && error.response.status === 401) {
-      // Clear local storage and redirect to login if token is invalid
-      if (error.response.data.message === 'Invalid token') {
-        localStorage.clear();
-        window.location.href = '/login';
-      }
-    }
-    return Promise.reject(error);
-  }
+  handleResponseError
+);
+
+authApi.interceptors.response.use(
+  (response) => response,
+  handleResponseError
 );
 
 const authService = {
-  // Register a new company
-  // Update the registerCompany method in the authService object
-registerCompany: async (formData) => {
-  try {
-    // Check if formData is an instance of FormData
-    const isFormData = formData instanceof FormData;
-    
-    // Log form data contents for debugging
-    if (isFormData) {
-      console.log('FormData contents:');
-      for (let pair of formData.entries()) {
-        if (pair[0] === 'logo') {
-          console.log(pair[0], 'File:', pair[1].name, 'Size:', pair[1].size, 'Type:', pair[1].type);
-        } else {
-          console.log(pair[0], pair[1]);
+  // Register a new company - use api (no auth) for this public route
+  registerCompany: async (formData) => {
+    try {
+      // Check if formData is an instance of FormData
+      const isFormData = formData instanceof FormData;
+      
+      // Log form data contents for debugging
+      if (isFormData) {
+        console.log('FormData contents:');
+        for (let pair of formData.entries()) {
+          if (pair[0] === 'logo') {
+            console.log(pair[0], 'File:', pair[1].name, 'Size:', pair[1].size, 'Type:', pair[1].type);
+          } else {
+            console.log(pair[0], pair[1]);
+          }
         }
+        
+        const response = await api.post('/companies/register', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        return response.data;
+      } else {
+        // Handle regular JSON data
+        const response = await api.post('/companies/register', formData);
+        return response.data;
       }
-      
-      const response = await api.post('/companies/register', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      return response.data;
-    } else {
-      // Handle regular JSON data
-      const response = await api.post('/companies/register', formData);
-      return response.data;
-    }
-  } catch (error) {
-    console.error('Registration error details:', error.response?.data || error.message);
-    throw error;
-  }
-},
-
-  
-  // // Login user
-  // login: async (credentials) => {
-  //   try {
-  //     console.log('Auth service: Making login request with:', {
-  //       companyCode: credentials.companyCode.toUpperCase(),
-  //       email: credentials.email.toLowerCase(),
-  //       passwordProvided: !!credentials.password
-  //     });
-      
-  //     // Trim the password to remove any accidental whitespace
-  //     const trimmedPassword = credentials.password.trim();
-      
-  //     const response = await api.post('/companies/login', {
-  //       companyCode: credentials.companyCode.toUpperCase(),
-  //       email: credentials.email.toLowerCase(),
-  //       // Use trimmedPassword (with capital P) instead of trimmedpassword
-  //       password: trimmedPassword
-  //     });
-  
-  //     console.log('Auth service: Login response received:', {
-  //       success: response.data.success,
-  //       hasToken: !!response.data.token,
-  //       hasUser: !!response.data.user
-  //     });
-      
-  //     // Store auth data in localStorage only on successful login
-  //     if (response.data.success && response.data.token) {
-  //       localStorage.setItem('token', response.data.token);
-  //       localStorage.setItem('user', JSON.stringify(response.data.user));
-  //       localStorage.setItem('userId', response.data.user._id || response.data.user.id);
-  //       localStorage.setItem('companyCode', credentials.companyCode.toUpperCase());
-  //       console.log('Auth service: User data stored in localStorage');
-  //     }
-      
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error('Login error in auth service:', error);
-  //     throw error;
-  //   }
-  // },
-
-  // Login user
-login: async (credentials) => {
-  try {
-    console.log('Auth service: Making login request with:', {
-      companyCode: credentials.companyCode.toUpperCase(),
-      email: credentials.email.toLowerCase(),
-      passwordProvided: !!credentials.password
-    });
-    
-    // Trim the password to remove any accidental whitespace
-    const trimmedPassword = credentials.password.trim();
-    
-    const response = await api.post('/companies/login', {
-      companyCode: credentials.companyCode.toUpperCase(),
-      email: credentials.email.toLowerCase(),
-      password: trimmedPassword
-    });
-    
-    // If login is successful, store token and user info
-    if (response.data.success) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      localStorage.setItem('companyCode', response.data.user.companyCode);
-      localStorage.setItem('userId', response.data.user.id);
-      
-      // Set the default Authorization header for future requests
-      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-      
-      console.log('Login successful, token stored');
-      return response.data;
-    } else {
-      console.log('Login failed with response:', response.data);
-      throw new Error(response.data.message || 'Login failed');
-    }
-  } catch (error) {
-    console.log('Login error in auth service:', error);
-    
-    // Provide more detailed error information
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error('Error response data:', error.response.data);
-      console.error('Error response status:', error.response.status);
-      
-      // Return the error message from the server if available
-      throw new Error(error.response.data.message || 'Authentication failed');
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received:', error.request);
-      throw new Error('No response from server. Please check your connection.');
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.error('Request setup error:', error.message);
+    } catch (error) {
+      console.error('Registration error details:', error.response?.data || error.message);
       throw error;
     }
-  }
-},
-
+  },
+  
+  // Login user - use api (no auth) for this public route
+  login: async (credentials) => {
+    try {
+      console.log('Auth service: Making login request with:', {
+        companyCode: credentials.companyCode.toUpperCase(),
+        email: credentials.email.toLowerCase(),
+        passwordProvided: !!credentials.password
+      });
+      
+      // Trim the password to remove any accidental whitespace
+      const trimmedPassword = credentials.password.trim();
+      
+      const response = await api.post('/companies/login', {
+        companyCode: credentials.companyCode.toUpperCase(),
+        email: credentials.email.toLowerCase(),
+        password: trimmedPassword
+      });
+      
+      // If login is successful, store token and user info
+      if (response.data.success) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('companyCode', response.data.user.companyCode);
+        localStorage.setItem('userId', response.data.user.id);
+        
+        // Set the default Authorization header for future requests
+        authApi.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        
+        console.log('Login successful, token stored');
+        return response.data;
+      } else {
+        console.log('Login failed with response:', response.data);
+        throw new Error(response.data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.log('Login error in auth service:', error);
+      
+      // Provide more detailed error information
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+        
+        // Return the error message from the server if available
+        throw new Error(error.response.data.message || 'Authentication failed');
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response received:', error.request);
+        throw new Error('No response from server. Please check your connection.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Request setup error:', error.message);
+        throw error;
+      }
+    }
+  },
   
   // Logout user
   logout: () => {
@@ -184,6 +440,9 @@ login: async (credentials) => {
     localStorage.removeItem('user');
     localStorage.removeItem('userId');
     localStorage.removeItem('companyCode');
+    
+    // Remove Authorization header
+    delete authApi.defaults.headers.common['Authorization'];
   },
   
   // Get current user from localStorage
@@ -197,7 +456,7 @@ login: async (credentials) => {
     return !!localStorage.getItem('token');
   },
   
-  // Verify OTP
+  // Verify OTP - use api (no auth) for this public route
   verifyOtp: async (email, otp) => {
     try {
       const response = await api.post('/companies/verify-otp', { email, otp });
@@ -208,7 +467,7 @@ login: async (credentials) => {
     }
   },
   
-  // Resend OTP
+  // Resend OTP - use api (no auth) for this public route
   resendOtp: async (email) => {
     try {
       const response = await api.post('/companies/resend-otp', { email });
@@ -219,7 +478,7 @@ login: async (credentials) => {
     }
   },
   
-  // Request password reset
+  // Request password reset - use api (no auth) for this public route
   forgotPassword: async (data) => {
     try {
       const response = await api.post('/companies/forgot-password', data);
@@ -230,7 +489,7 @@ login: async (credentials) => {
     }
   },
   
-  // Verify reset token
+  // Verify reset token - use api (no auth) for this public route
   verifyResetToken: async (data) => {
     try {
       const response = await api.post('/companies/verify-reset-token', data);
@@ -241,7 +500,7 @@ login: async (credentials) => {
     }
   },
   
-  // Reset password
+  // Reset password - use api (no auth) for this public route
   resetPassword: async (data) => {
     try {
       console.log('Auth service: Sending reset password request with:', {
@@ -264,22 +523,72 @@ login: async (credentials) => {
       
       return response.data;
     } catch (error) {
-      console.error('Reset password error in auth service:', error);
+      console.error('Reset password error:', error);
+      
+      if (error.response) {
+        console.error('Reset password error response:', error.response.data);
+      }
+      
       throw error;
     }
   },
   
-  // Change password (for authenticated users)
+  // Change password - use authApi (with auth) for this protected route
   changePassword: async (data) => {
     try {
-      const response = await api.post('/companies/change-password', data);
+      const response = await authApi.post('/companies/change-password', data);
       return response.data;
     } catch (error) {
       console.error('Change password error:', error);
+      throw error;
+    }
+  },
+  
+  // Get company details - use authApi (with auth) for this protected route
+  getCompanyDetails: async () => {
+    try {
+      const response = await authApi.get('/companies');
+      return response.data;
+    } catch (error) {
+      console.error('Get company details error:', error);
+      throw error;
+    }
+  },
+  
+  // Update company details - use authApi (with auth) for this protected route
+  updateCompanyDetails: async (data) => {
+    try {
+      const response = await authApi.put('/companies', data);
+      return response.data;
+    } catch (error) {
+      console.error('Update company details error:', error);
+      throw error;
+    }
+  },
+  
+  // Update company settings - use authApi (with auth) for this protected route
+  updateCompanySettings: async (data) => {
+    try {
+      const response = await authApi.put('/companies/settings', data);
+      return response.data;
+    } catch (error) {
+      console.error('Update company settings error:', error);
+      throw error;
+    }
+  },
+  
+  // Create a new user - use authApi (with auth) for this protected route
+  createUser: async (userData) => {
+    try {
+      const response = await authApi.post('/companies/users', userData);
+      return response.data;
+    } catch (error) {
+      console.error('Create user error:', error);
       throw error;
     }
   }
 };
 
 export default authService;
+ 
 
