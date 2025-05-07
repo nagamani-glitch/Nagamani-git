@@ -327,21 +327,37 @@ userSchema.pre('save', async function(next) {
 //   }
 // };
 
-// Method to check password
+// // Method to check password
+// userSchema.methods.comparePassword = async function(candidatePassword) {
+//   try {
+//     console.log('Comparing password for user:', this.email);
+//     const isMatch = await bcrypt.compare(candidatePassword, this.password);
+//     console.log('Password match result:', isMatch);
+//     return isMatch;
+//   } catch (error) {
+//     console.error('Error comparing passwords:', error);
+//     throw error; // Throw the error to be handled by the caller
+//   }
+// };
+
+// Method to check password - make sure this works in both models
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
     console.log('Comparing password for user:', this.email);
+    // Use bcrypt directly to avoid any issues with method binding
     const isMatch = await bcrypt.compare(candidatePassword, this.password);
     console.log('Password match result:', isMatch);
     return isMatch;
   } catch (error) {
     console.error('Error comparing passwords:', error);
-    throw error; // Throw the error to be handled by the caller
+    // Return false instead of throwing to avoid crashing the login process
+    return false;
   }
 };
 
 
 // Method to assign permissions based on role
+
 userSchema.methods.assignPermissions = function() {
   switch(this.role) {
     case 'admin':
@@ -382,9 +398,24 @@ userSchema.methods.assignPermissions = function() {
 // This model will be in the main database for global user authentication
 const MainUser = mongoose.model('User', userSchema);
 
+// // Function to get User model for a specific company
+// const getUserModel = async (companyCode) => {
+//   return await createCompanyModel(companyCode, 'User', userSchema);
+// };
+
 // Function to get User model for a specific company
 const getUserModel = async (companyCode) => {
-  return await createCompanyModel(companyCode, 'User', userSchema);
+  if (!companyCode) {
+    throw new Error('Company code is required to get user model');
+  }
+  
+  try {
+    const model = await createCompanyModel(companyCode, 'User', userSchema);
+    return model;
+  } catch (error) {
+    console.error(`Error getting User model for company ${companyCode}:`, error);
+    throw error;
+  }
 };
 
 export { userSchema, getUserModel };

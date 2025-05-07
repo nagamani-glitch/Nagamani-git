@@ -806,6 +806,128 @@ export const verifyResetToken = async (req, res) => {
   }
 };
 
+// // Reset password
+// export const resetPassword = async (req, res) => {
+//   try {
+//     const { token, email, companyCode, password } = req.body;
+    
+//     console.log('Password reset request received:', { 
+//       token: token.substring(0, 10) + '...', 
+//       email, 
+//       companyCode,
+//       passwordLength: password.length,
+//       passwordFirstChars: password.substring(0, 3)
+//     });
+
+//     console.log('DEBUG - Password reset with unhashed password:', {
+//       email,
+//       companyCode,
+//       rawPassword: password // This logs the actual password - SECURITY RISK!
+//     });
+    
+//     if (!token || !email || !companyCode || !password) {
+//       console.log('Missing required fields in reset password request');
+//       return res.status(400).json({ 
+//         message: 'Token, email, company code, and new password are required' 
+//       });
+//     }
+    
+//     // Password strength validation
+//     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+//     if (!passwordRegex.test(password)) {
+//       return res.status(400).json({ 
+//         message: 'Password must be at least 8 characters long and include uppercase, lowercase, number and special character' 
+//       });
+//     }
+    
+//     // Hash the token from the URL
+//     const hashedToken = crypto
+//       .createHash('sha256')
+//       .update(token)
+//       .digest('hex');
+    
+//     // Find user with the token and check if token is still valid
+//     const user = await User.findOne({
+//       email,
+//       companyCode,
+//       resetPasswordToken: hashedToken,
+//       resetPasswordExpires: { $gt: Date.now() }
+//     });
+    
+//     if (!user) {
+//       console.log('Invalid or expired token for user:', email);
+//       return res.status(400).json({ message: 'Invalid or expired token' });
+//     }
+    
+//     console.log('Found user for password reset:', {
+//       id: user._id,
+//       email: user.email,
+//       companyCode: user.companyCode,
+//       currentPasswordHash: user.password.substring(0, 10) + '...'
+//     });
+    
+//     // Check if new password is same as old password
+//     console.log('Checking if new password matches old password');
+//     const isSamePassword = await user.comparePassword(password);
+//     if (isSamePassword) {
+//       console.log('New password is same as current password');
+//       return res.status(400).json({ 
+//         message: 'New password cannot be the same as your current password' 
+//       });
+//     }
+    
+//     // Update password - this will trigger the pre-save middleware to hash it
+//     console.log('Setting new password (first 3 chars):', password.substring(0, 3));
+//     console.log('New password length:', password.length);
+//     user.password = password;
+    
+//     // Clear reset token fields
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpires = undefined;
+    
+//     await user.save();
+//     console.log('Password updated successfully for user:', user.email);
+//     console.log('New password hash:', user.password.substring(0, 10) + '...');
+    
+//     // Send confirmation email
+//     try {
+//       const transporter = nodemailer.createTransport({
+//         service: 'gmail',
+//         auth: {
+//           user: 'a.dineshsundar02@gmail.com',
+//           pass: 'xnbj tvjf odej ynit'
+//         }
+//       });
+      
+//       await transporter.sendMail({
+//         from: `"HRMS Support" <${'a.dineshsundar02@gmail.com'}>`,
+//         to: user.email,
+//         subject: 'Password Reset Successful',
+//         html: `
+//           <h1>Password Reset Successful</h1>
+//           <p>Your password has been successfully reset.</p>
+//           <p>If you did not request this change, please contact support immediately.</p>
+//         `
+//       });
+//     } catch (emailError) {
+//       console.error('Error sending confirmation email:', emailError);
+//       // Continue with the response even if email fails
+//     }
+    
+//     res.status(200).json({ 
+//       success: true, 
+//       message: 'Password has been reset successfully' 
+//     });
+    
+//   } catch (error) {
+//     console.error('Reset password error:', error);
+//     res.status(500).json({ 
+//       message: 'Error resetting password',
+//       error: error.message 
+//     });
+//   }
+// };
+
 // Reset password
 export const resetPassword = async (req, res) => {
   try {
@@ -815,14 +937,7 @@ export const resetPassword = async (req, res) => {
       token: token.substring(0, 10) + '...', 
       email, 
       companyCode,
-      passwordLength: password.length,
-      passwordFirstChars: password.substring(0, 3)
-    });
-
-    console.log('DEBUG - Password reset with unhashed password:', {
-      email,
-      companyCode,
-      rawPassword: password // This logs the actual password - SECURITY RISK!
+      passwordLength: password.length
     });
     
     if (!token || !email || !companyCode || !password) {
@@ -846,48 +961,77 @@ export const resetPassword = async (req, res) => {
       .update(token)
       .digest('hex');
     
-    // Find user with the token and check if token is still valid
-    const user = await User.findOne({
+    // Find user in main database with the token
+    const mainUser = await User.findOne({
       email,
       companyCode,
       resetPasswordToken: hashedToken,
       resetPasswordExpires: { $gt: Date.now() }
     });
     
-    if (!user) {
+    if (!mainUser) {
       console.log('Invalid or expired token for user:', email);
       return res.status(400).json({ message: 'Invalid or expired token' });
     }
     
-    console.log('Found user for password reset:', {
-      id: user._id,
-      email: user.email,
-      companyCode: user.companyCode,
-      currentPasswordHash: user.password.substring(0, 10) + '...'
+    console.log('Found user for password reset in main database:', {
+      id: mainUser._id,
+      email: mainUser.email,
+      companyCode: mainUser.companyCode
     });
     
-    // Check if new password is same as old password
-    console.log('Checking if new password matches old password');
-    const isSamePassword = await user.comparePassword(password);
-    if (isSamePassword) {
-      console.log('New password is same as current password');
-      return res.status(400).json({ 
-        message: 'New password cannot be the same as your current password' 
-      });
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    
+    // Update password in main database
+    mainUser.password = hashedPassword;
+    mainUser.resetPasswordToken = undefined;
+    mainUser.resetPasswordExpires = undefined;
+    
+    await mainUser.save();
+    console.log('Password updated in main database for user:', mainUser.email);
+    
+    // Update password in company database
+    try {
+      const { getUserModel } = await import('../models/User.js');
+      const CompanyUserModel = await getUserModel(companyCode);
+      
+      const companyUser = await CompanyUserModel.findOne({ email: email.toLowerCase() });
+      
+      if (companyUser) {
+        companyUser.password = hashedPassword;
+        companyUser.resetPasswordToken = undefined;
+        companyUser.resetPasswordExpires = undefined;
+        
+        await companyUser.save();
+        console.log('Password updated in company database for user:', companyUser.email);
+      } else {
+        console.log('User not found in company database, creating user');
+        
+        // Create user in company database with updated password
+        const newCompanyUser = new CompanyUserModel({
+          userId: mainUser.userId || `USER-${Date.now()}`,
+          firstName: mainUser.firstName,
+          middleName: mainUser.middleName,
+          lastName: mainUser.lastName,
+          name: mainUser.name,
+          email: mainUser.email,
+          password: hashedPassword,
+          role: mainUser.role,
+          companyCode: mainUser.companyCode,
+          permissions: mainUser.permissions,
+          isVerified: true,
+          isActive: true
+        });
+        
+        await newCompanyUser.save();
+        console.log('User created in company database with new password:', newCompanyUser.email);
+      }
+    } catch (dbError) {
+      console.error('Error updating password in company database:', dbError);
+      // Continue with the response even if this fails
     }
-    
-    // Update password - this will trigger the pre-save middleware to hash it
-    console.log('Setting new password (first 3 chars):', password.substring(0, 3));
-    console.log('New password length:', password.length);
-    user.password = password;
-    
-    // Clear reset token fields
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-    
-    await user.save();
-    console.log('Password updated successfully for user:', user.email);
-    console.log('New password hash:', user.password.substring(0, 10) + '...');
     
     // Send confirmation email
     try {
@@ -901,7 +1045,7 @@ export const resetPassword = async (req, res) => {
       
       await transporter.sendMail({
         from: `"HRMS Support" <${'a.dineshsundar02@gmail.com'}>`,
-        to: user.email,
+        to: mainUser.email,
         subject: 'Password Reset Successful',
         html: `
           <h1>Password Reset Successful</h1>
