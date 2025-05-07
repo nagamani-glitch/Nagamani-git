@@ -179,6 +179,16 @@ export const registerCompany = async (req, res) => {
       await newCompany.save();
       console.log('Company created with pending verification:', newCompany);
       
+      try {
+        const { getCompanyConnection } = await import('../config/db.js');
+        await getCompanyConnection(company.companyCode);
+        console.log(`Company database initialized for ${company.companyCode}`);
+      } catch (dbError) {
+        console.error('Error initializing company database:', dbError);
+        // Continue with the response even if database initialization fails
+      }
+
+
       // Send OTP email
       try {
         await sendOtpEmail(admin.email, otp, {
@@ -196,6 +206,9 @@ export const registerCompany = async (req, res) => {
         message: 'Registration initiated. Please verify your email with the OTP sent to complete registration.',
         email: admin.email
       });
+      
+
+
     } catch (error) {
       console.warn('Registration error:', error);
       return res.status(400).json({ message: error.message });
@@ -265,6 +278,59 @@ export const verifyOtp = async (req, res) => {
         company.pendingVerification = false;
         await company.save();
         console.log('Company activated:', company.name);
+
+        // Create admin user in company database
+        try {
+          const { getUserModel } = await import('../models/User.js');
+          const CompanyUserModel = await getUserModel(user.companyCode);
+          
+          // Create a copy of the admin user in the company database
+          const companyAdmin = new CompanyUserModel({
+            userId: user.userId,
+            firstName: user.firstName,
+            middleName: user.middleName,
+            lastName: user.lastName,
+            name: user.name,
+            email: user.email,
+            password: user.password, // Already hashed
+            role: user.role,
+            companyCode: user.companyCode,
+            permissions: user.permissions,
+            isVerified: true,
+            isActive: true
+          });
+          
+          await companyAdmin.save();
+          console.log('Admin user created in company database:', companyAdmin.email);
+          
+          // Also create a Company document in the company database
+          const { companySchema } = await import('../models/Company.js');
+          const createCompanyModel = (await import('../models/modelFactory.js')).default;
+          const CompanyModel = await createCompanyModel(user.companyCode, 'Company', companySchema);
+          
+          const companyRecord = new CompanyModel({
+            name: company.name,
+            companyCode: company.companyCode,
+            address: company.address,
+            contactEmail: company.contactEmail,
+            contactPhone: company.contactPhone,
+            logo: company.logo,
+            industry: company.industry,
+            isActive: true,
+            settings: company.settings,
+            adminUserId: companyAdmin._id,
+            registrationNumber: company.registrationNumber,
+            pendingVerification: false
+          });
+          
+          await companyRecord.save();
+          console.log('Company record created in company database');
+        } catch (dbError) {
+          console.error('Error creating records in company database:', dbError);
+          // Continue with the response even if this fails
+        }
+
+
       }
     }
     

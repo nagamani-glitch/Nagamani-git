@@ -1,19 +1,83 @@
+// import mongoose from "mongoose";
+// import colors from 'colors';
+
+// // const userName = encodeURIComponent('rickyharish30');
+// // const password = encodeURIComponent('LBGUaMDLUuNs7NTb');
+// const URL = `mongodb+srv://adineshsundar02:HRMS123@cluster0.egcee0k.mongodb.net/?retryWrites=true&w=majority&appName=HRMS_2204`;
+
+// const connectDB = async () => {
+//     try {
+//         const conn = await mongoose.connect(URL);
+//         console.log(`🚀 MongoDB Connected: ${conn.connection.host}`.cyan.underline);
+//     } catch (error) {
+//         console.log(`Error connecting to MongoDB: ${error.message}`.red.underline.bold);
+//         process.exit(1);
+//     }
+// };
+
+// export default connectDB;
+
+
 import mongoose from "mongoose";
 import colors from 'colors';
 
-const userName = encodeURIComponent('rickyharish30');
-const password = encodeURIComponent('LBGUaMDLUuNs7NTb');
+// Main connection URL
 const URL = `mongodb+srv://adineshsundar02:HRMS123@cluster0.egcee0k.mongodb.net/?retryWrites=true&w=majority&appName=HRMS_2204`;
 
-const connectDB = async () => {
+// Store connections for each company
+const connections = {};
+
+// Connect to main database
+const connectMainDB = async () => {
     try {
         const conn = await mongoose.connect(URL);
-        console.log(`🚀 MongoDB Connected: ${conn.connection.host}`.cyan.underline);
+        console.log(`🚀 Main MongoDB Connected: ${conn.connection.host}`.cyan.underline);
+        return conn;
     } catch (error) {
         console.log(`Error connecting to MongoDB: ${error.message}`.red.underline.bold);
         process.exit(1);
     }
 };
 
-export default connectDB;
+// Get or create a connection for a specific company
+const getCompanyConnection = async (companyCode) => {
+    if (!companyCode) {
+        throw new Error('Company code is required');
+    }
+    
+    // Normalize company code
+    companyCode = companyCode.toUpperCase();
+    
+    // Return existing connection if available
+    if (connections[companyCode]) {
+        return connections[companyCode];
+    }
+    
+    // Create a new connection for this company
+    try {
+        // Create a new connection with a specific database name for this company
+        const dbName = `hrms_${companyCode.toLowerCase()}`;
+        const connection = await mongoose.createConnection(`${URL.split('?')[0]}/${dbName}?${URL.split('?')[1]}`);
+        
+        console.log(`🚀 Company DB Connected: ${connection.name} for ${companyCode}`.green.underline);
+        
+        // Store the connection
+        connections[companyCode] = connection;
+        return connection;
+    } catch (error) {
+        console.log(`Error connecting to company database: ${error.message}`.red.underline.bold);
+        throw error;
+    }
+};
 
+// Close all connections
+const closeAllConnections = async () => {
+    await mongoose.disconnect();
+    for (const companyCode in connections) {
+        await connections[companyCode].close();
+    }
+    console.log('All database connections closed'.yellow);
+};
+
+export { connectMainDB, getCompanyConnection, closeAllConnections };
+export default connectMainDB;

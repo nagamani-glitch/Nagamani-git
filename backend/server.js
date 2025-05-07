@@ -4,7 +4,8 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 
-import connectDB from './config/db.js';
+//import connectDB from './config/db.js';
+import { connectMainDB } from './config/db.js';
 import employeesRouter from './routes/employeesRouter.js'
 import authRouter from './routes/authRouter.js'
 import profileRouter from './routes/profileRouter.js'
@@ -76,8 +77,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config()
-connectDB()
+//connectDB()
+// Connect to the main database
+connectMainDB()
 const app = express()
+
+// Add a graceful shutdown handler
+process.on('SIGINT', async () => {
+  console.log('Shutting down gracefully...');
+  const { closeAllConnections } = await import('./config/db.js');
+  await closeAllConnections();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('Shutting down gracefully...');
+  const { closeAllConnections } = await import('./config/db.js');
+  await closeAllConnections();
+  process.exit(0);
+});
 
 // Create HTTP server
 const server = http.createServer(app);
