@@ -104,7 +104,8 @@
   border-radius: 8px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
+  align-items: flex-start;
 }
 
 /* Employee name with avatar styling */
@@ -112,6 +113,108 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Add specific styling for the date picker container */
+.er-date-picker-container {
+  min-width: 240px; /* Set minimum width */
+  z-index: 2; /* Ensure date picker appears above other elements */
+  position: relative; /* Add position relative */
+}
+
+/* Style for the date picker dropdown */
+.er-date-picker-container .ant-picker-dropdown {
+  z-index: 1050 !important; /* Higher z-index for the dropdown */
+}
+
+/* Fix calendar panel alignment */
+.ant-picker-panel-container {
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.er-date-picker-dropdown {
+  z-index: 1050 !important;
+}
+
+/* Ensure the date picker has proper spacing */
+.er-date-picker {
+  width: 100% !important; /* Ensure it takes full width */
+}
+
+/* Ensure calendar cells are properly sized and aligned */
+.ant-picker-cell {
+  padding: 3px 0;
+  min-width: 24px;
+  height: 24px;
+}
+/* Fix calendar header alignment */
+.ant-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+/* Fix calendar content alignment */
+.ant-picker-content {
+  width: 100%;
+  table-layout: fixed;
+}
+/* Fix the date range picker specific issues */
+.ant-picker-range {
+  width: 100%;
+  min-width: 300px;
+}
+
+/* Ensure the range picker panels are properly aligned */
+.ant-picker-range-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+/* Fix the range separator alignment */
+.ant-picker-range-separator {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+/* Ensure proper spacing between the two calendar panels */
+.ant-picker-panel {
+  border-width: 0;
+}
+
+/* Fix mobile view for the date picker */
+@media (max-width: 768px) {
+  .ant-picker-panels {
+    flex-direction: column;
+  }
+  
+  .ant-picker-panel-container {
+    width: 100%;
+  }
+  
+  .ant-picker-range {
+    width: 100%;
+  }
+}
+
+/* Responsive adjustments for filters */
+@media (max-width: 768px) {
+  .er-table-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .er-table-filters .ant-space {
+    width: 100%;
+  }
+  
+  .er-date-picker-container {
+    width: 100% ;
+  }
 }
 
 .er-employee-avatar {
