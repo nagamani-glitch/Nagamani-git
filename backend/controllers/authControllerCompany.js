@@ -183,6 +183,15 @@ export const login = async (req, res) => {
       console.error('Error using comparePassword method:', pwError);
     }
     
+    // THIS IS THE FIX: Check if password is valid before proceeding
+    if (!isPasswordValid) {
+      console.log('Invalid password for user:', user.email);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+    
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, companyCode: user.companyCode, role: user.role },
@@ -191,12 +200,6 @@ export const login = async (req, res) => {
     );
     
     console.log('Login successful for user:', user.email);
-
-    // Add this to your login function for debugging
-console.log('Direct bcrypt compare test:');
-const directCompare = await bcrypt.compare(password, user.password);
-console.log('Direct bcrypt compare result:', directCompare);
-
     
     res.status(200).json({
       success: true,
@@ -220,6 +223,161 @@ console.log('Direct bcrypt compare result:', directCompare);
     });
   }
 };
+
+// // Login user
+// export const login = async (req, res) => {
+//   try {
+//     const { email, password, companyCode } = req.body;
+    
+//     console.log('Login attempt received:', { 
+//       email, 
+//       companyCode,
+//       passwordProvided: !!password,
+//       passwordLength: password ? password.length : 0
+//     });
+    
+//     // Find user by email and company code
+//     const user = await User.findOne({ 
+//       email: email.toLowerCase(), 
+//       companyCode: companyCode.toUpperCase() 
+//     });
+    
+//     console.log('User found:', user ? {
+//       id: user._id,
+//       email: user.email,
+//       companyCode: user.companyCode,
+//       isVerified: user.isVerified,
+//       isActive: user.isActive,
+//       passwordHashPrefix: user.password ? user.password.substring(0, 10) + '...' : 'none'
+//     } : 'No user found');
+    
+//     if (!user) {
+//       return res.status(401).json({ 
+//         success: false,
+//         message: 'Invalid email or company code' 
+//       });
+//     }
+    
+//     // Check if user is verified
+//     if (!user.isVerified) {
+//       console.log('User status check failed:', {
+//         isVerified: user.isVerified,
+//         isActive: user.isActive
+//       });
+      
+//       // Generate new OTP for unverified users
+//       const otp = Math.floor(100000 + Math.random() * 900000).toString();
+//       const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      
+//       user.otp = otp;
+//       user.otpExpires = otpExpires;
+//       await user.save();
+      
+//       // Find company for this user
+//       const company = await Company.findOne({ companyCode: user.companyCode });
+      
+//       // Send OTP email
+//       try {
+//         await sendOtpEmail(email, otp, {
+//           name: user.name,
+//           companyName: company ? company.name : 'HRMS'
+//         });
+        
+//         console.log('Verification OTP sent to:', email);
+//       } catch (emailError) {
+//         console.error('Error sending OTP email:', emailError);
+//         // Continue with response even if email fails
+//       }
+      
+//       return res.status(403).json({ 
+//         success: false,
+//         message: 'Email not verified. A verification code has been sent to your email.',
+//         requiresVerification: true,
+//         email: user.email
+//       });
+//     }
+    
+//     // Check if user is active
+//     if (!user.isActive) {
+//       console.log('User inactive:', user.email);
+//       return res.status(401).json({ 
+//         success: false,
+//         message: 'Your account is inactive. Please contact your administrator.' 
+//       });
+//     }
+    
+//     // Check if company exists and is active
+//     const company = await Company.findOne({ companyCode: user.companyCode });
+//     if (!company) {
+//       console.log('Company not found:', user.companyCode);
+//       return res.status(401).json({ 
+//         success: false,
+//         message: 'Company not found' 
+//       });
+//     }
+    
+//     if (!company.isActive) {
+//       console.log('Company inactive:', company.companyCode);
+//       return res.status(401).json({ 
+//         success: false,
+//         message: 'Company account is inactive' 
+//       });
+//     }
+    
+//     // Verify password - log detailed information
+//     console.log('Password verification attempt:', {
+//       userEmail: user.email,
+//       passwordProvided: !!password,
+//       passwordLength: password ? password.length : 0,
+//       storedPasswordHashPrefix: user.password ? user.password.substring(0, 10) + '...' : 'none'
+//     });
+    
+//     // Try both the comparePassword method and direct bcrypt compare
+//     let isPasswordValid = false;
+//     try {
+//       isPasswordValid = await user.comparePassword(password);
+//       console.log('Password validation using user.comparePassword:', isPasswordValid);
+//     } catch (pwError) {
+//       console.error('Error using comparePassword method:', pwError);
+//     }
+    
+//     // Generate JWT token
+//     const token = jwt.sign(
+//       { userId: user._id, companyCode: user.companyCode, role: user.role },
+//       process.env.JWT_SECRET,
+//       { expiresIn: '24h' }
+//     );
+    
+//     console.log('Login successful for user:', user.email);
+
+//     // Add this to your login function for debugging
+// console.log('Direct bcrypt compare test:');
+// const directCompare = await bcrypt.compare(password, user.password);
+// console.log('Direct bcrypt compare result:', directCompare);
+
+    
+//     res.status(200).json({
+//       success: true,
+//       token,
+//       user: {
+//         id: user._id,
+//         userId: user.userId,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//         permissions: user.permissions,
+//         companyCode: user.companyCode
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Login error details:', error);
+//     res.status(500).json({ 
+//       success: false,
+//       message: 'Server error during login',
+//       error: error.message 
+//     });
+//   }
+// };
 
 export const verifyEmail = async (req, res) => {
   try {
