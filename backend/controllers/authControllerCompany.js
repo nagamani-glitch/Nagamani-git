@@ -688,6 +688,7 @@ export const login = async (req, res) => {
     
     try {
       // Get company-specific User model
+      const { getUserModel } = await import('../models/User.js');
       const CompanyUserModel = await getUserModel(companyCode);
       
       // Find user in company database
@@ -703,11 +704,19 @@ export const login = async (req, res) => {
           companyCode: user.companyCode
         });
         
-        // Verify password directly with bcrypt since the model method might not be available
+        // Verify password directly with bcrypt
+        console.log('Comparing password for user:', user.email);
         const isPasswordValid = await bcrypt.compare(password, user.password);
         console.log('Password match result:', isPasswordValid);
         
         if (!isPasswordValid) {
+          // For debugging, log password details
+          console.log('Password comparison failed:', {
+            providedPasswordLength: password.length,
+            storedPasswordLength: user.password.length,
+            storedPasswordPrefix: user.password.substring(0, 10) + '...'
+          });
+          
           return res.status(401).json({
             success: false,
             message: 'Invalid email or password'

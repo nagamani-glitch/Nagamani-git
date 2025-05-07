@@ -216,6 +216,7 @@ export const registerCompany = async (req, res) => {
   });
 };
 
+
 // // Add a new controller function to verify OTP
 // export const verifyOtp = async (req, res) => {
 //   try {
@@ -242,8 +243,7 @@ export const registerCompany = async (req, res) => {
 //       storedOtp: user.otp,
 //       otpExpires: user.otpExpires,
 //       now: new Date(),
-//       isExpired: user.otpExpires < new Date(),
-//       passwordHash: user.password.substring(0, 10) + '...'
+//       isExpired: user.otpExpires < new Date()
 //     });
     
 //     // Check if OTP matches
@@ -318,7 +318,7 @@ export const registerCompany = async (req, res) => {
 //             industry: company.industry,
 //             isActive: true,
 //             settings: company.settings,
-//             adminUserId: companyAdmin._id,
+//             adminUserId: companyAdmin._id, // Use the company-specific user ID
 //             registrationNumber: company.registrationNumber,
 //             pendingVerification: false
 //           });
@@ -329,8 +329,6 @@ export const registerCompany = async (req, res) => {
 //           console.error('Error creating records in company database:', dbError);
 //           // Continue with the response even if this fails
 //         }
-
-
 //       }
 //     }
     
@@ -379,7 +377,8 @@ export const verifyOtp = async (req, res) => {
       storedOtp: user.otp,
       otpExpires: user.otpExpires,
       now: new Date(),
-      isExpired: user.otpExpires < new Date()
+      isExpired: user.otpExpires < new Date(),
+      passwordHash: user.password.substring(0, 10) + '...'
     });
     
     // Check if OTP matches
@@ -421,6 +420,7 @@ export const verifyOtp = async (req, res) => {
           const CompanyUserModel = await getUserModel(user.companyCode);
           
           // Create a copy of the admin user in the company database
+          // IMPORTANT: Do not hash the password again, use the existing hash
           const companyAdmin = new CompanyUserModel({
             userId: user.userId,
             firstName: user.firstName,
@@ -428,7 +428,7 @@ export const verifyOtp = async (req, res) => {
             lastName: user.lastName,
             name: user.name,
             email: user.email,
-            password: user.password, // Already hashed
+            password: user.password, // Use the already hashed password
             role: user.role,
             companyCode: user.companyCode,
             permissions: user.permissions,
@@ -436,14 +436,20 @@ export const verifyOtp = async (req, res) => {
             isActive: true
           });
           
+          // Disable the pre-save middleware for this save operation
+          companyAdmin.$skipMiddleware = true; // Add this flag
+          
           await companyAdmin.save();
           console.log('Admin user created in company database:', companyAdmin.email);
           
-          // Also create a Company document in the company database
-          const { companySchema } = await import('../models/Company.js');
+          // Import the company schema properly
+          const { default: Company, companySchema } = await import('../models/Company.js');
+          
+          // Create the company model for this company
           const createCompanyModel = (await import('../models/modelFactory.js')).default;
           const CompanyModel = await createCompanyModel(user.companyCode, 'Company', companySchema);
           
+          // Create a company record in the company database
           const companyRecord = new CompanyModel({
             name: company.name,
             companyCode: company.companyCode,
@@ -454,7 +460,7 @@ export const verifyOtp = async (req, res) => {
             industry: company.industry,
             isActive: true,
             settings: company.settings,
-            adminUserId: companyAdmin._id, // Use the company-specific user ID
+            adminUserId: companyAdmin._id,
             registrationNumber: company.registrationNumber,
             pendingVerification: false
           });

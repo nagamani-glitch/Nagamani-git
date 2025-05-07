@@ -300,19 +300,48 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
+// // Hash password before saving
+// userSchema.pre('save', async function(next) {
+//   if (this.isModified('password')) {
+//     console.log('DEBUG - About to hash password for user:', {
+//       email: this.email,
+//       companyCode: this.companyCode,
+//       rawPassword: this.password.substring(0, 3) + '...' // Log only first 3 chars for security
+//     });
+//     this.password = await bcrypt.hash(this.password, 10);
+//     console.log(`Hashed password length: ${this.password.length}`);
+//   }
+//   next();
+// });
+
 // Hash password before saving
 userSchema.pre('save', async function(next) {
+  // Skip middleware if flag is set
+  if (this.$skipMiddleware) {
+    return next();
+  }
+  
   if (this.isModified('password')) {
-    console.log('DEBUG - About to hash password for user:', {
+    // Check if password is already hashed to prevent double hashing
+    if (this.password.startsWith('$2a$') || this.password.startsWith('$2b$')) {
+      console.log('Password appears to be already hashed, skipping hashing');
+      return next();
+    }
+    
+    console.log('Hashing password for user:', {
       email: this.email,
       companyCode: this.companyCode,
-      rawPassword: this.password.substring(0, 3) + '...' // Log only first 3 chars for security
+      passwordLength: this.password.length
     });
+    
     this.password = await bcrypt.hash(this.password, 10);
     console.log(`Hashed password length: ${this.password.length}`);
   }
   next();
 });
+
+
+
 
 // // Method to check password
 // userSchema.methods.comparePassword = async function(candidatePassword) {
