@@ -139,10 +139,7 @@ const Header = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // useEffect(() => {
-  //   initializeTimesheet();
-  //   return cleanupTimesheet;
-  // }, []);
+  
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -189,43 +186,7 @@ const Header = () => {
     }
   };
 
-  // const handleTimerClick = async () => {
-  //   if (isLoading) return;
 
-  //   setIsLoading(true);
-  //   try {
-  //     if (isTimerRunning) {
-  //       // Calculate duration in seconds
-  //       const checkInTime = new Date(startTime);
-  //       const checkOutTime = new Date();
-  //       const durationInSeconds = Math.floor(
-  //         (checkOutTime - checkInTime) / 1000
-  //       );
-
-  //       // Log out with duration
-  //       await timesheetService.checkOut(employeeId, durationInSeconds);
-  //       cleanupTimesheet();
-  //       setIsTimerRunning(false);
-  //       setTimer(0);
-  //       setStartTime(null);
-  //       localStorage.removeItem("checkInTime");
-  //       showToastMessage("Successfully logged out");
-  //     } else {
-  //       // Log in
-  //       const response = await timesheetService.checkIn(employeeId);
-  //       const checkInTime = new Date(response.data.checkInTime);
-  //       startTimerWithTime(checkInTime);
-  //       showToastMessage("Successfully logged in");
-  //     }
-  //   } catch (error) {
-  //     console.error("Timesheet operation failed:", error);
-  //     showToastMessage("Operation failed. Please try again.");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // Inside the handleTimerClick function in Header.js
 
   const handleTimerClick = async () => {
     if (isLoading) return;
@@ -466,9 +427,7 @@ const Header = () => {
           ref={navbarCollapseRef}
         >
           <Container fluid>
-            {/* <Button variant="link" className="me-3" onClick={toggleSidebar}>
-              <FaBars size={28} color="white" />
-            </Button> */}
+           
             {isLoggedIn && (
   <Button variant="link" className="me-3" onClick={toggleSidebar}>
     <FaBars size={28} color="white" />

@@ -38,7 +38,7 @@ body {
     height: 80px;
   }
 }
-
+/* Modify the brand class in the media query */
 @media (max-width: 768px) {
   .responsive-logo {
     height: 60px;
@@ -46,7 +46,8 @@ body {
   
   .brand {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start; /* Change from center to flex-start */
+    align-items: center;
   }
 }
 
@@ -55,6 +56,23 @@ body {
     height: 50px;
   }
 }
+
+
+.navbar-brand.brand {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-right: 1rem;
+}
+
+/* Add this to ensure logo is always left-aligned */
+.custom-navbar .navbar-brand {
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
 
 .path-indicator {
   color: white;

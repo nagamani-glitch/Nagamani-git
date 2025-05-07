@@ -747,11 +747,7 @@ const Feedback = () => {
     }
   };
 
-  // // Handle mobile action menu
-  // const handleActionMenuOpen = (event, id) => {
-  //   setActionMenuAnchorEl(event.currentTarget);
-  //   setCurrentFeedbackId(id);
-  // };
+ 
 
   const handleActionMenuClose = () => {
     setActionMenuAnchorEl(null);
@@ -1078,22 +1074,10 @@ const Feedback = () => {
                 Analytics
               </Button>
 
-              {/* <Button
-                onClick={(e) => setExportOptions(e.currentTarget)}
-                startIcon={<GetAppIcon />}
-                sx={{
-                  height: { xs: "auto", sm: 40 },
-                  padding: { xs: "8px 16px", sm: "6px 16px" },
-                  width: { xs: "100%", sm: "auto" },
-                  display: { xs: "none", sm: "flex" }, // Hide on xs (mobile), show on sm and up (iPad/desktop)
-                }}
-                variant="outlined"
-              >
-                Export
-              </Button> */}
+
               <div className="export-tooltip">
                 <button
-                  className={`export-button ${loading ? "loading" : ""}`}
+                  className={`feedback-export-button ${loading ? "loading" : ""}`}
                   onClick={(e) =>
                     filteredFeedbackData.length > 0
                       ? setExportOptions(e.currentTarget)
@@ -1117,6 +1101,7 @@ const Feedback = () => {
                 startIcon={<Add />}
                 sx={{
                   height: { xs: "auto", sm: 40 },
+                  borderRadius: "8px",
                   padding: { xs: "8px 16px", sm: "6px 16px" },
                   width: { xs: "100%", sm: "auto" },
                   background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
