@@ -6,6 +6,7 @@ import { sendOtpEmail } from '../utils/mailer.js';
 import bcrypt from 'bcrypt';
 
 // Register a new company and admin user
+
 export const registerCompany = async (req, res) => {
   try {
     const { 
@@ -20,7 +21,7 @@ export const registerCompany = async (req, res) => {
       adminPassword
     } = req.body;
     
-    // Check if company code already exists
+    // Check if company code already exists in the main database
     const existingCompany = await Company.findOne({ companyCode });
     if (existingCompany) {
       return res.status(400).json({ message: 'Company code already in use' });
@@ -39,19 +40,69 @@ export const registerCompany = async (req, res) => {
       pendingVerification: true
     });
     
+    // Handle logo if it was uploaded
+    if (req.file) {
+      company.logoUrl = `/uploads/company-logos/${req.file.filename}`;
+    }
+    
+    // Save the company to the main database
     await company.save();
+    console.log(`Company ${companyName} (${companyCode}) created in main database`);
+    
+    // Get a connection to the company-specific database
+    const { getCompanyConnection } = await import('../config/db.js');
+    const companyConn = await getCompanyConnection(companyCode);
+    
+    // Define the User model for this specific company
+    const UserSchema = new mongoose.Schema({
+      firstName: String,
+      lastName: String,
+      name: String,
+      email: { 
+        type: String, 
+        required: true,
+        unique: true,
+        lowercase: true 
+      },
+      password: String,
+      role: String,
+      companyCode: String,
+      isVerified: Boolean,
+      isActive: Boolean,
+      otp: String,
+      otpExpires: Date,
+      permissions: [String]
+    });
+    
+    // Add method to assign permissions
+    UserSchema.methods.assignPermissions = function() {
+      if (this.role === 'admin') {
+        this.permissions = ['all']; // Admin has all permissions
+      }
+    };
+    
+    // Create the User model for this company
+    const CompanyUser = companyConn.model('User', UserSchema);
     
     // Generate OTP for verification
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
-    // Create admin user for the company in main database
-    const adminUser = new MainUser({
+    // Check if admin email already exists in this company database
+    const existingUser = await CompanyUser.findOne({ email: adminEmail.toLowerCase() });
+    if (existingUser) {
+      // If company was created but user exists, we should delete the company
+      await Company.findByIdAndDelete(company._id);
+      return res.status(400).json({ message: 'Admin email already in use' });
+    }
+    
+    // Create admin user for the company in company-specific database ONLY
+    const adminUser = new CompanyUser({
       firstName: adminFirstName,
       lastName: adminLastName,
       name: `${adminFirstName} ${adminLastName}`,
-      email: adminEmail,
-      password: adminPassword,
+      email: adminEmail.toLowerCase(), // Ensure email is lowercase for consistency
+      password: adminPassword, // This will be hashed by the schema pre-save hook
       role: 'admin',
       companyCode,
       isVerified: false,
@@ -63,10 +114,17 @@ export const registerCompany = async (req, res) => {
     // Assign permissions based on role
     adminUser.assignPermissions();
     
+    // Hash the password before saving
+    const bcrypt = await import('bcrypt');
+    adminUser.password = await bcrypt.hash(adminPassword, 10);
+    
+    // Save the admin user to the company-specific database
     await adminUser.save();
+    console.log(`Admin user ${adminEmail} created in company database for ${companyCode}`);
     
     // Send OTP email
     try {
+      const { sendOtpEmail } = await import('../services/emailService.js');
       await sendOtpEmail(adminEmail, otp, {
         name: adminUser.name,
         companyName: companyName
@@ -84,9 +142,92 @@ export const registerCompany = async (req, res) => {
       companyCode
     });
   } catch (error) {
+    console.error('Company registration error:', error);
     res.status(500).json({ message: error.message });
   }
 };
+
+// export const registerCompany = async (req, res) => {
+//   try {
+//     const { 
+//       companyName, 
+//       companyCode, 
+//       industry, 
+//       contactEmail,
+//       contactPhone,
+//       adminFirstName,
+//       adminLastName,
+//       adminEmail,
+//       adminPassword
+//     } = req.body;
+    
+//     // Check if company code already exists
+//     const existingCompany = await Company.findOne({ companyCode });
+//     if (existingCompany) {
+//       return res.status(400).json({ message: 'Company code already in use' });
+//     }
+    
+//     // Create new company in main database
+//     const company = new Company({
+//       name: companyName,
+//       companyCode,
+//       industry,
+//       contactEmail,
+//       contactPhone,
+//       subscriptionStatus: 'trial',
+//       trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days trial
+//       isActive: false, // Set as inactive until verification
+//       pendingVerification: true
+//     });
+    
+//     await company.save();
+    
+//     // Generate OTP for verification
+//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+//     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    
+//     // Create admin user for the company in main database
+//     const adminUser = new MainUser({
+//       firstName: adminFirstName,
+//       lastName: adminLastName,
+//       name: `${adminFirstName} ${adminLastName}`,
+//       email: adminEmail,
+//       password: adminPassword,
+//       role: 'admin',
+//       companyCode,
+//       isVerified: false,
+//       isActive: true,
+//       otp,
+//       otpExpires
+//     });
+    
+//     // Assign permissions based on role
+//     adminUser.assignPermissions();
+    
+//     await adminUser.save();
+    
+//     // Send OTP email
+//     try {
+//       await sendOtpEmail(adminEmail, otp, {
+//         name: adminUser.name,
+//         companyName: companyName
+//       });
+      
+//       console.log('Verification OTP sent to:', adminEmail);
+//     } catch (emailError) {
+//       console.error('Error sending OTP email:', emailError);
+//       // Continue with response even if email fails
+//     }
+    
+//     res.status(201).json({ 
+//       message: 'Company registration initiated. Please verify your email with the OTP sent to complete registration.',
+//       email: adminEmail,
+//       companyCode
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 
 // Login user
 export const login = async (req, res) => {
