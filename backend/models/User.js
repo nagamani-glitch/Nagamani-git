@@ -314,6 +314,19 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
+// // Method to check password
+// userSchema.methods.comparePassword = async function(candidatePassword) {
+//   try {
+//     console.log('Comparing password for user:', this.email);
+//     const isMatch = await bcrypt.compare(candidatePassword, this.password);
+//     console.log('Password match result:', isMatch);
+//     return isMatch;
+//   } catch (error) {
+//     console.error('Error comparing passwords:', error);
+//     return false;
+//   }
+// };
+
 // Method to check password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
@@ -323,9 +336,10 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
     return isMatch;
   } catch (error) {
     console.error('Error comparing passwords:', error);
-    return false;
+    throw error; // Throw the error to be handled by the caller
   }
 };
+
 
 // Method to assign permissions based on role
 userSchema.methods.assignPermissions = function() {

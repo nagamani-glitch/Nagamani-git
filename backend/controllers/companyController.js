@@ -216,6 +216,143 @@ export const registerCompany = async (req, res) => {
   });
 };
 
+// // Add a new controller function to verify OTP
+// export const verifyOtp = async (req, res) => {
+//   try {
+//     const { email, otp } = req.body;
+    
+//     console.log('Received verification request:', { email, otp });
+    
+//     if (!email || !otp) {
+//       console.log('Missing email or OTP in request:', req.body);
+//       return res.status(400).json({ message: 'Email and OTP are required' });
+//     }
+    
+//     // Find user by email first
+//     const user = await User.findOne({ email: email.toLowerCase() });
+    
+//     if (!user) {
+//       console.log('User not found with email:', email);
+//       return res.status(404).json({ message: 'User not found with this email' });
+//     }
+    
+//     console.log('Found user:', { 
+//       id: user._id, 
+//       email: user.email, 
+//       storedOtp: user.otp,
+//       otpExpires: user.otpExpires,
+//       now: new Date(),
+//       isExpired: user.otpExpires < new Date(),
+//       passwordHash: user.password.substring(0, 10) + '...'
+//     });
+    
+//     // Check if OTP matches
+//     if (user.otp !== otp) {
+//       console.log('OTP mismatch:', { provided: otp, stored: user.otp });
+//       return res.status(400).json({ message: 'Invalid OTP' });
+//     }
+    
+//     // Check if OTP is expired
+//     if (user.otpExpires < new Date()) {
+//       console.log('OTP expired:', { expires: user.otpExpires, now: new Date() });
+//       return res.status(400).json({ message: 'OTP has expired. Please request a new one' });
+//     }
+    
+//     // Mark user as verified and clear OTP
+//     user.isVerified = true;
+//     user.otp = undefined;
+//     user.otpExpires = undefined;
+    
+//     await user.save();
+//     console.log('User verified successfully:', user.email);
+    
+//     // Now activate the company if this is an admin user
+//     if (user.role === 'admin') {
+//       const company = await Company.findOne({ 
+//         companyCode: user.companyCode,
+//         adminUserId: user._id
+//       });
+      
+//       if (company) {
+//         company.isActive = true;
+//         company.pendingVerification = false;
+//         await company.save();
+//         console.log('Company activated:', company.name);
+
+//         // Create admin user in company database
+//         try {
+//           const { getUserModel } = await import('../models/User.js');
+//           const CompanyUserModel = await getUserModel(user.companyCode);
+          
+//           // Create a copy of the admin user in the company database
+//           const companyAdmin = new CompanyUserModel({
+//             userId: user.userId,
+//             firstName: user.firstName,
+//             middleName: user.middleName,
+//             lastName: user.lastName,
+//             name: user.name,
+//             email: user.email,
+//             password: user.password, // Already hashed
+//             role: user.role,
+//             companyCode: user.companyCode,
+//             permissions: user.permissions,
+//             isVerified: true,
+//             isActive: true
+//           });
+          
+//           await companyAdmin.save();
+//           console.log('Admin user created in company database:', companyAdmin.email);
+          
+//           // Also create a Company document in the company database
+//           const { companySchema } = await import('../models/Company.js');
+//           const createCompanyModel = (await import('../models/modelFactory.js')).default;
+//           const CompanyModel = await createCompanyModel(user.companyCode, 'Company', companySchema);
+          
+//           const companyRecord = new CompanyModel({
+//             name: company.name,
+//             companyCode: company.companyCode,
+//             address: company.address,
+//             contactEmail: company.contactEmail,
+//             contactPhone: company.contactPhone,
+//             logo: company.logo,
+//             industry: company.industry,
+//             isActive: true,
+//             settings: company.settings,
+//             adminUserId: companyAdmin._id,
+//             registrationNumber: company.registrationNumber,
+//             pendingVerification: false
+//           });
+          
+//           await companyRecord.save();
+//           console.log('Company record created in company database');
+//         } catch (dbError) {
+//           console.error('Error creating records in company database:', dbError);
+//           // Continue with the response even if this fails
+//         }
+
+
+//       }
+//     }
+    
+//     res.status(200).json({
+//       success: true,
+//       message: 'Email verified successfully. Your company registration is now complete.',
+//       user: {
+//         id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         companyCode: user.companyCode
+//       }
+//     });
+//   } catch (error) {
+//     console.error('OTP verification error:', error);
+//     res.status(500).json({ 
+//       message: 'Server error during OTP verification',
+//       error: error.message 
+//     });
+//   }
+// };
+
 // Add a new controller function to verify OTP
 export const verifyOtp = async (req, res) => {
   try {
@@ -242,8 +379,7 @@ export const verifyOtp = async (req, res) => {
       storedOtp: user.otp,
       otpExpires: user.otpExpires,
       now: new Date(),
-      isExpired: user.otpExpires < new Date(),
-      passwordHash: user.password.substring(0, 10) + '...'
+      isExpired: user.otpExpires < new Date()
     });
     
     // Check if OTP matches
@@ -318,7 +454,7 @@ export const verifyOtp = async (req, res) => {
             industry: company.industry,
             isActive: true,
             settings: company.settings,
-            adminUserId: companyAdmin._id,
+            adminUserId: companyAdmin._id, // Use the company-specific user ID
             registrationNumber: company.registrationNumber,
             pendingVerification: false
           });
@@ -329,8 +465,6 @@ export const verifyOtp = async (req, res) => {
           console.error('Error creating records in company database:', dbError);
           // Continue with the response even if this fails
         }
-
-
       }
     }
     

@@ -39,49 +39,49 @@ const connectMainDB = async () => {
     }
 };
 
-// Get or create a connection for a specific company
-const getCompanyConnection = async (companyCode) => {
-    if (!companyCode) {
-        throw new Error('Company code is required');
-    }
+// // Get or create a connection for a specific company
+// const getCompanyConnection = async (companyCode) => {
+//     if (!companyCode) {
+//         throw new Error('Company code is required');
+//     }
     
-    // Normalize company code
-    companyCode = companyCode.toUpperCase();
+//     // Normalize company code
+//     companyCode = companyCode.toUpperCase();
     
-    // Return existing connection if available
-    if (connections[companyCode]) {
-        return connections[companyCode];
-    }
+//     // Return existing connection if available
+//     if (connections[companyCode]) {
+//         return connections[companyCode];
+//     }
     
-    // Create a new connection for this company
-    try {
-        // Create a new connection with a specific database name for this company
-        const dbName = `hrms_${companyCode.toLowerCase()}`;
+//     // Create a new connection for this company
+//     try {
+//         // Create a new connection with a specific database name for this company
+//         const dbName = `hrms_${companyCode.toLowerCase()}`;
         
-        // Fix: Properly construct the connection URL without creating an invalid namespace
-        // Original problematic line:
-        // const connection = await mongoose.createConnection(`${URL.split('?')[0]}/${dbName}?${URL.split('?')[1]}`);
+//         // Fix: Properly construct the connection URL without creating an invalid namespace
+//         // Original problematic line:
+//         // const connection = await mongoose.createConnection(`${URL.split('?')[0]}/${dbName}?${URL.split('?')[1]}`);
         
-        // Fixed version - ensure we don't add an extra slash that creates an invalid namespace
-        const baseUrl = URL.split('?')[0];
-        const queryParams = URL.split('?')[1] || '';
+//         // Fixed version - ensure we don't add an extra slash that creates an invalid namespace
+//         const baseUrl = URL.split('?')[0];
+//         const queryParams = URL.split('?')[1] || '';
         
-        // Make sure we don't have double slashes by removing any trailing slash from baseUrl
-        const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-        const connectionString = `${cleanBaseUrl}/${dbName}?${queryParams}`;
+//         // Make sure we don't have double slashes by removing any trailing slash from baseUrl
+//         const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+//         const connectionString = `${cleanBaseUrl}/${dbName}?${queryParams}`;
         
-        const connection = await mongoose.createConnection(connectionString);
+//         const connection = await mongoose.createConnection(connectionString);
         
-        console.log(`🚀 Company DB Connected: ${connection.name} for ${companyCode}`.green.underline);
+//         console.log(`🚀 Company DB Connected: ${connection.name} for ${companyCode}`.green.underline);
         
-        // Store the connection
-        connections[companyCode] = connection;
-        return connection;
-    } catch (error) {
-        console.log(`Error connecting to company database: ${error.message}`.red.underline.bold);
-        throw error;
-    }
-};
+//         // Store the connection
+//         connections[companyCode] = connection;
+//         return connection;
+//     } catch (error) {
+//         console.log(`Error connecting to company database: ${error.message}`.red.underline.bold);
+//         throw error;
+//     }
+// };
 
 // // Get or create a connection for a specific company
 // const getCompanyConnection = async (companyCode) => {
@@ -115,6 +115,49 @@ const getCompanyConnection = async (companyCode) => {
 // };
 
 // Close all connections
+
+// Get or create a connection for a specific company
+const getCompanyConnection = async (companyCode) => {
+    if (!companyCode) {
+        throw new Error('Company code is required');
+    }
+    
+    // Normalize company code
+    companyCode = companyCode.toUpperCase();
+    
+    // Return existing connection if available
+    if (connections[companyCode]) {
+        return connections[companyCode];
+    }
+    
+    // Create a new connection for this company
+    try {
+        // Create a new connection with a specific database name for this company
+        const dbName = `hrms_${companyCode.toLowerCase()}`;
+        
+        // Fix: Properly construct the connection URL without creating an invalid namespace
+        const baseUrl = URL.split('?')[0];
+        const queryParams = URL.split('?')[1] || '';
+        
+        // Make sure we don't have double slashes by removing any trailing slash from baseUrl
+        const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+        const connectionString = `${cleanBaseUrl}/${dbName}?${queryParams}`;
+        
+        const connection = await mongoose.createConnection(connectionString);
+        
+        console.log(`🚀 Company DB Connected: ${connection.name} for ${companyCode}`.green.underline);
+        
+        // Store the connection
+        connections[companyCode] = connection;
+        return connection;
+    } catch (error) {
+        console.log(`Error connecting to company database: ${error.message}`.red.underline.bold);
+        throw error;
+    }
+};
+
+
+
 const closeAllConnections = async () => {
     await mongoose.disconnect();
     for (const companyCode in connections) {
