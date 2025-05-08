@@ -295,14 +295,26 @@ const validateForm = useCallback(() => {
   return true;
 }, [formData, dispatch]);
 
-
-const handleSubmit = useCallback(async () => {
+const handleSubmit = useCallback(async (e) => {
+  // Prevent default form submission behavior
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  
   // Prevent double submission
   if (isSubmitting || loading) return;
   
   // Validate form inputs
   if (!validateForm()) {
     return;
+  }
+  
+  // Save current form state to session storage in case of page reload
+  try {
+    sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
+  } catch (error) {
+    console.error('Error saving form data to session storage:', error);
   }
   
   // Set submission state
@@ -323,14 +335,33 @@ const handleSubmit = useCallback(async () => {
       companyCode: formData.companyCode.trim().toUpperCase()
     }));
     
-    // Handle the result
+    console.log('Login response in component:', {
+      success: loginUser.fulfilled.match(resultAction),
+      payload: resultAction.payload,
+      error: resultAction.error
+    });
+    
+    // Clear pending login on success
     if (loginUser.fulfilled.match(resultAction)) {
       sessionStorage.removeItem('pendingLogin');
+      
+      // Navigate to dashboard on success
       console.log('Login successful, navigating to dashboard');
       navigate('/Dashboards');
+    } else if (loginUser.rejected.match(resultAction)) {
+      // Handle specific error cases
+      const errorPayload = resultAction.payload;
+      
+      if (errorPayload && errorPayload.requiresVerification) {
+        console.log('Verification required for:', errorPayload.email);
+        // The error message will be set by the reducer
+      } else {
+        console.log('Login failed:', errorPayload);
+      }
     }
   } catch (error) {
     console.error('Login error in component:', error);
+    dispatch(setAuthError(error.message || 'Login failed. Please try again.'));
   } finally {
     if (isMounted.current) {
       setIsSubmitting(false);
@@ -338,8 +369,18 @@ const handleSubmit = useCallback(async () => {
   }
 }, [formData, isSubmitting, loading, validateForm, dispatch, navigate]);
 
+// // Handle verification request
+//   const handleRequestVerification = useCallback(() => {
+//     if (!verificationEmail) return;
+    
+//     // Save the current login attempt for after verification
+//     sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
+    
+//     // Redirect to verification page with email
+//     navigate(`/verify-otp?email=${encodeURIComponent(verificationEmail)}`);
+//   }, [verificationEmail, formData, navigate]);
 
-
+// Update the handleRequestVerification function
 const handleRequestVerification = useCallback(() => {
   if (!verificationEmail) {
     const email = formData.email.trim().toLowerCase();
@@ -464,197 +505,209 @@ const handleRequestVerification = useCallback(() => {
             )}
             
             {/* Use div instead of form to avoid implicit form submission */}
-
-            {/*Replace the Box component with a form element*/}
-<Box 
-  component="form" 
-  sx={{ 
-    mt: 1,
-    '& .MuiTextField-root': {
-      mb: 2
-    }
-  }}
-  onSubmit={(e) => {
-    e.preventDefault();
-    handleSubmit();
-  }}
->
-<TextField
-    fullWidth
-    required
-    id="companyCode"
-    label="Company Code"
-    name="companyCode"
-    autoComplete="organization"
-    value={formData.companyCode}
-    onChange={handleChange}
-    autoFocus
-    sx={textFieldSx}
-    size={isMobile ? "small" : "medium"}
-    disabled={loading || isSubmitting}
-    inputProps={{
-      style: { textTransform: 'uppercase' }
-    }}
-  />
-  
-  <TextField
-    fullWidth
-    required
-    id="email"
-    label="Email Address"
-    name="email"
-    autoComplete="email"
-    value={formData.email}
-    onChange={handleChange}
-    sx={textFieldSx}
-    size={isMobile ? "small" : "medium"}
-    disabled={loading || isSubmitting}
-    inputProps={{
-      style: { textTransform: 'lowercase' },
-      pattern: "[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-    }}
-  />
-  
-  <TextField
-    fullWidth
-    required
-    name="password"
-    label="Password"
-    type={showPassword ? "text" : "password"}
-    id="password"
-    autoComplete="current-password"
-    value={formData.password}
-    onChange={handleChange}
-    sx={textFieldSx}
-    size={isMobile ? "small" : "medium"}
-    disabled={loading || isSubmitting}
-    InputProps={{
-      endAdornment: (
-        <InputAdornment position="end">
-          <IconButton
-            onClick={togglePasswordVisibility}
-            edge="end"
-            aria-label="toggle password visibility"
-            sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-            size={isMobile ? "small" : "medium"}
-            disabled={loading || isSubmitting}
-            type="button" // Explicitly set type to button
-          >
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
-          </IconButton>
-        </InputAdornment>
-      ),
-    }}
-  />
+            <Box 
+              component="div"
+              sx={{ 
+                mt: 1,
+                '& .MuiTextField-root': {
+                  mb: 2
+                }
+              }}
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <TextField
+                fullWidth
+                required
+                id="companyCode"
+                label="Company Code"
+                name="companyCode"
+                autoComplete="organization"
+                value={formData.companyCode}
+                onChange={handleChange}
+                autoFocus
+                sx={textFieldSx}
+                size={isMobile ? "small" : "medium"}
+                disabled={loading || isSubmitting}
+                inputProps={{
+                  style: { textTransform: 'uppercase' }
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+              />
+              
+              <TextField
+                fullWidth
+                required
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                value={formData.email}
+                onChange={handleChange}
+                sx={textFieldSx}
+                size={isMobile ? "small" : "medium"}
+                disabled={loading || isSubmitting}
+                inputProps={{
+                  style: { textTransform: 'lowercase' }
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+              />
+              
+              <TextField
+                fullWidth
+                required
+                name="password"
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                id="password"
+                autoComplete="current-password"
+                value={formData.password}
+                onChange={handleChange}
+                sx={textFieldSx}
+                size={isMobile ? "small" : "medium"}
+                disabled={loading || isSubmitting}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={togglePasswordVisibility}
+                        edge="end"
+                        aria-label="toggle password visibility"
+                        sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                        size={isMobile ? "small" : "medium"}
+                        disabled={loading || isSubmitting}
+                        type="button" // Explicitly set type to button
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+              />
               
               <motion.div whileHover={{ scale: loading || isSubmitting ? 1 : 1.03 }} whileTap={{ scale: loading || isSubmitting ? 1 : 0.98 }}>
-    <Button
-      type="submit"
-      fullWidth
-      variant="contained"
-      sx={{
-        mt: 3,
-        mb: 2,
-        backgroundColor: '#4a90e2',
-        '&:hover': {
-          backgroundColor: loading || isSubmitting ? '#4a90e2' : '#357abd'
-        },
-        padding: isMobile ? '8px' : '12px',
-        fontSize: isMobile ? '14px' : '16px',
-        fontWeight: 600,
-        borderRadius: '8px',
-        textTransform: 'none',
-        boxShadow: '0 4px 10px rgba(74, 144, 226, 0.3)',
-        position: 'relative'
-      }}
-      disabled={loading || isSubmitting}
-    >
-      {loading || isSubmitting ? (
-        <>
-          <CircularProgress 
-            size={24} 
-            sx={{ 
-              color: 'white',
-              position: 'absolute',
-              left: 'calc(50% - 12px)',
-              top: 'calc(50% - 12px)'
-            }} 
-          />
-          <span style={{ visibility: 'hidden' }}>Sign In</span>
-        </>
-      ) : 'Sign In'}
-    </Button>
-  </motion.div>
-  
-  {verificationNeeded && (
-    <Box sx={{ mt: 2, mb: 2 }}>
-      <Button
-        onClick={handleRequestVerification}
-        fullWidth
-        variant="outlined"
-        sx={{
-          color: '#4a90e2',
-          borderColor: '#4a90e2',
-          '&:hover': {
-            backgroundColor: 'rgba(74, 144, 226, 0.08)',
-            borderColor: '#357abd'
-          },
-          padding: isMobile ? '6px' : '10px',
-          fontSize: isMobile ? '13px' : '15px',
-          fontWeight: 500,
-          borderRadius: '8px',
-          textTransform: 'none'
-        }}
-        disabled={loading || isSubmitting}
-        type="button" // Explicitly set type to button
-      >
-        Verify Email Now
-      </Button>
-    </Box>
-  )}
-  
-  <Box sx={{ mt: 2, textAlign: 'center' }}>
-    <Typography 
-      variant="body2" 
-      sx={{
-        color: 'rgba(255, 255, 255, 0.8)',
-        fontSize: isMobile ? '12px' : '14px',
-        '& a': {
-          color: '#4a90e2',
-          textDecoration: 'none',
-          '&:hover': {
-            textDecoration: 'underline'
-          }
-        }
-      }}
-    >
-      <Link to='/forgot-password' style={{ marginRight: '10px' }}>
-        Forgot Password?
-      </Link>
-    </Typography>
-    
-    <Typography 
-      variant="body2" 
-      sx={{
-        mt: 1,
-        color: 'rgba(255, 255, 255, 0.8)',
-        fontSize: isMobile ? '12px' : '14px',
-        '& a': {
-          color: '#4a90e2',
-          textDecoration: 'none',
-          '&:hover': {
-            textDecoration: 'underline'
-          }
-        }
-      }}
-    >
-      Don't have an account?{' '}
-      <Link to="/register" style={{ color: '#4a90e2', textDecoration: 'none' }}>
-        Sign up
-      </Link>
-    </Typography>
-  </Box>
-</Box>
+                <Button
+                  onClick={handleSubmit}
+                  fullWidth
+                  variant="contained"
+                  sx={{
+                    mt: 3,
+                    mb: 2,
+                    backgroundColor: '#4a90e2',
+                    '&:hover': {
+                      backgroundColor: loading || isSubmitting ? '#4a90e2' : '#357abd'
+                    },
+                    padding: isMobile ? '8px' : '12px',
+                    fontSize: isMobile ? '14px' : '16px',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    textTransform: 'none',
+                    boxShadow: '0 4px 10px rgba(74, 144, 226, 0.3)',
+                    position: 'relative'
+                  }}
+                  disabled={loading || isSubmitting}
+                  type="button" // Explicitly set type to button
+                >
+                  {loading || isSubmitting ? (
+                    <>
+                      <CircularProgress 
+                        size={24} 
+                        sx={{ 
+                          color: 'white',
+                          position: 'absolute',
+                          left: 'calc(50% - 12px)',
+                          top: 'calc(50% - 12px)'
+                        }} 
+                      />
+                      <span style={{ visibility: 'hidden' }}>Sign In</span>
+                    </>
+                  ) : 'Sign In'}
+                </Button>
+              </motion.div>
+              
+              {verificationNeeded && (
+                <Box sx={{ mt: 2, mb: 2 }}>
+                  <Button
+                    onClick={handleRequestVerification}
+                    fullWidth
+                    variant="outlined"
+                    sx={{
+                      color: '#4a90e2',
+                      borderColor: '#4a90e2',
+                      '&:hover': {
+                        backgroundColor: 'rgba(74, 144, 226, 0.08)',
+                        borderColor: '#357abd'
+                      },
+                      padding: isMobile ? '6px' : '10px',
+                      fontSize: isMobile ? '13px' : '15px',
+                      fontWeight: 500,
+                      borderRadius: '8px',
+                      textTransform: 'none'
+                    }}
+                    disabled={loading || isSubmitting}
+                  >
+                    Verify Email Now
+                  </Button>
+                </Box>
+              )}
+              
+              <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: isMobile ? '12px' : '14px',
+                    '& a': {
+                      color: '#4a90e2',
+                      textDecoration: 'none',
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
+                    }
+                  }}
+                >
+                  <Link to='/forgot-password' style={{ marginRight: '10px' }}>
+                    Forgot Password?
+                  </Link>
+                </Typography>
+                
+                <Typography 
+                  variant="body2" 
+                  sx={{
+                    mt: 1,
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: isMobile ? '12px' : '14px',
+                    '& a': {
+                      color: '#4a90e2',
+                      textDecoration: 'none',
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
+                    }
+                  }}
+                >
+                  Don't have an account?{' '}
+                  <Link to="/register" style={{ color: '#4a90e2', textDecoration: 'none' }}>
+                    Sign up
+                  </Link>
+                </Typography>
+              </Box>
+            </Box>
           </LoginFormContainer>
         </LoginContent>
       </LoginWrapper>
@@ -663,6 +716,5 @@ const handleRequestVerification = useCallback(() => {
 };
 
 export default LoginPage;
-
 
 

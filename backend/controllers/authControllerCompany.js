@@ -231,6 +231,232 @@ export const registerCompany = async (req, res) => {
 
 // Login user
 
+
+
+// export const login = async (req, res) => {
+//   try {
+//     const { email, password, companyCode } = req.body;
+    
+//     console.log('Login attempt received:', { 
+//       email, 
+//       companyCode,
+//       passwordProvided: !!password,
+//       passwordLength: password ? password.length : 0
+//     });
+    
+//     // First check if company exists and is active in main database
+//     const company = await Company.findOne({ 
+//       companyCode: companyCode.toUpperCase(),
+//       isActive: true
+//     });
+    
+//     if (!company) {
+//       console.log('Company not found or inactive:', companyCode);
+//       return res.status(401).json({ 
+//         success: false,
+//         message: 'Invalid company code or company is inactive' 
+//       });
+//     }
+    
+//     // Try to find user in company-specific database first
+//     let user = null;
+//     let isCompanyUser = false;
+    
+//     try {
+//       // Get company-specific User model
+//       const CompanyUserModel = await getUserModel(companyCode);
+      
+//       // Find user in company database
+//       user = await CompanyUserModel.findOne({ 
+//         email: email.toLowerCase()
+//       });
+      
+//       if (user) {
+//         isCompanyUser = true;
+//         console.log('User found in company database:', {
+//           id: user._id,
+//           email: user.email,
+//           companyCode: user.companyCode,
+//           isVerified: user.isVerified,
+//           isActive: user.isActive
+//         });
+//       }
+//     } catch (dbError) {
+//       console.error('Error accessing company database:', dbError);
+//       // Continue to check main database
+//     }
+    
+//     // If user not found in company database, check main database
+//     if (!user) {
+//       user = await MainUser.findOne({ 
+//         email: email.toLowerCase(), 
+//         companyCode: companyCode.toUpperCase() 
+//       });
+      
+//       console.log('User found in main database:', user ? {
+//         id: user._id,
+//         email: user.email,
+//         companyCode: user.companyCode,
+//         isVerified: user.isVerified,
+//         isActive: user.isActive
+//       } : 'No user found');
+      
+//       if (!user) {
+//         return res.status(401).json({ 
+//           success: false,
+//           message: 'Invalid email or company code' 
+//         });
+//       }
+      
+//       // If user exists in main DB but not verified, handle OTP
+//       if (!user.isVerified) {
+//         console.log('User status check failed:', {
+//           isVerified: user.isVerified,
+//           isActive: user.isActive
+//         });
+        
+//         // Generate new OTP for unverified users
+//         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+//         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        
+//         user.otp = otp;
+//         user.otpExpires = otpExpires;
+//         await user.save();
+        
+//         // Send OTP email
+//         try {
+//           await sendOtpEmail(email, otp, {
+//             name: user.name,
+//             companyName: company.name
+//           });
+          
+//           console.log('Verification OTP sent to:', email);
+//         } catch (emailError) {
+//           console.error('Error sending OTP email:', emailError);
+//           // Continue with response even if email fails
+//         }
+        
+//         return res.status(403).json({ 
+//           success: false,
+//           message: 'Email not verified. A verification code has been sent to your email.',
+//           requiresVerification: true,
+//           email: user.email
+//         });
+//       }
+      
+//       // If user is verified in main DB but not in company DB, they need to be added to company DB
+//       if (user.isVerified && !isCompanyUser) {
+//         try {
+//           // Get company-specific User model
+//           const CompanyUserModel = await getUserModel(companyCode);
+          
+//           // Create user in company database
+//           const companyUser = new CompanyUserModel({
+//             userId: user.userId,
+//             firstName: user.firstName,
+//             middleName: user.middleName,
+//             lastName: user.lastName,
+//             name: user.name,
+//             email: user.email,
+//             password: user.password, // Already hashed
+//             role: user.role,
+//             companyCode: user.companyCode,
+//             permissions: user.permissions,
+//             isVerified: true,
+//             isActive: user.isActive
+//           });
+          
+//           await companyUser.save();
+//           console.log('User created in company database:', companyUser.email);
+          
+//           // Use the company user for the rest of the login process
+//           user = companyUser;
+//           isCompanyUser = true;
+//         } catch (dbError) {
+//           console.error('Error creating user in company database:', dbError);
+//           // Continue with main user if company user creation fails
+//         }
+//       }
+//     }
+    
+//     // Check if user is active
+//     if (!user.isActive) {
+//       console.log('User inactive:', user.email);
+//       return res.status(401).json({ 
+//         success: false,
+//         message: 'Your account is inactive. Please contact your administrator.' 
+//       });
+//     }
+    
+//     // Verify password
+//     console.log('Password verification attempt:', {
+//       userEmail: user.email,
+//       passwordProvided: !!password,
+//       passwordLength: password ? password.length : 0
+//     });
+    
+//     let isPasswordValid = false;
+//     try {
+//       isPasswordValid = await user.comparePassword(password);
+//       console.log('Password validation result:', isPasswordValid);
+//     } catch (pwError) {
+//       console.error('Error using comparePassword method:', pwError);
+      
+//       // Fallback to direct bcrypt compare if method fails
+//       try {
+//         isPasswordValid = await bcrypt.compare(password, user.password);
+//         console.log('Direct bcrypt compare result:', isPasswordValid);
+//       } catch (bcryptError) {
+//         console.error('Error using direct bcrypt compare:', bcryptError);
+//       }
+//     }
+    
+//     // Check if password is valid before proceeding
+//     if (!isPasswordValid) {
+//       console.log('Invalid password for user:', user.email);
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Invalid email or password'
+//       });
+//     }
+    
+//     // Generate JWT token
+//     const token = jwt.sign(
+//       { 
+//         userId: user._id, 
+//         companyCode: user.companyCode, 
+//         role: user.role,
+//         isCompanyUser // Include flag to indicate if user is from company database
+//       },
+//       process.env.JWT_SECRET,
+//       { expiresIn: '24h' }
+//     );
+    
+//     console.log('Login successful for user:', user.email);
+    
+//     res.status(200).json({
+//       success: true,
+//       token,
+//       user: {
+//         id: user._id,
+//         userId: user.userId,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//         permissions: user.permissions,
+//         companyCode: user.companyCode
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Login error details:', error);
+//     res.status(500).json({ 
+//       success: false,
+//       message: 'Server error during login',
+//       error: error.message 
+//     });
+//   }
+// };
+
 // // Login user
 // export const login = async (req, res) => {
 //   try {
@@ -431,234 +657,6 @@ export const registerCompany = async (req, res) => {
 //   }
 // };
 
-// // Login user
-// export const login = async (req, res) => {
-//   try {
-//     const { email, password, companyCode } = req.body;
-    
-//     console.log('Login attempt received:', { 
-//       email, 
-//       companyCode,
-//       passwordProvided: !!password
-//     });
-    
-//     // First check if company exists and is active in main database
-//     const company = await Company.findOne({ 
-//       companyCode: companyCode.toUpperCase(),
-//       isActive: true
-//     });
-    
-//     if (!company) {
-//       console.log('Company not found or inactive:', companyCode);
-//       return res.status(401).json({ 
-//         success: false,
-//         message: 'Invalid company code or company is inactive' 
-//       });
-//     }
-    
-//     // Try to find user in company-specific database first
-//     let user = null;
-//     let isCompanyUser = false;
-    
-//     try {
-//       // Get company-specific User model
-//       const { getUserModel } = await import('../models/User.js');
-//       const CompanyUserModel = await getUserModel(companyCode);
-      
-//       // Find user in company database
-//       user = await CompanyUserModel.findOne({ 
-//         email: email.toLowerCase()
-//       });
-      
-//       if (user) {
-//         isCompanyUser = true;
-//         console.log('User found in company database:', {
-//           id: user._id,
-//           email: user.email,
-//           companyCode: user.companyCode
-//         });
-        
-//         // Verify password directly with bcrypt
-//         console.log('Comparing password for user:', user.email);
-//         const isPasswordValid = await bcrypt.compare(password, user.password);
-//         console.log('Password match result:', isPasswordValid);
-        
-//         if (!isPasswordValid) {
-//           // For debugging, log password details
-//           console.log('Password comparison failed:', {
-//             providedPasswordLength: password.length,
-//             storedPasswordLength: user.password.length,
-//             storedPasswordPrefix: user.password.substring(0, 10) + '...'
-//           });
-          
-//           return res.status(401).json({
-//             success: false,
-//             message: 'Invalid email or password'
-//           });
-//         }
-        
-//         // Generate JWT token
-//         const token = jwt.sign(
-//           { 
-//             userId: user._id, 
-//             companyCode: user.companyCode, 
-//             role: user.role,
-//             isCompanyUser: true
-//           },
-//           process.env.JWT_SECRET || 'your_jwt_secret',
-//           { expiresIn: '24h' }
-//         );
-        
-//         console.log('Login successful for company user:', user.email);
-        
-//         return res.status(200).json({
-//           success: true,
-//           token,
-//           user: {
-//             id: user._id,
-//             userId: user.userId,
-//             name: user.name,
-//             email: user.email,
-//             role: user.role,
-//             permissions: user.permissions,
-//             companyCode: user.companyCode
-//           }
-//         });
-//       }
-//     } catch (dbError) {
-//       console.error('Error accessing company database:', dbError);
-//       // Continue to check main database
-//     }
-    
-//     // If user not found in company database, check main database
-//     user = await MainUser.findOne({ 
-//       email: email.toLowerCase(), 
-//       companyCode: companyCode.toUpperCase() 
-//     });
-    
-//     if (!user) {
-//       return res.status(401).json({ 
-//         success: false,
-//         message: 'Invalid email or password' 
-//       });
-//     }
-    
-//     // Check if user is verified
-//     if (!user.isVerified) {
-//       // Generate new OTP for unverified users
-//       const otp = Math.floor(100000 + Math.random() * 900000).toString();
-//       const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-      
-//       user.otp = otp;
-//       user.otpExpires = otpExpires;
-//       await user.save();
-      
-//       // Send OTP email
-//       try {
-//         await sendOtpEmail(email, otp, {
-//           name: user.name,
-//           companyName: company.name
-//         });
-//       } catch (emailError) {
-//         console.error('Error sending OTP email:', emailError);
-//       }
-      
-//       return res.status(403).json({ 
-//         success: false,
-//         message: 'Email not verified. A verification code has been sent to your email.',
-//         requiresVerification: true,
-//         email: user.email
-//       });
-//     }
-    
-//     // Check if user is active
-//     if (!user.isActive) {
-//       return res.status(401).json({ 
-//         success: false,
-//         message: 'Your account is inactive. Please contact your administrator.' 
-//       });
-//     }
-    
-//     // Verify password for main database user
-//     const isPasswordValid = await bcrypt.compare(password, user.password);
-//     console.log('Password match result for main user:', isPasswordValid);
-    
-//     if (!isPasswordValid) {
-//       return res.status(401).json({
-//         success: false,
-//         message: 'Invalid email or password'
-//       });
-//     }
-    
-//     // If user is verified in main DB but not in company DB, create in company DB
-//     try {
-//       // Get company-specific User model
-//       const CompanyUserModel = await getUserModel(companyCode);
-      
-//       // Create user in company database
-//       const companyUser = new CompanyUserModel({
-//         userId: user.userId || `USER-${Date.now()}`,
-//         firstName: user.firstName,
-//         middleName: user.middleName,
-//         lastName: user.lastName,
-//         name: user.name,
-//         email: user.email,
-//         password: user.password, // Already hashed
-//         role: user.role,
-//         companyCode: user.companyCode,
-//         permissions: user.permissions,
-//         isVerified: true,
-//         isActive: true
-//       });
-      
-//       await companyUser.save();
-//       console.log('User created in company database:', companyUser.email);
-      
-//       // Use the company user for the rest of the login process
-//       user = companyUser;
-//       isCompanyUser = true;
-//     } catch (dbError) {
-//       console.error('Error creating user in company database:', dbError);
-//       // Continue with main user if company user creation fails
-//     }
-    
-//     // Generate JWT token
-//     const token = jwt.sign(
-//       { 
-//         userId: user._id, 
-//         companyCode: user.companyCode, 
-//         role: user.role,
-//         isCompanyUser
-//       },
-//       process.env.JWT_SECRET || 'your_jwt_secret',
-//       { expiresIn: '24h' }
-//     );
-    
-//     console.log('Login successful for user:', user.email);
-    
-//     res.status(200).json({
-//       success: true,
-//       token,
-//       user: {
-//         id: user._id,
-//         userId: user.userId,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//         permissions: user.permissions,
-//         companyCode: user.companyCode
-//       }
-//     });
-//   } catch (error) {
-//     console.error('Login error details:', error);
-//     res.status(500).json({ 
-//       success: false,
-//       message: 'Server error during login',
-//       error: error.message 
-//     });
-//   }
-// };
-
 // Login user
 export const login = async (req, res) => {
   try {
@@ -667,53 +665,104 @@ export const login = async (req, res) => {
     console.log('Login attempt received:', { 
       email, 
       companyCode,
-      passwordProvided: !!password,
-      passwordLength: password ? password.length : 0
+      passwordProvided: !!password
     });
-    
-    if (!email || !password || !companyCode) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email, password, and company code are required'
-      });
-    }
     
     // First check if company exists and is active in main database
     const company = await Company.findOne({ 
-      companyCode: companyCode.toUpperCase()
+      companyCode: companyCode.toUpperCase(),
+      isActive: true
     });
     
     if (!company) {
-      console.log('Company not found:', companyCode);
+      console.log('Company not found or inactive:', companyCode);
       return res.status(401).json({ 
         success: false,
-        message: 'Invalid company code' 
+        message: 'Invalid company code or company is inactive' 
       });
     }
     
-    if (!company.isActive) {
-      console.log('Company inactive:', company.companyCode);
-      return res.status(401).json({ 
-        success: false,
-        message: 'Company account is inactive' 
+    // Try to find user in company-specific database first
+    let user = null;
+    let isCompanyUser = false;
+    
+    try {
+      // Get company-specific User model
+      const { getUserModel } = await import('../models/User.js');
+      const CompanyUserModel = await getUserModel(companyCode);
+      
+      // Find user in company database
+      user = await CompanyUserModel.findOne({ 
+        email: email.toLowerCase()
       });
+      
+      if (user) {
+        isCompanyUser = true;
+        console.log('User found in company database:', {
+          id: user._id,
+          email: user.email,
+          companyCode: user.companyCode
+        });
+        
+        // Verify password directly with bcrypt
+        console.log('Comparing password for user:', user.email);
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        console.log('Password match result:', isPasswordValid);
+        
+        if (!isPasswordValid) {
+          // For debugging, log password details
+          console.log('Password comparison failed:', {
+            providedPasswordLength: password.length,
+            storedPasswordLength: user.password.length,
+            storedPasswordPrefix: user.password.substring(0, 10) + '...'
+          });
+          
+          return res.status(401).json({
+            success: false,
+            message: 'Invalid email or password'
+          });
+        }
+        
+        // Generate JWT token
+        const token = jwt.sign(
+          { 
+            userId: user._id, 
+            companyCode: user.companyCode, 
+            role: user.role,
+            isCompanyUser: true
+          },
+          process.env.JWT_SECRET || 'your_jwt_secret',
+          { expiresIn: '24h' }
+        );
+        
+        console.log('Login successful for company user:', user.email);
+        
+        return res.status(200).json({
+          success: true,
+          token,
+          user: {
+            id: user._id,
+            userId: user.userId,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            permissions: user.permissions,
+            companyCode: user.companyCode
+          }
+        });
+      }
+    } catch (dbError) {
+      console.error('Error accessing company database:', dbError);
+      // Continue to check main database
     }
     
-    // Find user in main database first
-    const mainUser = await User.findOne({ 
+    // If user not found in company database, check main database
+    user = await MainUser.findOne({ 
       email: email.toLowerCase(), 
       companyCode: companyCode.toUpperCase() 
     });
     
-    console.log('User found in main database:', mainUser ? {
-      id: mainUser._id,
-      email: mainUser.email,
-      companyCode: mainUser.companyCode,
-      isVerified: mainUser.isVerified,
-      isActive: mainUser.isActive
-    } : 'No user found');
-    
-    if (!mainUser) {
+    if (!user) {
       return res.status(401).json({ 
         success: false,
         message: 'Invalid email or password' 
@@ -721,78 +770,109 @@ export const login = async (req, res) => {
     }
     
     // Check if user is verified
-    if (!mainUser.isVerified) {
-      console.log('User not verified:', mainUser.email);
-      
+    if (!user.isVerified) {
       // Generate new OTP for unverified users
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
       
-      mainUser.otp = otp;
-      mainUser.otpExpires = otpExpires;
-      await mainUser.save();
+      user.otp = otp;
+      user.otpExpires = otpExpires;
+      await user.save();
       
       // Send OTP email
       try {
         await sendOtpEmail(email, otp, {
-          name: mainUser.name,
+          name: user.name,
           companyName: company.name
         });
-        
-        console.log('Verification OTP sent to:', email);
       } catch (emailError) {
         console.error('Error sending OTP email:', emailError);
-        // Continue with response even if email fails
       }
       
       return res.status(403).json({ 
         success: false,
         message: 'Email not verified. A verification code has been sent to your email.',
         requiresVerification: true,
-        email: mainUser.email
+        email: user.email
       });
     }
     
     // Check if user is active
-    if (!mainUser.isActive) {
-      console.log('User inactive:', mainUser.email);
+    if (!user.isActive) {
       return res.status(401).json({ 
         success: false,
         message: 'Your account is inactive. Please contact your administrator.' 
       });
     }
     
-    // Verify password
-    const isPasswordValid = await mainUser.comparePassword(password);
+    // Verify password for main database user
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log('Password match result for main user:', isPasswordValid);
     
     if (!isPasswordValid) {
-      console.log('Invalid password for user:', mainUser.email);
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: 'Invalid email or password' 
+        message: 'Invalid email or password'
       });
+    }
+    
+    // If user is verified in main DB but not in company DB, create in company DB
+    try {
+      // Get company-specific User model
+      const CompanyUserModel = await getUserModel(companyCode);
+      
+      // Create user in company database
+      const companyUser = new CompanyUserModel({
+        userId: user.userId || `USER-${Date.now()}`,
+        firstName: user.firstName,
+        middleName: user.middleName,
+        lastName: user.lastName,
+        name: user.name,
+        email: user.email,
+        password: user.password, // Already hashed
+        role: user.role,
+        companyCode: user.companyCode,
+        permissions: user.permissions,
+        isVerified: true,
+        isActive: true
+      });
+      
+      await companyUser.save();
+      console.log('User created in company database:', companyUser.email);
+      
+      // Use the company user for the rest of the login process
+      user = companyUser;
+      isCompanyUser = true;
+    } catch (dbError) {
+      console.error('Error creating user in company database:', dbError);
+      // Continue with main user if company user creation fails
     }
     
     // Generate JWT token
     const token = jwt.sign(
-      { userId: mainUser._id, companyCode: mainUser.companyCode, role: mainUser.role },
+      { 
+        userId: user._id, 
+        companyCode: user.companyCode, 
+        role: user.role,
+        isCompanyUser
+      },
       process.env.JWT_SECRET || 'your_jwt_secret',
       { expiresIn: '24h' }
     );
     
-    console.log('Login successful for user:', mainUser.email);
+    console.log('Login successful for user:', user.email);
     
     res.status(200).json({
       success: true,
       token,
       user: {
-        id: mainUser._id,
-        userId: mainUser.userId,
-        name: mainUser.name,
-        email: mainUser.email,
-        role: mainUser.role,
-        permissions: mainUser.permissions,
-        companyCode: mainUser.companyCode
+        id: user._id,
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions,
+        companyCode: user.companyCode
       }
     });
   } catch (error) {
@@ -804,6 +884,7 @@ export const login = async (req, res) => {
     });
   }
 };
+
 
 
 // Verify email with OTP

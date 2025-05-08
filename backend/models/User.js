@@ -449,4 +449,3 @@ const getUserModel = async (companyCode) => {
 
 export { userSchema, getUserModel };
 export default MainUser;
-
