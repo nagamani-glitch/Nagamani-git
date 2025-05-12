@@ -1,4 +1,3 @@
-/* EmployeeReport.css - with specific class names to avoid conflicts */
 .er-container {
   background-color: #f0f2f5;
   padding: 24px;
@@ -313,4 +312,34 @@
     background-color: #f0f0f0 !important;
     color: black !important;
   }
+}
+
+
+/* Add these styles to the end of your EmployeeReport.css file */
+
+/* Fix for calendar dropdown positioning */
+.er-calendar-dropdown {
+  z-index: 1050 !important;
+}
+
+.er-table-filters .ant-picker {
+  margin-bottom: 8px;
+  position: relative;
+}
+
+/* Fix for calendar dropdown positioning and overlapping */
+.ant-picker-dropdown {
+  position: absolute !important;
+  z-index: 1060 !important;
+}
+
+/* Ensure only one calendar is visible */
+.ant-picker-dropdown-hidden {
+  display: none !important;
+}
+
+/* Prevent multiple calendars from stacking */
+.ant-picker-dropdown-placement-bottomLeft {
+  left: auto !important;
+  top: auto !important;
 }
