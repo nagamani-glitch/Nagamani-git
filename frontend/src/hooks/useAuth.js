@@ -1,29 +1,31 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import authService from '../screens/api/auth';
+import { useDispatch, useSelector } from 'react-redux';
+import { 
+  loginUser, 
+  logoutUser, 
+  setVerificationEmail,
+  setAuthError,
+  clearError,
+  selectUser,
+  selectAuthLoading,
+  selectAuthError,
+  selectVerificationNeeded,
+  selectVerificationEmail
+} from '../redux/authSlice';
 
 export const useAuth = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [user, setUser] = useState(authService.getCurrentUser());
-  const [verificationNeeded, setVerificationNeeded] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState('');
-  
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   
-  // Add useEffect to handle user state changes
-  useEffect(() => {
-    // If user is set and we have a token, we're logged in
-    const token = localStorage.getItem('token');
-    if (user && token) {
-      console.log('User is authenticated, ready for navigation if needed');
-    }
-  }, [user]);
-  
+  // Get state from Redux
+  const user = useSelector(selectUser);
+  const loading = useSelector(selectAuthLoading);
+  const error = useSelector(selectAuthError);
+  const verificationNeeded = useSelector(selectVerificationNeeded);
+  const verificationEmail = useSelector(selectVerificationEmail);
+
   const login = useCallback(async (credentials) => {
-    setLoading(true);
-    setError('');
-    
     try {
       console.log('Attempting login with credentials:', {
         email: credentials.email,
@@ -31,68 +33,45 @@ export const useAuth = () => {
         passwordProvided: !!credentials.password
       });
       
-      const response = await authService.login(credentials);
+      const resultAction = await dispatch(loginUser(credentials));
+      
       console.log('Login response received:', {
-        success: response.success,
-        userReceived: !!response.user,
-        tokenReceived: !!response.token
+        success: loginUser.fulfilled.match(resultAction),
+        payload: resultAction.payload
       });
       
-      setUser(response.user);
-      
-      // Clear any pending login data
-      sessionStorage.removeItem('pendingLogin');
-      
-      console.log('Login successful, user state updated');
-
-      // Add direct navigation here as a backup
-    if (response.success && response.token) {
-      console.log('Navigating to dashboard from useAuth hook');
-      navigate('/Dashboards');
-    }
-    
-      return response;
-    } catch (error) {
-      console.error('Login error in useAuth hook:', error);
-      
-      if (error.response) {
-        // Handle verification required case
-        if (error.response.status === 403 && error.response.data?.requiresVerification) {
-          setVerificationNeeded(true);
-          setVerificationEmail(error.response.data.email || credentials.email);
-          setError('Email not verified. Please verify your email to continue.');
-          return { requiresVerification: true, email: error.response.data.email || credentials.email };
-        }
+      if (loginUser.fulfilled.match(resultAction)) {
+        // Clear any pending login data
+        sessionStorage.removeItem('pendingLogin');
         
-        // Handle other error responses
-        setError(error.response.data?.message || 
-                `Login failed (${error.response.status}): ${error.response.statusText}`);
-      } else if (error.request) {
-        setError('No response from server. Please check your internet connection.');
-      } else {
-        setError(`Error: ${error.message}`);
+        // Let the component handle navigation
+        return resultAction.payload;
       }
       
+      return resultAction.payload;
+    } catch (error) {
+      console.error('Login error in useAuth hook:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
-  }, []);
-  
+  }, [dispatch]);
+
   const logout = useCallback(() => {
-    authService.logout();
-    setUser(null);
+    dispatch(logoutUser());
     navigate('/login');
-  }, [navigate]);
+  }, [dispatch, navigate]);
   
   const verifyEmail = useCallback((email) => {
+    dispatch(setVerificationEmail(email));
     navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
-  }, [navigate]);
-
+  }, [dispatch, navigate]);
+  
+  const setError = useCallback((message) => {
+    dispatch(setAuthError(message));
+  }, [dispatch]);
+  
   const resetLoadingState = useCallback(() => {
-    setLoading(false);
-    setError('');
-  }, []);
+    dispatch(clearError());
+  }, [dispatch]);
   
   return {
     user,

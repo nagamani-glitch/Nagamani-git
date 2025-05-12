@@ -39,6 +39,7 @@ const Interview = () => {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [dateError, setDateError] = useState("");
 
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -55,52 +56,191 @@ const Interview = () => {
     setOpenDeleteDialog(true);
   };
 
-  // Add this function to handle the actual deletion
-  const confirmDelete = () => {
-    if (deleteId) {
-      axios
-        .delete(`http://localhost:5002/api/interviews/${deleteId}`)
-        .then(() => {
-          setData(data.filter((item) => item._id !== deleteId));
-          setSnackbar({
-            open: true,
-            message: "Interview deleted successfully",
-            severity: "success",
-          });
-        })
-        .catch((error) => {
-          console.error("Error deleting interview:", error);
-          setSnackbar({
-            open: true,
-            message: "Error deleting interview",
-            severity: "error",
-          });
+  // // Add this function to handle the actual deletion
+  // const confirmDelete = () => {
+  //   if (deleteId) {
+  //     axios
+  //       .delete(`http://localhost:5002/api/interviews/${deleteId}`)
+  //       .then(() => {
+  //         setData(data.filter((item) => item._id !== deleteId));
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Interview deleted successfully",
+  //           severity: "success",
+  //         });
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error deleting interview:", error);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Error deleting interview",
+  //           severity: "error",
+  //         });
+  //       });
+  //   }
+  //   setOpenDeleteDialog(false);
+  //   setDeleteId(null);
+  // };
+
+  // Update the confirmDelete function
+const confirmDelete = () => {
+  if (deleteId) {
+    const token = getAuthToken();
+    
+    axios
+      .delete(`http://localhost:5002/api/interviews/${deleteId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(() => {
+        setData(data.filter((item) => item._id !== deleteId));
+        setSnackbar({
+          open: true,
+          message: "Interview deleted successfully",
+          severity: "success",
         });
-    }
-    setOpenDeleteDialog(false);
-    setDeleteId(null);
-  };
+      })
+      .catch((error) => {
+        console.error("Error deleting interview:", error);
+        setSnackbar({
+          open: true,
+          message: error.response?.data?.error || "Error deleting interview",
+          severity: "error",
+        });
+      });
+  }
+  setOpenDeleteDialog(false);
+  setDeleteId(null);
+};
 
   useEffect(() => {
     fetchInterviews();
   }, [statusFilter]);
 
-  const fetchInterviews = () => {
-    const url = "http://localhost:5002/api/interviews";
-    axios
-      .get(url)
-      .then((response) => {
-        let filteredData = response.data;
-        if (statusFilter !== "All") {
-          filteredData = response.data.filter(
-            (item) => item.status === statusFilter
-          );
-        }
-        setData(filteredData);
-      })
-      .catch((error) => console.error("Error fetching interviews:", error));
+  // const fetchInterviews = () => {
+  //   const url = "http://localhost:5002/api/interviews";
+  //   axios
+  //     .get(url)
+  //     .then((response) => {
+  //       let filteredData = response.data;
+  //       if (statusFilter !== "All") {
+  //         filteredData = response.data.filter(
+  //           (item) => item.status === statusFilter
+  //         );
+  //       }
+  //       setData(filteredData);
+  //     })
+  //     .catch((error) => console.error("Error fetching interviews:", error));
+  // };
+
+  // Update the fetchInterviews function
+const fetchInterviews = () => {
+  const url = "http://localhost:5002/api/interviews";
+  const token = getAuthToken();
+  
+  axios
+    .get(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then((response) => {
+      let filteredData = response.data;
+      if (statusFilter !== "All") {
+        filteredData = response.data.filter(
+          (item) => item.status === statusFilter
+        );
+      }
+      setData(filteredData);
+    })
+    .catch((error) => console.error("Error fetching interviews:", error));
+};
+  
+  
+  // Add this function to validate date (only current or future dates)
+  const validateDate = (dateString) => {
+    if (!dateString) return false;
+
+    const selectedDate = new Date(dateString);
+    selectedDate.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
+
+    return selectedDate >= today;
   };
 
+  // Add this function to handle date changes with validation
+  const handleDateChange = (e) => {
+    const newDate = e.target.value;
+    setDate(newDate);
+
+    if (newDate && !validateDate(newDate)) {
+      setDateError("Please select current or future date");
+    } else {
+      setDateError("");
+    }
+  };
+
+  // const handleOpenDialog = (row = null) => {
+  //   if (row) {
+  //     setEditMode(true);
+  //     setSelectedRow(row);
+  //     setCandidate(row.candidate);
+  //     setInterviewer(row.interviewer);
+  //     setDate(row.date);
+  //     setTime(row.time);
+  //     setDescription(row.description);
+  //     setStatus(row.status);
+  //   } else {
+  //     setEditMode(false);
+  //     setCandidate("");
+  //     setInterviewer("");
+  //     setDate("");
+  //     setTime("");
+  //     setDescription("");
+  //     setStatus("");
+  //   }
+  //   setOpenDialog(true);
+  // };
+
+  // const handleSave = () => {
+  //   const interviewData = {
+  //     candidate,
+  //     interviewer,
+  //     date,
+  //     time,
+  //     description,
+  //     status: status || "Scheduled",
+  //   };
+  //   if (editMode && selectedRow) {
+  //     axios
+  //       .put(
+  //         `http://localhost:5002/api/interviews/${selectedRow._id}`,
+  //         interviewData
+  //       )
+  //       .then((response) => {
+  //         setData((prevData) =>
+  //           prevData.map((item) =>
+  //             item._id === selectedRow._id ? response.data : item
+  //           )
+  //         );
+  //         setOpenDialog(false);
+  //       })
+  //       .catch((error) => console.error("Error updating interview:", error));
+  //   } else {
+  //     axios
+  //       .post("http://localhost:5002/api/interviews", interviewData)
+  //       .then((response) => {
+  //         setData([...data, response.data]);
+  //         setOpenDialog(false);
+  //       })
+  //       .catch((error) => console.error("Error adding interview:", error));
+  //   }
+  // };
+
+  // Update the handleOpenDialog function
   const handleOpenDialog = (row = null) => {
     if (row) {
       setEditMode(true);
@@ -111,6 +251,12 @@ const Interview = () => {
       setTime(row.time);
       setDescription(row.description);
       setStatus(row.status);
+      // Validate the date when editing
+      if (row.date && !validateDate(row.date)) {
+        setDateError("Please update to current or future date");
+      } else {
+        setDateError("");
+      }
     } else {
       setEditMode(false);
       setCandidate("");
@@ -119,42 +265,162 @@ const Interview = () => {
       setTime("");
       setDescription("");
       setStatus("");
+      setDateError("");
     }
     setOpenDialog(true);
   };
-  const handleSave = () => {
-    const interviewData = {
-      candidate,
-      interviewer,
-      date,
-      time,
-      description,
-      status: status || "Scheduled",
-    };
-    if (editMode && selectedRow) {
-      axios
-        .put(
-          `http://localhost:5002/api/interviews/${selectedRow._id}`,
-          interviewData
-        )
-        .then((response) => {
-          setData((prevData) =>
-            prevData.map((item) =>
-              item._id === selectedRow._id ? response.data : item
-            )
-          );
-          setOpenDialog(false);
-        })
-        .catch((error) => console.error("Error updating interview:", error));
-    } else {
-      axios
-        .post("http://localhost:5002/api/interviews", interviewData)
-        .then((response) => {
-          setData([...data, response.data]);
-          setOpenDialog(false);
-        })
-        .catch((error) => console.error("Error adding interview:", error));
-    }
+
+  // const handleSave = () => {
+  //   // Check for date validation
+  //   if (!validateDate(date)) {
+  //     setDateError("Please select current or future date");
+  //     return;
+  //   }
+
+  //   const interviewData = {
+  //     candidate,
+  //     interviewer,
+  //     date,
+  //     time,
+  //     description,
+  //     status: status || "Scheduled",
+  //   };
+
+  //   if (editMode && selectedRow) {
+  //     axios
+  //       .put(
+  //         `http://localhost:5002/api/interviews/${selectedRow._id}`,
+  //         interviewData
+  //       )
+  //       .then((response) => {
+  //         setData((prevData) =>
+  //           prevData.map((item) =>
+  //             item._id === selectedRow._id ? response.data : item
+  //           )
+  //         );
+  //         setOpenDialog(false);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Interview updated successfully",
+  //           severity: "success",
+  //         });
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error updating interview:", error);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Error updating interview",
+  //           severity: "error",
+  //         });
+  //       });
+  //   } else {
+  //     axios
+  //       .post("http://localhost:5002/api/interviews", interviewData)
+  //       .then((response) => {
+  //         setData([...data, response.data]);
+  //         setOpenDialog(false);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Interview added successfully",
+  //           severity: "success",
+  //         });
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error adding interview:", error);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Error adding interview",
+  //           severity: "error",
+  //         });
+  //       });
+  //   }
+  // };
+
+  // Add this function if it doesn't exist
+  
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Update the handleSave function
+const handleSave = () => {
+  // Check for date validation
+  if (!validateDate(date)) {
+    setDateError("Please select current or future date");
+    return;
+  }
+
+  const interviewData = {
+    candidate,
+    interviewer,
+    date,
+    time,
+    description,
+    status: status || "Scheduled",
+  };
+
+  // Get the authentication token
+  const token = getAuthToken();
+  const headers = {
+    'Authorization': `Bearer ${token}`
+  };
+
+  if (editMode && selectedRow) {
+    axios
+      .put(
+        `http://localhost:5002/api/interviews/${selectedRow._id}`,
+        interviewData,
+        { headers }
+      )
+      .then((response) => {
+        setData((prevData) =>
+          prevData.map((item) =>
+            item._id === selectedRow._id ? response.data : item
+          )
+        );
+        setOpenDialog(false);
+        setSnackbar({
+          open: true,
+          message: "Interview updated successfully",
+          severity: "success",
+        });
+      })
+      .catch((error) => {
+        console.error("Error updating interview:", error);
+        setSnackbar({
+          open: true,
+          message: error.response?.data?.error || "Error updating interview",
+          severity: "error",
+        });
+      });
+  } else {
+    axios
+      .post("http://localhost:5002/api/interviews", interviewData, { headers })
+      .then((response) => {
+        setData([...data, response.data]);
+        setOpenDialog(false);
+        setSnackbar({
+          open: true,
+          message: "Interview added successfully",
+          severity: "success",
+        });
+      })
+      .catch((error) => {
+        console.error("Error adding interview:", error);
+        setSnackbar({
+          open: true,
+          message: error.response?.data?.error || "Error adding interview",
+          severity: "error",
+        });
+      });
+  }
+};
+
+  
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+    setDateError("");
   };
 
   return (
@@ -523,9 +789,22 @@ const Interview = () => {
       </Box>
 
       {/* Create/Edit Dialog */}
-      <Dialog
+      {/* <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: "95%", sm: "600px" },
+            maxWidth: "600px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            margin: { xs: "8px", sm: "32px" },
+          },
+        }}
+      > */}
+      <Dialog
+        open={openDialog}
+        onClose={handleDialogClose}
         PaperProps={{
           sx: {
             width: { xs: "95%", sm: "600px" },
@@ -591,13 +870,32 @@ const Interview = () => {
               }}
             />
 
-            <TextField
+            {/* <TextField
               label="Date"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               fullWidth
               InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "white",
+                  borderRadius: "12px",
+                  "&:hover fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            /> */}
+            <TextField
+              label="Date"
+              type="date"
+              value={date}
+              onChange={handleDateChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              error={!!dateError}
+              helperText={dateError}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "white",

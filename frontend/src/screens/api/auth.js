@@ -43,16 +43,82 @@ api.interceptors.response.use(
 
 const authService = {
   // Register a new company
-  registerCompany: async (companyData) => {
-    try {
-      const response = await api.post('/companies/register', companyData);
+  // Update the registerCompany method in the authService object
+registerCompany: async (formData) => {
+  try {
+    // Check if formData is an instance of FormData
+    const isFormData = formData instanceof FormData;
+    
+    // Log form data contents for debugging
+    if (isFormData) {
+      console.log('FormData contents:');
+      for (let pair of formData.entries()) {
+        if (pair[0] === 'logo') {
+          console.log(pair[0], 'File:', pair[1].name, 'Size:', pair[1].size, 'Type:', pair[1].type);
+        } else {
+          console.log(pair[0], pair[1]);
+        }
+      }
+      
+      const response = await api.post('/companies/register', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       return response.data;
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
+    } else {
+      // Handle regular JSON data
+      const response = await api.post('/companies/register', formData);
+      return response.data;
     }
-  },
+  } catch (error) {
+    console.error('Registration error details:', error.response?.data || error.message);
+    throw error;
+  }
+},
+
   
+  // // Login user
+  // login: async (credentials) => {
+  //   try {
+  //     console.log('Auth service: Making login request with:', {
+  //       companyCode: credentials.companyCode.toUpperCase(),
+  //       email: credentials.email.toLowerCase(),
+  //       passwordProvided: !!credentials.password
+  //     });
+      
+  //     // Trim the password to remove any accidental whitespace
+  //     const trimmedPassword = credentials.password.trim();
+      
+  //     const response = await api.post('/companies/login', {
+  //       companyCode: credentials.companyCode.toUpperCase(),
+  //       email: credentials.email.toLowerCase(),
+  //       // Use trimmedPassword (with capital P) instead of trimmedpassword
+  //       password: trimmedPassword
+  //     });
+  
+  //     console.log('Auth service: Login response received:', {
+  //       success: response.data.success,
+  //       hasToken: !!response.data.token,
+  //       hasUser: !!response.data.user
+  //     });
+      
+  //     // Store auth data in localStorage only on successful login
+  //     if (response.data.success && response.data.token) {
+  //       localStorage.setItem('token', response.data.token);
+  //       localStorage.setItem('user', JSON.stringify(response.data.user));
+  //       localStorage.setItem('userId', response.data.user._id || response.data.user.id);
+  //       localStorage.setItem('companyCode', credentials.companyCode.toUpperCase());
+  //       console.log('Auth service: User data stored in localStorage');
+  //     }
+      
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Login error in auth service:', error);
+  //     throw error;
+  //   }
+  // },
+
   // Login user
 login: async (credentials) => {
   try {
@@ -61,31 +127,53 @@ login: async (credentials) => {
       email: credentials.email.toLowerCase(),
       passwordProvided: !!credentials.password
     });
+    
+    // Trim the password to remove any accidental whitespace
+    const trimmedPassword = credentials.password.trim();
+    
     const response = await api.post('/companies/login', {
       companyCode: credentials.companyCode.toUpperCase(),
       email: credentials.email.toLowerCase(),
-      password: credentials.password
-    });
-
-    console.log('Auth service: Login response received:', {
-      success: response.data.success,
-      hasToken: !!response.data.token,
-      hasUser: !!response.data.user
+      password: trimmedPassword
     });
     
-    // Store auth data in localStorage only on successful login
-    if (response.data.success && response.data.token) {
+    // If login is successful, store token and user info
+    if (response.data.success) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      localStorage.setItem('userId', response.data.user._id || response.data.user.id);
-      localStorage.setItem('companyCode', credentials.companyCode.toUpperCase());
-      console.log('Auth service: User data stored in localStorage');
+      localStorage.setItem('companyCode', response.data.user.companyCode);
+      localStorage.setItem('userId', response.data.user.id);
+      
+      // Set the default Authorization header for future requests
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      
+      console.log('Login successful, token stored');
+      return response.data;
+    } else {
+      console.log('Login failed with response:', response.data);
+      throw new Error(response.data.message || 'Login failed');
     }
-    
-    return response.data;
   } catch (error) {
-    console.error('Login error in auth service:', error);
-    throw error;
+    console.log('Login error in auth service:', error);
+    
+    // Provide more detailed error information
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
+      
+      // Return the error message from the server if available
+      throw new Error(error.response.data.message || 'Authentication failed');
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received:', error.request);
+      throw new Error('No response from server. Please check your connection.');
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Request setup error:', error.message);
+      throw error;
+    }
   }
 },
 
@@ -156,10 +244,27 @@ login: async (credentials) => {
   // Reset password
   resetPassword: async (data) => {
     try {
-      const response = await api.post('/companies/reset-password', data);
+      console.log('Auth service: Sending reset password request with:', {
+        token: data.token,
+        email: data.email,
+        companyCode: data.companyCode,
+        passwordProvided: !!data.password
+      });
+      
+      const response = await api.post('/companies/reset-password', {
+        token: data.token,
+        email: data.email,
+        companyCode: data.companyCode,
+        password: data.password
+      });
+      
+      console.log('Auth service: Reset password response received:', {
+        success: response.data.success
+      });
+      
       return response.data;
     } catch (error) {
-      console.error('Reset password error:', error);
+      console.error('Reset password error in auth service:', error);
       throw error;
     }
   },
@@ -177,145 +282,3 @@ login: async (credentials) => {
 };
 
 export default authService;
-
-
-// import axios from 'axios';
-
-// const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
-
-// // Configure axios
-// axios.defaults.baseURL = API_URL;
-
-// const api = axios.create({
-//   baseURL: '/api',
-//   headers: {
-//     'Content-Type': 'application/json'
-//   }
-// });
-
-
-// // Add request interceptor to include token in requests
-// api.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
-
-// // Add response interceptor to handle common errors
-// api.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     // Handle session expiration
-//     if (error.response && error.response.status === 401) {
-//       // Clear local storage and redirect to login if token is invalid
-//       if (error.response.data.message === 'Invalid token') {
-//         localStorage.clear();
-//         window.location.href = '/login';
-//       }
-//     }
-//     return Promise.reject(error);
-//   }
-// );
-
-
-
-// // Add a request interceptor to include the token in all requests
-// axios.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//       config.headers['Authorization'] = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
-
-// // Add a response interceptor to handle token expiration
-// axios.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     if (error.response && error.response.status === 401) {
-//       // Token expired or invalid
-//       localStorage.removeItem('token');
-//       localStorage.removeItem('user');
-//       window.location.href = '/login';
-//     }
-//     return Promise.reject(error);
-//   }
-// );
-
-// const authService = {
-//   // Keep existing methods
-//   registerCompany: async (companyData) => {
-//       const response = await axios.post('/api/companies/register', companyData);
-//       return response.data;
-//   },
-  
-//   // Add or update the login method
-//   login: async (credentials) => {
-//       try {
-//           const response = await axios.post('/api/companies/login', {
-//               companyCode: credentials.companyCode.toUpperCase(),
-//               email: credentials.email.toLowerCase(),
-//               password: credentials.password
-//           });
-          
-//           // Store auth data in localStorage
-//           if (response.data.token) {
-//               localStorage.setItem('token', response.data.token);
-//               localStorage.setItem('user', JSON.stringify(response.data.user));
-//               localStorage.setItem('userId', response.data.user._id || response.data.user.id);
-//               localStorage.setItem('companyCode', credentials.companyCode.toUpperCase());
-//           }
-          
-//           return response.data;
-//       } catch (error) {
-//           console.error('Login error in auth service:', error);
-//           throw error;
-//       }
-//   },
-  
-//   // Add or update logout method
-//   logout: () => {
-//       localStorage.removeItem('token');
-//       localStorage.removeItem('user');
-//       localStorage.removeItem('userId');
-//       localStorage.removeItem('companyCode');
-//   },
-  
-//   // Add or update getCurrentUser method
-//   getCurrentUser: () => {
-//       const user = localStorage.getItem('user');
-//       return user ? JSON.parse(user) : null;
-//   },
-  
-//   // Add or update isAuthenticated method
-//   isAuthenticated: () => {
-//       return !!localStorage.getItem('token');
-//   },
-  
-//   // Add or update forgotPassword method
-//   forgotPassword: async (data) => {
-//       return await axios.post('/api/companies/forgot-password', data);
-//   },
-  
-//   // Add or update resetPassword method
-//   resetPassword: async (data) => {
-//       return await axios.post('/api/companies/reset-password', data);
-//   },
-  
-//   // Add or update verifyResetToken method
-//   verifyResetToken: async (data) => {
-//       return await axios.post('/api/companies/verify-reset-token', data);
-//   }
-// };
-
-// export default authService;

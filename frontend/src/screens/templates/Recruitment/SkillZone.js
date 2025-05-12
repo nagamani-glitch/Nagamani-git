@@ -92,82 +92,92 @@ const SkillZone = () => {
     message: "",
     severity: "success",
   });
+  const [validationErrors, setValidationErrors] = useState({
+    skillName: "",
+    candidateName: "",
+  });
   const [registeredEmployees, setRegisteredEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employeeData, setEmployeeData] = useState(null);
 
   // Add these state variables at the top of the component with other state declarations
-const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-const [deleteType, setDeleteType] = useState(""); // "skill" or "candidate"
-const [itemToDelete, setItemToDelete] = useState(null);
-const [parentSkillId, setParentSkillId] = useState(null); // For candidate deletion
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState(""); // "skill" or "candidate"
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [parentSkillId, setParentSkillId] = useState(null); // For candidate deletion
 
-// Replace the existing handleDeleteSkill function with this:
-const handleDeleteSkillClick = (skillId) => {
-  setDeleteType("skill");
-  setItemToDelete(skills.find(s => s._id === skillId));
-  setDeleteDialogOpen(true);
-};
+  // Replace the existing handleDeleteSkill function with this:
+  const handleDeleteSkillClick = (skillId) => {
+    setDeleteType("skill");
+    setItemToDelete(skills.find((s) => s._id === skillId));
+    setDeleteDialogOpen(true);
+  };
 
-// Replace the existing handleDeleteCandidate function with this:
-const handleDeleteCandidateClick = (skillId, candidateId) => {
-  const skill = skills.find(s => s._id === skillId);
-  const candidate = skill.candidates.find(c => c._id === candidateId);
-  
-  setDeleteType("candidate");
-  setItemToDelete(candidate);
-  setParentSkillId(skillId);
-  setDeleteDialogOpen(true);
-};
+  // Replace the existing handleDeleteCandidate function with this:
+  const handleDeleteCandidateClick = (skillId, candidateId) => {
+    const skill = skills.find((s) => s._id === skillId);
+    const candidate = skill.candidates.find((c) => c._id === candidateId);
 
-// Add this function to close the delete dialog
-const handleCloseDeleteDialog = () => {
-  setDeleteDialogOpen(false);
-  setItemToDelete(null);
-  setParentSkillId(null);
-};
+    setDeleteType("candidate");
+    setItemToDelete(candidate);
+    setParentSkillId(skillId);
+    setDeleteDialogOpen(true);
+  };
 
-// Add this function to handle the confirmed deletion
-const handleConfirmDelete = async () => {
-  try {
-    setLoading(true);
-    
-    if (deleteType === "skill" && itemToDelete) {
-      await axios.delete(`http://localhost:5002/api/skill-zone/${itemToDelete._id}`);
-      setSkills((prevSkills) =>
-        prevSkills.filter((skill) => skill._id !== itemToDelete._id)
-      );
-      showSnackbar("Skill deleted successfully");
-    } 
-    else if (deleteType === "candidate" && itemToDelete && parentSkillId) {
-      await axios.delete(
-        `http://localhost:5002/api/skill-zone/${parentSkillId}/candidates/${itemToDelete._id}`
-      );
-      setSkills((prevSkills) =>
-        prevSkills.map((skill) =>
-          skill._id === parentSkillId
-            ? {
-                ...skill,
-                candidates: skill.candidates.filter(
-                  (c) => c._id !== itemToDelete._id
-                ),
-              }
-            : skill
-        )
-      );
-      showSnackbar("Candidate deleted successfully");
+  // Add this function to close the delete dialog
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+    setParentSkillId(null);
+  };
+
+  // Add these validation functions before the useEffect hooks
+  const validateName = (name) => {
+    const nameRegex = /^[a-zA-Z\s]{2,30}$/;
+    return nameRegex.test(name);
+  };
+
+  // Add this function to handle the confirmed deletion
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true);
+
+      if (deleteType === "skill" && itemToDelete) {
+        await axios.delete(
+          `http://localhost:5002/api/skill-zone/${itemToDelete._id}`
+        );
+        setSkills((prevSkills) =>
+          prevSkills.filter((skill) => skill._id !== itemToDelete._id)
+        );
+        showSnackbar("Skill deleted successfully");
+      } else if (deleteType === "candidate" && itemToDelete && parentSkillId) {
+        await axios.delete(
+          `http://localhost:5002/api/skill-zone/${parentSkillId}/candidates/${itemToDelete._id}`
+        );
+        setSkills((prevSkills) =>
+          prevSkills.map((skill) =>
+            skill._id === parentSkillId
+              ? {
+                  ...skill,
+                  candidates: skill.candidates.filter(
+                    (c) => c._id !== itemToDelete._id
+                  ),
+                }
+              : skill
+          )
+        );
+        showSnackbar("Candidate deleted successfully");
+      }
+
+      handleCloseDeleteDialog();
+    } catch (error) {
+      console.error(`Error deleting ${deleteType}:`, error);
+      showSnackbar(`Error deleting ${deleteType}`, "error");
+    } finally {
+      setLoading(false);
     }
-    
-    handleCloseDeleteDialog();
-  } catch (error) {
-    console.error(`Error deleting ${deleteType}:`, error);
-    showSnackbar(`Error deleting ${deleteType}`, "error");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   useEffect(() => {
     fetchSkills();
@@ -204,6 +214,30 @@ const handleConfirmDelete = async () => {
     }
   };
 
+  // const handleEmployeeSelect = (event, employee) => {
+  //   console.log("Selected employee:", employee);
+  //   setSelectedEmployee(employee);
+  //   if (employee) {
+  //     // Populate the candidate form with employee data
+  //     const fullName = `${employee.personalInfo?.firstName || ""} ${
+  //       employee.personalInfo?.lastName || ""
+  //     }`.trim();
+  //     setNewCandidateName(fullName);
+
+  //     // Store additional employee data to be used when adding candidate
+  //     const employeeDataObj = {
+  //       employeeId: employee.Emp_ID,
+  //       email: employee.personalInfo?.email || "",
+  //       department: employee.joiningDetails?.department || "",
+  //       designation: employee.joiningDetails?.initialDesignation || "",
+  //     };
+  //     console.log("Setting employee data:", employeeDataObj);
+  //     setEmployeeData(employeeDataObj);
+  //   } else {
+  //     setEmployeeData(null);
+  //   }
+  // };
+
   const handleEmployeeSelect = (event, employee) => {
     console.log("Selected employee:", employee);
     setSelectedEmployee(employee);
@@ -213,6 +247,16 @@ const handleConfirmDelete = async () => {
         employee.personalInfo?.lastName || ""
       }`.trim();
       setNewCandidateName(fullName);
+
+      // Validate the name
+      if (fullName) {
+        setValidationErrors({
+          ...validationErrors,
+          candidateName: validateName(fullName)
+            ? ""
+            : "Candidate name should contain only letters and be 2-30 characters long",
+        });
+      }
 
       // Store additional employee data to be used when adding candidate
       const employeeDataObj = {
@@ -248,6 +292,17 @@ const handleConfirmDelete = async () => {
     setOpen(true);
   };
 
+  // const handleClose = () => {
+  //   setOpen(false);
+  //   setNewSkillName("");
+  //   setNewCandidateName("");
+  //   setNewReason("");
+  //   setCurrentSkillId(null);
+  //   setCurrentCandidateId(null);
+  //   setSelectedEmployee(null);
+  //   setEmployeeData(null);
+  // };
+
   const handleClose = () => {
     setOpen(false);
     setNewSkillName("");
@@ -257,6 +312,7 @@ const handleConfirmDelete = async () => {
     setCurrentCandidateId(null);
     setSelectedEmployee(null);
     setEmployeeData(null);
+    setValidationErrors({ skillName: "", candidateName: "" });
   };
 
   const handleOpenAddCandidateDialog = (skillId) => {
@@ -268,6 +324,7 @@ const handleConfirmDelete = async () => {
     setAddCandidateDialogOpen(true);
   };
 
+  // Update the handleCloseAddCandidateDialog function to reset validation errors
   const handleCloseAddCandidateDialog = () => {
     setAddCandidateDialogOpen(false);
     setCurrentSkillId(null);
@@ -275,11 +332,60 @@ const handleConfirmDelete = async () => {
     setNewReason("");
     setSelectedEmployee(null);
     setEmployeeData(null);
+    setValidationErrors({ skillName: "", candidateName: "" });
   };
+
+  // const handleCloseAddCandidateDialog = () => {
+  //   setAddCandidateDialogOpen(false);
+  //   setCurrentSkillId(null);
+  //   setNewCandidateName("");
+  //   setNewReason("");
+  //   setSelectedEmployee(null);
+  //   setEmployeeData(null);
+  // };
+
+  // const handleAddSkill = async () => {
+  //   if (!newSkillName) {
+  //     showSnackbar("Please enter a skill name", "error");
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.post(
+  //       "http://localhost:5002/api/skill-zone",
+  //       {
+  //         name: newSkillName,
+  //         candidates: [], // Start with empty candidates array
+  //       }
+  //     );
+
+  //     setSkills([...skills, response.data]);
+  //     handleClose();
+  //     showSnackbar("Skill added successfully");
+  //   } catch (error) {
+  //     console.error("Error adding skill:", error);
+  //     showSnackbar("Error adding skill", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Update the handleAddSkill function to include validation
 
   const handleAddSkill = async () => {
     if (!newSkillName) {
       showSnackbar("Please enter a skill name", "error");
+      return;
+    }
+
+    // Validate skill name
+    if (!validateName(newSkillName)) {
+      setValidationErrors({
+        ...validationErrors,
+        skillName:
+          "Skill name should contain only letters and be 2-30 characters long",
+      });
       return;
     }
 
@@ -304,9 +410,70 @@ const handleConfirmDelete = async () => {
     }
   };
 
+  // const handleAddCandidate = async () => {
+  //   if (!newCandidateName || !newReason) {
+  //     showSnackbar("Please fill all required fields", "error");
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+
+  //     // Create the candidate data object
+  //     const candidateData = {
+  //       name: newCandidateName,
+  //       reason: newReason,
+  //       addedOn: new Date().toLocaleDateString(),
+  //     };
+
+  //     // Add employee data if available
+  //     if (employeeData) {
+  //       console.log("Adding employee data to candidate:", employeeData);
+  //       candidateData.employeeId = employeeData.employeeId;
+  //       candidateData.email = employeeData.email;
+  //       candidateData.department = employeeData.department;
+  //       candidateData.designation = employeeData.designation;
+  //     }
+
+  //     console.log("Sending candidate data:", candidateData);
+
+  //     const response = await axios.post(
+  //       `http://localhost:5002/api/skill-zone/${currentSkillId}/candidates`,
+  //       candidateData
+  //     );
+
+  //     console.log("Response after adding candidate:", response.data);
+
+  //     setSkills((prevSkills) =>
+  //       prevSkills.map((skill) =>
+  //         skill._id === currentSkillId ? response.data : skill
+  //       )
+  //     );
+
+  //     handleCloseAddCandidateDialog();
+  //     showSnackbar("Candidate added successfully");
+  //   } catch (error) {
+  //     console.error("Error adding candidate:", error);
+  //     showSnackbar("Error adding candidate", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Update the handleAddCandidate function to include validation
   const handleAddCandidate = async () => {
     if (!newCandidateName || !newReason) {
       showSnackbar("Please fill all required fields", "error");
+      return;
+    }
+
+    // Validate candidate name
+    if (!validateName(newCandidateName)) {
+      setValidationErrors({
+        ...validationErrors,
+        candidateName:
+          "Candidate name should contain only letters and be 2-30 characters long",
+      });
       return;
     }
 
@@ -391,7 +558,61 @@ const handleConfirmDelete = async () => {
     setOpen(true);
   };
 
+  // const handleSaveEdit = async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     // Create the updated candidate data
+  //     const updatedCandidate = {
+  //       name: newCandidateName,
+  //       reason: newReason,
+  //     };
+
+  //     // Include employee data if available
+  //     if (employeeData) {
+  //       console.log("Including employee data in update:", employeeData);
+  //       updatedCandidate.employeeId = employeeData.employeeId;
+  //       updatedCandidate.email = employeeData.email;
+  //       updatedCandidate.department = employeeData.department;
+  //       updatedCandidate.designation = employeeData.designation;
+  //     }
+
+  //     console.log("Sending updated candidate data:", updatedCandidate);
+
+  //     const response = await axios.put(
+  //       `http://localhost:5002/api/skill-zone/${currentSkillId}/candidates/${currentCandidateId}`,
+  //       updatedCandidate
+  //     );
+
+  //     console.log("Response after updating candidate:", response.data);
+
+  //     setSkills((prevSkills) =>
+  //       prevSkills.map((skill) =>
+  //         skill._id === currentSkillId ? response.data : skill
+  //       )
+  //     );
+  //     handleClose();
+  //     showSnackbar("Candidate updated successfully");
+  //   } catch (error) {
+  //     console.error("Error updating candidate:", error);
+  //     showSnackbar("Error updating candidate", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Update the handleSaveEdit function to include validation
   const handleSaveEdit = async () => {
+    // Validate candidate name
+    if (!validateName(newCandidateName)) {
+      setValidationErrors({
+        ...validationErrors,
+        candidateName:
+          "Candidate name should contain only letters and be 2-30 characters long",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -434,6 +655,44 @@ const handleConfirmDelete = async () => {
     }
   };
 
+  // Add a function to handle input changes with validation
+  const handleSkillNameChange = (e) => {
+    const value = e.target.value;
+    setNewSkillName(value);
+
+    if (value) {
+      setValidationErrors({
+        ...validationErrors,
+        skillName: validateName(value)
+          ? ""
+          : "Skill name should contain only letters and be 2-30 characters long",
+      });
+    } else {
+      setValidationErrors({
+        ...validationErrors,
+        skillName: "",
+      });
+    }
+  };
+
+  const handleCandidateNameChange = (e) => {
+    const value = e.target.value;
+    setNewCandidateName(value);
+
+    if (value) {
+      setValidationErrors({
+        ...validationErrors,
+        candidateName: validateName(value)
+          ? ""
+          : "Candidate name should contain only letters and be 2-30 characters long",
+      });
+    } else {
+      setValidationErrors({
+        ...validationErrors,
+        candidateName: "",
+      });
+    }
+  };
 
   const filteredSkills = skills.filter(
     (skill) =>
@@ -655,19 +914,17 @@ const handleConfirmDelete = async () => {
                           </IconButton>
                         </Tooltip> */}
 
-<Tooltip title="Delete Skill">
-  <IconButton
-    onClick={(e) => {
-      e.stopPropagation();
-      handleDeleteSkillClick(skill._id);
-    }}
-    sx={{ color: "error.main" }}
-  >
-    <Delete />
-  </IconButton>
-</Tooltip>
-
-
+                        <Tooltip title="Delete Skill">
+                          <IconButton
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSkillClick(skill._id);
+                            }}
+                            sx={{ color: "error.main" }}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Tooltip>
                       </Box>
                     </Box>
                   </AccordionSummary>
@@ -911,16 +1168,20 @@ const handleConfirmDelete = async () => {
                                     </IconButton>
                                   </Tooltip> */}
 
-<Tooltip title="Delete Candidate">
-  <IconButton
-    size="small"
-    onClick={() => handleDeleteCandidateClick(skill._id, candidate._id)}
-    sx={{ color: "error.main" }}
-  >
-    <Delete fontSize="small" />
-  </IconButton>
-</Tooltip>
-
+                                  <Tooltip title="Delete Candidate">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        handleDeleteCandidateClick(
+                                          skill._id,
+                                          candidate._id
+                                        )
+                                      }
+                                      sx={{ color: "error.main" }}
+                                    >
+                                      <Delete fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
                                 </TableCell>
                               </TableRow>
                             ))
@@ -935,119 +1196,147 @@ const handleConfirmDelete = async () => {
           </Paper>
         </Fade>
 
-
         {/* Delete Confirmation Dialog */}
-<Dialog
-  open={deleteDialogOpen}
-  onClose={handleCloseDeleteDialog}
-  PaperProps={{
-    sx: {
-      borderRadius: "16px",
-      overflow: "hidden",
-      p: 0,
-      maxWidth: "500px",
-      width: "100%"
-    },
-  }}
->
-  <DialogTitle sx={{ 
-    background: "linear-gradient(45deg, #f44336, #e57373)",
-    color: "white",
-    fontSize: "1.25rem", 
-    fontWeight: 600,
-    display: "flex",
-    alignItems: "center",
-    gap: 1,
-    padding: { xs: "16px", sm: "24px" },
-    margin: 0
-  }}>
-    <Delete />
-    Confirm Deletion
-  </DialogTitle>
-  <DialogContent sx={{ p: 3, pt: 3 }}>
-    <Alert severity="warning" sx={{ mb: 2 }}>
-      {deleteType === "skill" 
-        ? "Are you sure you want to delete this skill? All candidates in this skill will also be deleted."
-        : "Are you sure you want to delete this candidate?"}
-    </Alert>
-    {itemToDelete && (
-      <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
-        {deleteType === "skill" ? (
-          <>
-            <Typography variant="body1" fontWeight={600} color="#2c3e50">
-              Skill: {itemToDelete.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              This skill contains {itemToDelete.candidates?.length || 0} candidates.
-            </Typography>
-          </>
-        ) : (
-          <>
-            <Typography variant="body1" fontWeight={600} color="#2c3e50">
-              Candidate: {itemToDelete.name}
-            </Typography>
-            {itemToDelete.employeeId && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Employee ID: {itemToDelete.employeeId}
-              </Typography>
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleCloseDeleteDialog}
+          PaperProps={{
+            sx: {
+              borderRadius: "16px",
+              overflow: "hidden",
+              p: 0,
+              maxWidth: "500px",
+              width: "100%",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #f44336, #e57373)",
+              color: "white",
+              fontSize: "1.25rem",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              padding: { xs: "16px", sm: "24px" },
+              margin: 0,
+            }}
+          >
+            <Delete />
+            Confirm Deletion
+          </DialogTitle>
+          <DialogContent sx={{ p: 3, pt: 3 }}>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              {deleteType === "skill"
+                ? "Are you sure you want to delete this skill? All candidates in this skill will also be deleted."
+                : "Are you sure you want to delete this candidate?"}
+            </Alert>
+            {itemToDelete && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}>
+                {deleteType === "skill" ? (
+                  <>
+                    <Typography
+                      variant="body1"
+                      fontWeight={600}
+                      color="#2c3e50"
+                    >
+                      Skill: {itemToDelete.name}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 1 }}
+                    >
+                      This skill contains {itemToDelete.candidates?.length || 0}{" "}
+                      candidates.
+                    </Typography>
+                  </>
+                ) : (
+                  <>
+                    <Typography
+                      variant="body1"
+                      fontWeight={600}
+                      color="#2c3e50"
+                    >
+                      Candidate: {itemToDelete.name}
+                    </Typography>
+                    {itemToDelete.employeeId && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 1 }}
+                      >
+                        Employee ID: {itemToDelete.employeeId}
+                      </Typography>
+                    )}
+                    {itemToDelete.department && (
+                      <Typography variant="body2" color="text.secondary">
+                        Department: {itemToDelete.department}
+                      </Typography>
+                    )}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 1 }}
+                    >
+                      Reason: {itemToDelete.reason}
+                    </Typography>
+                  </>
+                )}
+              </Box>
             )}
-            {itemToDelete.department && (
-              <Typography variant="body2" color="text.secondary">
-                Department: {itemToDelete.department}
-              </Typography>
-            )}
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Reason: {itemToDelete.reason}
-            </Typography>
-          </>
-        )}
-      </Box>
-    )}
-  </DialogContent>
-  <DialogActions sx={{ p: 3, backgroundColor: "#f8fafc", borderTop: "1px solid #e0e0e0" }}>
-    <Button 
-      onClick={handleCloseDeleteDialog}
-      sx={{ 
-        border: "2px solid #1976d2",
-        color: "#1976d2",
-        "&:hover": {
-          border: "2px solid #64b5f6",
-          backgroundColor: "#e3f2fd",
-          color: "#1976d2",
-        },
-        textTransform: "none",
-        borderRadius: "8px",
-        px: 3,
-        fontWeight: 600,
-      }}
-    >
-      Cancel
-    </Button>
-    <Button 
-      onClick={handleConfirmDelete} 
-      variant="contained" 
-      color="error"
-      disabled={loading}
-      startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
-      sx={{ 
-        background: "linear-gradient(45deg, #f44336, #e57373)",
-        fontSize: "0.95rem",
-        textTransform: "none",
-        padding: "8px 32px",
-        borderRadius: "10px",
-        boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
-        color: "white",
-        "&:hover": {
-          background: "linear-gradient(45deg, #d32f2f, #ef5350)",
-        },
-      }}
-    >
-      {loading ? "Deleting..." : "Delete"}
-    </Button>
-  </DialogActions>
-</Dialog>
-
-
+          </DialogContent>
+          <DialogActions
+            sx={{
+              p: 3,
+              backgroundColor: "#f8fafc",
+              borderTop: "1px solid #e0e0e0",
+            }}
+          >
+            <Button
+              onClick={handleCloseDeleteDialog}
+              sx={{
+                border: "2px solid #1976d2",
+                color: "#1976d2",
+                "&:hover": {
+                  border: "2px solid #64b5f6",
+                  backgroundColor: "#e3f2fd",
+                  color: "#1976d2",
+                },
+                textTransform: "none",
+                borderRadius: "8px",
+                px: 3,
+                fontWeight: 600,
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              variant="contained"
+              color="error"
+              disabled={loading}
+              startIcon={
+                loading ? <CircularProgress size={20} color="inherit" /> : null
+              }
+              sx={{
+                background: "linear-gradient(45deg, #f44336, #e57373)",
+                fontSize: "0.95rem",
+                textTransform: "none",
+                padding: "8px 32px",
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(244, 67, 54, 0.2)",
+                color: "white",
+                "&:hover": {
+                  background: "linear-gradient(45deg, #d32f2f, #ef5350)",
+                },
+              }}
+            >
+              {loading ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Add Skill Dialog */}
         <Dialog
@@ -1067,7 +1356,7 @@ const handleConfirmDelete = async () => {
             sx={{
               background: "linear-gradient(45deg, #1976d2, #42a5f5)",
               color: "white",
-              borderRadius: "0",  
+              borderRadius: "0",
               fontWeight: 600,
               fontSize: { xs: "1.25rem", sm: "1.5rem" },
               padding: { xs: "16px", sm: "24px" },
@@ -1080,12 +1369,22 @@ const handleConfirmDelete = async () => {
           <DialogContent sx={{ mt: 2, p: { xs: 2, sm: 3 } }}>
             {editing ? (
               <>
-                <TextField
+                {/* <TextField
                   label="Skill Name"
                   value={newSkillName}
                   fullWidth
                   disabled
                   margin="normal"
+                /> */}
+                <TextField
+                  autoFocus
+                  label="Skill Name"
+                  value={newSkillName}
+                  onChange={handleSkillNameChange}
+                  fullWidth
+                  margin="normal"
+                  error={!!validationErrors.skillName}
+                  helperText={validationErrors.skillName}
                 />
 
                 {/* Employee Selection Autocomplete */}
@@ -1122,12 +1421,21 @@ const handleConfirmDelete = async () => {
                   )}
                 />
 
-                <TextField
+                {/* <TextField
                   label="Candidate Name"
                   value={newCandidateName}
                   onChange={(e) => setNewCandidateName(e.target.value)}
                   fullWidth
                   margin="normal"
+                /> */}
+                <TextField
+                  label="Candidate Name"
+                  value={newCandidateName}
+                  onChange={handleCandidateNameChange}
+                  fullWidth
+                  margin="normal"
+                  error={!!validationErrors.candidateName}
+                  helperText={validationErrors.candidateName}
                 />
 
                 <TextField
@@ -1152,19 +1460,22 @@ const handleConfirmDelete = async () => {
             )}
           </DialogContent>
           <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
-            <Button onClick={handleClose} color="primary" variant="outlined"
+            <Button
+              onClick={handleClose}
+              color="primary"
+              variant="outlined"
               sx={{
                 border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
                 color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
+                "&:hover": {
+                  border: "2px solid #64b5f6",
+                  backgroundColor: "#e3f2fd",
+                  color: "#1976d2",
+                },
+                textTransform: "none",
+                borderRadius: "8px",
+                px: 3,
+                fontWeight: 600,
               }}
             >
               Cancel
@@ -1283,16 +1594,16 @@ const handleConfirmDelete = async () => {
               variant="outlined"
               sx={{
                 border: "2px solid #1976d2",
-              color: "#1976d2",
-              "&:hover": {
-                border: "2px solid #64b5f6",
-                backgroundColor: "#e3f2fd",
                 color: "#1976d2",
-              },
-              textTransform: "none",
-              borderRadius: "8px",
-              px: 3,
-              fontWeight: 600,
+                "&:hover": {
+                  border: "2px solid #64b5f6",
+                  backgroundColor: "#e3f2fd",
+                  color: "#1976d2",
+                },
+                textTransform: "none",
+                borderRadius: "8px",
+                px: 3,
+                fontWeight: 600,
               }}
             >
               Cancel

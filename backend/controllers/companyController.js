@@ -1,109 +1,355 @@
-import Company from '../models/Company.js';
-import User from '../models/User.js';
-import bcrypt from 'bcryptjs/dist/bcrypt.js';
-import jwt from 'jsonwebtoken';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import path from 'path';
+import fs from 'fs';
+import multer from 'multer';
+import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
-import crypto from 'crypto';
+import Company from '../models/Company.js';
+import  User  from '../models/User.js';
 import { sendOtpEmail } from '../utils/mailer.js';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 
 
-// Register a new company with admin user
-export const registerCompany = async (req, res) => {
-  try {
-    console.log('Registration request received:', req.body);
-    
-    const { company, admin } = req.body;
+// Get the current file's path and directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-    console.log('DEBUG - Registration with unhashed password:', {
-      email: admin.email,
-      companyCode: company.companyCode,
-      rawPassword: admin.password // This logs the actual password - SECURITY RISK!
-    });
-    
-    // Check if company code already exists
-    const existingCompany = await Company.findOne({ companyCode: company.companyCode });
-    if (existingCompany) {
-      return res.status(400).json({ message: 'Company with this code already exists' });
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    const uploadsDir = path.join(__dirname, '../uploads/company-logos');
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
     }
-    
-    // Check if admin email already exists
-    const existingAdmin = await User.findOne({ email: admin.email });
-    if (existingAdmin) {
-      return res.status(400).json({ message: 'Admin email is already registered' });
-    }
-    
-    // Create new company
-    const newCompany = new Company(company);
-    await newCompany.save();
-    console.log('Company created:', newCompany);
-    
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP as string
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-      // Log password before hashing for debugging
-      console.log('Admin registration - Email:', admin.email);
-      console.log('Admin registration - Password (first 3 chars):', admin.password.substring(0, 3));
-      console.log('Admin registration - Password length:', admin.password.length);
-    
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(admin.password, salt);
-    
-    // Create admin user with provided name components
-const newAdmin = new User({
-  firstName: admin.firstName,
-  middleName: admin.middleName || '',
-  lastName: admin.lastName,
-  name: admin.name || `${admin.firstName} ${admin.lastName}`,
-  email: admin.email,
-  password: admin.password,
-  role: 'admin',
-  companyCode: company.companyCode,
-  isActive: true,
-  otp: otp, // Store OTP
-  otpExpires: otpExpires, // Store OTP expiration
-  isVerified: false // Set to false until OTP verification
+    cb(null, uploadsDir);
+  },
+  filename: function(req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'logo-' + uniqueSuffix + path.extname(file.originalname));
+  }
 });
-    
-    console.log('Generated OTP:', otp);
-    console.log('OTP expires at:', otpExpires);
-    console.log('Admin user created:', newAdmin);
-    // Log the OTP for debugging (remove in production)
-    console.log('Generated OTP for', admin.email, ':', otp);
 
-    // Assign permissions based on role
-    newAdmin.assignPermissions();
-    
-    await newAdmin.save();
-    console.log('Admin created:', newAdmin);
-    
-    
-    // Send OTP email to admin
-    await sendOtpEmail(admin.email, otp, {
-      name: newAdmin.name,
-      companyName: company.name
-    });
-    
-    res.status(201).json({
-      success: true,
-      message: 'Company registered successfully. Please verify your email with the OTP sent.',
-      company: {
-        id: newCompany._id,
-        name: newCompany.name,
-        companyCode: newCompany.companyCode
-      },
-      email: admin.email // Send back email for redirection to OTP verification page
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ 
-      message: 'Server error during registration',
-      error: error.message 
-    });
+// File filter for logo uploads
+const fileFilter = (req, file, cb) => {
+  // Accept only image files
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed!'), false);
   }
 };
+
+// Create multer upload instance
+const upload = multer({ 
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024 // 2MB limit
+  }
+}).single('logo');
+
+export {upload};
+
+// Update the registerCompany function to handle file uploads
+export const registerCompany = async (req, res) => {
+  // Use multer to handle file upload
+  upload(req, res, async (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        // A Multer error occurred when uploading
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ message: 'File size too large. Maximum size is 2MB.' });
+        }
+        return res.status(400).json({ message: `Upload error: ${err.message}` });
+      } else {
+        // An unknown error occurred
+        return res.status(400).json({ message: err.message });
+      }
+    }
+    
+    try {
+      console.log('Registration request received');
+      console.log('Request body keys:', Object.keys(req.body));
+      
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({ message: 'Company logo is required' });
+      }
+      
+      console.log('File received:', req.file);
+      
+      // Parse JSON data from form fields
+      let company, admin;
+      try {
+        company = JSON.parse(req.body.company);
+        admin = JSON.parse(req.body.admin);
+      } catch (error) {
+        return res.status(400).json({ message: 'Invalid JSON data in form fields' });
+      }
+      
+      // Add logo URL to company data
+      const logoUrl = `/uploads/company-logos/${req.file.filename}`;
+      company.logo = logoUrl;
+      
+      console.log('Processing registration with data:', {
+        companyCode: company.companyCode,
+        adminEmail: admin.email,
+        logoUrl
+      });
+      
+      // Check if company code already exists
+      const existingCompany = await Company.findOne({ companyCode: company.companyCode });
+      if (existingCompany) {
+        return res.status(400).json({ message: 'Company with this code already exists' });
+      }
+      
+      // Check if admin email already exists
+      const existingAdmin = await User.findOne({ email: admin.email });
+      if (existingAdmin) {
+        return res.status(400).json({ message: 'Admin email is already registered' });
+      }
+      
+      // Generate OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP as string
+      const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(admin.password, salt);
+
+      let finalPasswordHash;
+      
+      const isAlreadyHashed = admin.password.startsWith('$2a$');
+      
+      console.log('Password check:', {
+        email: admin.email,
+        passwordLength: admin.password.length,
+        isAlreadyHashed: isAlreadyHashed
+      });
+      
+      // Only hash the password if it's not already hashed
+      if (!isAlreadyHashed) {
+        const salt = await bcrypt.genSalt(10);
+        finalPasswordHash = await bcrypt.hash(admin.password, salt);
+        console.log('Password hashed for new user:', {
+          email: admin.email,
+          originalLength: admin.password.length,
+          hashedLength: finalPasswordHash.length
+        });
+      } else {
+        console.log('Password already hashed, using as-is');
+        finalPasswordHash = admin.password;
+      }
+      
+      // Create admin user with provided name components
+      const newAdmin = new User({
+        firstName: admin.firstName,
+        middleName: admin.middleName || '',
+        lastName: admin.lastName,
+        name: admin.name || `${admin.firstName} ${admin.lastName}`,
+        email: admin.email.toLowerCase(),
+        password: finalPasswordHash, // Use finalPasswordHash here
+        role: 'admin',
+        companyCode: company.companyCode.toUpperCase(),
+        isActive: true,
+        isVerified: false,
+        otp,
+        otpExpires
+      });
+      
+      await newAdmin.save();
+      console.log('Admin user created:', {
+        id: newAdmin._id,
+        email: newAdmin.email,
+        role: newAdmin.role
+      });
+      
+      // Create new company but mark it as pending verification
+      const newCompany = new Company({
+        ...company,
+        isActive: false, // Set company as inactive until verification
+        adminUserId: newAdmin._id,
+        pendingVerification: true // Add a flag to indicate pending verification
+      });
+      
+      await newCompany.save();
+      console.log('Company created with pending verification:', newCompany);
+      
+      try {
+        const { getCompanyConnection } = await import('../config/db.js');
+        await getCompanyConnection(company.companyCode);
+        console.log(`Company database initialized for ${company.companyCode}`);
+      } catch (dbError) {
+        console.error('Error initializing company database:', dbError);
+        // Continue with the response even if database initialization fails
+      }
+
+
+      // Send OTP email
+      try {
+        await sendOtpEmail(admin.email, otp, {
+          name: newAdmin.name,
+          companyName: company.name
+        });
+        console.log(`OTP sent to ${admin.email}: ${otp}`);
+      } catch (emailError) {
+        console.error('Error sending OTP email:', emailError);
+        // Continue with the response even if email fails
+      }
+      
+      res.status(201).json({
+        success: true,
+        message: 'Registration initiated. Please verify your email with the OTP sent to complete registration.',
+        email: admin.email
+      });
+      
+
+
+    } catch (error) {
+      console.warn('Registration error:', error);
+      return res.status(400).json({ message: error.message });
+    }
+  });
+};
+
+
+// // Add a new controller function to verify OTP
+// export const verifyOtp = async (req, res) => {
+//   try {
+//     const { email, otp } = req.body;
+    
+//     console.log('Received verification request:', { email, otp });
+    
+//     if (!email || !otp) {
+//       console.log('Missing email or OTP in request:', req.body);
+//       return res.status(400).json({ message: 'Email and OTP are required' });
+//     }
+    
+//     // Find user by email first
+//     const user = await User.findOne({ email: email.toLowerCase() });
+    
+//     if (!user) {
+//       console.log('User not found with email:', email);
+//       return res.status(404).json({ message: 'User not found with this email' });
+//     }
+    
+//     console.log('Found user:', { 
+//       id: user._id, 
+//       email: user.email, 
+//       storedOtp: user.otp,
+//       otpExpires: user.otpExpires,
+//       now: new Date(),
+//       isExpired: user.otpExpires < new Date()
+//     });
+    
+//     // Check if OTP matches
+//     if (user.otp !== otp) {
+//       console.log('OTP mismatch:', { provided: otp, stored: user.otp });
+//       return res.status(400).json({ message: 'Invalid OTP' });
+//     }
+    
+//     // Check if OTP is expired
+//     if (user.otpExpires < new Date()) {
+//       console.log('OTP expired:', { expires: user.otpExpires, now: new Date() });
+//       return res.status(400).json({ message: 'OTP has expired. Please request a new one' });
+//     }
+    
+//     // Mark user as verified and clear OTP
+//     user.isVerified = true;
+//     user.otp = undefined;
+//     user.otpExpires = undefined;
+    
+//     await user.save();
+//     console.log('User verified successfully:', user.email);
+    
+//     // Now activate the company if this is an admin user
+//     if (user.role === 'admin') {
+//       const company = await Company.findOne({ 
+//         companyCode: user.companyCode,
+//         adminUserId: user._id
+//       });
+      
+//       if (company) {
+//         company.isActive = true;
+//         company.pendingVerification = false;
+//         await company.save();
+//         console.log('Company activated:', company.name);
+
+//         // Create admin user in company database
+//         try {
+//           const { getUserModel } = await import('../models/User.js');
+//           const CompanyUserModel = await getUserModel(user.companyCode);
+          
+//           // Create a copy of the admin user in the company database
+//           const companyAdmin = new CompanyUserModel({
+//             userId: user.userId,
+//             firstName: user.firstName,
+//             middleName: user.middleName,
+//             lastName: user.lastName,
+//             name: user.name,
+//             email: user.email,
+//             password: user.password, // Already hashed
+//             role: user.role,
+//             companyCode: user.companyCode,
+//             permissions: user.permissions,
+//             isVerified: true,
+//             isActive: true
+//           });
+          
+//           await companyAdmin.save();
+//           console.log('Admin user created in company database:', companyAdmin.email);
+          
+//           // Also create a Company document in the company database
+//           const { companySchema } = await import('../models/Company.js');
+//           const createCompanyModel = (await import('../models/modelFactory.js')).default;
+//           const CompanyModel = await createCompanyModel(user.companyCode, 'Company', companySchema);
+          
+//           const companyRecord = new CompanyModel({
+//             name: company.name,
+//             companyCode: company.companyCode,
+//             address: company.address,
+//             contactEmail: company.contactEmail,
+//             contactPhone: company.contactPhone,
+//             logo: company.logo,
+//             industry: company.industry,
+//             isActive: true,
+//             settings: company.settings,
+//             adminUserId: companyAdmin._id, // Use the company-specific user ID
+//             registrationNumber: company.registrationNumber,
+//             pendingVerification: false
+//           });
+          
+//           await companyRecord.save();
+//           console.log('Company record created in company database');
+//         } catch (dbError) {
+//           console.error('Error creating records in company database:', dbError);
+//           // Continue with the response even if this fails
+//         }
+//       }
+//     }
+    
+//     res.status(200).json({
+//       success: true,
+//       message: 'Email verified successfully. Your company registration is now complete.',
+//       user: {
+//         id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         companyCode: user.companyCode
+//       }
+//     });
+//   } catch (error) {
+//     console.error('OTP verification error:', error);
+//     res.status(500).json({ 
+//       message: 'Server error during OTP verification',
+//       error: error.message 
+//     });
+//   }
+// };
 
 // Add a new controller function to verify OTP
 export const verifyOtp = async (req, res) => {
@@ -155,9 +401,82 @@ export const verifyOtp = async (req, res) => {
     await user.save();
     console.log('User verified successfully:', user.email);
     
+    // Now activate the company if this is an admin user
+    if (user.role === 'admin') {
+      const company = await Company.findOne({ 
+        companyCode: user.companyCode,
+        adminUserId: user._id
+      });
+      
+      if (company) {
+        company.isActive = true;
+        company.pendingVerification = false;
+        await company.save();
+        console.log('Company activated:', company.name);
+
+        // Create admin user in company database
+        try {
+          const { getUserModel } = await import('../models/User.js');
+          const CompanyUserModel = await getUserModel(user.companyCode);
+          
+          // Create a copy of the admin user in the company database
+          // IMPORTANT: Do not hash the password again, use the existing hash
+          const companyAdmin = new CompanyUserModel({
+            userId: user.userId,
+            firstName: user.firstName,
+            middleName: user.middleName,
+            lastName: user.lastName,
+            name: user.name,
+            email: user.email,
+            password: user.password, // Use the already hashed password
+            role: user.role,
+            companyCode: user.companyCode,
+            permissions: user.permissions,
+            isVerified: true,
+            isActive: true
+          });
+          
+          // Disable the pre-save middleware for this save operation
+          companyAdmin.$skipMiddleware = true; // Add this flag
+          
+          await companyAdmin.save();
+          console.log('Admin user created in company database:', companyAdmin.email);
+          
+          // Import the company schema properly
+          const { default: Company, companySchema } = await import('../models/Company.js');
+          
+          // Create the company model for this company
+          const createCompanyModel = (await import('../models/modelFactory.js')).default;
+          const CompanyModel = await createCompanyModel(user.companyCode, 'Company', companySchema);
+          
+          // Create a company record in the company database
+          const companyRecord = new CompanyModel({
+            name: company.name,
+            companyCode: company.companyCode,
+            address: company.address,
+            contactEmail: company.contactEmail,
+            contactPhone: company.contactPhone,
+            logo: company.logo,
+            industry: company.industry,
+            isActive: true,
+            settings: company.settings,
+            adminUserId: companyAdmin._id,
+            registrationNumber: company.registrationNumber,
+            pendingVerification: false
+          });
+          
+          await companyRecord.save();
+          console.log('Company record created in company database');
+        } catch (dbError) {
+          console.error('Error creating records in company database:', dbError);
+          // Continue with the response even if this fails
+        }
+      }
+    }
+    
     res.status(200).json({
       success: true,
-      message: 'Email verified successfully',
+      message: 'Email verified successfully. Your company registration is now complete.',
       user: {
         id: user._id,
         name: user.name,
@@ -493,6 +812,128 @@ export const verifyResetToken = async (req, res) => {
   }
 };
 
+// // Reset password
+// export const resetPassword = async (req, res) => {
+//   try {
+//     const { token, email, companyCode, password } = req.body;
+    
+//     console.log('Password reset request received:', { 
+//       token: token.substring(0, 10) + '...', 
+//       email, 
+//       companyCode,
+//       passwordLength: password.length,
+//       passwordFirstChars: password.substring(0, 3)
+//     });
+
+//     console.log('DEBUG - Password reset with unhashed password:', {
+//       email,
+//       companyCode,
+//       rawPassword: password // This logs the actual password - SECURITY RISK!
+//     });
+    
+//     if (!token || !email || !companyCode || !password) {
+//       console.log('Missing required fields in reset password request');
+//       return res.status(400).json({ 
+//         message: 'Token, email, company code, and new password are required' 
+//       });
+//     }
+    
+//     // Password strength validation
+//     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+//     if (!passwordRegex.test(password)) {
+//       return res.status(400).json({ 
+//         message: 'Password must be at least 8 characters long and include uppercase, lowercase, number and special character' 
+//       });
+//     }
+    
+//     // Hash the token from the URL
+//     const hashedToken = crypto
+//       .createHash('sha256')
+//       .update(token)
+//       .digest('hex');
+    
+//     // Find user with the token and check if token is still valid
+//     const user = await User.findOne({
+//       email,
+//       companyCode,
+//       resetPasswordToken: hashedToken,
+//       resetPasswordExpires: { $gt: Date.now() }
+//     });
+    
+//     if (!user) {
+//       console.log('Invalid or expired token for user:', email);
+//       return res.status(400).json({ message: 'Invalid or expired token' });
+//     }
+    
+//     console.log('Found user for password reset:', {
+//       id: user._id,
+//       email: user.email,
+//       companyCode: user.companyCode,
+//       currentPasswordHash: user.password.substring(0, 10) + '...'
+//     });
+    
+//     // Check if new password is same as old password
+//     console.log('Checking if new password matches old password');
+//     const isSamePassword = await user.comparePassword(password);
+//     if (isSamePassword) {
+//       console.log('New password is same as current password');
+//       return res.status(400).json({ 
+//         message: 'New password cannot be the same as your current password' 
+//       });
+//     }
+    
+//     // Update password - this will trigger the pre-save middleware to hash it
+//     console.log('Setting new password (first 3 chars):', password.substring(0, 3));
+//     console.log('New password length:', password.length);
+//     user.password = password;
+    
+//     // Clear reset token fields
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpires = undefined;
+    
+//     await user.save();
+//     console.log('Password updated successfully for user:', user.email);
+//     console.log('New password hash:', user.password.substring(0, 10) + '...');
+    
+//     // Send confirmation email
+//     try {
+//       const transporter = nodemailer.createTransport({
+//         service: 'gmail',
+//         auth: {
+//           user: 'a.dineshsundar02@gmail.com',
+//           pass: 'xnbj tvjf odej ynit'
+//         }
+//       });
+      
+//       await transporter.sendMail({
+//         from: `"HRMS Support" <${'a.dineshsundar02@gmail.com'}>`,
+//         to: user.email,
+//         subject: 'Password Reset Successful',
+//         html: `
+//           <h1>Password Reset Successful</h1>
+//           <p>Your password has been successfully reset.</p>
+//           <p>If you did not request this change, please contact support immediately.</p>
+//         `
+//       });
+//     } catch (emailError) {
+//       console.error('Error sending confirmation email:', emailError);
+//       // Continue with the response even if email fails
+//     }
+    
+//     res.status(200).json({ 
+//       success: true, 
+//       message: 'Password has been reset successfully' 
+//     });
+    
+//   } catch (error) {
+//     console.error('Reset password error:', error);
+//     res.status(500).json({ 
+//       message: 'Error resetting password',
+//       error: error.message 
+//     });
+//   }
+// };
+
 // Reset password
 export const resetPassword = async (req, res) => {
   try {
@@ -502,14 +943,7 @@ export const resetPassword = async (req, res) => {
       token: token.substring(0, 10) + '...', 
       email, 
       companyCode,
-      passwordLength: password.length,
-      passwordFirstChars: password.substring(0, 3)
-    });
-
-    console.log('DEBUG - Password reset with unhashed password:', {
-      email,
-      companyCode,
-      rawPassword: password // This logs the actual password - SECURITY RISK!
+      passwordLength: password.length
     });
     
     if (!token || !email || !companyCode || !password) {
@@ -533,48 +967,77 @@ export const resetPassword = async (req, res) => {
       .update(token)
       .digest('hex');
     
-    // Find user with the token and check if token is still valid
-    const user = await User.findOne({
+    // Find user in main database with the token
+    const mainUser = await User.findOne({
       email,
       companyCode,
       resetPasswordToken: hashedToken,
       resetPasswordExpires: { $gt: Date.now() }
     });
     
-    if (!user) {
+    if (!mainUser) {
       console.log('Invalid or expired token for user:', email);
       return res.status(400).json({ message: 'Invalid or expired token' });
     }
     
-    console.log('Found user for password reset:', {
-      id: user._id,
-      email: user.email,
-      companyCode: user.companyCode,
-      currentPasswordHash: user.password.substring(0, 10) + '...'
+    console.log('Found user for password reset in main database:', {
+      id: mainUser._id,
+      email: mainUser.email,
+      companyCode: mainUser.companyCode
     });
     
-    // Check if new password is same as old password
-    console.log('Checking if new password matches old password');
-    const isSamePassword = await user.comparePassword(password);
-    if (isSamePassword) {
-      console.log('New password is same as current password');
-      return res.status(400).json({ 
-        message: 'New password cannot be the same as your current password' 
-      });
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    
+    // Update password in main database
+    mainUser.password = hashedPassword;
+    mainUser.resetPasswordToken = undefined;
+    mainUser.resetPasswordExpires = undefined;
+    
+    await mainUser.save();
+    console.log('Password updated in main database for user:', mainUser.email);
+    
+    // Update password in company database
+    try {
+      const { getUserModel } = await import('../models/User.js');
+      const CompanyUserModel = await getUserModel(companyCode);
+      
+      const companyUser = await CompanyUserModel.findOne({ email: email.toLowerCase() });
+      
+      if (companyUser) {
+        companyUser.password = hashedPassword;
+        companyUser.resetPasswordToken = undefined;
+        companyUser.resetPasswordExpires = undefined;
+        
+        await companyUser.save();
+        console.log('Password updated in company database for user:', companyUser.email);
+      } else {
+        console.log('User not found in company database, creating user');
+        
+        // Create user in company database with updated password
+        const newCompanyUser = new CompanyUserModel({
+          userId: mainUser.userId || `USER-${Date.now()}`,
+          firstName: mainUser.firstName,
+          middleName: mainUser.middleName,
+          lastName: mainUser.lastName,
+          name: mainUser.name,
+          email: mainUser.email,
+          password: hashedPassword,
+          role: mainUser.role,
+          companyCode: mainUser.companyCode,
+          permissions: mainUser.permissions,
+          isVerified: true,
+          isActive: true
+        });
+        
+        await newCompanyUser.save();
+        console.log('User created in company database with new password:', newCompanyUser.email);
+      }
+    } catch (dbError) {
+      console.error('Error updating password in company database:', dbError);
+      // Continue with the response even if this fails
     }
-    
-    // Update password - this will trigger the pre-save middleware to hash it
-    console.log('Setting new password (first 3 chars):', password.substring(0, 3));
-    console.log('New password length:', password.length);
-    user.password = password;
-    
-    // Clear reset token fields
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-    
-    await user.save();
-    console.log('Password updated successfully for user:', user.email);
-    console.log('New password hash:', user.password.substring(0, 10) + '...');
     
     // Send confirmation email
     try {
@@ -588,7 +1051,7 @@ export const resetPassword = async (req, res) => {
       
       await transporter.sendMail({
         from: `"HRMS Support" <${'a.dineshsundar02@gmail.com'}>`,
-        to: user.email,
+        to: mainUser.email,
         subject: 'Password Reset Successful',
         html: `
           <h1>Password Reset Successful</h1>
@@ -714,4 +1177,5 @@ export const resendOtp = async (req, res) => {
       error: error.message 
     });
   }
+
 };
