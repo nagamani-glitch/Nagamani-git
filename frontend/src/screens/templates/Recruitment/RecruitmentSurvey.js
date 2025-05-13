@@ -63,6 +63,10 @@ const RecruitmentSurvey = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [parentTemplateId, setParentTemplateId] = useState(null); // For question deletion
 
+    const getAuthToken = () => {
+      return localStorage.getItem('token');
+    };
+
   // Replace the existing handleDeleteTemplate function with this:
   const handleDeleteTemplateClick = (templateId) => {
     setDeleteType("template");
@@ -89,7 +93,7 @@ const RecruitmentSurvey = () => {
   };
 
   // Add this function to handle the confirmed deletion
-  const handleConfirmDelete = async () => {
+   const handleConfirmDelete = async () => {
     try {
       setLoading(true);
 
@@ -131,40 +135,65 @@ const RecruitmentSurvey = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }; 
 
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5002/api/recruitment-survey"
-        );
-        console.log("Fetched templates:", response.data);
-        setTemplates(response.data);
-      } catch (error) {
-        console.error("Error fetching templates:", error);
-        showSnackbar("Error fetching templates", "error");
+
+  
+
+
+
+  
+
+  // Update the fetchTemplates function
+      useEffect(() => {
+        const fetchTemplates = async () => {
+          try {
+            const token = getAuthToken();
+            const response = await axios.get(
+              "http://localhost:5002/api/recruitment-survey",
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              }
+            );
+            console.log("Fetched templates:", response.data);
+            setTemplates(response.data);
+          } catch (error) {
+            console.error("Error fetching templates:", error);
+            showSnackbar("Error fetching templates", "error");
+          }
+        };
+
+        fetchTemplates();
+        fetchRegisteredEmployees();
+      }, []);
+
+ 
+
+
+
+  // Update the fetchRegisteredEmployees function
+const fetchRegisteredEmployees = async () => {
+  try {
+    setLoadingEmployees(true);
+    const token = getAuthToken();
+    const response = await axios.get(
+      "http://localhost:5002/api/employees/registered",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       }
-    };
-
-    fetchTemplates();
-    fetchRegisteredEmployees();
-  }, []);
-
-  const fetchRegisteredEmployees = async () => {
-    try {
-      setLoadingEmployees(true);
-      const response = await axios.get(
-        "http://localhost:5002/api/employees/registered"
-      );
-      console.log("Fetched employees:", response.data);
-      setRegisteredEmployees(response.data);
-      setLoadingEmployees(false);
-    } catch (error) {
-      console.error("Error fetching registered employees:", error);
-      setLoadingEmployees(false);
-    }
-  };
+    );
+    console.log("Fetched employees:", response.data);
+    setRegisteredEmployees(response.data);
+    setLoadingEmployees(false);
+  } catch (error) {
+    console.error("Error fetching registered employees:", error);
+    setLoadingEmployees(false);
+  }
+};
 
   const handleEmployeeSelect = (event, employee) => {
     console.log("Selected employee:", employee);
@@ -201,54 +230,65 @@ const RecruitmentSurvey = () => {
     setSelectedEmployee(null);
   };
 
-  const handleAddTemplate = async () => {
-    if (newTemplateName && newQuestion && newType) {
-      try {
-        setLoading(true);
 
-        // Create the question object with employee data
-        const questionData = {
-          avatar: newTemplateName.charAt(0).toUpperCase(),
-          question: newQuestion,
-          type: newType,
-        };
 
-        // Add employee data if an employee is selected
-        if (selectedEmployee) {
-          questionData.employeeId = selectedEmployee.Emp_ID;
-          questionData.employeeName = `${
-            selectedEmployee.personalInfo?.firstName || ""
-          } ${selectedEmployee.personalInfo?.lastName || ""}`.trim();
-          questionData.employeeDepartment =
-            selectedEmployee.joiningDetails?.department || "";
-          questionData.employeeDesignation =
-            selectedEmployee.joiningDetails?.initialDesignation || "";
-        }
 
-        const newTemplate = {
-          name: newTemplateName,
-          questions: [questionData],
-        };
 
-        console.log("Sending template data:", newTemplate);
+  // Update the handleAddTemplate function
+const handleAddTemplate = async () => {
+  if (newTemplateName && newQuestion && newType) {
+    try {
+      setLoading(true);
+      const token = getAuthToken();
 
-        const { data } = await axios.post(
-          "http://localhost:5002/api/recruitment-survey/add",
-          newTemplate
-        );
+      // Create the question object with employee data
+      const questionData = {
+        avatar: newTemplateName.charAt(0).toUpperCase(),
+        question: newQuestion,
+        type: newType,
+      };
 
-        console.log("Template added response:", data);
-        setTemplates([...templates, data]);
-        handleClose();
-        showSnackbar("Template added successfully");
-      } catch (error) {
-        console.error("Error adding template:", error);
-        showSnackbar("Error adding template", "error");
-      } finally {
-        setLoading(false);
+      // Add employee data if an employee is selected
+      if (selectedEmployee) {
+        questionData.employeeId = selectedEmployee.Emp_ID;
+        questionData.employeeName = `${
+          selectedEmployee.personalInfo?.firstName || ""
+        } ${selectedEmployee.personalInfo?.lastName || ""}`.trim();
+        questionData.employeeDepartment =
+          selectedEmployee.joiningDetails?.department || "";
+        questionData.employeeDesignation =
+          selectedEmployee.joiningDetails?.initialDesignation || "";
       }
+
+      const newTemplate = {
+        name: newTemplateName,
+        questions: [questionData],
+      };
+
+      console.log("Sending template data:", newTemplate);
+
+      const { data } = await axios.post(
+        "http://localhost:5002/api/recruitment-survey/add",
+        newTemplate,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      console.log("Template added response:", data);
+      setTemplates([...templates, data]);
+      handleClose();
+      showSnackbar("Template added successfully");
+    } catch (error) {
+      console.error("Error adding template:", error);
+      showSnackbar("Error adding template", "error");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
+};
 
   const handleOpenAddQuestionDialog = (templateId) => {
     setCurrentTemplateId(templateId);
@@ -265,56 +305,67 @@ const RecruitmentSurvey = () => {
     setNewType("");
     setSelectedEmployee(null);
   };
+ 
 
-  const handleAddQuestionToTemplate = async () => {
-    if (!newQuestion || !newType || !currentTemplateId) return;
 
-    try {
-      setLoading(true);
+  // Update the handleAddQuestionToTemplate function
+const handleAddQuestionToTemplate = async () => {
+  if (!newQuestion || !newType || !currentTemplateId) return;
 
-      // Create request data with employee fields directly
-      const requestData = {
-        question: newQuestion,
-        type: newType,
-      };
+  try {
+    setLoading(true);
+    const token = getAuthToken();
 
-      // Add employee data if an employee is selected
-      if (selectedEmployee) {
-        requestData.employeeId = selectedEmployee.Emp_ID;
-        requestData.employeeName = `${
-          selectedEmployee.personalInfo?.firstName || ""
-        } ${selectedEmployee.personalInfo?.lastName || ""}`.trim();
-        requestData.employeeDepartment =
-          selectedEmployee.joiningDetails?.department || "";
-        requestData.employeeDesignation =
-          selectedEmployee.joiningDetails?.initialDesignation || "";
-      }
+    // Create request data with employee fields directly
+    const requestData = {
+      question: newQuestion,
+      type: newType,
+    };
 
-      console.log("Sending question data:", requestData);
-
-      const { data } = await axios.post(
-        `http://localhost:5002/api/recruitment-survey/${currentTemplateId}/questions`,
-        requestData
-      );
-
-      console.log("Question added response:", data);
-
-      // Update templates state with the new question
-      setTemplates((prevTemplates) =>
-        prevTemplates.map((template) =>
-          template._id === currentTemplateId ? data : template
-        )
-      );
-
-      handleCloseAddQuestionDialog();
-      showSnackbar("Question added to template successfully");
-    } catch (error) {
-      console.error("Error adding question to template:", error);
-      showSnackbar("Error adding question to template", "error");
-    } finally {
-      setLoading(false);
+    // Add employee data if an employee is selected
+    if (selectedEmployee) {
+      requestData.employeeId = selectedEmployee.Emp_ID;
+      requestData.employeeName = `${
+        selectedEmployee.personalInfo?.firstName || ""
+      } ${selectedEmployee.personalInfo?.lastName || ""}`.trim();
+      requestData.employeeDepartment =
+        selectedEmployee.joiningDetails?.department || "";
+      requestData.employeeDesignation =
+        selectedEmployee.joiningDetails?.initialDesignation || "";
     }
-  };
+
+    console.log("Sending question data:", requestData);
+
+    const { data } = await axios.post(
+      `http://localhost:5002/api/recruitment-survey/${currentTemplateId}/questions`,
+      requestData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log("Question added response:", data);
+
+    // Update templates state with the new question
+    setTemplates((prevTemplates) =>
+      prevTemplates.map((template) =>
+        template._id === currentTemplateId ? data : template
+      )
+    );
+
+    handleCloseAddQuestionDialog();
+    showSnackbar("Question added to template successfully");
+  } catch (error) {
+    console.error("Error adding question to template:", error);
+    showSnackbar("Error adding question to template", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const handleEditQuestion = (templateId, questionId) => {
     const template = templates.find((t) => t._id === templateId);
@@ -346,53 +397,64 @@ const RecruitmentSurvey = () => {
     setOpen(true);
   };
 
-  const handleSaveEdit = async () => {
-    try {
-      setLoading(true);
 
-      // Create request data with employee fields directly
-      const requestData = {
-        question: newQuestion,
-        type: newType,
-      };
 
-      // Add employee data if an employee is selected
-      if (selectedEmployee) {
-        requestData.employeeId = selectedEmployee.Emp_ID;
-        requestData.employeeName = `${
-          selectedEmployee.personalInfo?.firstName || ""
-        } ${selectedEmployee.personalInfo?.lastName || ""}`.trim();
-        requestData.employeeDepartment =
-          selectedEmployee.joiningDetails?.department || "";
-        requestData.employeeDesignation =
-          selectedEmployee.joiningDetails?.initialDesignation || "";
-      }
 
-      console.log("Sending edit data:", requestData);
+  // Update the handleSaveEdit function
+const handleSaveEdit = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
 
-      const { data } = await axios.put(
-        `http://localhost:5002/api/recruitment-survey/${currentTemplateId}/questions/${currentQuestionId}`,
-        requestData
-      );
+    // Create request data with employee fields directly
+    const requestData = {
+      question: newQuestion,
+      type: newType,
+    };
 
-      console.log("Edit saved response:", data);
-
-      // Update templates state with the edited question
-      setTemplates((prevTemplates) =>
-        prevTemplates.map((template) =>
-          template._id === currentTemplateId ? data : template
-        )
-      );
-
-      handleClose();
-      showSnackbar("Question updated successfully");
-    } catch (error) {
-      console.error("Error updating question:", error);
-      showSnackbar("Error updating question", "error");
-    } finally {
-      setLoading(false);
+    // Add employee data if an employee is selected
+    if (selectedEmployee) {
+      requestData.employeeId = selectedEmployee.Emp_ID;
+      requestData.employeeName = `${
+        selectedEmployee.personalInfo?.firstName || ""
+      } ${selectedEmployee.personalInfo?.lastName || ""}`.trim();
+      requestData.employeeDepartment =
+        selectedEmployee.joiningDetails?.department || "";
+      requestData.employeeDesignation =
+        selectedEmployee.joiningDetails?.initialDesignation || "";
     }
-  };
+
+    console.log("Sending edit data:", requestData);
+
+    const { data } = await axios.put(
+      `http://localhost:5002/api/recruitment-survey/${currentTemplateId}/questions/${currentQuestionId}`,
+      requestData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log("Edit saved response:", data);
+
+    // Update templates state with the edited question
+    setTemplates((prevTemplates) =>
+      prevTemplates.map((template) =>
+        template._id === currentTemplateId ? data : template
+      )
+    );
+
+    handleClose();
+    showSnackbar("Question updated successfully");
+  } catch (error) {
+    console.error("Error updating question:", error);
+    showSnackbar("Error updating question", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <Box

@@ -43,7 +43,7 @@ import {
   Add,
 } from "@mui/icons-material";
 import axios from "axios";
-
+ 
 // Standardized theme-based styling
 const styles = {
   container: {
@@ -63,7 +63,7 @@ const styles = {
     width: "100%",
     padding: { xs: 1, sm: 2, md: 2 }, // Add consistent padding
   },
-
+ 
   pageTitle: {
     mb: 3,
     color: "#1976d2",
@@ -93,7 +93,7 @@ const styles = {
       padding: { xs: "8px 10px", sm: "8px 14px" }, // Smaller padding on mobile
     },
   },
-
+ 
   actionButtonsContainer: {
     display: "flex",
     gap: 2,
@@ -127,7 +127,7 @@ const styles = {
     },
     textTransform: "none", // Prevent uppercase transformation
   },
-
+ 
   addButton: {
     height: 40,
     background: `linear-gradient(45deg, #1976d2 30%, #1565c0 90%)`,
@@ -144,7 +144,7 @@ const styles = {
     },
     textTransform: "none", // Prevent uppercase transformation
   },
-
+ 
   sectionTitle: {
     fontWeight: 600,
     color: "#1a2027",
@@ -152,7 +152,7 @@ const styles = {
     pl: 1,
     fontSize: { xs: "1.25rem", sm: "1.5rem" },
   },
-
+ 
   // Updated card and content styles for better responsiveness
   card: {
     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -287,7 +287,7 @@ const styles = {
     fontSize: { xs: "1.2rem", sm: "1.1rem" }, // Slightly smaller icon on mobile
     color: "#475569", // Darker color for better visibility
   },
-
+ 
   dialogTitle: {
     fontWeight: 600,
     background: "linear-gradient(45deg, #1976d2, #64b5f6)",
@@ -348,13 +348,13 @@ const styles = {
     },
   },
 };
-
+ 
 // Update the statusColors object to use red for "Not-Hired"
 const statusColors = {
   "Not-Hired": "#ef4444", // Changed to red
   Hired: "#4caf50", // Green (unchanged)
 };
-
+ 
 const RecruitmentCandidate = () => {
   const [view, setView] = useState("grid");
   const [candidates, setCandidates] = useState([]);
@@ -378,7 +378,7 @@ const RecruitmentCandidate = () => {
   const [registeredEmployees, setRegisteredEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-
+ 
   const [newCandidate, setNewCandidate] = useState({
     name: "",
     email: "",
@@ -387,88 +387,152 @@ const RecruitmentCandidate = () => {
     color: statusColors["Not-Hired"],
     employeeId: "",
   });
-
+ 
   useEffect(() => {
     fetchCandidates();
     fetchRegisteredEmployees();
   }, []);
+ 
+  // // Add these validation functions before the useEffect hooks
+  // const validateName = (name) => {
+  //   const nameRegex = /^[a-zA-Z\s]{2,30}$/;
+  //   return nameRegex.test(name);
+  // };
+ 
+  // const validateEmail = (email) => {
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   return emailRegex.test(email);
+  // };
+ 
+  // const validatePosition = (position) => {
+  //   const positionRegex = /^[a-zA-Z\s]{0,30}$/;
+  //   return position === "" || positionRegex.test(position);
+  // };
 
-  // Add these validation functions before the useEffect hooks
+
+   // Add these validation functions before the useEffect hooks
   const validateName = (name) => {
     const nameRegex = /^[a-zA-Z\s]{2,30}$/;
     return nameRegex.test(name);
   };
-
+ 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
-
+ 
   const validatePosition = (position) => {
     const positionRegex = /^[a-zA-Z\s]{0,30}$/;
     return position === "" || positionRegex.test(position);
   };
 
+  // Add this function to get the auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
+
+ 
+  // const fetchCandidates = async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/applicantProfiles"
+  //     );
+  //     setCandidates(response.data);
+  //   } catch (error) {
+  //     showSnackbar("Error fetching candidates", "error");
+  //   }
+  // };
+ 
   const fetchCandidates = async () => {
     try {
+      const token = getAuthToken();
       const response = await axios.get(
-        "http://localhost:5002/api/applicantProfiles"
+        "http://localhost:5002/api/applicantProfiles",
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
       setCandidates(response.data);
     } catch (error) {
-      showSnackbar("Error fetching candidates", "error");
+      showSnackbar(error.response?.data?.error || "Error fetching candidates", "error");
     }
   };
+
+
+
+  // const fetchRegisteredEmployees = async () => {
+  //   try {
+  //     setLoadingEmployees(true);
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/employees/registered"
+  //     );
+  //     setRegisteredEmployees(response.data);
+  //     setLoadingEmployees(false);
+  //   } catch (error) {
+  //     console.error("Error fetching registered employees:", error);
+  //     showSnackbar("Error fetching employees", "error");
+  //     setLoadingEmployees(false);
+  //   }
+  // };
 
   const fetchRegisteredEmployees = async () => {
     try {
       setLoadingEmployees(true);
+      const token = getAuthToken();
       const response = await axios.get(
-        "http://localhost:5002/api/employees/registered"
+        "http://localhost:5002/api/employees/registered",
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
       setRegisteredEmployees(response.data);
       setLoadingEmployees(false);
     } catch (error) {
       console.error("Error fetching registered employees:", error);
-      showSnackbar("Error fetching employees", "error");
+      showSnackbar(error.response?.data?.error || "Error fetching employees", "error");
       setLoadingEmployees(false);
     }
   };
 
-  // const handleEmployeeSelect = (event, employee) => {
+
+
+  //  const handleEmployeeSelect = (event, employee) => {
   //   setSelectedEmployee(employee);
   //   if (employee) {
-  //     // Populate the candidate form with employee data
+  //     const name = `${employee.personalInfo?.firstName || ""} ${
+  //       employee.personalInfo?.lastName || ""
+  //     }`.trim();
+  //     const email = employee.personalInfo?.email || "";
+  //     const position = employee.joiningDetails?.initialDesignation || "";
+ 
+  //     // Update the candidate form with employee data
   //     setNewCandidate({
   //       ...newCandidate,
-  //       name: `${employee.personalInfo?.firstName || ""} ${
-  //         employee.personalInfo?.lastName || ""
-  //       }`.trim(),
-  //       email: employee.personalInfo?.email || "",
-  //       position: employee.joiningDetails?.initialDesignation || "",
+  //       name,
+  //       email,
+  //       position,
   //       employeeId: employee.Emp_ID || "",
+  //     });
+ 
+  //     // Validate the fields
+  //     setValidationErrors({
+  //       name: validateName(name)
+  //         ? ""
+  //         : "Name should contain only letters and be 2-30 characters long",
+  //       email: validateEmail(email) ? "" : "Please enter a valid email address",
+  //       position: validatePosition(position)
+  //         ? ""
+  //         : "Position should contain only letters and spaces",
   //     });
   //   }
   // };
-
-  // const handleCreateSubmit = async () => {
-  //   try {
-  //     const response = await axios.post(
-  //       "http://localhost:5002/api/applicantProfiles",
-  //       newCandidate
-  //     );
-  //     setCandidates([...candidates, response.data]);
-  //     setCreateDialogOpen(false);
-  //     resetNewCandidate();
-  //     showSnackbar("Candidate created successfully");
-  //   } catch (error) {
-  //     showSnackbar("Error creating candidate", "error");
-  //   }
-  // };
-
-  // Update the handleCreateSubmit function to check all validations
-
-  const handleEmployeeSelect = (event, employee) => {
+ 
+   const handleEmployeeSelect = (event, employee) => {
     setSelectedEmployee(employee);
     if (employee) {
       const name = `${employee.personalInfo?.firstName || ""} ${
@@ -476,7 +540,7 @@ const RecruitmentCandidate = () => {
       }`.trim();
       const email = employee.personalInfo?.email || "";
       const position = employee.joiningDetails?.initialDesignation || "";
-
+ 
       // Update the candidate form with employee data
       setNewCandidate({
         ...newCandidate,
@@ -485,7 +549,7 @@ const RecruitmentCandidate = () => {
         position,
         employeeId: employee.Emp_ID || "",
       });
-
+ 
       // Validate the fields
       setValidationErrors({
         name: validateName(name)
@@ -499,32 +563,59 @@ const RecruitmentCandidate = () => {
     }
   };
 
-  // const handleCreateSubmit = async () => {
-  //   if (
-  //     !validateName(newCandidate.name) ||
-  //     !validateEmail(newCandidate.email) ||
-  //     !validatePosition(newCandidate.position)
-  //   ) {
-  //     showSnackbar("Please fix the validation errors", "error");
-  //     return;
-  //   }
 
-  //   try {
-  //     const response = await axios.post(
-  //       "http://localhost:5002/api/applicantProfiles",
-  //       newCandidate
-  //     );
-  //     setCandidates([...candidates, response.data]);
-  //     setCreateDialogOpen(false);
-  //     resetNewCandidate();
-  //     showSnackbar("Candidate created successfully");
-  //   } catch (error) {
-  //     showSnackbar("Error creating candidate", "error");
-  //   }
-  // };
 
-  // Update the handleCreateSubmit function to check for duplicates
-  const handleCreateSubmit = async () => {
+
+// const handleCreateSubmit = async () => {
+//     if (
+//       !validateName(newCandidate.name) ||
+//       !validateEmail(newCandidate.email) ||
+//       !validatePosition(newCandidate.position)
+//     ) {
+//       showSnackbar("Please fix the validation errors", "error");
+//       return;
+//     }
+ 
+//     // Check for duplicate email
+//     const duplicateEmail = candidates.find(
+//       (candidate) =>
+//         candidate.email.toLowerCase() === newCandidate.email.toLowerCase()
+//     );
+ 
+//     if (duplicateEmail) {
+//       showSnackbar("A candidate with this email already exists", "error");
+//       return;
+//     }
+ 
+//     // Check for duplicate name (optional, depending on your requirements)
+//     const duplicateName = candidates.find(
+//       (candidate) =>
+//         candidate.name.toLowerCase() === newCandidate.name.toLowerCase()
+//     );
+ 
+//     if (duplicateName) {
+//       showSnackbar("A candidate with this name already exists", "error");
+//       return;
+//     }
+ 
+//     try {
+//       const response = await axios.post(
+//         "http://localhost:5002/api/applicantProfiles",
+//         newCandidate
+//       );
+//       setCandidates([...candidates, response.data]);
+//       setCreateDialogOpen(false);
+//       resetNewCandidate();
+//       showSnackbar("Candidate created successfully");
+//     } catch (error) {
+//       showSnackbar("Error creating candidate", "error");
+//     }
+//   };
+ 
+
+
+
+const handleCreateSubmit = async () => {
     if (
       !validateName(newCandidate.name) ||
       !validateEmail(newCandidate.email) ||
@@ -533,100 +624,94 @@ const RecruitmentCandidate = () => {
       showSnackbar("Please fix the validation errors", "error");
       return;
     }
-
+ 
     // Check for duplicate email
     const duplicateEmail = candidates.find(
       (candidate) =>
         candidate.email.toLowerCase() === newCandidate.email.toLowerCase()
     );
-
+ 
     if (duplicateEmail) {
       showSnackbar("A candidate with this email already exists", "error");
       return;
     }
-
+ 
     // Check for duplicate name (optional, depending on your requirements)
     const duplicateName = candidates.find(
       (candidate) =>
         candidate.name.toLowerCase() === newCandidate.name.toLowerCase()
     );
-
+ 
     if (duplicateName) {
       showSnackbar("A candidate with this name already exists", "error");
       return;
     }
-
+ 
     try {
+      const token = getAuthToken();
       const response = await axios.post(
         "http://localhost:5002/api/applicantProfiles",
-        newCandidate
+        newCandidate,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
       setCandidates([...candidates, response.data]);
       setCreateDialogOpen(false);
       resetNewCandidate();
       showSnackbar("Candidate created successfully");
     } catch (error) {
-      showSnackbar("Error creating candidate", "error");
+      showSnackbar(error.response?.data?.error || "Error creating candidate", "error");
     }
   };
 
-  const handleDeleteCandidate = async (id) => {
+
+  // const handleDeleteCandidate = async (id) => {
+  //   try {
+  //     await axios.delete(`http://localhost:5002/api/applicantProfiles/${id}`);
+  //     setCandidates(candidates.filter((c) => c._id !== id));
+  //     setDeleteDialogOpen(false);
+  //     showSnackbar("Candidate deleted successfully");
+  //   } catch (error) {
+  //     showSnackbar("Error deleting candidate", "error");
+  //   }
+  // };
+ 
+const handleDeleteCandidate = async (id) => {
     try {
-      await axios.delete(`http://localhost:5002/api/applicantProfiles/${id}`);
+      const token = getAuthToken();
+      await axios.delete(`http://localhost:5002/api/applicantProfiles/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setCandidates(candidates.filter((c) => c._id !== id));
       setDeleteDialogOpen(false);
       showSnackbar("Candidate deleted successfully");
     } catch (error) {
-      showSnackbar("Error deleting candidate", "error");
+      showSnackbar(error.response?.data?.error || "Error deleting candidate", "error");
     }
   };
 
-  // // Add this function to handle input changes with validation
-  // const handleInputChange = (field, value) => {
-  //   setNewCandidate({ ...newCandidate, [field]: value });
 
-  //   if (field === "name") {
-  //     setValidationErrors({
-  //       ...validationErrors,
-  //       name: validateName(value)
-  //         ? ""
-  //         : "Name should contain only letters and be 2-30 characters long",
-  //     });
-  //   }
-
-  //   if (field === "email") {
-  //     setValidationErrors({
-  //       ...validationErrors,
-  //       email: validateEmail(value) ? "" : "Please enter a valid email address",
-  //     });
-  //   }
-
-  //   if (field === "position") {
-  //     setValidationErrors({
-  //       ...validationErrors,
-  //       position: validatePosition(value)
-  //         ? ""
-  //         : "Position should contain only letters and spaces",
-  //     });
-  //   }
-  // };
-  // Update the handleInputChange function to check for duplicates in real-time
   const handleInputChange = (field, value) => {
     setNewCandidate({ ...newCandidate, [field]: value });
-
+ 
     if (field === "name") {
       // Validate name format
       const nameError = validateName(value)
         ? ""
         : "Name should contain only letters and be 2-30 characters long";
-
+ 
       // Check for duplicate name
       const duplicateName =
         value &&
         candidates.find(
           (candidate) => candidate.name.toLowerCase() === value.toLowerCase()
         );
-
+ 
       setValidationErrors({
         ...validationErrors,
         name:
@@ -634,20 +719,20 @@ const RecruitmentCandidate = () => {
           (duplicateName ? "A candidate with this name already exists" : ""),
       });
     }
-
+ 
     if (field === "email") {
       // Validate email format
       const emailError = validateEmail(value)
         ? ""
         : "Please enter a valid email address";
-
+ 
       // Check for duplicate email
       const duplicateEmail =
         value &&
         candidates.find(
           (candidate) => candidate.email.toLowerCase() === value.toLowerCase()
         );
-
+ 
       setValidationErrors({
         ...validationErrors,
         email:
@@ -655,7 +740,7 @@ const RecruitmentCandidate = () => {
           (duplicateEmail ? "A candidate with this email already exists" : ""),
       });
     }
-
+ 
     if (field === "position") {
       setValidationErrors({
         ...validationErrors,
@@ -665,15 +750,45 @@ const RecruitmentCandidate = () => {
       });
     }
   };
+ 
 
-  const handleStatusChange = (event) => {
+
+
+  
+  // const handleStatusChange = (event) => {
+  //   const status = event.target.value;
+  //   setNewCandidate({
+  //     ...newCandidate,
+  //     status: status,
+  //     color: statusColors[status],
+  //   });
+ 
+  //   // If changing to a status that doesn't support employee selection, clear the selected employee
+  //   if (status !== "Hired") {
+  //     setSelectedEmployee(null);
+  //     setNewCandidate((prev) => ({
+  //       ...prev,
+  //       status: status,
+  //       color: statusColors[status],
+  //       employeeId: "",
+  //     }));
+  //   }
+  // };
+ 
+  // const showSnackbar = (message, severity = "success") => {
+  //   setSnackbar({ open: true, message, severity });
+  // };
+ 
+
+
+   const handleStatusChange = (event) => {
     const status = event.target.value;
     setNewCandidate({
       ...newCandidate,
       status: status,
       color: statusColors[status],
     });
-
+ 
     // If changing to a status that doesn't support employee selection, clear the selected employee
     if (status !== "Hired") {
       setSelectedEmployee(null);
@@ -685,10 +800,43 @@ const RecruitmentCandidate = () => {
       }));
     }
   };
-
+ 
   const showSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
   };
+
+
+  // const resetNewCandidate = () => {
+  //   setNewCandidate({
+  //     name: "",
+  //     email: "",
+  //     position: "",
+  //     status: "Not-Hired",
+  //     color: statusColors["Not-Hired"],
+  //     employeeId: "",
+  //   });
+  //   setSelectedEmployee(null);
+  // };
+ 
+  // const filteredCandidates = candidates.filter(
+  //   (candidate) =>
+  //     candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+  //     (filter ? candidate.status === filter : true)
+  // );
+ 
+  // const groupedCandidates = groupBy
+  //   ? filteredCandidates.reduce((groups, candidate) => {
+  //       const position = candidate.position || "Unspecified Position";
+  //       if (!groups[position]) groups[position] = [];
+  //       groups[position].push(candidate);
+  //       return groups;
+  //     }, {})
+  //   : { All: filteredCandidates };
+ 
+  // // Check if employee selection should be enabled
+  // const isEmployeeSelectionEnabled = () => {
+  //   return newCandidate.status === "Hired";
+  // };
 
   const resetNewCandidate = () => {
     setNewCandidate({
@@ -701,13 +849,13 @@ const RecruitmentCandidate = () => {
     });
     setSelectedEmployee(null);
   };
-
+ 
   const filteredCandidates = candidates.filter(
     (candidate) =>
       candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (filter ? candidate.status === filter : true)
   );
-
+ 
   const groupedCandidates = groupBy
     ? filteredCandidates.reduce((groups, candidate) => {
         const position = candidate.position || "Unspecified Position";
@@ -716,11 +864,12 @@ const RecruitmentCandidate = () => {
         return groups;
       }, {})
     : { All: filteredCandidates };
-
+ 
   // Check if employee selection should be enabled
   const isEmployeeSelectionEnabled = () => {
     return newCandidate.status === "Hired";
   };
+
 
   return (
     <Box sx={styles.container}>
@@ -728,7 +877,7 @@ const RecruitmentCandidate = () => {
         <Typography variant="h4" sx={styles.pageTitle}>
           Recruitment Candidates
         </Typography>
-
+ 
         {/* Header with search and actions */}
         <Paper elevation={0} sx={styles.headerPaper}>
           <Box
@@ -754,7 +903,7 @@ const RecruitmentCandidate = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               sx={styles.searchField}
             />
-
+ 
             {/* Action buttons for larger screens */}
             <Box sx={styles.actionButtonsContainer}>
               {/* View toggle */}
@@ -772,7 +921,7 @@ const RecruitmentCandidate = () => {
                   <GridView />
                 </ToggleButton>
               </ToggleButtonGroup>
-
+ 
               {/* Filter button */}
               <Button
                 variant="outlined"
@@ -790,7 +939,7 @@ const RecruitmentCandidate = () => {
               >
                 {filter || "All Status"}
               </Button>
-
+ 
               {/* Group button - hidden on xs screens */}
               <Button
                 variant="outlined"
@@ -803,7 +952,7 @@ const RecruitmentCandidate = () => {
               >
                 {groupBy ? "Ungroup" : "Group by Position"}
               </Button>
-
+ 
               {/* Add button - hidden on xs screens */}
               <Button
                 variant="contained"
@@ -817,7 +966,7 @@ const RecruitmentCandidate = () => {
                 Add Candidate
               </Button>
             </Box>
-
+ 
             {/* Add button - visible on xs screens mobile view */}
             <Box
               sx={{
@@ -848,7 +997,7 @@ const RecruitmentCandidate = () => {
               >
                 {groupBy ? "Ungroup" : "Group"}
               </Button>
-
+ 
               <Button
                 variant="contained"
                 //  startIcon={<Add />}
@@ -873,8 +1022,8 @@ const RecruitmentCandidate = () => {
             </Box>
           </Box>
         </Paper>
-
-        {/* Candidates grid/list */}
+ 
+  {/* Candidates grid/list */}
         {Object.entries(groupedCandidates).map(([position, candidates]) => (
           <Fade in={true} timeout={500} key={position}>
             <Box mb={4}>
@@ -884,7 +1033,7 @@ const RecruitmentCandidate = () => {
                   {position}
                 </Typography>
               )}
-
+ 
               {/* Candidates grid */}
               <Grid container spacing={{ xs: 2, sm: 2, md: 2.5, lg: 3 }}>
                 {candidates.map((candidate) => (
@@ -918,12 +1067,12 @@ const RecruitmentCandidate = () => {
                           >
                             <MoreVert sx={styles.menuButtonIcon} />
                           </IconButton>
-
+ 
                           {/* Avatar */}
                           <Avatar sx={styles.avatar}>
                             {(candidate?.name?.[0] || "U").toUpperCase()}
                           </Avatar>
-
+ 
                           {/* Card content */}
                           <Box sx={styles.cardBody}>
                             {/* Name */}
@@ -940,7 +1089,7 @@ const RecruitmentCandidate = () => {
                                 </Typography>
                               </Tooltip>
                             </Box>
-
+ 
                             {/* Employee ID if available */}
                             {candidate.employeeId && (
                               <Box sx={{ mb: 1 }}>
@@ -953,7 +1102,7 @@ const RecruitmentCandidate = () => {
                                 </Typography>
                               </Box>
                             )}
-
+ 
                             {/* Email */}
                             <Tooltip
                               title={candidate.email || "No email provided"}
@@ -963,7 +1112,7 @@ const RecruitmentCandidate = () => {
                                 {candidate.email || "No email provided"}
                               </Typography>
                             </Tooltip>
-
+ 
                             {/* Position */}
                             <Tooltip
                               title={
@@ -975,7 +1124,7 @@ const RecruitmentCandidate = () => {
                                 {candidate.position || "No position specified"}
                               </Typography>
                             </Tooltip>
-
+ 
                             {/* Status chip */}
                             <Box sx={styles.statusChipContainer}>
                               <Chip
@@ -1015,7 +1164,7 @@ const RecruitmentCandidate = () => {
             <Typography color="#ef4444">Delete</Typography>
           </MenuItem>
         </Menu>
-
+ 
         {/* Delete confirmation dialog */}
         <Dialog
           open={deleteDialogOpen}
@@ -1125,7 +1274,7 @@ const RecruitmentCandidate = () => {
                 helperText={validationErrors.position}
                 sx={styles.formField}
               />
-
+ 
               <FormControl fullWidth sx={styles.formField}>
                 <InputLabel>Status</InputLabel>
                 <Select
@@ -1137,7 +1286,7 @@ const RecruitmentCandidate = () => {
                   <MenuItem value="Not-Hired">Not Hired</MenuItem>
                 </Select>
               </FormControl>
-
+ 
               {/* Employee Selection Autocomplete - only enabled for Hired status */}
               <Autocomplete
                 id="employee-select"
@@ -1221,7 +1370,7 @@ const RecruitmentCandidate = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
+ 
         {/* Snackbar for notifications */}
         <Snackbar
           open={snackbar.open}
@@ -1242,5 +1391,5 @@ const RecruitmentCandidate = () => {
     </Box>
   );
 };
-
+ 
 export default RecruitmentCandidate;
