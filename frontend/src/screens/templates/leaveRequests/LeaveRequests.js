@@ -105,10 +105,101 @@ const LeaveRequests = () => {
     fetchLeaveRequests();
   }, []);
 
+  // Add this helper function to get the auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
+//   const fetchLeaveRequests = async () => {
+//     try {
+//       setLoading(true);
+//       const response = await axios.get(API_URL);
+
+//       // Get current date
+//       const currentDate = new Date();
+
+//       // Filter out leave requests that are older than 30 days after their end date
+//       // and have been either approved or rejected
+//       const filteredLeaveData = response.data.filter((leave) => {
+//         const endDate = new Date(leave.endDate);
+//         const daysSinceEnd = Math.floor(
+//           (currentDate - endDate) / (1000 * 60 * 60 * 24)
+//         );
+
+//         // Keep requests if they are:
+//         // 1. Still pending, OR
+//         // 2. Less than 30 days old after end date
+//         return leave.status === "pending" || daysSinceEnd < 30;
+//       });
+
+//       setLeaveData(filteredLeaveData);
+//       setLoading(false);
+//     } catch (error) {
+//       console.error("Error fetching leave requests:", error);
+//       showSnackbar("Error fetching leave requests", "error");
+//       setLoading(false);
+//     }
+//   };
+
+// const handleApproveRequest = async (id) => {
+//   try {
+//     setLoading(true);
+//     const response = await axios.put(`${API_URL}/${id}/approve`);
+
+//     // Get the leave request data from the response
+//     const approvedLeave = response.data;
+
+//     // Update the local state with the updated leave request
+//     setLeaveData(
+//       leaveData.map((leave) => (leave._id === id ? approvedLeave : leave))
+//     );
+
+//     // Add a notification for the employee
+//     // Make sure all these fields exist in your response data
+//     if (approvedLeave) {
+//       console.log("Adding notification for approved leave:", approvedLeave);
+      
+//       // Get the employee name from the response
+//       const employeeName = approvedLeave.employeeName || "Employee";
+      
+//       // Get the leave type
+//       const leaveType = approvedLeave.leaveType || "leave";
+      
+//       // Get the dates
+//       const startDate = approvedLeave.startDate;
+//       const endDate = approvedLeave.endDate;
+      
+//       // Add the notification
+//       addLeaveRequestNotification(
+//         employeeName,
+//         "approved",
+//         leaveType,
+//         startDate,
+//         endDate,
+//         approvedLeave.employeeId 
+//       );
+//     }
+
+//     showSnackbar("Leave request approved successfully");
+//   } catch (error) {
+//     console.error("Error approving leave request:", error);
+//     showSnackbar("Error approving leave request", "error");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+// Update the fetchLeaveRequests function
   const fetchLeaveRequests = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(API_URL);
+      const token = getAuthToken();
+      
+      const response = await axios.get(API_URL, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
       // Get current date
       const currentDate = new Date();
@@ -135,84 +226,65 @@ const LeaveRequests = () => {
       setLoading(false);
     }
   };
-// // Then in your handleApproveRequest function:
-// const handleApproveRequest = async (id) => {
-//   try {
-//     setLoading(true);
-//     const response = await axios.put(`${API_URL}/${id}/approve`);
 
-//     // Get the leave request data from the response
-//     const approvedLeave = response.data;
-
-//     // Update the local state with the updated leave request
-//     setLeaveData(
-//       leaveData.map((leave) => (leave._id === id ? approvedLeave : leave))
-//     );
-
-//     // Add notification logic here
-
-//     showSnackbar("Leave request approved successfully");
-//   } catch (error) {
-//     console.error("Error approving leave request:", error);
-//     if (error.response) {
-//       console.error("Error response data:", error.response.data);
-//       console.error("Error response status:", error.response.status);
-//     }
-//     showSnackbar("Error approving leave request", "error");
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-
-// Update the handleApproveRequest function
-const handleApproveRequest = async (id) => {
-  try {
-    setLoading(true);
-    const response = await axios.put(`${API_URL}/${id}/approve`);
-
-    // Get the leave request data from the response
-    const approvedLeave = response.data;
-
-    // Update the local state with the updated leave request
-    setLeaveData(
-      leaveData.map((leave) => (leave._id === id ? approvedLeave : leave))
-    );
-
-    // Add a notification for the employee
-    // Make sure all these fields exist in your response data
-    if (approvedLeave) {
-      console.log("Adding notification for approved leave:", approvedLeave);
+  // Update the handleApproveRequest function
+  const handleApproveRequest = async (id) => {
+    try {
+      setLoading(true);
+      const token = getAuthToken();
       
-      // Get the employee name from the response
-      const employeeName = approvedLeave.employeeName || "Employee";
-      
-      // Get the leave type
-      const leaveType = approvedLeave.leaveType || "leave";
-      
-      // Get the dates
-      const startDate = approvedLeave.startDate;
-      const endDate = approvedLeave.endDate;
-      
-      // Add the notification
-      addLeaveRequestNotification(
-        employeeName,
-        "approved",
-        leaveType,
-        startDate,
-        endDate,
-        approvedLeave.employeeId 
+      const response = await axios.put(
+        `${API_URL}/${id}/approve`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
-    }
 
-    showSnackbar("Leave request approved successfully");
-  } catch (error) {
-    console.error("Error approving leave request:", error);
-    showSnackbar("Error approving leave request", "error");
-  } finally {
-    setLoading(false);
-  }
-};
+      // Get the leave request data from the response
+      const approvedLeave = response.data;
+
+      // Update the local state with the updated leave request
+      setLeaveData(
+        leaveData.map((leave) => (leave._id === id ? approvedLeave : leave))
+      );
+
+      // Add a notification for the employee
+      // Make sure all these fields exist in your response data
+      if (approvedLeave) {
+        console.log("Adding notification for approved leave:", approvedLeave);
+        
+        // Get the employee name from the response
+        const employeeName = approvedLeave.employeeName || "Employee";
+        
+        // Get the leave type
+        const leaveType = approvedLeave.leaveType || "leave";
+        
+        // Get the dates
+        const startDate = approvedLeave.startDate;
+        const endDate = approvedLeave.endDate;
+        
+        // Add the notification
+        addLeaveRequestNotification(
+          employeeName,
+          "approved",
+          leaveType,
+          startDate,
+          endDate,
+          approvedLeave.employeeId 
+        );
+      }
+
+      showSnackbar("Leave request approved successfully");
+    } catch (error) {
+      console.error("Error approving leave request:", error);
+      showSnackbar("Error approving leave request", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenRejectDialog = (id) => {
     setSelectedLeaveId(id);
@@ -220,7 +292,7 @@ const handleApproveRequest = async (id) => {
     setIsRejectDialogOpen(true);
   };
 
-//  // And in your handleRejectRequest function:
+
 // const handleRejectRequest = async () => {
 //   if (!rejectionReason.trim()) {
 //     showSnackbar("Rejection reason is required", "error");
@@ -243,79 +315,116 @@ const handleApproveRequest = async (id) => {
 //       )
 //     );
 
-//     // Add notification logic here
+//     // Add a notification for the employee
+//     if (rejectedLeave) {
+//       console.log("Adding notification for rejected leave:", rejectedLeave);
+      
+//       // Get the employee name from the response
+//       const employeeName = rejectedLeave.employeeName || "Employee";
+      
+//       // Get the leave type
+//       const leaveType = rejectedLeave.leaveType || "leave";
+      
+//       // Get the dates
+//       const startDate = rejectedLeave.startDate;
+//       const endDate = rejectedLeave.endDate;
+      
+//       // Add the notification
+//       addLeaveRequestNotification(
+//         employeeName,
+//         "rejected",
+//         leaveType,
+//         startDate,
+//         endDate
+//       );
+//     }
 
 //     setIsRejectDialogOpen(false);
 //     showSnackbar("Leave request rejected successfully");
 //   } catch (error) {
 //     console.error("Error rejecting leave request:", error);
-//     if (error.response) {
-//       console.error("Error response data:", error.response.data);
-//       console.error("Error response status:", error.response.status);
-//     }
 //     showSnackbar("Error rejecting leave request", "error");
 //   } finally {
 //     setLoading(false);
 //   }
 // };
 
-// Update the handleRejectRequest function
-const handleRejectRequest = async () => {
-  if (!rejectionReason.trim()) {
-    showSnackbar("Rejection reason is required", "error");
-    return;
-  }
+// Update the handleApproveRequest function
 
-  try {
-    setLoading(true);
-    const response = await axios.put(`${API_URL}/${selectedLeaveId}/reject`, {
-      rejectionReason,
-    });
-
-    // Get the leave request data from the response
-    const rejectedLeave = response.data;
-
-    // Update the local state with the updated leave request
-    setLeaveData(
-      leaveData.map((leave) =>
-        leave._id === selectedLeaveId ? rejectedLeave : leave
-      )
-    );
-
-    // Add a notification for the employee
-    if (rejectedLeave) {
-      console.log("Adding notification for rejected leave:", rejectedLeave);
-      
-      // Get the employee name from the response
-      const employeeName = rejectedLeave.employeeName || "Employee";
-      
-      // Get the leave type
-      const leaveType = rejectedLeave.leaveType || "leave";
-      
-      // Get the dates
-      const startDate = rejectedLeave.startDate;
-      const endDate = rejectedLeave.endDate;
-      
-      // Add the notification
-      addLeaveRequestNotification(
-        employeeName,
-        "rejected",
-        leaveType,
-        startDate,
-        endDate
-      );
+ // Update the handleRejectRequest function
+  const handleRejectRequest = async () => {
+    if (!rejectionReason.trim()) {
+      showSnackbar("Rejection reason is required", "error");
+      return;
     }
 
-    setIsRejectDialogOpen(false);
-    showSnackbar("Leave request rejected successfully");
-  } catch (error) {
-    console.error("Error rejecting leave request:", error);
-    showSnackbar("Error rejecting leave request", "error");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      const token = getAuthToken();
+      
+      const response = await axios.put(
+        `${API_URL}/${selectedLeaveId}/reject`,
+        { rejectionReason },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
+      // Get the leave request data from the response
+      const rejectedLeave = response.data;
+
+      // Update the local state with the updated leave request
+      setLeaveData(
+        leaveData.map((leave) =>
+          leave._id === selectedLeaveId ? rejectedLeave : leave
+        )
+      );
+
+      // Add a notification for the employee
+      if (rejectedLeave) {
+        console.log("Adding notification for rejected leave:", rejectedLeave);
+        
+        // Get the employee name from the response
+        const employeeName = rejectedLeave.employeeName || "Employee";
+        
+        // Get the leave type
+        const leaveType = rejectedLeave.leaveType || "leave";
+        
+        // Get the dates
+        const startDate = rejectedLeave.startDate;
+        const endDate = rejectedLeave.endDate;
+        
+        // Add the notification
+        addLeaveRequestNotification(
+          employeeName,
+          "rejected",
+          leaveType,
+          startDate,
+          endDate,
+          rejectedLeave.employeeId
+        );
+      }
+
+      setIsRejectDialogOpen(false);
+      showSnackbar("Leave request rejected successfully");
+    } catch (error) {
+      console.error("Error rejecting leave request:", error);
+      showSnackbar("Error rejecting leave request", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // const handleOpenCommentDialog = (leaveId) => {
+  //   const leave = leaveData.find((l) => l._id === leaveId);
+  //   setSelectedLeaveId(leaveId);
+  //   setNewComment(leave.comment || "");
+  //   setIsCommentDialogOpen(true);
+  // };
+
+ // Update the handleOpenCommentDialog function
   const handleOpenCommentDialog = (leaveId) => {
     const leave = leaveData.find((l) => l._id === leaveId);
     setSelectedLeaveId(leaveId);
@@ -329,13 +438,47 @@ const handleRejectRequest = async () => {
     setNewComment("");
   };
 
+  // const handleSaveComment = async () => {
+  //   try {
+  //     setLoading(true);
+  //     // Add a comment endpoint to your backend if needed
+  //     const response = await axios.put(`${API_URL}/${selectedLeaveId}`, {
+  //       comment: newComment,
+  //     });
+
+  //     // Update the local state with the updated leave request
+  //     setLeaveData(
+  //       leaveData.map((leave) =>
+  //         leave._id === selectedLeaveId ? response.data : leave
+  //       )
+  //     );
+
+  //     handleCloseCommentDialog();
+  //     showSnackbar("Comment updated successfully");
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error updating comment:", error);
+  //     showSnackbar("Error updating comment", "error");
+  //     setLoading(false);
+  //   }
+  // };
+
+ // Update the handleSaveComment function
   const handleSaveComment = async () => {
     try {
       setLoading(true);
+      const token = getAuthToken();
+      
       // Add a comment endpoint to your backend if needed
-      const response = await axios.put(`${API_URL}/${selectedLeaveId}`, {
-        comment: newComment,
-      });
+      const response = await axios.put(
+        `${API_URL}/${selectedLeaveId}`,
+        { comment: newComment },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
       // Update the local state with the updated leave request
       setLeaveData(
@@ -359,14 +502,50 @@ const handleRejectRequest = async () => {
     setIsDeleteDialogOpen(true);
   };
 
+  // const handleDeleteRequest = async (id) => {
+  //   try {
+  //     setLoading(true);
+  //     // Instead of deleting, update the status to "cancelled" or similar
+  //     await axios.put(`${API_URL}/${id}`, {
+  //       status: "cancelled",
+  //       comment: "Cancelled by HR",
+  //     });
+
+  //     // Update the local state
+  //     setLeaveData(
+  //       leaveData.map((leave) =>
+  //         leave._id === id ? { ...leave, status: "cancelled" } : leave
+  //       )
+  //     );
+
+  //     showSnackbar("Leave request cancelled successfully");
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error cancelling leave request:", error);
+  //     showSnackbar("Error cancelling leave request", "error");
+  //     setLoading(false);
+  //   }
+  // };
+
+// Update the handleDeleteRequest function
   const handleDeleteRequest = async (id) => {
     try {
       setLoading(true);
+      const token = getAuthToken();
+      
       // Instead of deleting, update the status to "cancelled" or similar
-      await axios.put(`${API_URL}/${id}`, {
-        status: "cancelled",
-        comment: "Cancelled by HR",
-      });
+      await axios.put(
+        `${API_URL}/${id}`,
+        {
+          status: "cancelled",
+          comment: "Cancelled by HR"
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
       // Update the local state
       setLeaveData(
@@ -384,6 +563,15 @@ const handleRejectRequest = async () => {
     }
   };
 
+  // const handleConfirmDelete = async () => {
+  //   if (!leaveToDelete) return;
+
+  //   await handleDeleteRequest(leaveToDelete);
+  //   setIsDeleteDialogOpen(false);
+  //   setLeaveToDelete(null);
+  // };
+
+// Update the handleConfirmDelete function
   const handleConfirmDelete = async () => {
     if (!leaveToDelete) return;
 

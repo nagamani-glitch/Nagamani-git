@@ -1,3 +1,36 @@
+// import mongoose from 'mongoose';
+ 
+// const timesheetSchema = new mongoose.Schema({
+//   employeeId: {
+//     type: String,
+//     required: true
+//   },
+//   employeeName: {
+//     type: String,
+//     required: true
+//   },
+//   checkInTime: {
+//     type: Date,
+//     required: true
+//   },
+//   checkOutTime: {
+//     type: Date
+//   },
+//   duration: {
+//     type: Number,
+//     default: 0
+//   },
+//   status: {
+//     type: String,
+//     enum: ['active', 'completed'],
+//     default: 'active'
+//   }
+// }, {
+//   timestamps: true
+// });
+ 
+// export default mongoose.model('Timesheet', timesheetSchema);
+
 import mongoose from 'mongoose';
  
 const timesheetSchema = new mongoose.Schema({
@@ -28,5 +61,12 @@ const timesheetSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
- 
-export default mongoose.model('Timesheet', timesheetSchema);
+
+// Create model for Timesheet in the main database (for backward compatibility)
+const Timesheet = mongoose.model('Timesheet', timesheetSchema);
+
+// Export the schema for company-specific models
+export { timesheetSchema };
+
+// Export the main model as default
+export default Timesheet;

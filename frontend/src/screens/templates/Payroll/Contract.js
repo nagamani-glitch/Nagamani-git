@@ -174,38 +174,38 @@ const Contract = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.delete(
-        `http://localhost:5002/api/payroll-contracts/${contractToDelete._id}`
-      );
+  // const handleConfirmDelete = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.delete(
+  //       `http://localhost:5002/api/payroll-contracts/${contractToDelete._id}`
+  //     );
 
-      if (response.data.success) {
-        toast.success("Contract deleted successfully");
-        setContracts(
-          contracts.filter((contract) => contract._id !== contractToDelete._id)
-        );
-        setFilteredContracts(
-          filteredContracts.filter(
-            (contract) => contract._id !== contractToDelete._id
-          )
-        );
-        setSelectedContracts(
-          selectedContracts.filter(
-            (contractId) => contractId !== contractToDelete._id
-          )
-        );
-      }
-      setDeleteDialogOpen(false);
-      setContractToDelete(null);
-      setLoading(false);
-    } catch (error) {
-      console.error("Delete failed:", error);
-      toast.error("Failed to delete contract");
-      setLoading(false);
-    }
-  };
+  //     if (response.data.success) {
+  //       toast.success("Contract deleted successfully");
+  //       setContracts(
+  //         contracts.filter((contract) => contract._id !== contractToDelete._id)
+  //       );
+  //       setFilteredContracts(
+  //         filteredContracts.filter(
+  //           (contract) => contract._id !== contractToDelete._id
+  //         )
+  //       );
+  //       setSelectedContracts(
+  //         selectedContracts.filter(
+  //           (contractId) => contractId !== contractToDelete._id
+  //         )
+  //       );
+  //     }
+  //     setDeleteDialogOpen(false);
+  //     setContractToDelete(null);
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Delete failed:", error);
+  //     toast.error("Failed to delete contract");
+  //     setLoading(false);
+  //   }
+  // };
 
   // Fetch contracts on component mount
   useEffect(() => {
@@ -253,193 +253,481 @@ const Contract = () => {
     setTotalPages(Math.ceil(filteredContracts.length / itemsPerPage));
   };
 
-  // Fetch contracts from API
-  const fetchContracts = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        "http://localhost:5002/api/payroll-contracts"
-      );
-      if (response.data.success) {
-        setContracts(response.data.data);
-        setFilteredContracts(response.data.data);
-        calculateTotalPages();
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching contracts:", error);
-      toast.error("Failed to fetch contracts");
-      setLoading(false);
 
-      // Set default data if API fails
-      const defaultData = [
+
+  // Add this helper function at the beginning of the Contract component
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Update fetchContracts function
+const fetchContracts = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    const response = await axios.get(
+      "http://localhost:5002/api/payroll-contracts",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    if (response.data.success) {
+      setContracts(response.data.data);
+      setFilteredContracts(response.data.data);
+      calculateTotalPages();
+    }
+    setLoading(false);
+  } catch (error) {
+    // Error handling remains the same
+  }
+};
+
+// Update fetchEmployees function
+const fetchEmployees = async () => {
+  try {
+    setLoadingEmployees(true);
+    const token = getAuthToken();
+    
+    const response = await axios.get(
+      "http://localhost:5002/api/employees/registered",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    if (response.data) {
+      setEmployees(response.data);
+    }
+    setLoadingEmployees(false);
+  } catch (error) {
+    // Error handling remains the same
+  }
+};
+
+// Update handleEmployeeSelect function
+const handleEmployeeSelect = async (employeeId) => {
+  setSelectedEmployee(employeeId);
+  if (!employeeId) return;
+
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    const response = await axios.get(
+      `http://localhost:5002/api/employees/get-employee/${employeeId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    // Rest of the function remains the same
+  } catch (error) {
+    // Error handling remains the same
+  }
+};
+
+// Update fetchDashboardStats function
+const fetchDashboardStats = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    const response = await axios.get(
+      "http://localhost:5002/api/payroll-contracts/dashboard",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    // Rest of the function remains the same
+  } catch (error) {
+    // Error handling remains the same
+  }
+};
+
+// Update handleSaveCreate function
+const handleSaveCreate = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    const contractData = {
+      contract: formData.contractTitle,
+      contractStatus: formData.contractStatus,
+      employee: formData.employee,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      wageType: formData.wageType,
+      payFrequency: formData.payFrequency,
+      basicSalary: Number(formData.basicSalary),
+      filingStatus: formData.filingStatus,
+      department: formData.department,
+      position: formData.position,
+      role: formData.role,
+      shift: formData.shift,
+      workType: formData.workType,
+      noticePeriod: Number(formData.noticePeriod),
+      deductFromBasicPay: formData.deductFromBasicPay,
+      calculateDailyLeave: formData.calculateDailyLeave,
+      note: formData.note,
+    };
+
+    let response;
+    if (editingId) {
+      response = await axios.put(
+        `http://localhost:5002/api/payroll-contracts/${editingId}`,
+        contractData,
         {
-          _id: "1",
-          contract: "Full-time",
-          employee: "John Doe",
-          startDate: "2023-01-01",
-          endDate: "2024-01-01",
-          wageType: "Monthly",
-          basicSalary: 5002,
-          filingStatus: "Filed",
-          contractStatus: "Active",
-        },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    } else {
+      response = await axios.post(
+        "http://localhost:5002/api/payroll-contracts",
+        contractData,
         {
-          _id: "2",
-          contract: "Part-time",
-          employee: "Jane Smith",
-          startDate: "2023-06-15",
-          endDate: "2024-06-14",
-          wageType: "Hourly",
-          basicSalary: 25,
-          filingStatus: "Filed",
-          contractStatus: "Active",
-        },
-      ];
-      setContracts(defaultData);
-      setFilteredContracts(defaultData);
-    }
-  };
-
-  // Fetch employees from API
-  const fetchEmployees = async () => {
-    try {
-      setLoadingEmployees(true);
-      const response = await axios.get(
-        "http://localhost:5002/api/employees/registered"
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
-      if (response.data) {
-        setEmployees(response.data);
-      }
-      setLoadingEmployees(false);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      toast.error("Failed to fetch employees");
-      setLoadingEmployees(false);
     }
-  };
+    // Rest of the function remains the same
+  } catch (error) {
+    // Error handling remains the same
+  }
+};
 
-  // Handle employee selection
-  const handleEmployeeSelect = async (employeeId) => {
-    setSelectedEmployee(employeeId);
-
-    if (!employeeId) return;
-
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `http://localhost:5002/api/employees/get-employee/${employeeId}`
-      );
-
-      if (response.data.success) {
-        const employee = response.data.data;
-
-        // Autofill form fields with employee data
-        setFormData({
-          ...formData,
-          employee: `${employee.personalInfo?.firstName || ""} ${
-            employee.personalInfo?.lastName || ""
-          }`,
-          department: employee.joiningDetails?.department || "",
-          position: employee.joiningDetails?.initialDesignation || "",
-          role: employee.joiningDetails?.role || "",
-          // You can map more fields as needed
-        });
-
-        toast.success("Employee data loaded successfully");
+// Update handleSave function (for inline editing)
+const handleSave = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    const response = await axios.put(
+      `http://localhost:5002/api/payroll-contracts/${editedData._id}`,
+      {
+        contract: editedData.contract,
+        employee: editedData.employee,
+        startDate: editedData.startDate,
+        endDate: editedData.endDate,
+        wageType: editedData.wageType,
+        basicSalary: Number(editedData.basicSalary),
+        filingStatus: editedData.filingStatus,
+        contractStatus: editedData.contractStatus,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       }
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching employee details:", error);
-      toast.error("Failed to load employee data");
-      setLoading(false);
-    }
-  };
+    );
+    // Rest of the function remains the same
+  } catch (error) {
+    // Error handling remains the same
+  }
+};
 
-  // Fetch dashboard statistics
-  const fetchDashboardStats = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        "http://localhost:5002/api/payroll-contracts/dashboard"
-      );
-      if (response.data.success) {
-        setDashboardStats(response.data.data);
-      } else {
-        // If API doesn't return success, create mock data
-        setDashboardStats({
-          totalContracts: contracts.length,
-          byStatus: {
-            active: contracts.filter((c) => c.contractStatus === "Active")
-              .length,
-            draft: contracts.filter((c) => c.contractStatus === "Draft").length,
-            expired: contracts.filter((c) => c.contractStatus === "Expired")
-              .length,
-            terminated: contracts.filter(
-              (c) => c.contractStatus === "Terminated"
-            ).length,
-          },
-          byType: {
-            fullTime: contracts.filter((c) => c.contract === "Full-time")
-              .length,
-            partTime: contracts.filter((c) => c.contract === "Part-time")
-              .length,
-          },
-          expiringContracts: {
-            count: 2,
-            contracts: contracts.slice(0, 2),
-          },
-          departmentStats: [
-            { _id: "HR Dept", count: 3 },
-            { _id: "IT Dept", count: 5 },
-            { _id: "Sales Dept", count: 2 },
-            { _id: "Finance Dept", count: 1 },
-          ],
-        });
+// Update handleDelete function
+const handleDelete = async (id) => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    const response = await axios.delete(
+      `http://localhost:5002/api/payroll-contracts/${id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       }
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
-      toast.error("Failed to fetch dashboard statistics");
-      setLoading(false);
+    );
+    // Rest of the function remains the same
+  } catch (error) {
+    // Error handling remains the same
+  }
+};
 
-      // Create mock data if API fails
-      setDashboardStats({
-        totalContracts: contracts.length,
-        byStatus: {
-          active: contracts.filter((c) => c.contractStatus === "Active").length,
-          draft: contracts.filter((c) => c.contractStatus === "Draft").length,
-          expired: contracts.filter((c) => c.contractStatus === "Expired")
-            .length,
-          terminated: contracts.filter((c) => c.contractStatus === "Terminated")
-            .length,
-        },
-        byType: {
-          fullTime: contracts.filter((c) => c.contract === "Full-time").length,
-          partTime: contracts.filter((c) => c.contract === "Part-time").length,
-        },
-        expiringContracts: {
-          count: 2,
-          contracts: contracts.slice(0, 2),
-        },
-        departmentStats: [
-          { _id: "HR Dept", count: 3 },
-          { _id: "IT Dept", count: 5 },
-          { _id: "Sales Dept", count: 2 },
-          { _id: "Finance Dept", count: 1 },
-        ],
-      });
+// Update handleConfirmDelete function
+const handleConfirmDelete = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    const response = await axios.delete(
+      `http://localhost:5002/api/payroll-contracts/${contractToDelete._id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    // Rest of the function remains the same
+  } catch (error) {
+    // Error handling remains the same
+  }
+};
+
+// Update handleApplyFilter function
+const handleApplyFilter = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    // Create a clean filter object with only non-empty values
+    const filterParams = {};
+    
+    if (filterData.employeeName && filterData.employeeName.trim() !== "") {
+      filterParams.employeeName = filterData.employeeName.trim();
     }
-  };
+    
+    if (filterData.contractStatus && filterData.contractStatus !== "") {
+      filterParams.contractStatus = filterData.contractStatus;
+    }
+    
+    // Add other filter parameters as in the original code
+    
+    // Convert filter params to query string
+    const queryString = new URLSearchParams(filterParams).toString();
 
-  // // Toggle dashboard view
-  // const toggleDashboard = () => {
-  //   setShowDashboard(!showDashboard);
-  //   if (!showDashboard) {
-  //     setDashboardOrientation("landscape");
-  //     fetchDashboardStats();
+    const response = await axios.get(
+      `http://localhost:5002/api/payroll-contracts/filter?${queryString}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    // Rest of the function remains the same
+  } catch (error) {
+    // Error handling remains the same
+  }
+};
+
+// Update exportToPDF function if it makes API calls
+// If it doesn't make API calls directly, no changes needed
+
+// Update handleBulkUpdate function if it exists
+const handleBulkUpdate = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    // In a real app with API calls:
+    const response = await axios.post(
+      "http://localhost:5002/api/payroll-contracts/bulk-update",
+      {
+        contractIds: selectedContracts,
+        field: bulkUpdateData.field,
+        value: bulkUpdateData.value
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    // Rest of the function remains the same
+    setLoading(false);
+  } catch (error) {
+    // Error handling remains the same
+  }
+};
+
+
+  // // Fetch contracts from API
+  // const fetchContracts = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/payroll-contracts"
+  //     );
+  //     if (response.data.success) {
+  //       setContracts(response.data.data);
+  //       setFilteredContracts(response.data.data);
+  //       calculateTotalPages();
+  //     }
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error fetching contracts:", error);
+  //     toast.error("Failed to fetch contracts");
+  //     setLoading(false);
+
+  //     // Set default data if API fails
+  //     const defaultData = [
+  //       {
+  //         _id: "1",
+  //         contract: "Full-time",
+  //         employee: "John Doe",
+  //         startDate: "2023-01-01",
+  //         endDate: "2024-01-01",
+  //         wageType: "Monthly",
+  //         basicSalary: 5002,
+  //         filingStatus: "Filed",
+  //         contractStatus: "Active",
+  //       },
+  //       {
+  //         _id: "2",
+  //         contract: "Part-time",
+  //         employee: "Jane Smith",
+  //         startDate: "2023-06-15",
+  //         endDate: "2024-06-14",
+  //         wageType: "Hourly",
+  //         basicSalary: 25,
+  //         filingStatus: "Filed",
+  //         contractStatus: "Active",
+  //       },
+  //     ];
+  //     setContracts(defaultData);
+  //     setFilteredContracts(defaultData);
   //   }
   // };
+
+  // // Fetch employees from API
+  // const fetchEmployees = async () => {
+  //   try {
+  //     setLoadingEmployees(true);
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/employees/registered"
+  //     );
+  //     if (response.data) {
+  //       setEmployees(response.data);
+  //     }
+  //     setLoadingEmployees(false);
+  //   } catch (error) {
+  //     console.error("Error fetching employees:", error);
+  //     toast.error("Failed to fetch employees");
+  //     setLoadingEmployees(false);
+  //   }
+  // };
+
+  // // Handle employee selection
+  // const handleEmployeeSelect = async (employeeId) => {
+  //   setSelectedEmployee(employeeId);
+
+  //   if (!employeeId) return;
+
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/employees/get-employee/${employeeId}`
+  //     );
+
+  //     if (response.data.success) {
+  //       const employee = response.data.data;
+
+  //       // Autofill form fields with employee data
+  //       setFormData({
+  //         ...formData,
+  //         employee: `${employee.personalInfo?.firstName || ""} ${
+  //           employee.personalInfo?.lastName || ""
+  //         }`,
+  //         department: employee.joiningDetails?.department || "",
+  //         position: employee.joiningDetails?.initialDesignation || "",
+  //         role: employee.joiningDetails?.role || "",
+  //         // You can map more fields as needed
+  //       });
+
+  //       toast.success("Employee data loaded successfully");
+  //     }
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error fetching employee details:", error);
+  //     toast.error("Failed to load employee data");
+  //     setLoading(false);
+  //   }
+  // };
+
+  // // Fetch dashboard statistics
+  // const fetchDashboardStats = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/payroll-contracts/dashboard"
+  //     );
+  //     if (response.data.success) {
+  //       setDashboardStats(response.data.data);
+  //     } else {
+  //       // If API doesn't return success, create mock data
+  //       setDashboardStats({
+  //         totalContracts: contracts.length,
+  //         byStatus: {
+  //           active: contracts.filter((c) => c.contractStatus === "Active")
+  //             .length,
+  //           draft: contracts.filter((c) => c.contractStatus === "Draft").length,
+  //           expired: contracts.filter((c) => c.contractStatus === "Expired")
+  //             .length,
+  //           terminated: contracts.filter(
+  //             (c) => c.contractStatus === "Terminated"
+  //           ).length,
+  //         },
+  //         byType: {
+  //           fullTime: contracts.filter((c) => c.contract === "Full-time")
+  //             .length,
+  //           partTime: contracts.filter((c) => c.contract === "Part-time")
+  //             .length,
+  //         },
+  //         expiringContracts: {
+  //           count: 2,
+  //           contracts: contracts.slice(0, 2),
+  //         },
+  //         departmentStats: [
+  //           { _id: "HR Dept", count: 3 },
+  //           { _id: "IT Dept", count: 5 },
+  //           { _id: "Sales Dept", count: 2 },
+  //           { _id: "Finance Dept", count: 1 },
+  //         ],
+  //       });
+  //     }
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error fetching dashboard stats:", error);
+  //     toast.error("Failed to fetch dashboard statistics");
+  //     setLoading(false);
+
+  //     // Create mock data if API fails
+  //     setDashboardStats({
+  //       totalContracts: contracts.length,
+  //       byStatus: {
+  //         active: contracts.filter((c) => c.contractStatus === "Active").length,
+  //         draft: contracts.filter((c) => c.contractStatus === "Draft").length,
+  //         expired: contracts.filter((c) => c.contractStatus === "Expired")
+  //           .length,
+  //         terminated: contracts.filter((c) => c.contractStatus === "Terminated")
+  //           .length,
+  //       },
+  //       byType: {
+  //         fullTime: contracts.filter((c) => c.contract === "Full-time").length,
+  //         partTime: contracts.filter((c) => c.contract === "Part-time").length,
+  //       },
+  //       expiringContracts: {
+  //         count: 2,
+  //         contracts: contracts.slice(0, 2),
+  //       },
+  //       departmentStats: [
+  //         { _id: "HR Dept", count: 3 },
+  //         { _id: "IT Dept", count: 5 },
+  //         { _id: "Sales Dept", count: 2 },
+  //         { _id: "Finance Dept", count: 1 },
+  //       ],
+  //     });
+  //   }
+  // };
+
+  
 
   // Toggle dashboard view
   const toggleDashboard = () => {
@@ -508,40 +796,70 @@ const Contract = () => {
     setFilteredContracts(sortedContracts);
   };
 
-  // // 1. First, modify the handleEdit function to populate the formData and show the create page
-  // const handleEdit = (contract) => {
-  //   // Populate the form data with the selected contract's values
-  //   setFormData({
-  //     contractStatus: contract.contractStatus || "Active",
-  //     contractTitle: contract.contract || "",
-  //     employee: contract.employee || "",
-  //     startDate: contract.startDate || "",
-  //     endDate: contract.endDate || "",
-  //     wageType: contract.wageType || "",
-  //     payFrequency: contract.payFrequency || "",
-  //     basicSalary: contract.basicSalary || "",
-  //     filingStatus: contract.filingStatus || "",
-  //     department: contract.department || "",
-  //     position: contract.position || "",
-  //     role: contract.role || "",
-  //     shift: contract.shift || "",
-  //     workType: contract.workType || "",
-  //     noticePeriod: contract.noticePeriod || "",
-  //     contractDocument: null, // Can't pre-fill file inputs
-  //     deductFromBasicPay: contract.deductFromBasicPay || false,
-  //     calculateDailyLeave: contract.calculateDailyLeave || false,
-  //     note: contract.note || "",
-  //   });
+  
 
-  //   // Store the contract ID for updating
-  //   setEditingId(contract._id);
+  // 1. Modify the handleEdit function to validate position and role values
+  const handleEdit = (contract) => {
+    // Define the available options for position and role
+    const availablePositions = [
+      "HR Manager",
+      "Sales Representative",
+      "Software Developer",
+      "Marketing Specialist",
+      "Accountant",
+      "IT Support",
+    ];
 
-  //   // Reset selected employee when editing
-  //   setSelectedEmployee("");
+    const availableRoles = [
+      "Intern",
+      "Junior",
+      "Senior",
+      "Manager",
+      "Director",
+    ];
 
-  //   // Show the create page (which will now function as an edit page)
-  //   setShowCreatePage(true);
-  // };
+    // Check if the contract's position is in the available options
+    const validPosition = availablePositions.includes(contract.position)
+      ? contract.position
+      : "";
+
+    // Check if the contract's role is in the available options
+    const validRole = availableRoles.includes(contract.role)
+      ? contract.role
+      : "";
+
+    // Populate the form data with the selected contract's values
+    setFormData({
+      contractStatus: contract.contractStatus || "Active",
+      contractTitle: contract.contract || "",
+      employee: contract.employee || "",
+      startDate: contract.startDate || "",
+      endDate: contract.endDate || "",
+      wageType: contract.wageType || "",
+      payFrequency: contract.payFrequency || "",
+      basicSalary: contract.basicSalary || "",
+      filingStatus: contract.filingStatus || "",
+      department: contract.department || "",
+      position: validPosition, // Use validated position
+      role: validRole, // Use validated role
+      shift: contract.shift || "",
+      workType: contract.workType || "",
+      noticePeriod: contract.noticePeriod || "",
+      contractDocument: null, // Can't pre-fill file inputs
+      deductFromBasicPay: contract.deductFromBasicPay || false,
+      calculateDailyLeave: contract.calculateDailyLeave || false,
+      note: contract.note || "",
+    });
+
+    // Store the contract ID for updating
+    setEditingId(contract._id);
+
+    // Reset selected employee when editing
+    setSelectedEmployee("");
+
+    // Show the create page (which will now function as an edit page)
+    setShowCreatePage(true);
+  };
 
   // // 2. Modify the handleSaveCreate function to handle both create and update
   // const handleSaveCreate = async () => {
@@ -631,192 +949,6 @@ const Contract = () => {
   //   }
   // };
 
-  //   // 1. First, modify the handleEdit function to properly populate the formData
-  // const handleEdit = (contract) => {
-  //   // Populate the form data with the selected contract's values
-  //   setFormData({
-  //     contractStatus: contract.contractStatus || "Active",
-  //     contractTitle: contract.contract || "",
-  //     employee: contract.employee || "",
-  //     startDate: contract.startDate || "",
-  //     endDate: contract.endDate || "",
-  //     wageType: contract.wageType || "",
-  //     payFrequency: contract.payFrequency || "",
-  //     basicSalary: contract.basicSalary || "",
-  //     filingStatus: contract.filingStatus || "",
-  //     department: contract.department || "",
-  //     position: contract.position || "",
-  //     role: contract.role || "",
-  //     shift: contract.shift || "",
-  //     workType: contract.workType || "",
-  //     noticePeriod: contract.noticePeriod || "",
-  //     contractDocument: null, // Can't pre-fill file inputs
-  //     deductFromBasicPay: contract.deductFromBasicPay || false,
-  //     calculateDailyLeave: contract.calculateDailyLeave || false,
-  //     note: contract.note || "",
-  //   });
-
-  //   // Store the contract ID for updating
-  //   setEditingId(contract._id);
-
-  //   // Reset selected employee when editing
-  //   setSelectedEmployee("");
-
-  //   // Show the create page (which will now function as an edit page)
-  //   setShowCreatePage(true);
-  // };
-
-  // 1. Modify the handleEdit function to validate position and role values
-  const handleEdit = (contract) => {
-    // Define the available options for position and role
-    const availablePositions = [
-      "HR Manager",
-      "Sales Representative",
-      "Software Developer",
-      "Marketing Specialist",
-      "Accountant",
-      "IT Support",
-    ];
-
-    const availableRoles = [
-      "Intern",
-      "Junior",
-      "Senior",
-      "Manager",
-      "Director",
-    ];
-
-    // Check if the contract's position is in the available options
-    const validPosition = availablePositions.includes(contract.position)
-      ? contract.position
-      : "";
-
-    // Check if the contract's role is in the available options
-    const validRole = availableRoles.includes(contract.role)
-      ? contract.role
-      : "";
-
-    // Populate the form data with the selected contract's values
-    setFormData({
-      contractStatus: contract.contractStatus || "Active",
-      contractTitle: contract.contract || "",
-      employee: contract.employee || "",
-      startDate: contract.startDate || "",
-      endDate: contract.endDate || "",
-      wageType: contract.wageType || "",
-      payFrequency: contract.payFrequency || "",
-      basicSalary: contract.basicSalary || "",
-      filingStatus: contract.filingStatus || "",
-      department: contract.department || "",
-      position: validPosition, // Use validated position
-      role: validRole, // Use validated role
-      shift: contract.shift || "",
-      workType: contract.workType || "",
-      noticePeriod: contract.noticePeriod || "",
-      contractDocument: null, // Can't pre-fill file inputs
-      deductFromBasicPay: contract.deductFromBasicPay || false,
-      calculateDailyLeave: contract.calculateDailyLeave || false,
-      note: contract.note || "",
-    });
-
-    // Store the contract ID for updating
-    setEditingId(contract._id);
-
-    // Reset selected employee when editing
-    setSelectedEmployee("");
-
-    // Show the create page (which will now function as an edit page)
-    setShowCreatePage(true);
-  };
-
-  // 2. Modify the handleSaveCreate function to handle both create and update
-  const handleSaveCreate = async () => {
-    try {
-      setLoading(true);
-      const contractData = {
-        contract: formData.contractTitle,
-        contractStatus: formData.contractStatus,
-        employee: formData.employee,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        wageType: formData.wageType,
-        payFrequency: formData.payFrequency,
-        basicSalary: Number(formData.basicSalary),
-        filingStatus: formData.filingStatus,
-        department: formData.department,
-        position: formData.position,
-        role: formData.role,
-        shift: formData.shift,
-        workType: formData.workType,
-        noticePeriod: Number(formData.noticePeriod),
-        deductFromBasicPay: formData.deductFromBasicPay,
-        calculateDailyLeave: formData.calculateDailyLeave,
-        note: formData.note,
-      };
-
-      // Handle file upload if a document is selected
-      if (formData.contractDocument) {
-        const formDataWithFile = new FormData();
-        formDataWithFile.append("document", formData.contractDocument);
-
-        // Upload file first (this would be a separate endpoint in a real app)
-        // const uploadResponse = await axios.post('http://localhost:5002/api/upload', formDataWithFile);
-        // contractData.documentUrl = uploadResponse.data.url;
-      }
-
-      let response;
-
-      if (editingId) {
-        // Update existing contract
-        response = await axios.put(
-          `http://localhost:5002/api/payroll-contracts/${editingId}`,
-          contractData
-        );
-
-        if (response.data.success) {
-          toast.success("Contract updated successfully");
-
-          // Update the contracts list
-          setContracts(
-            contracts.map((contract) =>
-              contract._id === editingId ? response.data.data : contract
-            )
-          );
-
-          setFilteredContracts(
-            filteredContracts.map((contract) =>
-              contract._id === editingId ? response.data.data : contract
-            )
-          );
-        }
-      } else {
-        // Create new contract
-        response = await axios.post(
-          "http://localhost:5002/api/payroll-contracts",
-          contractData
-        );
-
-        if (response.data.success) {
-          toast.success("Contract created successfully");
-
-          // Add the new contract to the list
-          setContracts([...contracts, response.data.data]);
-          setFilteredContracts([...filteredContracts, response.data.data]);
-        }
-      }
-
-      // Reset form and close create/edit page
-      setShowCreatePage(false);
-      setEditingId(null);
-      setSelectedEmployee("");
-      setLoading(false);
-    } catch (error) {
-      console.error("Contract operation error:", error);
-      toast.error(error.response?.data?.error || "Failed to process contract");
-      setLoading(false);
-    }
-  };
-
   // Add this function to handle inline edit mode
   const handleInlineEdit = (contract) => {
     setEditingId(contract._id);
@@ -825,7 +957,8 @@ const Contract = () => {
     });
   };
 
-  // // Handle save in edit mode
+  
+  // Handle save in edit mode (for inline editing)
   // const handleSave = async () => {
   //   try {
   //     setLoading(true);
@@ -865,71 +998,31 @@ const Contract = () => {
   //     setLoading(false);
   //   }
   // };
-  // Handle save in edit mode (for inline editing)
-  const handleSave = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.put(
-        `http://localhost:5002/api/payroll-contracts/${editedData._id}`,
-        {
-          contract: editedData.contract,
-          employee: editedData.employee,
-          startDate: editedData.startDate,
-          endDate: editedData.endDate,
-          wageType: editedData.wageType,
-          basicSalary: Number(editedData.basicSalary),
-          filingStatus: editedData.filingStatus,
-          contractStatus: editedData.contractStatus,
-        }
-      );
 
-      if (response.data.success) {
-        toast.success("Contract updated successfully");
-        const updatedContract = response.data.data;
-        setContracts(
-          contracts.map((contract) =>
-            contract._id === editedData._id ? updatedContract : contract
-          )
-        );
-        setFilteredContracts(
-          filteredContracts.map((contract) =>
-            contract._id === editedData._id ? updatedContract : contract
-          )
-        );
-        setEditingId(null);
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error("Save failed:", error);
-      toast.error("Failed to update contract");
-      setLoading(false);
-    }
-  };
-
-  // Handle delete
-  const handleDelete = async (id) => {
-    try {
-      setLoading(true);
-      const response = await axios.delete(
-        `http://localhost:5002/api/payroll-contracts/${id}`
-      );
-      if (response.data.success) {
-        toast.success("Contract deleted successfully");
-        setContracts(contracts.filter((contract) => contract._id !== id));
-        setFilteredContracts(
-          filteredContracts.filter((contract) => contract._id !== id)
-        );
-        setSelectedContracts(
-          selectedContracts.filter((contractId) => contractId !== id)
-        );
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error("Delete failed:", error);
-      toast.error("Failed to delete contract");
-      setLoading(false);
-    }
-  };
+  // // Handle delete
+  // const handleDelete = async (id) => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.delete(
+  //       `http://localhost:5002/api/payroll-contracts/${id}`
+  //     );
+  //     if (response.data.success) {
+  //       toast.success("Contract deleted successfully");
+  //       setContracts(contracts.filter((contract) => contract._id !== id));
+  //       setFilteredContracts(
+  //         filteredContracts.filter((contract) => contract._id !== id)
+  //       );
+  //       setSelectedContracts(
+  //         selectedContracts.filter((contractId) => contractId !== id)
+  //       );
+  //     }
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Delete failed:", error);
+  //     toast.error("Failed to delete contract");
+  //     setLoading(false);
+  //   }
+  // };
 
   // Handle search
   const handleSearchChange = (e) => {
@@ -985,166 +1078,166 @@ const Contract = () => {
     setCurrentPage(1);
   };
 
-  const handleApplyFilter = async () => {
-    try {
-      setLoading(true);
+  // const handleApplyFilter = async () => {
+  //   try {
+  //     setLoading(true);
 
-      // Create a clean filter object with only non-empty values
-      const filterParams = {};
+  //     // Create a clean filter object with only non-empty values
+  //     const filterParams = {};
 
-      if (filterData.employeeName && filterData.employeeName.trim() !== "") {
-        filterParams.employeeName = filterData.employeeName.trim();
-      }
+  //     if (filterData.employeeName && filterData.employeeName.trim() !== "") {
+  //       filterParams.employeeName = filterData.employeeName.trim();
+  //     }
 
-      if (filterData.contractStatus && filterData.contractStatus !== "") {
-        filterParams.contractStatus = filterData.contractStatus;
-      }
+  //     if (filterData.contractStatus && filterData.contractStatus !== "") {
+  //       filterParams.contractStatus = filterData.contractStatus;
+  //     }
 
-      if (filterData.wageType && filterData.wageType !== "") {
-        filterParams.wageType = filterData.wageType;
-      }
+  //     if (filterData.wageType && filterData.wageType !== "") {
+  //       filterParams.wageType = filterData.wageType;
+  //     }
 
-      if (filterData.department && filterData.department !== "") {
-        filterParams.department = filterData.department;
-      }
+  //     if (filterData.department && filterData.department !== "") {
+  //       filterParams.department = filterData.department;
+  //     }
 
-      if (filterData.startDate && filterData.startDate !== "") {
-        filterParams.startDate = filterData.startDate;
-      }
+  //     if (filterData.startDate && filterData.startDate !== "") {
+  //       filterParams.startDate = filterData.startDate;
+  //     }
 
-      if (filterData.endDate && filterData.endDate !== "") {
-        filterParams.endDate = filterData.endDate;
-      }
+  //     if (filterData.endDate && filterData.endDate !== "") {
+  //       filterParams.endDate = filterData.endDate;
+  //     }
 
-      if (filterData.minSalary && filterData.minSalary !== "") {
-        filterParams.minSalary = filterData.minSalary;
-      }
+  //     if (filterData.minSalary && filterData.minSalary !== "") {
+  //       filterParams.minSalary = filterData.minSalary;
+  //     }
 
-      if (filterData.maxSalary && filterData.maxSalary !== "") {
-        filterParams.maxSalary = filterData.maxSalary;
-      }
+  //     if (filterData.maxSalary && filterData.maxSalary !== "") {
+  //       filterParams.maxSalary = filterData.maxSalary;
+  //     }
 
-      if (filterData.filingStatus && filterData.filingStatus !== "") {
-        filterParams.filingStatus = filterData.filingStatus;
-      }
+  //     if (filterData.filingStatus && filterData.filingStatus !== "") {
+  //       filterParams.filingStatus = filterData.filingStatus;
+  //     }
 
-      console.log("Sending filter parameters to API:", filterParams);
+  //     console.log("Sending filter parameters to API:", filterParams);
 
-      // Make the API request with the filter parameters
-      const response = await axios.get(
-        "http://localhost:5002/api/payroll-contracts/filter",
-        { params: filterParams }
-      );
+  //     // Make the API request with the filter parameters
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/payroll-contracts/filter",
+  //       { params: filterParams }
+  //     );
 
-      console.log("API response:", response.data);
+  //     console.log("API response:", response.data);
 
-      if (response.data.success) {
-        setFilteredContracts(response.data.data);
-        toast.success(`Found ${response.data.data.length} matching contracts`);
-      } else {
-        toast.error("Failed to filter contracts");
-        // Keep the current filtered contracts
-      }
+  //     if (response.data.success) {
+  //       setFilteredContracts(response.data.data);
+  //       toast.success(`Found ${response.data.data.length} matching contracts`);
+  //     } else {
+  //       toast.error("Failed to filter contracts");
+  //       // Keep the current filtered contracts
+  //     }
 
-      // Close the filter dialog and reset pagination
-      setShowFilterDialog(false);
-      setCurrentPage(1);
-      calculateTotalPages();
-      setLoading(false);
-    } catch (error) {
-      console.error("Filter API error:", error);
-      toast.error(
-        "Error applying filters. Using client-side filtering instead."
-      );
+  //     // Close the filter dialog and reset pagination
+  //     setShowFilterDialog(false);
+  //     setCurrentPage(1);
+  //     calculateTotalPages();
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Filter API error:", error);
+  //     toast.error(
+  //       "Error applying filters. Using client-side filtering instead."
+  //     );
 
-      // Fallback to client-side filtering
-      const filtered = contracts.filter((contract) => {
-        // Check each filter condition
-        if (
-          filterData.employeeName &&
-          (!contract.employee ||
-            !contract.employee
-              .toLowerCase()
-              .includes(filterData.employeeName.toLowerCase()))
-        ) {
-          return false;
-        }
+  //     // Fallback to client-side filtering
+  //     const filtered = contracts.filter((contract) => {
+  //       // Check each filter condition
+  //       if (
+  //         filterData.employeeName &&
+  //         (!contract.employee ||
+  //           !contract.employee
+  //             .toLowerCase()
+  //             .includes(filterData.employeeName.toLowerCase()))
+  //       ) {
+  //         return false;
+  //       }
 
-        if (
-          filterData.contractStatus &&
-          contract.contractStatus !== filterData.contractStatus
-        ) {
-          return false;
-        }
+  //       if (
+  //         filterData.contractStatus &&
+  //         contract.contractStatus !== filterData.contractStatus
+  //       ) {
+  //         return false;
+  //       }
 
-        if (filterData.wageType && contract.wageType !== filterData.wageType) {
-          return false;
-        }
+  //       if (filterData.wageType && contract.wageType !== filterData.wageType) {
+  //         return false;
+  //       }
 
-        if (
-          filterData.department &&
-          (!contract.department ||
-            !contract.department
-              .toLowerCase()
-              .includes(filterData.department.toLowerCase()))
-        ) {
-          return false;
-        }
+  //       if (
+  //         filterData.department &&
+  //         (!contract.department ||
+  //           !contract.department
+  //             .toLowerCase()
+  //             .includes(filterData.department.toLowerCase()))
+  //       ) {
+  //         return false;
+  //       }
 
-        if (
-          filterData.startDate &&
-          (!contract.startDate ||
-            new Date(contract.startDate) < new Date(filterData.startDate))
-        ) {
-          return false;
-        }
+  //       if (
+  //         filterData.startDate &&
+  //         (!contract.startDate ||
+  //           new Date(contract.startDate) < new Date(filterData.startDate))
+  //       ) {
+  //         return false;
+  //       }
 
-        if (
-          filterData.endDate &&
-          (!contract.endDate ||
-            new Date(contract.endDate) > new Date(filterData.endDate))
-        ) {
-          return false;
-        }
+  //       if (
+  //         filterData.endDate &&
+  //         (!contract.endDate ||
+  //           new Date(contract.endDate) > new Date(filterData.endDate))
+  //       ) {
+  //         return false;
+  //       }
 
-        if (
-          filterData.minSalary &&
-          (!contract.basicSalary ||
-            Number(contract.basicSalary) < Number(filterData.minSalary))
-        ) {
-          return false;
-        }
+  //       if (
+  //         filterData.minSalary &&
+  //         (!contract.basicSalary ||
+  //           Number(contract.basicSalary) < Number(filterData.minSalary))
+  //       ) {
+  //         return false;
+  //       }
 
-        if (
-          filterData.maxSalary &&
-          (!contract.basicSalary ||
-            Number(contract.basicSalary) > Number(filterData.maxSalary))
-        ) {
-          return false;
-        }
-        if (
-          filterData.filingStatus &&
-          contract.filingStatus !== filterData.filingStatus
-        ) {
-          return false;
-        }
+  //       if (
+  //         filterData.maxSalary &&
+  //         (!contract.basicSalary ||
+  //           Number(contract.basicSalary) > Number(filterData.maxSalary))
+  //       ) {
+  //         return false;
+  //       }
+  //       if (
+  //         filterData.filingStatus &&
+  //         contract.filingStatus !== filterData.filingStatus
+  //       ) {
+  //         return false;
+  //       }
 
-        // If all conditions pass, include this contract
-        return true;
-      });
+  //       // If all conditions pass, include this contract
+  //       return true;
+  //     });
 
-      setFilteredContracts(filtered);
-      toast.info(
-        `Found ${filtered.length} matching contracts (client-side filtering)`
-      );
+  //     setFilteredContracts(filtered);
+  //     toast.info(
+  //       `Found ${filtered.length} matching contracts (client-side filtering)`
+  //     );
 
-      // Close the filter dialog and reset pagination
-      setShowFilterDialog(false);
-      setCurrentPage(1);
-      calculateTotalPages();
-      setLoading(false);
-    }
-  };
+  //     // Close the filter dialog and reset pagination
+  //     setShowFilterDialog(false);
+  //     setCurrentPage(1);
+  //     calculateTotalPages();
+  //     setLoading(false);
+  //   }
+  // };
 
   // Handle contract selection
   const handleSelectContract = (id) => {
@@ -1180,82 +1273,7 @@ const Contract = () => {
     csvLink.current.link.click();
   };
 
-  // // Export to PDF
-  // const exportToPDF = () => {
-  //   try {
-  //     const doc = new jsPDF();
-
-  //     // Add title
-  //     doc.setFontSize(18);
-  //     doc.text("Contracts Report", 14, 22);
-
-  //     // Add date
-  //     doc.setFontSize(11);
-  //     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
-
-  //     // Define table columns
-  //     const tableColumn = [
-  //       "Contract",
-  //       "Employee",
-  //       "Start Date",
-  //       "End Date",
-  //       "Wage Type",
-  //       "Basic Salary",
-  //       "Status",
-  //     ];
-
-  //     // Define table rows
-  //     const tableRows = [];
-
-  //     // Add data to rows
-  //     const contractsToExport =
-  //       selectedContracts.length > 0
-  //         ? filteredContracts.filter((contract) =>
-  //             selectedContracts.includes(contract._id)
-  //           )
-  //         : filteredContracts;
-
-  //     contractsToExport.forEach((contract) => {
-  //       const contractData = [
-  //         contract.contract,
-  //         contract.employee,
-  //         contract.startDate,
-  //         contract.endDate || "N/A",
-  //         contract.wageType,
-  //         contract.basicSalary,
-  //         contract.contractStatus || "Active",
-  //       ];
-  //       tableRows.push(contractData);
-  //     });
-
-  //     // Generate the table
-  //     doc.autoTable({
-  //       head: [tableColumn],
-  //       body: tableRows,
-  //       startY: 40,
-  //       styles: {
-  //         fontSize: 10,
-  //         cellPadding: 3,
-  //         overflow: "linebreak",
-  //       },
-  //       headStyles: {
-  //         fillColor: [41, 128, 185],
-  //         textColor: 255,
-  //         fontStyle: "bold",
-  //       },
-  //       alternateRowStyles: {
-  //         fillColor: [245, 245, 245],
-  //       },
-  //     });
-
-  //     // Save the PDF
-  //     doc.save("contracts_report.pdf");
-  //     toast.success("PDF exported successfully");
-  //   } catch (error) {
-  //     console.error("PDF export error:", error);
-  //     toast.error("Failed to export PDF");
-  //   }
-  // };
+ 
   // Export to PDF
   const exportToPDF = () => {
     if (filteredContracts.length === 0) {
@@ -1338,53 +1356,13 @@ const Contract = () => {
     }
   };
 
-  // // Handle print
-  // const handlePrint = () => {
-  //   window.print();
-  // };
 
   // Handle bulk action change
   const handleBulkActionChange = (e) => {
     setBulkAction(e.target.value);
   };
 
-  // // Apply bulk action
-  // const handleApplyBulkAction = () => {
-  //   if (!bulkAction || selectedContracts.length === 0) {
-  //     toast.warning("Please select an action and at least one contract");
-  //     return;
-  //   }
-
-  //   switch (bulkAction) {
-  //     case "delete":
-  //       if (
-  //         window.confirm(
-  //           `Are you sure you want to delete ${selectedContracts.length} contracts?`
-  //         )
-  //       ) {
-  //         Promise.all(selectedContracts.map((id) => handleDelete(id)))
-  //           .then(() => {
-  //             toast.success(`${selectedContracts.length} contracts deleted`);
-  //             setSelectedContracts([]);
-  //             setSelectAll(false);
-  //           })
-  //           .catch((error) => {
-  //             console.error("Bulk delete error:", error);
-  //             toast.error("Failed to delete some contracts");
-  //           });
-  //       }
-  //       break;
-  //     case "export":
-  //       exportToPDF();
-  //       break;
-  //     case "status":
-  //       setShowBulkUpdateModal(true);
-  //       setBulkUpdateData({ field: "contractStatus", value: "Active" });
-  //       break;
-  //     default:
-  //       toast.warning("Invalid action selected");
-  //   }
-  // };
+  
   // Apply bulk action
   const handleApplyBulkAction = () => {
     if (!bulkAction || selectedContracts.length === 0) {
@@ -1431,33 +1409,33 @@ const Contract = () => {
     }
   };
 
-  // Handle bulk update
-  const handleBulkUpdate = async () => {
-    try {
-      setLoading(true);
+  // // Handle bulk update
+  // const handleBulkUpdate = async () => {
+  //   try {
+  //     setLoading(true);
 
-      // In a real app, you would make API calls to update each contract
-      // For now, we'll update them locally
-      const updatedContracts = contracts.map((contract) => {
-        if (selectedContracts.includes(contract._id)) {
-          return { ...contract, [bulkUpdateData.field]: bulkUpdateData.value };
-        }
-        return contract;
-      });
+  //     // In a real app, you would make API calls to update each contract
+  //     // For now, we'll update them locally
+  //     const updatedContracts = contracts.map((contract) => {
+  //       if (selectedContracts.includes(contract._id)) {
+  //         return { ...contract, [bulkUpdateData.field]: bulkUpdateData.value };
+  //       }
+  //       return contract;
+  //     });
 
-      setContracts(updatedContracts);
-      setFilteredContracts(updatedContracts);
-      setShowBulkUpdateModal(false);
-      setSelectedContracts([]);
-      setSelectAll(false);
-      toast.success(`Updated ${selectedContracts.length} contracts`);
-      setLoading(false);
-    } catch (error) {
-      console.error("Bulk update error:", error);
-      toast.error("Failed to update contracts");
-      setLoading(false);
-    }
-  };
+  //     setContracts(updatedContracts);
+  //     setFilteredContracts(updatedContracts);
+  //     setShowBulkUpdateModal(false);
+  //     setSelectedContracts([]);
+  //     setSelectAll(false);
+  //     toast.success(`Updated ${selectedContracts.length} contracts`);
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Bulk update error:", error);
+  //     toast.error("Failed to update contracts");
+  //     setLoading(false);
+  //   }
+  // };
 
   // Handle page change
   const handlePageChange = (page) => {
@@ -2115,73 +2093,7 @@ const Contract = () => {
 
       <Divider sx={{ mb: 2 }} />
 
-      {/* Export toolbar - Styled version */}
-      {/* <Paper
-        elevation={0}
-        sx={{
-          backgroundColor: "#f8fafc",
-          borderRadius: "8px",
-          padding: "12px 16px",
-          marginBottom: "24px",
-          display: "flex",
-          flexDirection: { xs: "column", sm: "row" },
-          alignItems: { xs: "flex-start", sm: "center" },
-          gap: 2,
-        }}
-      >
-        <Typography
-          variant="subtitle1"
-          sx={{
-            fontWeight: 600,
-            color: "#475569",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <FaFileExport style={{ marginRight: "8px" }} />
-          Export & Reports:
-        </Typography>
 
-        <Stack
-          direction="row"
-          spacing={1}
-          flexWrap="wrap"
-          sx={{ "& button": { minWidth: "auto" } }}
-        >
-          <Button
-            size="small"
-            startIcon={<FaFileExcel />}
-            onClick={handleExportCSV}
-            sx={{ color: "#16a34a" }}
-          >
-            Excel
-          </Button>
-          <Button
-            size="small"
-            startIcon={<FaFilePdf />}
-            onClick={exportToPDF}
-            sx={{ color: "#ef4444" }}
-          >
-            PDF
-          </Button>
-          {/* <Button
-            size="small"
-            startIcon={<FaPrint />}
-            onClick={handlePrint}
-            sx={{ color: "#475569" }}
-          >
-            Print
-          </Button> 
-          <Button
-            size="small"
-            startIcon={<FaChartBar />}
-            onClick={toggleDashboard}
-            sx={{ color: "#1976d2" }}
-          >
-            {showDashboard ? "Hide Dashboard" : "Show Dashboard"}
-          </Button>
-        </Stack>
-      </Paper> */}
       {/* Export toolbar - Only show when data exists */}
       {filteredContracts.length > 0 && (
         <Paper

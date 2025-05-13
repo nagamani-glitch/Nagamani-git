@@ -39,6 +39,7 @@
 //     enum: ['low', 'medium', 'high'], 
 //     default: 'medium' 
 //   },
+//   userId: { type: String }, // Add this field to track the creator's userId
 //   comments: [{
 //     author: { type: String },
 //     text: { type: String },
@@ -223,4 +224,11 @@ objectiveSchema.methods.addHistoryEntry = function(action, user, details) {
 objectiveSchema.set('toJSON', { virtuals: true });
 objectiveSchema.set('toObject', { virtuals: true });
 
-export default mongoose.model('Objective', objectiveSchema);
+// Create model for Objective in the main database (for backward compatibility)
+const Objective = mongoose.model('Objective', objectiveSchema);
+
+// Export the schema for company-specific models
+export { objectiveSchema };
+
+// Export the main model as default
+export default Objective;

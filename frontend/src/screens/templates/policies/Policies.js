@@ -72,18 +72,18 @@ const Policies = () => {
     fetchPolicies();
   }, []);
 
-  const fetchPolicies = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get("http://localhost:5002/api/policies");
-      setPolicies(response.data);
-    } catch (error) {
-      console.error("Error fetching policies:", error);
-      showSnackbar("Error fetching policies", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchPolicies = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get("http://localhost:5002/api/policies");
+  //     setPolicies(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching policies:", error);
+  //     showSnackbar("Error fetching policies", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleSearchChange = (e) => setSearch(e.target.value);
 
@@ -113,22 +113,22 @@ const Policies = () => {
     setPolicyToDelete(null);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!policyToDelete) return;
+  // const handleConfirmDelete = async () => {
+  //   if (!policyToDelete) return;
     
-    try {
-      setLoading(true);
-      await axios.delete(`http://localhost:5002/api/policies/${policyToDelete._id}`);
-      setPolicies(policies.filter((policy) => policy._id !== policyToDelete._id));
-      showSnackbar("Policy deleted successfully");
-    } catch (error) {
-      console.error("Error deleting policy:", error);
-      showSnackbar("Error deleting policy", "error");
-    } finally {
-      setLoading(false);
-      handleCloseDeleteDialog();
-    }
-  };
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(`http://localhost:5002/api/policies/${policyToDelete._id}`);
+  //     setPolicies(policies.filter((policy) => policy._id !== policyToDelete._id));
+  //     showSnackbar("Policy deleted successfully");
+  //   } catch (error) {
+  //     console.error("Error deleting policy:", error);
+  //     showSnackbar("Error deleting policy", "error");
+  //   } finally {
+  //     setLoading(false);
+  //     handleCloseDeleteDialog();
+  //   }
+  // };
 
   const handleView = (policy) => {
     setSelectedPolicy(policy);
@@ -142,40 +142,40 @@ const Policies = () => {
     setIsEditMode(false);
   };
 
-  const handleSave = async () => {
-    try {
-      setLoading(true);
-      if (isEditMode) {
-        if (selectedPolicy._id) {
-          // Update existing policy
-          const response = await axios.put(
-            `http://localhost:5002/api/policies/${selectedPolicy._id}`,
-            selectedPolicy
-          );
-          setPolicies(
-            policies.map((p) =>
-              p._id === selectedPolicy._id ? response.data : p
-            )
-          );
-          showSnackbar("Policy updated successfully");
-        } else {
-          // Create new policy
-          const response = await axios.post(
-            "http://localhost:5002/api/policies",
-            selectedPolicy
-          );
-          setPolicies([...policies, response.data]);
-          showSnackbar("Policy created successfully");
-        }
-      }
-      handleDialogClose();
-    } catch (error) {
-      console.error("Error saving policy:", error);
-      showSnackbar("Error saving policy", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleSave = async () => {
+  //   try {
+  //     setLoading(true);
+  //     if (isEditMode) {
+  //       if (selectedPolicy._id) {
+  //         // Update existing policy
+  //         const response = await axios.put(
+  //           `http://localhost:5002/api/policies/${selectedPolicy._id}`,
+  //           selectedPolicy
+  //         );
+  //         setPolicies(
+  //           policies.map((p) =>
+  //             p._id === selectedPolicy._id ? response.data : p
+  //           )
+  //         );
+  //         showSnackbar("Policy updated successfully");
+  //       } else {
+  //         // Create new policy
+  //         const response = await axios.post(
+  //           "http://localhost:5002/api/policies",
+  //           selectedPolicy
+  //         );
+  //         setPolicies([...policies, response.data]);
+  //         showSnackbar("Policy created successfully");
+  //       }
+  //     }
+  //     handleDialogClose();
+  //   } catch (error) {
+  //     console.error("Error saving policy:", error);
+  //     showSnackbar("Error saving policy", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbar({
@@ -191,6 +191,103 @@ const Policies = () => {
       open: false,
     });
   };
+
+
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Update the fetchPolicies function
+const fetchPolicies = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await axios.get("http://localhost:5002/api/policies", {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setPolicies(response.data);
+  } catch (error) {
+    console.error("Error fetching policies:", error);
+    showSnackbar("Error fetching policies", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Update the handleSave function
+const handleSave = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    if (isEditMode) {
+      if (selectedPolicy._id) {
+        // Update existing policy
+        const response = await axios.put(
+          `http://localhost:5002/api/policies/${selectedPolicy._id}`,
+          selectedPolicy,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        setPolicies(
+          policies.map((p) =>
+            p._id === selectedPolicy._id ? response.data : p
+          )
+        );
+        showSnackbar("Policy updated successfully");
+      } else {
+        // Create new policy
+        const response = await axios.post(
+          "http://localhost:5002/api/policies",
+          selectedPolicy,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        setPolicies([...policies, response.data]);
+        showSnackbar("Policy created successfully");
+      }
+    }
+    handleDialogClose();
+  } catch (error) {
+    console.error("Error saving policy:", error);
+    showSnackbar(error.response?.data?.error || "Error saving policy", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Update the handleConfirmDelete function
+const handleConfirmDelete = async () => {
+  if (!policyToDelete) return;
+  
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    await axios.delete(`http://localhost:5002/api/policies/${policyToDelete._id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setPolicies(policies.filter((policy) => policy._id !== policyToDelete._id));
+    showSnackbar("Policy deleted successfully");
+  } catch (error) {
+    console.error("Error deleting policy:", error);
+    showSnackbar(error.response?.data?.error || "Error deleting policy", "error");
+  } finally {
+    setLoading(false);
+    handleCloseDeleteDialog();
+  }
+};
+
 
   return (
     <Box sx={{ 

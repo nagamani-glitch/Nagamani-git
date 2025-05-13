@@ -166,6 +166,11 @@ const AttendanceRecords = () => {
     }
   }, [timesheets]);
 
+  const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
   // Add this function to map employee IDs to names
   const getEmployeeNameById = (employeeId) => {
     if (!employeeId || !employees || employees.length === 0) {
@@ -209,30 +214,61 @@ const AttendanceRecords = () => {
     return "Unknown Employee";
   };
 
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(EMPLOYEES_API_URL);
-      console.log("Employee data fetched:", response.data);
+  // const fetchEmployees = async () => {
+  //   try {
+  //     const response = await axios.get(EMPLOYEES_API_URL);
+  //     console.log("Employee data fetched:", response.data);
 
-      // Handle different response structures
-      let employeeData;
-      if (Array.isArray(response.data)) {
-        employeeData = response.data;
-      } else if (response.data.employees) {
-        employeeData = response.data.employees;
-      } else if (response.data.data) {
-        employeeData = response.data.data;
-      } else {
-        employeeData = [];
-        console.error("Unexpected employee response format:", response.data);
+  //     // Handle different response structures
+  //     let employeeData;
+  //     if (Array.isArray(response.data)) {
+  //       employeeData = response.data;
+  //     } else if (response.data.employees) {
+  //       employeeData = response.data.employees;
+  //     } else if (response.data.data) {
+  //       employeeData = response.data.data;
+  //     } else {
+  //       employeeData = [];
+  //       console.error("Unexpected employee response format:", response.data);
+  //     }
+
+  //     setEmployees(employeeData);
+  //   } catch (error) {
+  //     console.error("Error fetching employees:", error);
+  //     setEmployees([]);
+  //   }
+  // };
+
+const fetchEmployees = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(EMPLOYEES_API_URL, {
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
+    });
+    console.log("Employee data fetched:", response.data);
 
-      setEmployees(employeeData);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      setEmployees([]);
+    // Handle different response structures
+    let employeeData;
+    if (Array.isArray(response.data)) {
+      employeeData = response.data;
+    } else if (response.data.employees) {
+      employeeData = response.data.employees;
+    } else if (response.data.data) {
+      employeeData = response.data.data;
+    } else {
+      employeeData = [];
+      console.error("Unexpected employee response format:", response.data);
     }
-  };
+
+    setEmployees(employeeData);
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    setEmployees([]);
+  }
+};
+
 
   // const fetchTimesheets = async () => {
   //   try {
@@ -243,16 +279,25 @@ const AttendanceRecords = () => {
 
   //     if (filterValues.employee) {
   //       // Use the correct employee ID field based on your data structure
-  //       queryParams.append('employeeId', filterValues.employee._id || filterValues.employee.id || filterValues.employee.employeeId);
+  //       queryParams.append(
+  //         "employeeId",
+  //         filterValues.employee._id ||
+  //           filterValues.employee.id ||
+  //           filterValues.employee.employeeId
+  //       );
   //     }
 
   //     if (filterValues.status) {
-  //       queryParams.append('status', filterValues.status);
+  //       queryParams.append("status", filterValues.status);
   //     }
 
-  //     if (filterValues.dateRange !== 'all' && filterValues.startDate && filterValues.endDate) {
-  //       queryParams.append('startDate', filterValues.startDate.toISOString());
-  //       queryParams.append('endDate', filterValues.endDate.toISOString());
+  //     if (
+  //       filterValues.dateRange !== "all" &&
+  //       filterValues.startDate &&
+  //       filterValues.endDate
+  //     ) {
+  //       queryParams.append("startDate", filterValues.startDate.toISOString());
+  //       queryParams.append("endDate", filterValues.endDate.toISOString());
   //     }
 
   //     // First try to get all timesheets
@@ -261,7 +306,9 @@ const AttendanceRecords = () => {
   //       // Try the /all endpoint first
   //       response = await axios.get(`${API_URL}/all?${queryParams.toString()}`);
   //     } catch (error) {
-  //       console.log("Error fetching from /all endpoint, trying alternative endpoint");
+  //       console.log(
+  //         "Error fetching from /all endpoint, trying alternative endpoint"
+  //       );
   //       // If /all endpoint fails, try the base endpoint
   //       response = await axios.get(`${API_URL}?${queryParams.toString()}`);
   //     }
@@ -281,18 +328,28 @@ const AttendanceRecords = () => {
   //       console.error("Unexpected response format:", response.data);
   //     }
 
-  //     // Enhance timesheet data with employee names
-  //     const enhancedTimesheetData = timesheetData.map(timesheet => {
-  //       // Get the employee ID from the timesheet
-  //       const employeeId = timesheet.employeeId;
+  //     // Log the first timesheet to see its structure
+  //     if (timesheetData.length > 0) {
+  //       console.log("Sample timesheet:", timesheetData[0]);
+  //     }
 
-  //       // Find the corresponding employee
+  //     // Enhance timesheet data with employee names if needed
+  //     const enhancedTimesheetData = timesheetData.map((timesheet) => {
+  //       // If the timesheet already has an employeeName, use it
+  //       if (
+  //         timesheet.employeeName &&
+  //         timesheet.employeeName !== "Unknown Employee"
+  //       ) {
+  //         return timesheet;
+  //       }
+
+  //       // Otherwise, try to find the employee name from the employees list
+  //       const employeeId = timesheet.employeeId;
   //       const employeeName = getEmployeeNameById(employeeId);
 
-  //       // Return enhanced timesheet with employee name
   //       return {
   //         ...timesheet,
-  //         employeeName: employeeName
+  //         employeeName: employeeName,
   //       };
   //     });
 
@@ -305,97 +362,92 @@ const AttendanceRecords = () => {
   //   }
   // };
 
+
   const fetchTimesheets = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      // Build the query parameters based on filters
-      let queryParams = new URLSearchParams();
+    // Build the query parameters based on filters
+    let queryParams = new URLSearchParams();
 
-      if (filterValues.employee) {
-        // Use the correct employee ID field based on your data structure
-        queryParams.append(
-          "employeeId",
-          filterValues.employee._id ||
-            filterValues.employee.id ||
-            filterValues.employee.employeeId
-        );
-      }
-
-      if (filterValues.status) {
-        queryParams.append("status", filterValues.status);
-      }
-
-      if (
-        filterValues.dateRange !== "all" &&
-        filterValues.startDate &&
-        filterValues.endDate
-      ) {
-        queryParams.append("startDate", filterValues.startDate.toISOString());
-        queryParams.append("endDate", filterValues.endDate.toISOString());
-      }
-
-      // First try to get all timesheets
-      let response;
-      try {
-        // Try the /all endpoint first
-        response = await axios.get(`${API_URL}/all?${queryParams.toString()}`);
-      } catch (error) {
-        console.log(
-          "Error fetching from /all endpoint, trying alternative endpoint"
-        );
-        // If /all endpoint fails, try the base endpoint
-        response = await axios.get(`${API_URL}?${queryParams.toString()}`);
-      }
-
-      console.log("Timesheet data fetched:", response.data);
-
-      // Handle different response structures
-      let timesheetData;
-      if (Array.isArray(response.data)) {
-        timesheetData = response.data;
-      } else if (response.data.timesheets) {
-        timesheetData = response.data.timesheets;
-      } else if (response.data.data) {
-        timesheetData = response.data.data;
-      } else {
-        timesheetData = [];
-        console.error("Unexpected response format:", response.data);
-      }
-
-      // Log the first timesheet to see its structure
-      if (timesheetData.length > 0) {
-        console.log("Sample timesheet:", timesheetData[0]);
-      }
-
-      // Enhance timesheet data with employee names if needed
-      const enhancedTimesheetData = timesheetData.map((timesheet) => {
-        // If the timesheet already has an employeeName, use it
-        if (
-          timesheet.employeeName &&
-          timesheet.employeeName !== "Unknown Employee"
-        ) {
-          return timesheet;
-        }
-
-        // Otherwise, try to find the employee name from the employees list
-        const employeeId = timesheet.employeeId;
-        const employeeName = getEmployeeNameById(employeeId);
-
-        return {
-          ...timesheet,
-          employeeName: employeeName,
-        };
-      });
-
-      setTimesheets(enhancedTimesheetData);
-    } catch (error) {
-      console.error("Error fetching timesheets:", error);
-      setTimesheets([]);
-    } finally {
-      setLoading(false);
+    if (filterValues.employee) {
+      // Use the correct employee ID field based on your data structure
+      queryParams.append('employeeId', filterValues.employee._id || filterValues.employee.id || filterValues.employee.employeeId);
     }
-  };
+
+    if (filterValues.status) {
+      queryParams.append('status', filterValues.status);
+    }
+
+    if (filterValues.dateRange !== 'all' && filterValues.startDate && filterValues.endDate) {
+      queryParams.append('startDate', filterValues.startDate.toISOString());
+      queryParams.append('endDate', filterValues.endDate.toISOString());
+    }
+
+    // Get the authentication token
+    const token = getAuthToken();
+    const headers = {
+      'Authorization': `Bearer ${token}`
+    };
+
+    // First try to get all timesheets
+    let response;
+    try {
+      // Try the /all endpoint first
+      response = await axios.get(`${API_URL}/all?${queryParams.toString()}`, { headers });
+    } catch (error) {
+      console.log("Error fetching from /all endpoint, trying alternative endpoint");
+      // If /all endpoint fails, try the base endpoint
+      response = await axios.get(`${API_URL}?${queryParams.toString()}`, { headers });
+    }
+
+    console.log("Timesheet data fetched:", response.data);
+
+    // Handle different response structures
+    let timesheetData;
+    if (Array.isArray(response.data)) {
+      timesheetData = response.data;
+    } else if (response.data.timesheets) {
+      timesheetData = response.data.timesheets;
+    } else if (response.data.data) {
+      timesheetData = response.data.data;
+    } else {
+      timesheetData = [];
+      console.error("Unexpected response format:", response.data);
+    }
+
+    // Log the first timesheet to see its structure
+    if (timesheetData.length > 0) {
+      console.log("Sample timesheet:", timesheetData[0]);
+    }
+
+    // Enhance timesheet data with employee names if needed
+    const enhancedTimesheetData = timesheetData.map((timesheet) => {
+      // If the timesheet already has an employeeName, use it
+      if (timesheet.employeeName && timesheet.employeeName !== "Unknown Employee") {
+        return timesheet;
+      }
+
+      // Otherwise, try to find the employee name from the employees list
+      const employeeId = timesheet.employeeId;
+      const employeeName = getEmployeeNameById(employeeId);
+
+      return {
+        ...timesheet,
+        employeeName: employeeName,
+      };
+    });
+
+    setTimesheets(enhancedTimesheetData);
+  } catch (error) {
+    console.error("Error fetching timesheets:", error);
+    setTimesheets([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const calculateStats = (data) => {
     if (!data || data.length === 0) {

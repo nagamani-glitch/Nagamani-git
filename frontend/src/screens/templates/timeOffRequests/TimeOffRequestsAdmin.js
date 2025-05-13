@@ -124,36 +124,36 @@ const TimeOffRequestsAdmin = () => {
     fetchRequests();
   }, [searchTerm, filterStatus]);
 
-  const fetchRequests = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `http://localhost:5002/api/time-off-requests?searchTerm=${searchTerm}&status=${filterStatus}`
-      );
-      setRequests(response.data);
-    } catch (error) {
-      console.error("Error fetching requests:", error);
-      showSnackbar("Error fetching requests", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchRequests = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/time-off-requests?searchTerm=${searchTerm}&status=${filterStatus}`
+  //     );
+  //     setRequests(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching requests:", error);
+  //     showSnackbar("Error fetching requests", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
   };
 
-  const handlePreview = async (id) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5002/api/time-off-requests/${id}`
-      );
-      setSelectedRequest(response.data);
-      setPreviewOpen(true);
-    } catch (error) {
-      showSnackbar("Error fetching request details", "error");
-    }
-  };
+  // const handlePreview = async (id) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/time-off-requests/${id}`
+  //     );
+  //     setSelectedRequest(response.data);
+  //     setPreviewOpen(true);
+  //   } catch (error) {
+  //     showSnackbar("Error fetching request details", "error");
+  //   }
+  // };
 
   const handleReviewOpen = (request) => {
     setSelectedRequest(request);
@@ -164,34 +164,34 @@ const TimeOffRequestsAdmin = () => {
     setReviewOpen(true);
   };
 
-  const handleReviewSubmit = async () => {
-    try {
-      setLoading(true);
+  // const handleReviewSubmit = async () => {
+  //   try {
+  //     setLoading(true);
 
-      const response = await axios.put(
-        `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`,
-        {
-          ...reviewData,
-          reviewedBy: currentUserName,
-        }
-      );
+  //     const response = await axios.put(
+  //       `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`,
+  //       {
+  //         ...reviewData,
+  //         reviewedBy: currentUserName,
+  //       }
+  //     );
 
-      if (response.data) {
-        showSnackbar(`Request ${reviewData.status.toLowerCase()} successfully`);
+  //     if (response.data) {
+  //       showSnackbar(`Request ${reviewData.status.toLowerCase()} successfully`);
 
-        // No need to manually add notification here as the backend will handle it
-        // The backend will create the notification and emit the socket event
+  //       // No need to manually add notification here as the backend will handle it
+  //       // The backend will create the notification and emit the socket event
 
-        fetchRequests();
-        setReviewOpen(false);
-      }
-    } catch (error) {
-      console.error("Error updating request:", error);
-      showSnackbar("Error updating request", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //       fetchRequests();
+  //       setReviewOpen(false);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating request:", error);
+  //     showSnackbar("Error updating request", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleReviewChange = (e) => {
     const { name, value } = e.target;
@@ -217,6 +217,90 @@ const TimeOffRequestsAdmin = () => {
   const formatTime = (timeString) => {
     return timeString;
   };
+
+
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Update the fetchRequests function
+const fetchRequests = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await axios.get(
+      `http://localhost:5002/api/time-off-requests?searchTerm=${searchTerm}&status=${filterStatus}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setRequests(response.data);
+  } catch (error) {
+    console.error("Error fetching requests:", error);
+    showSnackbar("Error fetching requests", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Update the handlePreview function
+const handlePreview = async (id) => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      `http://localhost:5002/api/time-off-requests/${id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setSelectedRequest(response.data);
+    setPreviewOpen(true);
+  } catch (error) {
+    showSnackbar("Error fetching request details", "error");
+  }
+};
+
+// Update the handleReviewSubmit function
+const handleReviewSubmit = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+
+    const response = await axios.put(
+      `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`,
+      {
+        ...reviewData,
+        reviewedBy: currentUserName,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    if (response.data) {
+      showSnackbar(`Request ${reviewData.status.toLowerCase()} successfully`);
+
+      // No need to manually add notification here as the backend will handle it
+      // The backend will create the notification and emit the socket event
+
+      fetchRequests();
+      setReviewOpen(false);
+    }
+  } catch (error) {
+    console.error("Error updating request:", error);
+    showSnackbar("Error updating request", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>

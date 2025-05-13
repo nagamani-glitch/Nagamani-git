@@ -172,25 +172,25 @@ const TimeOffRequests = () => {
     fetchRequests();
   }, [searchTerm, filterStatus, userId]);
 
-  const fetchRequests = async () => {
-    try {
-      if (!userId) {
-        setRequests([]);
-        return;
-      }
+  // const fetchRequests = async () => {
+  //   try {
+  //     if (!userId) {
+  //       setRequests([]);
+  //       return;
+  //     }
 
-      setLoading(true);
-      const response = await axios.get(
-        `http://localhost:5002/api/time-off-requests/by-user/${userId}?searchTerm=${searchTerm}&status=${filterStatus}`
-      );
-      setRequests(response.data);
-    } catch (error) {
-      console.error("Error fetching requests:", error);
-      showSnackbar("Error fetching requests", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setLoading(true);
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/time-off-requests/by-user/${userId}?searchTerm=${searchTerm}&status=${filterStatus}`
+  //     );
+  //     setRequests(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching requests:", error);
+  //     showSnackbar("Error fetching requests", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
     if (!userId) return;
@@ -262,50 +262,50 @@ const TimeOffRequests = () => {
     });
   };
 
-  const handlePreview = async (id) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5002/api/time-off-requests/${id}`
-      );
-      setSelectedRequest(response.data);
-      setPreviewOpen(true);
-    } catch (error) {
-      showSnackbar("Error fetching request details", "error");
-    }
-  };
+  // const handlePreview = async (id) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/time-off-requests/${id}`
+  //     );
+  //     setSelectedRequest(response.data);
+  //     setPreviewOpen(true);
+  //   } catch (error) {
+  //     showSnackbar("Error fetching request details", "error");
+  //   }
+  // };
 
-  const handleEdit = async (id) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5002/api/time-off-requests/${id}`
-      );
-      const requestData = response.data;
+  // const handleEdit = async (id) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/time-off-requests/${id}`
+  //     );
+  //     const requestData = response.data;
 
-      setFormData({
-        ...requestData,
-        date: new Date(requestData.date),
-      });
+  //     setFormData({
+  //       ...requestData,
+  //       date: new Date(requestData.date),
+  //     });
 
-      setEditMode(true);
-      setSelectedRequest(requestData);
-      setCreateOpen(true);
-    } catch (error) {
-      showSnackbar("Error fetching request details", "error");
-    }
-  };
+  //     setEditMode(true);
+  //     setSelectedRequest(requestData);
+  //     setCreateOpen(true);
+  //   } catch (error) {
+  //     showSnackbar("Error fetching request details", "error");
+  //   }
+  // };
 
-  const handleDelete = async () => {
-    try {
-      await axios.delete(
-        `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`
-      );
-      showSnackbar("Request deleted successfully");
-      fetchRequests();
-      setDeleteOpen(false);
-    } catch (error) {
-      showSnackbar("Error deleting request", "error");
-    }
-  };
+  // const handleDelete = async () => {
+  //   try {
+  //     await axios.delete(
+  //       `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`
+  //     );
+  //     showSnackbar("Request deleted successfully");
+  //     fetchRequests();
+  //     setDeleteOpen(false);
+  //   } catch (error) {
+  //     showSnackbar("Error deleting request", "error");
+  //   }
+  // };
 
   const handleCreateNew = () => {
     // Pre-fill the form with current user data if available
@@ -328,58 +328,58 @@ const TimeOffRequests = () => {
     setCreateOpen(true);
   };
 
-  const handleSave = async () => {
-    try {
-      const requiredFields = [
-        "name",
-        "empId",
-        "date",
-        "day",
-        "checkIn",
-        "checkOut",
-        "shift",
-        "workType",
-        "minHour",
-        "atWork",
-      ];
-      const missingFields = requiredFields.filter((field) => !formData[field]);
+  // const handleSave = async () => {
+  //   try {
+  //     const requiredFields = [
+  //       "name",
+  //       "empId",
+  //       "date",
+  //       "day",
+  //       "checkIn",
+  //       "checkOut",
+  //       "shift",
+  //       "workType",
+  //       "minHour",
+  //       "atWork",
+  //     ];
+  //     const missingFields = requiredFields.filter((field) => !formData[field]);
 
-      if (missingFields.length > 0) {
-        throw new Error(`Required fields missing: ${missingFields.join(", ")}`);
-      }
+  //     if (missingFields.length > 0) {
+  //       throw new Error(`Required fields missing: ${missingFields.join(", ")}`);
+  //     }
 
-      // Add userId to the form data
-      const formattedData = {
-        ...formData,
-        userId: userId, // Add the current user's ID
-        minHour: Number(formData.minHour),
-        atWork: Number(formData.atWork),
-        overtime: Number(formData.overtime) || 0,
-        date: new Date(formData.date).toISOString(),
-      };
+  //     // Add userId to the form data
+  //     const formattedData = {
+  //       ...formData,
+  //       userId: userId, // Add the current user's ID
+  //       minHour: Number(formData.minHour),
+  //       atWork: Number(formData.atWork),
+  //       overtime: Number(formData.overtime) || 0,
+  //       date: new Date(formData.date).toISOString(),
+  //     };
 
-      const url = editMode
-        ? `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`
-        : "http://localhost:5002/api/time-off-requests";
+  //     const url = editMode
+  //       ? `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`
+  //       : "http://localhost:5002/api/time-off-requests";
 
-      const response = await axios({
-        method: editMode ? "PUT" : "POST",
-        url,
-        data: formattedData,
-      });
+  //     const response = await axios({
+  //       method: editMode ? "PUT" : "POST",
+  //       url,
+  //       data: formattedData,
+  //     });
 
-      showSnackbar(
-        editMode
-          ? "Request updated successfully"
-          : "Request created successfully"
-      );
-      fetchRequests();
-      setCreateOpen(false);
-      setFormData(initialFormState);
-    } catch (error) {
-      showSnackbar(error.message, "error");
-    }
-  };
+  //     showSnackbar(
+  //       editMode
+  //         ? "Request updated successfully"
+  //         : "Request created successfully"
+  //     );
+  //     fetchRequests();
+  //     setCreateOpen(false);
+  //     setFormData(initialFormState);
+  //   } catch (error) {
+  //     showSnackbar(error.message, "error");
+  //   }
+  // };
 
   const getStatusColor = (status) => {
     const colors = {
@@ -397,6 +397,165 @@ const TimeOffRequests = () => {
   const formatTime = (timeString) => {
     return timeString;
   };
+
+
+
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Update the fetchRequests function
+const fetchRequests = async () => {
+  try {
+    if (!userId) {
+      setRequests([]);
+      return;
+    }
+
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await axios.get(
+      `http://localhost:5002/api/time-off-requests/by-user/${userId}?searchTerm=${searchTerm}&status=${filterStatus}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setRequests(response.data);
+  } catch (error) {
+    console.error("Error fetching requests:", error);
+    showSnackbar("Error fetching requests", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Update the handlePreview function
+const handlePreview = async (id) => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      `http://localhost:5002/api/time-off-requests/${id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setSelectedRequest(response.data);
+    setPreviewOpen(true);
+  } catch (error) {
+    showSnackbar("Error fetching request details", "error");
+  }
+};
+
+// Update the handleEdit function
+const handleEdit = async (id) => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      `http://localhost:5002/api/time-off-requests/${id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    const requestData = response.data;
+
+    setFormData({
+      ...requestData,
+      date: new Date(requestData.date),
+    });
+
+    setEditMode(true);
+    setSelectedRequest(requestData);
+    setCreateOpen(true);
+  } catch (error) {
+    showSnackbar("Error fetching request details", "error");
+  }
+};
+
+// Update the handleDelete function
+const handleDelete = async () => {
+  try {
+    const token = getAuthToken();
+    await axios.delete(
+      `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    showSnackbar("Request deleted successfully");
+    fetchRequests();
+    setDeleteOpen(false);
+  } catch (error) {
+    showSnackbar("Error deleting request", "error");
+  }
+};
+
+// Update the handleSave function
+const handleSave = async () => {
+  try {
+    const requiredFields = [
+      "name",
+      "empId",
+      "date",
+      "day",
+      "checkIn",
+      "checkOut",
+      "shift",
+      "workType",
+      "minHour",
+      "atWork",
+    ];
+    const missingFields = requiredFields.filter((field) => !formData[field]);
+
+    if (missingFields.length > 0) {
+      throw new Error(`Required fields missing: ${missingFields.join(", ")}`);
+    }
+
+    // Add userId to the form data
+    const formattedData = {
+      ...formData,
+      userId: userId, // Add the current user's ID
+      minHour: Number(formData.minHour),
+      atWork: Number(formData.atWork),
+      overtime: Number(formData.overtime) || 0,
+      date: new Date(formData.date).toISOString(),
+    };
+
+    const token = getAuthToken();
+    const url = editMode
+      ? `http://localhost:5002/api/time-off-requests/${selectedRequest._id}`
+      : "http://localhost:5002/api/time-off-requests";
+
+    const response = await axios({
+      method: editMode ? "PUT" : "POST",
+      url,
+      data: formattedData,
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    showSnackbar(
+      editMode
+        ? "Request updated successfully"
+        : "Request created successfully"
+    );
+    fetchRequests();
+    setCreateOpen(false);
+    setFormData(initialFormState);
+  } catch (error) {
+    showSnackbar(error.message, "error");
+  }
+};
+
 
   return (
     <Box
