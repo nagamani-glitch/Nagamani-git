@@ -142,6 +142,12 @@ const Objectives = () => {
   // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
   // Filter button click handler
   const handleFilterClick = (event) => {
     setFilterAnchorEl(event.currentTarget);
@@ -203,29 +209,59 @@ useEffect(() => {
 }, [selectedTab, currentUserId]);
 
 
+  // // Fetch employees data
+  // const fetchEmployees = async () => {
+  //   try {
+  //     setLoadingEmployees(true);
+  //     const response = await axios.get(EMPLOYEES_API_URL);
+
+  //     // Transform the data to the format we need
+  //     const formattedEmployees = response.data.map((emp) => ({
+  //       id: emp.Emp_ID,
+  //       name: `${emp.personalInfo?.firstName || ""} ${
+  //         emp.personalInfo?.lastName || ""
+  //       }`.trim(),
+  //       designation: emp.joiningDetails?.initialDesignation || "No Designation",
+  //       department: emp.joiningDetails?.department || "No Department",
+  //     }));
+
+  //     setEmployees(formattedEmployees);
+  //     setLoadingEmployees(false);
+  //   } catch (error) {
+  //     console.error("Error fetching employees:", error);
+  //     setLoadingEmployees(false);
+  //   }
+  // };
+
   // Fetch employees data
-  const fetchEmployees = async () => {
-    try {
-      setLoadingEmployees(true);
-      const response = await axios.get(EMPLOYEES_API_URL);
+const fetchEmployees = async () => {
+  try {
+    setLoadingEmployees(true);
+    const token = getAuthToken();
+    const response = await axios.get(EMPLOYEES_API_URL, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
 
-      // Transform the data to the format we need
-      const formattedEmployees = response.data.map((emp) => ({
-        id: emp.Emp_ID,
-        name: `${emp.personalInfo?.firstName || ""} ${
-          emp.personalInfo?.lastName || ""
-        }`.trim(),
-        designation: emp.joiningDetails?.initialDesignation || "No Designation",
-        department: emp.joiningDetails?.department || "No Department",
-      }));
+    // Transform the data to the format we need
+    const formattedEmployees = response.data.map((emp) => ({
+      id: emp.Emp_ID,
+      name: `${emp.personalInfo?.firstName || ""} ${
+        emp.personalInfo?.lastName || ""
+      }`.trim(),
+      designation: emp.joiningDetails?.initialDesignation || "No Designation",
+      department: emp.joiningDetails?.department || "No Department",
+    }));
 
-      setEmployees(formattedEmployees);
-      setLoadingEmployees(false);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      setLoadingEmployees(false);
-    }
-  };
+    setEmployees(formattedEmployees);
+    setLoadingEmployees(false);
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    setLoadingEmployees(false);
+  }
+};
+
 
 // Update the useEffect to avoid conflicts with tab changes
 useEffect(() => {
@@ -240,6 +276,17 @@ useEffect(() => {
   }
 }, [selectedTab, currentUserId]);
 
+// // Keep the original loadObjectives for other cases (search, filter, etc.)
+// const loadObjectives = async () => {
+//   if (window.isChangingTab) {
+//     console.log("Skipping loadObjectives during tab change");
+//     return;
+//   }
+  
+//   console.log("Regular loadObjectives called");
+//   fetchObjectivesForTab(selectedTab);
+// };
+
 // Keep the original loadObjectives for other cases (search, filter, etc.)
 const loadObjectives = async () => {
   if (window.isChangingTab) {
@@ -250,6 +297,7 @@ const loadObjectives = async () => {
   console.log("Regular loadObjectives called");
   fetchObjectivesForTab(selectedTab);
 };
+
 
 
 
@@ -363,71 +411,141 @@ const filteredObjectives = objectives.filter((obj) => {
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    try {
-      setLoading(true);
-      await axios.delete(`${API_URL}/${itemToDelete._id}`);
-      setObjectives(objectives.filter((obj) => obj._id !== itemToDelete._id));
-      setNotification({
-        open: true,
-        message: "Objective deleted successfully",
-        severity: "success",
-      });
-      setDeleteDialogOpen(false);
-      setItemToDelete(null);
-    } catch (error) {
-      console.error("Error deleting objective:", error);
-      setNotification({
-        open: true,
-        message: "Failed to delete objective",
-        severity: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleConfirmDelete = async () => {
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(`${API_URL}/${itemToDelete._id}`);
+  //     setObjectives(objectives.filter((obj) => obj._id !== itemToDelete._id));
+  //     setNotification({
+  //       open: true,
+  //       message: "Objective deleted successfully",
+  //       severity: "success",
+  //     });
+  //     setDeleteDialogOpen(false);
+  //     setItemToDelete(null);
+  //   } catch (error) {
+  //     console.error("Error deleting objective:", error);
+  //     setNotification({
+  //       open: true,
+  //       message: "Failed to delete objective",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+const handleConfirmDelete = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    await axios.delete(`${API_URL}/${itemToDelete._id}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    setObjectives(objectives.filter((obj) => obj._id !== itemToDelete._id));
+    setNotification({
+      open: true,
+      message: "Objective deleted successfully",
+      severity: "success",
+    });
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+  } catch (error) {
+    console.error("Error deleting objective:", error);
+    setNotification({
+      open: true,
+      message: "Failed to delete objective",
+      severity: "error",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleCloseDeleteDialog = () => {
     setDeleteDialogOpen(false);
     setItemToDelete(null);
   };
 
+  // // Handle archive
+  // const handleArchive = async (id) => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.patch(
+  //       `${API_URL}/${id}/archive`,
+  //       {},
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+
+  //     setObjectives((prevObjectives) =>
+  //       prevObjectives.map((obj) => (obj._id === id ? response.data : obj))
+  //     );
+
+  //     setNotification({
+  //       open: true,
+  //       message: response.data.archived
+  //         ? "Objective archived successfully"
+  //         : "Objective unarchived successfully",
+  //       severity: "success",
+  //     });
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error toggling archive status:", error);
+  //     setNotification({
+  //       open: true,
+  //       message: "Failed to update archive status",
+  //       severity: "error",
+  //     });
+  //     setLoading(false);
+  //   }
+  // };
+
   // Handle archive
-  const handleArchive = async (id) => {
-    try {
-      setLoading(true);
-      const response = await axios.patch(
-        `${API_URL}/${id}/archive`,
-        {},
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+const handleArchive = async (id) => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await axios.patch(
+      `${API_URL}/${id}/archive`,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+      }
+    );
 
-      setObjectives((prevObjectives) =>
-        prevObjectives.map((obj) => (obj._id === id ? response.data : obj))
-      );
+    setObjectives((prevObjectives) =>
+      prevObjectives.map((obj) => (obj._id === id ? response.data : obj))
+    );
 
-      setNotification({
-        open: true,
-        message: response.data.archived
-          ? "Objective archived successfully"
-          : "Objective unarchived successfully",
-        severity: "success",
-      });
-      setLoading(false);
-    } catch (error) {
-      console.error("Error toggling archive status:", error);
-      setNotification({
-        open: true,
-        message: "Failed to update archive status",
-        severity: "error",
-      });
-      setLoading(false);
-    }
-  };
+    setNotification({
+      open: true,
+      message: response.data.archived
+        ? "Objective archived successfully"
+        : "Objective unarchived successfully",
+      severity: "success",
+    });
+    setLoading(false);
+  } catch (error) {
+    console.error("Error toggling archive status:", error);
+    setNotification({
+      open: true,
+      message: "Failed to update archive status",
+      severity: "error",
+    });
+    setLoading(false);
+  }
+};
+
 
   // Handle add new objective
   const handleAdd = () => {
@@ -446,98 +564,198 @@ const filteredObjectives = objectives.filter((obj) => {
     setIsCreateModalOpen(true);
   };
 
+  // // Update the handleCreateSubmit function to include userId for new objectives
+  // const handleCreateSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     setLoading(true);
+  //     // Format the data according to the schema
+  //     const objectiveData = {
+  //       title: currentObjective.title,
+  //       managers: Array.isArray(currentObjective.managers)
+  //         ? currentObjective.managers
+  //         : [],
+  //       keyResults: Number(currentObjective.keyResults) || 0,
+  //       keyResultsData: Array.isArray(currentObjective.keyResultsData)
+  //         ? currentObjective.keyResultsData
+  //         : [],
+  //       assignees: Array.isArray(currentObjective.assignees)
+  //         ? currentObjective.assignees
+  //         : [],
+  //       duration: currentObjective.duration,
+  //       description: currentObjective.description,
+  //       objectiveType: currentObjective.objectiveType || "all",
+  //       archived: false,
+  //       userId: currentUserId, // Add the userId to associate with the creator
+  //     };
+
+  //     const response = await axios.post(API_URL, objectiveData, {
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+
+  //     setObjectives([...objectives, response.data]);
+  //     setIsCreateModalOpen(false);
+  //     setCurrentObjective(null);
+  //     setSelectedTab(response.data.objectiveType);
+  //     setNotification({
+  //       open: true,
+  //       message: "Objective created successfully",
+  //       severity: "success",
+  //     });
+  //     setLoading(false);
+
+  //     // Reload objectives to ensure we have the latest data
+  //     loadObjectives();
+  //   } catch (error) {
+  //     console.error("Error creating objective:", error);
+  //     setNotification({
+  //       open: true,
+  //       message: "Failed to create objective",
+  //       severity: "error",
+  //     });
+  //     setLoading(false);
+  //   }
+  // };
+
   // Update the handleCreateSubmit function to include userId for new objectives
-  const handleCreateSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      // Format the data according to the schema
-      const objectiveData = {
-        title: currentObjective.title,
-        managers: Array.isArray(currentObjective.managers)
-          ? currentObjective.managers
-          : [],
-        keyResults: Number(currentObjective.keyResults) || 0,
-        keyResultsData: Array.isArray(currentObjective.keyResultsData)
-          ? currentObjective.keyResultsData
-          : [],
-        assignees: Array.isArray(currentObjective.assignees)
-          ? currentObjective.assignees
-          : [],
-        duration: currentObjective.duration,
-        description: currentObjective.description,
-        objectiveType: currentObjective.objectiveType || "all",
-        archived: false,
-        userId: currentUserId, // Add the userId to associate with the creator
-      };
+const handleCreateSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    setLoading(true);
+    // Format the data according to the schema
+    const objectiveData = {
+      title: currentObjective.title,
+      managers: Array.isArray(currentObjective.managers)
+        ? currentObjective.managers
+        : [],
+      keyResults: Number(currentObjective.keyResults) || 0,
+      keyResultsData: Array.isArray(currentObjective.keyResultsData)
+        ? currentObjective.keyResultsData
+        : [],
+      assignees: Array.isArray(currentObjective.assignees)
+        ? currentObjective.assignees
+        : [],
+      duration: currentObjective.duration,
+      description: currentObjective.description,
+      objectiveType: currentObjective.objectiveType || "all",
+      archived: false,
+      userId: currentUserId, // Add the userId to associate with the creator
+    };
 
-      const response = await axios.post(API_URL, objectiveData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    const token = getAuthToken();
+    const response = await axios.post(API_URL, objectiveData, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+    });
 
-      setObjectives([...objectives, response.data]);
-      setIsCreateModalOpen(false);
-      setCurrentObjective(null);
-      setSelectedTab(response.data.objectiveType);
-      setNotification({
-        open: true,
-        message: "Objective created successfully",
-        severity: "success",
-      });
-      setLoading(false);
+    setObjectives([...objectives, response.data]);
+    setIsCreateModalOpen(false);
+    setCurrentObjective(null);
+    setSelectedTab(response.data.objectiveType);
+    setNotification({
+      open: true,
+      message: "Objective created successfully",
+      severity: "success",
+    });
+    setLoading(false);
 
-      // Reload objectives to ensure we have the latest data
-      loadObjectives();
-    } catch (error) {
-      console.error("Error creating objective:", error);
-      setNotification({
-        open: true,
-        message: "Failed to create objective",
-        severity: "error",
-      });
-      setLoading(false);
-    }
-  };
+    // Reload objectives to ensure we have the latest data
+    loadObjectives();
+  } catch (error) {
+    console.error("Error creating objective:", error);
+    setNotification({
+      open: true,
+      message: "Failed to create objective",
+      severity: "error",
+    });
+    setLoading(false);
+  }
+};
+
+
   // Handle edit
   const handleEdit = (objective) => {
     setCurrentObjective({ ...objective });
     setIsEditModalOpen(true);
   };
 
+  // // Handle edit submit
+  // const handleEditSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.put(
+  //       `${API_URL}/${currentObjective._id}`,
+  //       currentObjective
+  //     );
+  //     setObjectives(
+  //       objectives.map((obj) =>
+  //         obj._id === currentObjective._id ? response.data : obj
+  //       )
+  //     );
+  //     setIsEditModalOpen(false);
+  //     setCurrentObjective(null);
+  //     setNotification({
+  //       open: true,
+  //       message: "Objective updated successfully",
+  //       severity: "success",
+  //     });
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error updating objective:", error);
+  //     setNotification({
+  //       open: true,
+  //       message: "Failed to update objective",
+  //       severity: "error",
+  //     });
+  //     setLoading(false);
+  //   }
+  // };
+
   // Handle edit submit
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      const response = await axios.put(
-        `${API_URL}/${currentObjective._id}`,
-        currentObjective
-      );
-      setObjectives(
-        objectives.map((obj) =>
-          obj._id === currentObjective._id ? response.data : obj
-        )
-      );
-      setIsEditModalOpen(false);
-      setCurrentObjective(null);
-      setNotification({
-        open: true,
-        message: "Objective updated successfully",
-        severity: "success",
-      });
-      setLoading(false);
-    } catch (error) {
-      console.error("Error updating objective:", error);
-      setNotification({
-        open: true,
-        message: "Failed to update objective",
-        severity: "error",
-      });
-      setLoading(false);
-    }
-  };
+const handleEditSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await axios.put(
+      `${API_URL}/${currentObjective._id}`,
+      currentObjective,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      }
+    );
+    setObjectives(
+      objectives.map((obj) =>
+        obj._id === currentObjective._id ? response.data : obj
+      )
+    );
+    setIsEditModalOpen(false);
+    setCurrentObjective(null);
+    setNotification({
+      open: true,
+      message: "Objective updated successfully",
+      severity: "success",
+    });
+    setLoading(false);
+  } catch (error) {
+    console.error("Error updating objective:", error);
+    setNotification({
+      open: true,
+      message: "Failed to update objective",
+      severity: "error",
+    });
+    setLoading(false);
+  }
+};
+
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -572,6 +790,60 @@ const handleTabChange = (event, newValue) => {
   fetchObjectivesForTab(newTab);
 };
 
+// // Create a new function specifically for fetching objectives for a tab
+// const fetchObjectivesForTab = async (tabName) => {
+//   console.log("Fetching objectives specifically for tab:", tabName);
+  
+//   setLoading(true);
+//   setError(null);
+  
+//   try {
+//     let url = API_URL;
+//     const params = {
+//       searchTerm,
+//       archived: filter.archived || undefined,
+//     };
+
+//     // For self tab, only fetch the current user's objectives
+//     if (tabName === "self" && currentUserId) {
+//       params.userId = currentUserId;
+//       params.objectiveType = "self"; // Only get self objectives
+//     }
+    
+//     const response = await axios.get(url, { params });
+//     console.log(`Received ${response.data.length} objectives for tab:`, tabName);
+
+//     // Process based on tab
+//     if (tabName === "all" && currentUserId) {
+//       // For "all" tab: show team objectives and current user's self objectives
+//       const filteredData = response.data.filter(obj => 
+//         obj.objectiveType === "all" || (obj.objectiveType === "self" && obj.userId === currentUserId)
+//       );
+//       console.log(`Filtered to ${filteredData.length} objectives for 'all' tab`);
+//       setObjectives(filteredData);
+//       setTotalObjectives(filteredData.length);
+//     } else if (tabName === "self") {
+//       // For "self" tab: only show current user's self objectives
+//       setObjectives(response.data);
+//       setTotalObjectives(response.data.length);
+//     } else {
+//       // For other tabs
+//       setObjectives(response.data);
+//       setTotalObjectives(response.data.length);
+//     }
+    
+//     setLoading(false);
+    
+//     // Clear the tab change flag
+//     window.isChangingTab = false;
+//   } catch (error) {
+//     console.error("Error fetching objectives for tab:", error);
+//     setError("Failed to load objectives. Please try again.");
+//     setLoading(false);
+//     window.isChangingTab = false;
+//   }
+// };
+
 // Create a new function specifically for fetching objectives for a tab
 const fetchObjectivesForTab = async (tabName) => {
   console.log("Fetching objectives specifically for tab:", tabName);
@@ -592,7 +864,13 @@ const fetchObjectivesForTab = async (tabName) => {
       params.objectiveType = "self"; // Only get self objectives
     }
     
-    const response = await axios.get(url, { params });
+    const token = getAuthToken();
+    const response = await axios.get(url, { 
+      params,
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     console.log(`Received ${response.data.length} objectives for tab:`, tabName);
 
     // Process based on tab
@@ -625,6 +903,7 @@ const fetchObjectivesForTab = async (tabName) => {
     window.isChangingTab = false;
   }
 };
+
 
 
   const handleNotificationClose = () => {
@@ -699,43 +978,6 @@ const fetchObjectivesForTab = async (tabName) => {
       [name]: value,
     }));
   };
-
-  // const handleKeyResultDateChange = (newDate) => {
-  //   setKeyResultInput((prev) => ({
-  //     ...prev,
-  //     dueDate: newDate,
-  //   }));
-  // };
-
-  // const handleAddKeyResult = () => {
-  //   if (keyResultInput.title.trim() === "") {
-  //     setNotification({
-  //       open: true,
-  //       message: "Key result title is required",
-  //       severity: "error",
-  //     });
-  //     return;
-  //   }
-
-  //   setCurrentObjective((prev) => ({
-  //     ...prev,
-  //     keyResultsData: Array.isArray(prev.keyResultsData)
-  //       ? [...prev.keyResultsData, keyResultInput]
-  //       : [keyResultInput],
-  //     keyResults: Array.isArray(prev.keyResultsData)
-  //       ? prev.keyResultsData.length + 1
-  //       : 1,
-  //   }));
-
-  //   // Reset the input
-  //   setKeyResultInput({
-  //     title: "",
-  //     description: "",
-  //     targetValue: "",
-  //     unit: "",
-  //     dueDate: null,
-  //   });
-  // };
 
   // Update the handleKeyResultDateChange function to include validation
 

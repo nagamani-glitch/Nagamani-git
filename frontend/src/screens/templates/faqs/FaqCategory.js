@@ -83,21 +83,49 @@ export default function FaqCategory() {
     fetchCategories();
   }, []);
 
-  const fetchCategories = async () => {
-    try {
-      setLoading(true);
-      const { data } = await axios.get(`${apiBaseURL}/api/faqCategories`);
-      setCategories(data);
-    } catch (err) {
-      console.error(
-        "Error fetching FAQ categories:",
-        err.response?.data || err.message
-      );
-      showSnackbar("Error fetching FAQ categories", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+  // const fetchCategories = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const { data } = await axios.get(`${apiBaseURL}/api/faqCategories`);
+  //     setCategories(data);
+  //   } catch (err) {
+  //     console.error(
+  //       "Error fetching FAQ categories:",
+  //       err.response?.data || err.message
+  //     );
+  //     showSnackbar("Error fetching FAQ categories", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Update the fetchCategories function
+const fetchCategories = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const { data } = await axios.get(`${apiBaseURL}/api/faqCategories`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setCategories(data);
+  } catch (err) {
+    console.error(
+      "Error fetching FAQ categories:",
+      err.response?.data || err.message
+    );
+    showSnackbar("Error fetching FAQ categories", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const toSentenceCase = (str) => {
     return str
@@ -113,37 +141,81 @@ export default function FaqCategory() {
     setFormData({ ...formData, [name]: formattedValue });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.title.trim()) {
-      setErrorMessage("Category title is required.");
-      return;
-    }
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!formData.title.trim()) {
+  //     setErrorMessage("Category title is required.");
+  //     return;
+  //   }
 
-    try {
-      setLoading(true);
-      if (editingCategoryId) {
-        await axios.put(
-          `${apiBaseURL}/api/faqCategories/${editingCategoryId}`,
-          formData
-        );
-        showSnackbar("Category updated successfully");
-        setEditingCategoryId(null);
-      } else {
-        await axios.post(`${apiBaseURL}/api/faqCategories`, formData);
-        showSnackbar("Category created successfully");
-      }
-      fetchCategories();
-      setIsAddModalOpen(false);
-      setFormData({ title: "", description: "" });
-      setErrorMessage(null);
-    } catch (err) {
-      setErrorMessage(err.response?.data?.error || "Failed to save category.");
-      showSnackbar("Failed to save category", "error");
-    } finally {
-      setLoading(false);
+  //   try {
+  //     setLoading(true);
+  //     if (editingCategoryId) {
+  //       await axios.put(
+  //         `${apiBaseURL}/api/faqCategories/${editingCategoryId}`,
+  //         formData
+  //       );
+  //       showSnackbar("Category updated successfully");
+  //       setEditingCategoryId(null);
+  //     } else {
+  //       await axios.post(`${apiBaseURL}/api/faqCategories`, formData);
+  //       showSnackbar("Category created successfully");
+  //     }
+  //     fetchCategories();
+  //     setIsAddModalOpen(false);
+  //     setFormData({ title: "", description: "" });
+  //     setErrorMessage(null);
+  //   } catch (err) {
+  //     setErrorMessage(err.response?.data?.error || "Failed to save category.");
+  //     showSnackbar("Failed to save category", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Update the handleSubmit function
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!formData.title.trim()) {
+    setErrorMessage("Category title is required.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    if (editingCategoryId) {
+      await axios.put(
+        `${apiBaseURL}/api/faqCategories/${editingCategoryId}`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      showSnackbar("Category updated successfully");
+      setEditingCategoryId(null);
+    } else {
+      await axios.post(`${apiBaseURL}/api/faqCategories`, formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      showSnackbar("Category created successfully");
     }
-  };
+    fetchCategories();
+    setIsAddModalOpen(false);
+    setFormData({ title: "", description: "" });
+    setErrorMessage(null);
+  } catch (err) {
+    setErrorMessage(err.response?.data?.error || "Failed to save category.");
+    showSnackbar("Failed to save category", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDeleteClick = (category) => {
     setCategoryToDelete(category);
@@ -156,24 +228,50 @@ export default function FaqCategory() {
     setCategoryToDelete(null);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!categoryToDelete) return;
+  // const handleConfirmDelete = async () => {
+  //   if (!categoryToDelete) return;
 
-    try {
-      setLoading(true);
-      await axios.delete(
-        `${apiBaseURL}/api/faqCategories/${categoryToDelete._id}`
-      );
-      fetchCategories();
-      showSnackbar("Category deleted successfully");
-    } catch (err) {
-      console.error("Error deleting category:", err);
-      showSnackbar("Error deleting category", "error");
-    } finally {
-      setLoading(false);
-      handleCloseDeleteDialog();
-    }
-  };
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(
+  //       `${apiBaseURL}/api/faqCategories/${categoryToDelete._id}`
+  //     );
+  //     fetchCategories();
+  //     showSnackbar("Category deleted successfully");
+  //   } catch (err) {
+  //     console.error("Error deleting category:", err);
+  //     showSnackbar("Error deleting category", "error");
+  //   } finally {
+  //     setLoading(false);
+  //     handleCloseDeleteDialog();
+  //   }
+  // };
+
+  // Update the handleConfirmDelete function
+const handleConfirmDelete = async () => {
+  if (!categoryToDelete) return;
+
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    await axios.delete(
+      `${apiBaseURL}/api/faqCategories/${categoryToDelete._id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    fetchCategories();
+    showSnackbar("Category deleted successfully");
+  } catch (err) {
+    console.error("Error deleting category:", err);
+    showSnackbar("Error deleting category", "error");
+  } finally {
+    setLoading(false);
+    handleCloseDeleteDialog();
+  }
+};
 
   const openEditModal = (category) => {
     setFormData({ title: category.title, description: category.description });

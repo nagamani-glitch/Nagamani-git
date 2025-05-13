@@ -186,86 +186,194 @@ const WorkTypeRequest = () => {
     };
   }, []);
 
-  const fetchCurrentUser = async () => {
-    try {
-      setLoadingCurrentUser(true);
-      const userId = localStorage.getItem("userId");
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
 
-      if (!userId) {
-        console.error("No user ID found in localStorage");
-        setSnackbar({
-          open: true,
-          message: "User ID not found. Please log in again.",
-          severity: "error",
-        });
-        return;
-      }
 
-      const response = await axios.get(
-        `http://localhost:5002/api/employees/by-user/${userId}`
-      );
+  // const fetchCurrentUser = async () => {
+  //   try {
+  //     setLoadingCurrentUser(true);
+  //     const userId = localStorage.getItem("userId");
 
-      if (response.data.success) {
-        const userData = response.data.data;
+  //     if (!userId) {
+  //       console.error("No user ID found in localStorage");
+  //       setSnackbar({
+  //         open: true,
+  //         message: "User ID not found. Please log in again.",
+  //         severity: "error",
+  //       });
+  //       return;
+  //     }
 
-        // Set the current user
-        setCurrentUser(userData);
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/employees/by-user/${userId}`
+  //     );
 
-        // Pre-fill the form with the current user's details
-        setFormData((prev) => ({
-          ...prev,
-          employee: `${userData.personalInfo?.firstName || ""} ${
-            userData.personalInfo?.lastName || ""
-          }`,
-          employeeCode: userData.Emp_ID,
-          currentWorktype: userData.joiningDetails?.workType || "Full Time",
-        }));
+  //     if (response.data.success) {
+  //       const userData = response.data.data;
 
-        console.log("Current user loaded successfully:", userData.Emp_ID);
-        return userData; // Return the user data for chaining
-      } else {
-        throw new Error("Failed to load user data");
-      }
-    } catch (error) {
-      console.error("Error fetching current user:", error);
+  //       // Set the current user
+  //       setCurrentUser(userData);
+
+  //       // Pre-fill the form with the current user's details
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         employee: `${userData.personalInfo?.firstName || ""} ${
+  //           userData.personalInfo?.lastName || ""
+  //         }`,
+  //         employeeCode: userData.Emp_ID,
+  //         currentWorktype: userData.joiningDetails?.workType || "Full Time",
+  //       }));
+
+  //       console.log("Current user loaded successfully:", userData.Emp_ID);
+  //       return userData; // Return the user data for chaining
+  //     } else {
+  //       throw new Error("Failed to load user data");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching current user:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error loading user data: " + error.message,
+  //       severity: "error",
+  //     });
+  //     return null;
+  //   } finally {
+  //     setLoadingCurrentUser(false);
+  //   }
+  // };
+
+  // const loadWorktypeRequests = async () => {
+  //   try {
+  //     if (tabValue === 0) {
+  //       // For Work Type Requests tab, only show the current user's requests if we have their employee code
+  //       if (currentUser && currentUser.Emp_ID) {
+  //         const response = await axios.get(USER_API_URL(currentUser.Emp_ID));
+  //         setWorktypeRequests(response.data);
+  //       } else {
+  //         // If no current user, fetch all requests (this will be filtered on the backend)
+  //         const response = await axios.get(API_URL);
+  //         setWorktypeRequests(response.data);
+  //       }
+  //     } else {
+  //       // For Review tab, show all requests
+  //       const response = await axios.get(API_URL);
+  //       setReviewRequests(response.data);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error loading worktype requests:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error loading worktype requests: " + error.message,
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  // Update the fetchCurrentUser function
+const fetchCurrentUser = async () => {
+  try {
+    setLoadingCurrentUser(true);
+    const userId = localStorage.getItem("userId");
+    const token = getAuthToken();
+
+    if (!userId) {
+      console.error("No user ID found in localStorage");
       setSnackbar({
         open: true,
-        message: "Error loading user data: " + error.message,
+        message: "User ID not found. Please log in again.",
         severity: "error",
       });
-      return null;
-    } finally {
-      setLoadingCurrentUser(false);
+      return;
     }
-  };
 
-  const loadWorktypeRequests = async () => {
-    try {
-      if (tabValue === 0) {
-        // For Work Type Requests tab, only show the current user's requests if we have their employee code
-        if (currentUser && currentUser.Emp_ID) {
-          const response = await axios.get(USER_API_URL(currentUser.Emp_ID));
-          setWorktypeRequests(response.data);
-        } else {
-          // If no current user, fetch all requests (this will be filtered on the backend)
-          const response = await axios.get(API_URL);
-          setWorktypeRequests(response.data);
+    const response = await axios.get(
+      `http://localhost:5002/api/employees/by-user/${userId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      } else {
-        // For Review tab, show all requests
-        const response = await axios.get(API_URL);
-        setReviewRequests(response.data);
       }
-    } catch (error) {
-      console.error("Error loading worktype requests:", error);
-      setSnackbar({
-        open: true,
-        message: "Error loading worktype requests: " + error.message,
-        severity: "error",
-      });
-    }
-  };
+    );
 
+    if (response.data.success) {
+      const userData = response.data.data;
+
+      // Set the current user
+      setCurrentUser(userData);
+
+      // Pre-fill the form with the current user's details
+      setFormData((prev) => ({
+        ...prev,
+        employee: `${userData.personalInfo?.firstName || ""} ${
+          userData.personalInfo?.lastName || ""
+        }`,
+        employeeCode: userData.Emp_ID,
+        currentWorktype: userData.joiningDetails?.workType || "Full Time",
+      }));
+
+      console.log("Current user loaded successfully:", userData.Emp_ID);
+      return userData; // Return the user data for chaining
+    } else {
+      throw new Error("Failed to load user data");
+    }
+  } catch (error) {
+    console.error("Error fetching current user:", error);
+    setSnackbar({
+      open: true,
+      message: "Error loading user data: " + error.message,
+      severity: "error",
+    });
+    return null;
+  } finally {
+    setLoadingCurrentUser(false);
+  }
+};
+
+// Update the loadWorktypeRequests function
+const loadWorktypeRequests = async () => {
+  try {
+    const token = getAuthToken();
+    
+    if (tabValue === 0) {
+      // For Work Type Requests tab, only show the current user's requests if we have their employee code
+      if (currentUser && currentUser.Emp_ID) {
+        const response = await axios.get(USER_API_URL(currentUser.Emp_ID), {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        setWorktypeRequests(response.data);
+      } else {
+        // If no current user, fetch all requests (this will be filtered on the backend)
+        const response = await axios.get(API_URL, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        setWorktypeRequests(response.data);
+      }
+    } else {
+      // For Review tab, show all requests
+      const response = await axios.get(API_URL, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      setReviewRequests(response.data);
+    }
+  } catch (error) {
+    console.error("Error loading worktype requests:", error);
+    setSnackbar({
+      open: true,
+      message: "Error loading worktype requests: " + error.message,
+      severity: "error",
+    });
+  }
+};
+  
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -313,248 +421,539 @@ const WorkTypeRequest = () => {
     setItemToDelete(null);
   };
 
-  const handleConfirmDelete = async () => {
-    try {
-      setLoading(true);
+  // const handleConfirmDelete = async () => {
+  //   try {
+  //     setLoading(true);
 
-      if (deleteType === "worktype" && itemToDelete) {
-        await axios.delete(`${API_URL}/${itemToDelete._id}`);
-        await loadWorktypeRequests();
-        setSnackbar({
-          open: true,
-          message: "Work type request deleted successfully",
-          severity: "success",
-        });
-      } else if (deleteType === "bulk" && selectedAllocations.length > 0) {
-        await Promise.all(
-          selectedAllocations.map((id) =>
-            axios.delete(`${API_URL}/${id}`)
-          )
-        );
-        await loadWorktypeRequests();
-        setSelectedAllocations([]);
-        setShowSelectionButtons(false);
-        setSnackbar({
-          open: true,
-          message: `${selectedAllocations.length} ${itemToDelete.type} deleted successfully`,
-          severity: "success",
-        });
+  //     if (deleteType === "worktype" && itemToDelete) {
+  //       await axios.delete(`${API_URL}/${itemToDelete._id}`);
+  //       await loadWorktypeRequests();
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Work type request deleted successfully",
+  //         severity: "success",
+  //       });
+  //     } else if (deleteType === "bulk" && selectedAllocations.length > 0) {
+  //       await Promise.all(
+  //         selectedAllocations.map((id) =>
+  //           axios.delete(`${API_URL}/${id}`)
+  //         )
+  //       );
+  //       await loadWorktypeRequests();
+  //       setSelectedAllocations([]);
+  //       setShowSelectionButtons(false);
+  //       setSnackbar({
+  //         open: true,
+  //         message: `${selectedAllocations.length} ${itemToDelete.type} deleted successfully`,
+  //         severity: "success",
+  //       });
+  //     }
+
+  //     handleCloseDeleteDialog();
+  //   } catch (error) {
+  //     console.error(`Error deleting ${deleteType}:`, error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: `Error deleting ${deleteType}: ${
+  //         error.response?.data?.message || error.message
+  //       }`,
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+  // Update the handleConfirmDelete function
+const handleConfirmDelete = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+
+    if (deleteType === "worktype" && itemToDelete) {
+      await axios.delete(`${API_URL}/${itemToDelete._id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      await loadWorktypeRequests();
+      setSnackbar({
+        open: true,
+        message: "Work type request deleted successfully",
+        severity: "success",
+      });
+    } else if (deleteType === "bulk" && selectedAllocations.length > 0) {
+      await Promise.all(
+        selectedAllocations.map((id) =>
+          axios.delete(`${API_URL}/${id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+        )
+      );
+      await loadWorktypeRequests();
+      setSelectedAllocations([]);
+      setShowSelectionButtons(false);
+      setSnackbar({
+        open: true,
+        message: `${selectedAllocations.length} ${itemToDelete.type} deleted successfully`,
+        severity: "success",
+      });
+    }
+
+    handleCloseDeleteDialog();
+  } catch (error) {
+    console.error(`Error deleting ${deleteType}:`, error);
+    setSnackbar({
+      open: true,
+      message: `Error deleting ${deleteType}: ${
+        error.response?.data?.message || error.message
+      }`,
+      severity: "error",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // const handleBulkApprove = async () => {
+  //   try {
+  //     const reviewerName = localStorage.getItem("userName") || "Admin";
+      
+  //     await axios.put(`${API_URL}/bulk-approve`, {
+  //       ids: selectedAllocations
+  //     });
+      
+  //     await loadWorktypeRequests();
+  //     setSelectedAllocations([]);
+  //     setShowSelectionButtons(false);
+  //     setAnchorEl(null);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Work type requests approved successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error bulk approving worktypes:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error approving work type requests: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  // const handleBulkReject = async () => {
+  //   try {
+  //     const reviewerName = localStorage.getItem("userName") || "Admin";
+      
+  //     await axios.put(`${API_URL}/bulk-reject`, {
+  //       ids: selectedAllocations
+  //     });
+      
+  //     await loadWorktypeRequests();
+  //     setSelectedAllocations([]);
+  //     setShowSelectionButtons(false);
+  //     setAnchorEl(null);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Work type requests rejected successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error bulk rejecting worktypes:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error rejecting work type requests: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  // const handleApprove = async (id, e) => {
+  //   e.stopPropagation();
+  //   try {
+  //     await axios.put(`${API_URL}/${id}/approve`);
+      
+  //     await loadWorktypeRequests();
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Work type request approved successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error approving worktype:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error approving work type request: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  // const handleReject = async (id, e) => {
+  //   e.stopPropagation();
+  //   try {
+  //     await axios.put(`${API_URL}/${id}/reject`);
+      
+  //     await loadWorktypeRequests();
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Work type request rejected successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error rejecting worktype:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error rejecting work type request: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  // const handleCreateWorktype = async () => {
+  //   try {
+  //     const userId = localStorage.getItem("userId");
+  //     if (!userId) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Unable to create work type request: User ID not available",
+  //         severity: "error",
+  //       });
+  //       return;
+  //     }
+
+  //     // If currentUser is not loaded yet, try to fetch it again
+  //     let userToUse = currentUser;
+  //     if (!userToUse) {
+  //       console.log("Current user not loaded, fetching again...");
+  //       userToUse = await fetchCurrentUser();
+
+  //       if (!userToUse) {
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Unable to create work type request: Failed to load user data",
+  //           severity: "error",
+  //         });
+  //         return;
+  //       }
+  //     }
+
+  //     // Validate form data
+  //     if (!formData.requestWorktype) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Please select a work type",
+  //         severity: "warning",
+  //       });
+  //       return;
+  //     }
+
+  //     if (!formData.requestedDate) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Please select a requested date",
+  //         severity: "warning",
+  //       });
+  //       return;
+  //     }
+
+  //     if (!formData.requestedTill) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Please select a requested till date",
+  //         severity: "warning",
+  //       });
+  //       return;
+  //     }
+
+  //     const worktypeData = {
+  //       name: `${userToUse.personalInfo?.firstName || ""} ${
+  //         userToUse.personalInfo?.lastName || ""
+  //       }`,
+  //       employeeCode: userToUse.Emp_ID,
+  //       requestedWorktype: formData.requestWorktype,
+  //       currentWorktype: userToUse.joiningDetails?.workType || "Full Time",
+  //       requestedDate: formData.requestedDate,
+  //       requestedTill: formData.requestedTill,
+  //       description: formData.description || "",
+  //       isPermanentRequest,
+  //       userId: userId,
+  //     };
+
+  //     console.log("Creating work type request with data:", worktypeData);
+
+  //     const response = await axios.post(API_URL, worktypeData);
+  //     console.log("Work type request created:", response.data);
+
+  //     await loadWorktypeRequests();
+  //     setCreateDialogOpen(false);
+  //     resetFormData();
+
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Work type request created successfully and sent for review",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error creating work type:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error creating work type request: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+// Update the handleCreateWorktype function
+
+// Update the handleBulkApprove function
+const handleBulkApprove = async () => {
+  try {
+    const reviewerName = localStorage.getItem("userName") || "Admin";
+    const token = getAuthToken();
+    
+    await axios.put(`${API_URL}/bulk-approve`, {
+      ids: selectedAllocations
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
+    });
+    
+    await loadWorktypeRequests();
+    setSelectedAllocations([]);
+    setShowSelectionButtons(false);
+    setAnchorEl(null);
+    setSnackbar({
+      open: true,
+      message: "Work type requests approved successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error bulk approving worktypes:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error approving work type requests: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
 
-      handleCloseDeleteDialog();
-    } catch (error) {
-      console.error(`Error deleting ${deleteType}:`, error);
+// Update the handleBulkReject function
+const handleBulkReject = async () => {
+  try {
+    const reviewerName = localStorage.getItem("userName") || "Admin";
+    const token = getAuthToken();
+    
+    await axios.put(`${API_URL}/bulk-reject`, {
+      ids: selectedAllocations
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    await loadWorktypeRequests();
+    setSelectedAllocations([]);
+    setShowSelectionButtons(false);
+    setAnchorEl(null);
+    setSnackbar({
+      open: true,
+      message: "Work type requests rejected successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error bulk rejecting worktypes:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error rejecting work type requests: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
+
+// Update the handleApprove function
+const handleApprove = async (id, e) => {
+  e.stopPropagation();
+  try {
+    const token = getAuthToken();
+    
+    await axios.put(`${API_URL}/${id}/approve`, {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    await loadWorktypeRequests();
+    setSnackbar({
+      open: true,
+      message: "Work type request approved successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error approving worktype:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error approving work type request: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
+
+// Update the handleReject function
+const handleReject = async (id, e) => {
+  e.stopPropagation();
+  try {
+    const token = getAuthToken();
+    
+    await axios.put(`${API_URL}/${id}/reject`, {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    await loadWorktypeRequests();
+    setSnackbar({
+      open: true,
+      message: "Work type request rejected successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error rejecting worktype:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error rejecting work type request: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
+
+
+const handleCreateWorktype = async () => {
+  try {
+    const userId = localStorage.getItem("userId");
+    const token = getAuthToken();
+    
+    if (!userId) {
       setSnackbar({
         open: true,
-        message: `Error deleting ${deleteType}: ${
-          error.response?.data?.message || error.message
-        }`,
+        message: "Unable to create work type request: User ID not available",
         severity: "error",
       });
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
 
-  const handleBulkApprove = async () => {
-    try {
-      const reviewerName = localStorage.getItem("userName") || "Admin";
-      
-      await axios.put(`${API_URL}/bulk-approve`, {
-        ids: selectedAllocations
-      });
-      
-      await loadWorktypeRequests();
-      setSelectedAllocations([]);
-      setShowSelectionButtons(false);
-      setAnchorEl(null);
-      setSnackbar({
-        open: true,
-        message: "Work type requests approved successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error bulk approving worktypes:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error approving work type requests: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
+    // If currentUser is not loaded yet, try to fetch it again
+    let userToUse = currentUser;
+    if (!userToUse) {
+      console.log("Current user not loaded, fetching again...");
+      userToUse = await fetchCurrentUser();
 
-  const handleBulkReject = async () => {
-    try {
-      const reviewerName = localStorage.getItem("userName") || "Admin";
-      
-      await axios.put(`${API_URL}/bulk-reject`, {
-        ids: selectedAllocations
-      });
-      
-      await loadWorktypeRequests();
-      setSelectedAllocations([]);
-      setShowSelectionButtons(false);
-      setAnchorEl(null);
-      setSnackbar({
-        open: true,
-        message: "Work type requests rejected successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error bulk rejecting worktypes:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error rejecting work type requests: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
-
-  const handleApprove = async (id, e) => {
-    e.stopPropagation();
-    try {
-      await axios.put(`${API_URL}/${id}/approve`);
-      
-      await loadWorktypeRequests();
-      setSnackbar({
-        open: true,
-        message: "Work type request approved successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error approving worktype:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error approving work type request: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
-
-  const handleReject = async (id, e) => {
-    e.stopPropagation();
-    try {
-      await axios.put(`${API_URL}/${id}/reject`);
-      
-      await loadWorktypeRequests();
-      setSnackbar({
-        open: true,
-        message: "Work type request rejected successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error rejecting worktype:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error rejecting work type request: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
-
-  const handleCreateWorktype = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
+      if (!userToUse) {
         setSnackbar({
           open: true,
-          message: "Unable to create work type request: User ID not available",
+          message: "Unable to create work type request: Failed to load user data",
           severity: "error",
         });
         return;
       }
-
-      // If currentUser is not loaded yet, try to fetch it again
-      let userToUse = currentUser;
-      if (!userToUse) {
-        console.log("Current user not loaded, fetching again...");
-        userToUse = await fetchCurrentUser();
-
-        if (!userToUse) {
-          setSnackbar({
-            open: true,
-            message: "Unable to create work type request: Failed to load user data",
-            severity: "error",
-          });
-          return;
-        }
-      }
-
-      // Validate form data
-      if (!formData.requestWorktype) {
-        setSnackbar({
-          open: true,
-          message: "Please select a work type",
-          severity: "warning",
-        });
-        return;
-      }
-
-      if (!formData.requestedDate) {
-        setSnackbar({
-          open: true,
-          message: "Please select a requested date",
-          severity: "warning",
-        });
-        return;
-      }
-
-      if (!formData.requestedTill) {
-        setSnackbar({
-          open: true,
-          message: "Please select a requested till date",
-          severity: "warning",
-        });
-        return;
-      }
-
-      const worktypeData = {
-        name: `${userToUse.personalInfo?.firstName || ""} ${
-          userToUse.personalInfo?.lastName || ""
-        }`,
-        employeeCode: userToUse.Emp_ID,
-        requestedWorktype: formData.requestWorktype,
-        currentWorktype: userToUse.joiningDetails?.workType || "Full Time",
-        requestedDate: formData.requestedDate,
-        requestedTill: formData.requestedTill,
-        description: formData.description || "",
-        isPermanentRequest,
-        userId: userId,
-      };
-
-      console.log("Creating work type request with data:", worktypeData);
-
-      const response = await axios.post(API_URL, worktypeData);
-      console.log("Work type request created:", response.data);
-
-      await loadWorktypeRequests();
-      setCreateDialogOpen(false);
-      resetFormData();
-
-      setSnackbar({
-        open: true,
-        message: "Work type request created successfully and sent for review",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error creating work type:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error creating work type request: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
     }
-  };
+
+    // Validate form data
+    if (!formData.requestWorktype) {
+      setSnackbar({
+        open: true,
+        message: "Please select a work type",
+        severity: "warning",
+      });
+      return;
+    }
+
+    if (!formData.requestedDate) {
+      setSnackbar({
+        open: true,
+        message: "Please select a requested date",
+        severity: "warning",
+      });
+      return;
+    }
+
+    if (!formData.requestedTill) {
+      setSnackbar({
+        open: true,
+        message: "Please select a requested till date",
+        severity: "warning",
+      });
+      return;
+    }
+
+    const worktypeData = {
+      name: `${userToUse.personalInfo?.firstName || ""} ${
+        userToUse.personalInfo?.lastName || ""
+      }`,
+      employeeCode: userToUse.Emp_ID,
+      requestedWorktype: formData.requestWorktype,
+      currentWorktype: userToUse.joiningDetails?.workType || "Full Time",
+      requestedDate: formData.requestedDate,
+      requestedTill: formData.requestedTill,
+      description: formData.description || "",
+      isPermanentRequest,
+      userId: userId,
+    };
+
+    console.log("Creating work type request with data:", worktypeData);
+
+    const response = await axios.post(API_URL, worktypeData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    console.log("Work type request created:", response.data);
+
+    await loadWorktypeRequests();
+    setCreateDialogOpen(false);
+    resetFormData();
+
+    setSnackbar({
+      open: true,
+      message: "Work type request created successfully and sent for review",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error creating work type:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error creating work type request: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
+
 
   const handleEdit = (worktype, e) => {
     e.stopPropagation();
@@ -570,42 +969,88 @@ const WorkTypeRequest = () => {
     setEditDialogOpen(true);
   };
 
-  const handleSaveEdit = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
+  // const handleSaveEdit = async () => {
+  //   try {
+  //     const userId = localStorage.getItem("userId");
 
-      const updatedData = {
-        name: formData.employee,
-        employeeCode: formData.employeeCode,
-        requestedWorktype: formData.requestWorktype,
-        requestedDate: formData.requestedDate,
-        requestedTill: formData.requestedTill,
-        description: formData.description,
-        userId: userId, // Include userId for ownership verification
-      };
+  //     const updatedData = {
+  //       name: formData.employee,
+  //       employeeCode: formData.employeeCode,
+  //       requestedWorktype: formData.requestWorktype,
+  //       requestedDate: formData.requestedDate,
+  //       requestedTill: formData.requestedTill,
+  //       description: formData.description,
+  //       userId: userId, // Include userId for ownership verification
+  //     };
 
-      await axios.put(`${API_URL}/${editingWorktype._id}`, updatedData);
-      await loadWorktypeRequests();
-      setEditDialogOpen(false);
-      setEditingWorktype(null);
-      resetFormData();
+  //     await axios.put(`${API_URL}/${editingWorktype._id}`, updatedData);
+  //     await loadWorktypeRequests();
+  //     setEditDialogOpen(false);
+  //     setEditingWorktype(null);
+  //     resetFormData();
 
-      setSnackbar({
-        open: true,
-        message: "Work type request updated successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error updating work type:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error updating work type request: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Work type request updated successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating work type:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error updating work type request: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+
+  // Update the handleSaveEdit function
+const handleSaveEdit = async () => {
+  try {
+    const userId = localStorage.getItem("userId");
+    const token = getAuthToken();
+
+    const updatedData = {
+      name: formData.employee,
+      employeeCode: formData.employeeCode,
+      requestedWorktype: formData.requestWorktype,
+      requestedDate: formData.requestedDate,
+      requestedTill: formData.requestedTill,
+      description: formData.description,
+      userId: userId, // Include userId for ownership verification
+    };
+
+    await axios.put(`${API_URL}/${editingWorktype._id}`, updatedData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    await loadWorktypeRequests();
+    setEditDialogOpen(false);
+    setEditingWorktype(null);
+    resetFormData();
+
+    setSnackbar({
+      open: true,
+      message: "Work type request updated successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error updating work type:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error updating work type request: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
+
+
 
   const resetFormData = () => {
     // If we have current user data, preserve the employee info

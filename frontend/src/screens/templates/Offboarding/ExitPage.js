@@ -185,6 +185,12 @@ const ExitPage = () => {
     officiallyOffboarded: false,
   });
 
+// Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
   // Helper functions
   const calculateCompletionPercentage = (employee) => {
     if (!employee.taskStatus) return 0;
@@ -244,107 +250,228 @@ const ExitPage = () => {
     }
   };
 
-  const handleAssetStatusChange = (employee, assetIndex, newStatus) => {
-    const updatedEmployee = { ...employee };
-    updatedEmployee.assets[assetIndex].status = newStatus;
+  // const handleAssetStatusChange = (employee, assetIndex, newStatus) => {
+  //   const updatedEmployee = { ...employee };
+  //   updatedEmployee.assets[assetIndex].status = newStatus;
 
-    axios
-      .put(
-        `http://localhost:5002/api/offboarding/${employee._id}`,
-        updatedEmployee
-      )
-      .then(() => {
-        setSnackbar({
-          open: true,
-          message: "Asset status updated successfully",
-          severity: "success",
-        });
-        fetchOffboardings();
-      })
-      .catch((error) => {
-        console.error("Error updating asset status:", error);
-        setSnackbar({
-          open: true,
-          message: "Failed to update asset status",
-          severity: "error",
-        });
+  //   axios
+  //     .put(
+  //       `http://localhost:5002/api/offboarding/${employee._id}`,
+  //       updatedEmployee
+  //     )
+  //     .then(() => {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Asset status updated successfully",
+  //         severity: "success",
+  //       });
+  //       fetchOffboardings();
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error updating asset status:", error);
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Failed to update asset status",
+  //         severity: "error",
+  //       });
+  //     });
+  // };
+
+const handleAssetStatusChange = (employee, assetIndex, newStatus) => {
+  const updatedEmployee = { ...employee };
+  updatedEmployee.assets[assetIndex].status = newStatus;
+  
+  const token = getAuthToken();
+
+  axios
+    .put(
+      `http://localhost:5002/api/offboarding/${employee._id}`,
+      updatedEmployee,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    )
+    .then(() => {
+      setSnackbar({
+        open: true,
+        message: "Asset status updated successfully",
+        severity: "success",
       });
-  };
+      fetchOffboardings();
+    })
+    .catch((error) => {
+      console.error("Error updating asset status:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to update asset status",
+        severity: "error",
+      });
+    });
+};
+
+
+
+  // const handleClearanceStatusChange = (employee, department, status) => {
+  //   const updatedEmployee = { ...employee };
+  //   if (!updatedEmployee.clearanceStatus) {
+  //     updatedEmployee.clearanceStatus = {};
+  //   }
+  //   updatedEmployee.clearanceStatus[department] = status;
+
+  //   // Check if all clearances are completed
+  //   const allCleared = Object.values(updatedEmployee.clearanceStatus).every(
+  //     (val) => val === true
+  //   );
+  //   updatedEmployee.exitChecklistCompleted = allCleared;
+
+  //   axios
+  //     .put(
+  //       `http://localhost:5002/api/offboarding/${employee._id}`,
+  //       updatedEmployee
+  //     )
+  //     .then(() => {
+  //       setSnackbar({
+  //         open: true,
+  //         message: `${department} clearance ${status ? "approved" : "pending"}`,
+  //         severity: "success",
+  //       });
+  //       setSelectedEmployee(updatedEmployee);
+  //       fetchOffboardings();
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error updating clearance status:", error);
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Failed to update clearance status",
+  //         severity: "error",
+  //       });
+  //     });
+  // };
 
   const handleClearanceStatusChange = (employee, department, status) => {
-    const updatedEmployee = { ...employee };
-    if (!updatedEmployee.clearanceStatus) {
-      updatedEmployee.clearanceStatus = {};
-    }
-    updatedEmployee.clearanceStatus[department] = status;
+  const updatedEmployee = { ...employee };
+  if (!updatedEmployee.clearanceStatus) {
+    updatedEmployee.clearanceStatus = {};
+  }
+  updatedEmployee.clearanceStatus[department] = status;
 
-    // Check if all clearances are completed
-    const allCleared = Object.values(updatedEmployee.clearanceStatus).every(
-      (val) => val === true
-    );
-    updatedEmployee.exitChecklistCompleted = allCleared;
+  // Check if all clearances are completed
+  const allCleared = Object.values(updatedEmployee.clearanceStatus).every(
+    (val) => val === true
+  );
+  updatedEmployee.exitChecklistCompleted = allCleared;
+  
+  const token = getAuthToken();
 
-    axios
-      .put(
-        `http://localhost:5002/api/offboarding/${employee._id}`,
-        updatedEmployee
-      )
-      .then(() => {
-        setSnackbar({
-          open: true,
-          message: `${department} clearance ${status ? "approved" : "pending"}`,
-          severity: "success",
-        });
-        setSelectedEmployee(updatedEmployee);
-        fetchOffboardings();
-      })
-      .catch((error) => {
-        console.error("Error updating clearance status:", error);
-        setSnackbar({
-          open: true,
-          message: "Failed to update clearance status",
-          severity: "error",
-        });
+  axios
+    .put(
+      `http://localhost:5002/api/offboarding/${employee._id}`,
+      updatedEmployee,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    )
+    .then(() => {
+      setSnackbar({
+        open: true,
+        message: `${department} clearance ${status ? "approved" : "pending"}`,
+        severity: "success",
       });
-  };
+      setSelectedEmployee(updatedEmployee);
+      fetchOffboardings();
+    })
+    .catch((error) => {
+      console.error("Error updating clearance status:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to update clearance status",
+        severity: "error",
+      });
+    });
+};
+
 
   const handleViewDetails = (employee) => {
     setSelectedEmployee(employee);
     setViewDetailsOpen(true);
   };
 
-  const handleMoveToNextStage = (employee) => {
-    const currentStageIndex = offboardingStages.findIndex(
-      (stage) => stage.stageName === employee.stage
-    );
+  // const handleMoveToNextStage = (employee) => {
+  //   const currentStageIndex = offboardingStages.findIndex(
+  //     (stage) => stage.stageName === employee.stage
+  //   );
 
-    if (currentStageIndex < offboardingStages.length - 1) {
-      const nextStage = offboardingStages[currentStageIndex + 1].stageName;
-      const updatedEmployee = { ...employee, stage: nextStage };
+  //   if (currentStageIndex < offboardingStages.length - 1) {
+  //     const nextStage = offboardingStages[currentStageIndex + 1].stageName;
+  //     const updatedEmployee = { ...employee, stage: nextStage };
 
-      axios
-        .put(
-          `http://localhost:5002/api/offboarding/${employee._id}`,
-          updatedEmployee
-        )
-        .then(() => {
-          setSnackbar({
-            open: true,
-            message: `Employee moved to ${nextStage} stage`,
-            severity: "success",
-          });
-          fetchOffboardings();
-        })
-        .catch((error) => {
-          console.error("Error moving employee to next stage:", error);
-          setSnackbar({
-            open: true,
-            message: "Failed to move employee to next stage",
-            severity: "error",
-          });
+  //     axios
+  //       .put(
+  //         `http://localhost:5002/api/offboarding/${employee._id}`,
+  //         updatedEmployee
+  //       )
+  //       .then(() => {
+  //         setSnackbar({
+  //           open: true,
+  //           message: `Employee moved to ${nextStage} stage`,
+  //           severity: "success",
+  //         });
+  //         fetchOffboardings();
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error moving employee to next stage:", error);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Failed to move employee to next stage",
+  //           severity: "error",
+  //         });
+  //       });
+  //   }
+  // };
+
+const handleMoveToNextStage = (employee) => {
+  const currentStageIndex = offboardingStages.findIndex(
+    (stage) => stage.stageName === employee.stage
+  );
+
+  if (currentStageIndex < offboardingStages.length - 1) {
+    const nextStage = offboardingStages[currentStageIndex + 1].stageName;
+    const updatedEmployee = { ...employee, stage: nextStage };
+    const token = getAuthToken();
+
+    axios
+      .put(
+        `http://localhost:5002/api/offboarding/${employee._id}`,
+        updatedEmployee,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      )
+      .then(() => {
+        setSnackbar({
+          open: true,
+          message: `Employee moved to ${nextStage} stage`,
+          severity: "success",
         });
-    }
-  };
+        fetchOffboardings();
+      })
+      .catch((error) => {
+        console.error("Error moving employee to next stage:", error);
+        setSnackbar({
+          open: true,
+          message: "Failed to move employee to next stage",
+          severity: "error",
+        });
+      });
+  }
+};
+
 
   const handleFinalizeOffboarding = (employee) => {
     setConfirmDialog({
@@ -354,101 +481,217 @@ const ExitPage = () => {
     });
   };
 
-  const completeOffboarding = (employeeId) => {
-    const employee = offboardingStages
-      .flatMap((stage) => stage.employees)
-      .find((emp) => emp._id === employeeId);
+  // const completeOffboarding = (employeeId) => {
+  //   const employee = offboardingStages
+  //     .flatMap((stage) => stage.employees)
+  //     .find((emp) => emp._id === employeeId);
 
-    if (!employee) return;
+  //   if (!employee) return;
 
-    const updatedEmployee = {
-      ...employee,
-      officiallyOffboarded: true,
-      offboardingCompletedDate: new Date(),
-    };
+  //   const updatedEmployee = {
+  //     ...employee,
+  //     officiallyOffboarded: true,
+  //     offboardingCompletedDate: new Date(),
+  //   };
 
-    axios
-      .put(
-        `http://localhost:5002/api/offboarding/${employeeId}`,
-        updatedEmployee
-      )
-      .then(() => {
-        setSnackbar({
-          open: true,
-          message: "Employee has been officially offboarded",
-          severity: "success",
-        });
-        fetchOffboardings();
-        if (selectedEmployee && selectedEmployee._id === employeeId) {
-          setSelectedEmployee(updatedEmployee);
-        }
-      })
-      .catch((error) => {
-        console.error("Error finalizing offboarding:", error);
-        setSnackbar({
-          open: true,
-          message: "Failed to finalize offboarding",
-          severity: "error",
-        });
-      });
+  //   axios
+  //     .put(
+  //       `http://localhost:5002/api/offboarding/${employeeId}`,
+  //       updatedEmployee
+  //     )
+  //     .then(() => {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Employee has been officially offboarded",
+  //         severity: "success",
+  //       });
+  //       fetchOffboardings();
+  //       if (selectedEmployee && selectedEmployee._id === employeeId) {
+  //         setSelectedEmployee(updatedEmployee);
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error finalizing offboarding:", error);
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Failed to finalize offboarding",
+  //         severity: "error",
+  //       });
+  //     });
+  // };
+
+const completeOffboarding = (employeeId) => {
+  const employee = offboardingStages
+    .flatMap((stage) => stage.employees)
+    .find((emp) => emp._id === employeeId);
+
+  if (!employee) return;
+
+  const updatedEmployee = {
+    ...employee,
+    officiallyOffboarded: true,
+    offboardingCompletedDate: new Date(),
   };
+  
+  const token = getAuthToken();
+
+  axios
+    .put(
+      `http://localhost:5002/api/offboarding/${employeeId}`,
+      updatedEmployee,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    )
+    .then(() => {
+      setSnackbar({
+        open: true,
+        message: "Employee has been officially offboarded",
+        severity: "success",
+      });
+      fetchOffboardings();
+      if (selectedEmployee && selectedEmployee._id === employeeId) {
+        setSelectedEmployee(updatedEmployee);
+      }
+    })
+    .catch((error) => {
+      console.error("Error finalizing offboarding:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to finalize offboarding",
+        severity: "error",
+      });
+    });
+};
+
+
+  // const handleFileUpload = () => {
+  //   if (!selectedFile || !documentType) return;
+
+  //   setLoading(true);
+
+  //   // Create form data for file upload
+  //   const formData = new FormData();
+  //   formData.append("file", selectedFile);
+  //   formData.append("documentType", documentType);
+  //   formData.append("employeeId", selectedEmployee?._id || "");
+
+  //   axios
+  //     .post("http://localhost:5002/api/documents/upload", formData, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     })
+  //     .then((response) => {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Document uploaded successfully",
+  //         severity: "success",
+  //       });
+  //       setUploadOpen(false);
+  //       setSelectedFile(null);
+  //       setDocumentType("");
+  //       fetchOffboardings();
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error uploading document:", error);
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Failed to upload document",
+  //         severity: "error",
+  //       });
+  //     })
+  //     .finally(() => {
+  //       setLoading(false);
+  //     });
+  // };
 
   const handleFileUpload = () => {
-    if (!selectedFile || !documentType) return;
+  if (!selectedFile || !documentType) return;
 
-    setLoading(true);
+  setLoading(true);
 
-    // Create form data for file upload
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    formData.append("documentType", documentType);
-    formData.append("employeeId", selectedEmployee?._id || "");
+  // Create form data for file upload
+  const formData = new FormData();
+  formData.append("file", selectedFile);
+  formData.append("documentType", documentType);
+  formData.append("employeeId", selectedEmployee?._id || "");
+  
+  const token = getAuthToken();
 
-    axios
-      .post("http://localhost:5002/api/documents/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then((response) => {
-        setSnackbar({
-          open: true,
-          message: "Document uploaded successfully",
-          severity: "success",
-        });
-        setUploadOpen(false);
-        setSelectedFile(null);
-        setDocumentType("");
-        fetchOffboardings();
-      })
-      .catch((error) => {
-        console.error("Error uploading document:", error);
-        setSnackbar({
-          open: true,
-          message: "Failed to upload document",
-          severity: "error",
-        });
-      })
-      .finally(() => {
-        setLoading(false);
+  axios
+    .post("http://localhost:5002/api/documents/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        'Authorization': `Bearer ${token}`
+      },
+    })
+    .then((response) => {
+      setSnackbar({
+        open: true,
+        message: "Document uploaded successfully",
+        severity: "success",
       });
-  };
+      setUploadOpen(false);
+      setSelectedFile(null);
+      setDocumentType("");
+      fetchOffboardings();
+    })
+    .catch((error) => {
+      console.error("Error uploading document:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to upload document",
+        severity: "error",
+      });
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+};
+
 
   const handleDownloadDocument = (path) => {
     // Implement document download functionality
     window.open(`http://localhost:5002${path}`, "_blank");
   };
 
+  // const fetchEmployees = async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/employees/list"
+  //     );
+  //     setEmployees(response.data.data || []);
+  //   } catch (error) {
+  //     console.error("Error fetching employees:", error);
+  //   }
+  // };
+
   const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:5002/api/employees/list"
-      );
-      setEmployees(response.data.data || []);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-    }
-  };
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      "http://localhost:5002/api/employees/list",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setEmployees(response.data.data || []);
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    setSnackbar({
+      open: true,
+      message: "Failed to fetch employee data",
+      severity: "error",
+    });
+  }
+};
+
+
 
   const handleExistingEmployeeSelect = (employee) => {
     if (!employee) {
@@ -467,19 +710,44 @@ const ExitPage = () => {
     });
   };
 
-  const fetchOffboardings = async () => {
-    try {
-      const response = await axios.get("http://localhost:5002/api/offboarding");
-      const offboardings = response.data;
-      const updatedStages = offboardingStages.map((stage) => ({
-        ...stage,
-        employees: offboardings.filter((emp) => emp.stage === stage.stageName),
-      }));
-      setOffboardingStages(updatedStages);
-    } catch (error) {
-      console.error("Error fetching offboardings:", error);
-    }
-  };
+  // const fetchOffboardings = async () => {
+  //   try {
+  //     const response = await axios.get("http://localhost:5002/api/offboarding");
+  //     const offboardings = response.data;
+  //     const updatedStages = offboardingStages.map((stage) => ({
+  //       ...stage,
+  //       employees: offboardings.filter((emp) => emp.stage === stage.stageName),
+  //     }));
+  //     setOffboardingStages(updatedStages);
+  //   } catch (error) {
+  //     console.error("Error fetching offboardings:", error);
+  //   }
+  // };
+
+const fetchOffboardings = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get("http://localhost:5002/api/offboarding", {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const offboardings = response.data;
+    const updatedStages = offboardingStages.map((stage) => ({
+      ...stage,
+      employees: offboardings.filter((emp) => emp.stage === stage.stageName),
+    }));
+    setOffboardingStages(updatedStages);
+  } catch (error) {
+    console.error("Error fetching offboardings:", error);
+    setSnackbar({
+      open: true,
+      message: "Failed to fetch offboarding data",
+      severity: "error",
+    });
+  }
+};
+
 
   useEffect(() => {
     fetchOffboardings();
@@ -492,90 +760,194 @@ const ExitPage = () => {
     setCreateOpen(true);
   };
 
-  const handleCreate = async () => {
-    try {
-      setLoading(true);
-      if (editMode) {
-        await axios.put(
-          `http://localhost:5002/api/offboarding/${editData._id}`,
-          editData
-        );
-      } else {
-        await axios.post("http://localhost:5002/api/offboarding", newData);
-      }
-      await fetchOffboardings();
-      setCreateOpen(false);
-      setEditMode(false);
-      setEditData(null);
-      setSelectedExistingEmployee(null);
-      setNewData({
-        employeeName: "",
-        employeeId: "",
-        department: "",
-        position: "",
-        joiningDate: "",
-        noticePeriod: "",
-        startDate: "",
-        endDate: "",
-        stage: "Notice Period",
-        taskStatus: "0/0",
-        description: "",
-        manager: "",
-        reason: "",
-        interviewDate: "",
-        interviewer: "",
-        feedback: "",
-        handoverTo: "",
-        handoverEmail: "",
-        projectDocuments: "",
-        pendingTasks: "",
-        assets: [],
-        clearanceStatus: {
-          hr: false,
-          it: false,
-          finance: false,
-          admin: false,
-        },
-        exitChecklistCompleted: false,
-        officiallyOffboarded: false,
-      });
-      setSnackbar({
-        open: true,
-        message: editMode
-          ? "Offboarding updated successfully"
-          : "Offboarding created successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error saving offboarding:", error);
-      setSnackbar({
-        open: true,
-        message: "Error saving offboarding data",
-        severity: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleCreate = async () => {
+  //   try {
+  //     setLoading(true);
+  //     if (editMode) {
+  //       await axios.put(
+  //         `http://localhost:5002/api/offboarding/${editData._id}`,
+  //         editData
+  //       );
+  //     } else {
+  //       await axios.post("http://localhost:5002/api/offboarding", newData);
+  //     }
+  //     await fetchOffboardings();
+  //     setCreateOpen(false);
+  //     setEditMode(false);
+  //     setEditData(null);
+  //     setSelectedExistingEmployee(null);
+  //     setNewData({
+  //       employeeName: "",
+  //       employeeId: "",
+  //       department: "",
+  //       position: "",
+  //       joiningDate: "",
+  //       noticePeriod: "",
+  //       startDate: "",
+  //       endDate: "",
+  //       stage: "Notice Period",
+  //       taskStatus: "0/0",
+  //       description: "",
+  //       manager: "",
+  //       reason: "",
+  //       interviewDate: "",
+  //       interviewer: "",
+  //       feedback: "",
+  //       handoverTo: "",
+  //       handoverEmail: "",
+  //       projectDocuments: "",
+  //       pendingTasks: "",
+  //       assets: [],
+  //       clearanceStatus: {
+  //         hr: false,
+  //         it: false,
+  //         finance: false,
+  //         admin: false,
+  //       },
+  //       exitChecklistCompleted: false,
+  //       officiallyOffboarded: false,
+  //     });
+  //     setSnackbar({
+  //       open: true,
+  //       message: editMode
+  //         ? "Offboarding updated successfully"
+  //         : "Offboarding created successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error saving offboarding:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error saving offboarding data",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5002/api/offboarding/${id}`);
-      await fetchOffboardings();
-      setSnackbar({
-        open: true,
-        message: "Offboarding record deleted successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error deleting offboarding:", error);
-      setSnackbar({
-        open: true,
-        message: "Error deleting offboarding record",
-        severity: "error",
+const handleCreate = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    
+    if (editMode) {
+      await axios.put(
+        `http://localhost:5002/api/offboarding/${editData._id}`,
+        editData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+    } else {
+      await axios.post("http://localhost:5002/api/offboarding", newData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
     }
-  };
+    
+    await fetchOffboardings();
+    setCreateOpen(false);
+    setEditMode(false);
+    setEditData(null);
+    setSelectedExistingEmployee(null);
+    setNewData({
+      employeeName: "",
+      employeeId: "",
+      department: "",
+      position: "",
+      joiningDate: "",
+      noticePeriod: "",
+      startDate: "",
+      endDate: "",
+      stage: "Notice Period",
+      taskStatus: "0/0",
+      description: "",
+      manager: "",
+      reason: "",
+      interviewDate: "",
+      interviewer: "",
+      feedback: "",
+      handoverTo: "",
+      handoverEmail: "",
+      projectDocuments: "",
+      pendingTasks: "",
+      assets: [],
+      clearanceStatus: {
+        hr: false,
+        it: false,
+        finance: false,
+        admin: false,
+      },
+      exitChecklistCompleted: false,
+      officiallyOffboarded: false,
+    });
+    setSnackbar({
+      open: true,
+      message: editMode
+        ? "Offboarding updated successfully"
+        : "Offboarding created successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error saving offboarding:", error);
+    setSnackbar({
+      open: true,
+      message: "Error saving offboarding data",
+      severity: "error",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // const handleDelete = async (id) => {
+  //   try {
+  //     await axios.delete(`http://localhost:5002/api/offboarding/${id}`);
+  //     await fetchOffboardings();
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Offboarding record deleted successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error deleting offboarding:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error deleting offboarding record",
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+const handleDelete = async (id) => {
+  try {
+    const token = getAuthToken();
+    await axios.delete(`http://localhost:5002/api/offboarding/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    await fetchOffboardings();
+    setSnackbar({
+      open: true,
+      message: "Offboarding record deleted successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error deleting offboarding:", error);
+    setSnackbar({
+      open: true,
+      message: "Error deleting offboarding record",
+      severity: "error",
+    });
+  }
+};
+
 
   const handleExpand = (index) => {
     setOffboardingStages((prev) =>

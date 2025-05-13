@@ -78,18 +78,42 @@ function RestrictLeaves() {
     fetchRestrictLeaves();
   }, []);
 
-  const fetchRestrictLeaves = async () => {
-    try {
-      setLoading(true);
-      const { data } = await axios.get(`${apiBaseURL}/api/restrictLeaves`);
-      setRestrictLeaves(data);
-    } catch (err) {
-      console.error("Error fetching restricted leaves:", err);
-      showSnackbar("Error fetching restricted leaves", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+  // const fetchRestrictLeaves = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const { data } = await axios.get(`${apiBaseURL}/api/restrictLeaves`);
+  //     setRestrictLeaves(data);
+  //   } catch (err) {
+  //     console.error("Error fetching restricted leaves:", err);
+  //     showSnackbar("Error fetching restricted leaves", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Update the fetchRestrictLeaves function
+const fetchRestrictLeaves = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const { data } = await axios.get(`${apiBaseURL}/api/restrictLeaves`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setRestrictLeaves(data);
+  } catch (err) {
+    console.error("Error fetching restricted leaves:", err);
+    showSnackbar("Error fetching restricted leaves", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -178,67 +202,135 @@ function RestrictLeaves() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // Check for validation errors
-    if (validationErrors.title) {
-      showSnackbar(validationErrors.title, "error");
-      return;
-    }
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   // Check for validation errors
+  //   if (validationErrors.title) {
+  //     showSnackbar(validationErrors.title, "error");
+  //     return;
+  //   }
 
-    // Check for validation errors
-    if (validationErrors.title || validationErrors.endDate) {
-      showSnackbar(validationErrors.title || validationErrors.endDate, "error");
-      return;
-    }
+  //   // Check for validation errors
+  //   if (validationErrors.title || validationErrors.endDate) {
+  //     showSnackbar(validationErrors.title || validationErrors.endDate, "error");
+  //     return;
+  //   }
 
-    // Additional validation for dates
-    if (!validateEndDate(formData.startDate, formData.endDate)) {
-      showSnackbar("End date must be equal to or after start date", "error");
-      return;
-    }
-    setLoading(true);
+  //   // Additional validation for dates
+  //   if (!validateEndDate(formData.startDate, formData.endDate)) {
+  //     showSnackbar("End date must be equal to or after start date", "error");
+  //     return;
+  //   }
+  //   setLoading(true);
 
-    // Format dates before submitting
-    const formattedFormData = {
-      ...formData,
-      startDate: new Date(formData.startDate).toISOString(), // Convert to ISO format
-      endDate: new Date(formData.endDate).toISOString(), // Convert to ISO format
-    };
+  //   // Format dates before submitting
+  //   const formattedFormData = {
+  //     ...formData,
+  //     startDate: new Date(formData.startDate).toISOString(), // Convert to ISO format
+  //     endDate: new Date(formData.endDate).toISOString(), // Convert to ISO format
+  //   };
 
-    try {
-      if (isEditing) {
-        await axios.put(
-          `${apiBaseURL}/api/restrictLeaves/${editId}`,
-          formattedFormData
-        );
-        console.log(`Updated restricted leave with ID: ${editId}`);
-        showSnackbar("Restricted leave updated successfully");
-      } else {
-        await axios.post(`${apiBaseURL}/api/restrictLeaves`, formattedFormData);
-        console.log(`Added new restricted leave`);
-        showSnackbar("Restricted leave added successfully");
-      }
-      fetchRestrictLeaves();
-      setIsAddModalOpen(false);
-      setFormData({
-        title: "",
-        startDate: "",
-        endDate: "",
-        department: "",
-        jobPosition: "",
-        description: "",
-      });
-      setIsEditing(false);
-      setEditId(null);
-      setValidationErrors({ title: "", endDate: "" });
-    } catch (err) {
-      console.error("Error creating/updating restricted leave:", err);
-      showSnackbar("Error saving restricted leave", "error");
-    } finally {
-      setLoading(false);
-    }
+  //   try {
+  //     if (isEditing) {
+  //       await axios.put(
+  //         `${apiBaseURL}/api/restrictLeaves/${editId}`,
+  //         formattedFormData
+  //       );
+  //       console.log(`Updated restricted leave with ID: ${editId}`);
+  //       showSnackbar("Restricted leave updated successfully");
+  //     } else {
+  //       await axios.post(`${apiBaseURL}/api/restrictLeaves`, formattedFormData);
+  //       console.log(`Added new restricted leave`);
+  //       showSnackbar("Restricted leave added successfully");
+  //     }
+  //     fetchRestrictLeaves();
+  //     setIsAddModalOpen(false);
+  //     setFormData({
+  //       title: "",
+  //       startDate: "",
+  //       endDate: "",
+  //       department: "",
+  //       jobPosition: "",
+  //       description: "",
+  //     });
+  //     setIsEditing(false);
+  //     setEditId(null);
+  //     setValidationErrors({ title: "", endDate: "" });
+  //   } catch (err) {
+  //     console.error("Error creating/updating restricted leave:", err);
+  //     showSnackbar("Error saving restricted leave", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+// Update the handleSubmit function
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  // Check for validation errors
+  if (validationErrors.title || validationErrors.endDate) {
+    showSnackbar(validationErrors.title || validationErrors.endDate, "error");
+    return;
+  }
+
+  // Additional validation for dates
+  if (!validateEndDate(formData.startDate, formData.endDate)) {
+    showSnackbar("End date must be equal to or after start date", "error");
+    return;
+  }
+  setLoading(true);
+
+  // Format dates before submitting
+  const formattedFormData = {
+    ...formData,
+    startDate: new Date(formData.startDate).toISOString(), // Convert to ISO format
+    endDate: new Date(formData.endDate).toISOString(), // Convert to ISO format
   };
+
+  try {
+    const token = getAuthToken();
+    
+    if (isEditing) {
+      await axios.put(
+        `${apiBaseURL}/api/restrictLeaves/${editId}`,
+        formattedFormData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      console.log(`Updated restricted leave with ID: ${editId}`);
+      showSnackbar("Restricted leave updated successfully");
+    } else {
+      await axios.post(`${apiBaseURL}/api/restrictLeaves`, formattedFormData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      console.log(`Added new restricted leave`);
+      showSnackbar("Restricted leave added successfully");
+    }
+    fetchRestrictLeaves();
+    setIsAddModalOpen(false);
+    setFormData({
+      title: "",
+      startDate: "",
+      endDate: "",
+      department: "",
+      jobPosition: "",
+      description: "",
+    });
+    setIsEditing(false);
+    setEditId(null);
+    setValidationErrors({ title: "", endDate: "" });
+  } catch (err) {
+    console.error("Error creating/updating restricted leave:", err);
+    showSnackbar("Error saving restricted leave", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleEdit = (leave) => {
     setFormData({
@@ -291,25 +383,52 @@ function RestrictLeaves() {
     setLeaveToDelete(null);
   };
 
-  const handleConfirmDelete = async () => {
+  // const handleConfirmDelete = async () => {
+  //   if (!leaveToDelete) return;
+
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(
+  //       `${apiBaseURL}/api/restrictLeaves/${leaveToDelete._id}`
+  //     );
+  //     console.log(`Deleted restricted leave with ID: ${leaveToDelete._id}`);
+  //     fetchRestrictLeaves();
+  //     showSnackbar("Restricted leave deleted successfully");
+  //   } catch (err) {
+  //     console.error("Error deleting restricted leave:", err);
+  //     showSnackbar("Error deleting restricted leave", "error");
+  //   } finally {
+  //     setLoading(false);
+  //     handleCloseDeleteDialog();
+  //   }
+  // };
+
+// Update the handleConfirmDelete function
+const handleConfirmDelete = async () => {
+  try {
     if (!leaveToDelete) return;
 
-    try {
-      setLoading(true);
-      await axios.delete(
-        `${apiBaseURL}/api/restrictLeaves/${leaveToDelete._id}`
-      );
-      console.log(`Deleted restricted leave with ID: ${leaveToDelete._id}`);
-      fetchRestrictLeaves();
-      showSnackbar("Restricted leave deleted successfully");
-    } catch (err) {
-      console.error("Error deleting restricted leave:", err);
-      showSnackbar("Error deleting restricted leave", "error");
-    } finally {
-      setLoading(false);
-      handleCloseDeleteDialog();
-    }
-  };
+    setLoading(true);
+    const token = getAuthToken();
+    await axios.delete(
+      `${apiBaseURL}/api/restrictLeaves/${leaveToDelete._id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log(`Deleted restricted leave with ID: ${leaveToDelete._id}`);
+    fetchRestrictLeaves();
+    showSnackbar("Restricted leave deleted successfully");
+  } catch (err) {
+    console.error("Error deleting restricted leave:", err);
+    showSnackbar("Error deleting restricted leave", "error");
+  } finally {
+    setLoading(false);
+    handleCloseDeleteDialog();
+  }
+};
 
   const toSentenceCase = (str) => {
     return str

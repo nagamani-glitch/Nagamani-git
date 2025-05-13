@@ -106,14 +106,14 @@ function OnboardingView() {
     setSelectedCandidateId(null);
   };
 
-  const confirmDelete = async () => {
-    try {
-      await handleDeleteCandidate(selectedCandidateId);
-      closeDeleteConfirm();
-    } catch (error) {
-      console.error("Error deleting candidate:", error);
-    }
-  };
+  // const confirmDelete = async () => {
+  //   try {
+  //     await handleDeleteCandidate(selectedCandidateId);
+  //     closeDeleteConfirm();
+  //   } catch (error) {
+  //     console.error("Error deleting candidate:", error);
+  //   }
+  // };
 
   const openMailConfirm = (candidate) => {
     setSelectedCandidateForMail(candidate);
@@ -125,42 +125,42 @@ function OnboardingView() {
     setSelectedCandidateForMail(null);
   };
 
-  const confirmSendMail = async () => {
-    try {
-      await sendMailToCandidate(selectedCandidateForMail);
-      closeMailConfirm();
-    } catch (error) {
-      console.error("Error sending mail:", error);
-    }
-  };
+  // const confirmSendMail = async () => {
+  //   try {
+  //     await sendMailToCandidate(selectedCandidateForMail);
+  //     closeMailConfirm();
+  //   } catch (error) {
+  //     console.error("Error sending mail:", error);
+  //   }
+  // };
 
   // Update the handleDeleteCandidate function to not require confirmation
   // since we'll handle that separately
-  const handleDeleteCandidate = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5002/api/onboarding/${id}`);
-      setCandidates(candidates.filter((candidate) => candidate._id !== id));
-    } catch (error) {
-      console.error("Error deleting candidate:", error);
-    }
-  };
+  // const handleDeleteCandidate = async (id) => {
+  //   try {
+  //     await axios.delete(`http://localhost:5002/api/onboarding/${id}`);
+  //     setCandidates(candidates.filter((candidate) => candidate._id !== id));
+  //   } catch (error) {
+  //     console.error("Error deleting candidate:", error);
+  //   }
+  // };
 
   useEffect(() => {
     fetchCandidates();
   }, [stageFilter]);
 
-  const fetchCandidates = async () => {
-    try {
-      const url =
-        stageFilter === "All"
-          ? "http://localhost:5002/api/onboarding"
-          : `http://localhost:5002/api/onboarding/filter?stage=${stageFilter}`;
-      const response = await axios.get(url);
-      setCandidates(response.data);
-    } catch (error) {
-      console.error("Error fetching candidates:", error);
-    }
-  };
+  // const fetchCandidates = async () => {
+  //   try {
+  //     const url =
+  //       stageFilter === "All"
+  //         ? "http://localhost:5002/api/onboarding"
+  //         : `http://localhost:5002/api/onboarding/filter?stage=${stageFilter}`;
+  //     const response = await axios.get(url);
+  //     setCandidates(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching candidates:", error);
+  //   }
+  // };
 
   // Update the handleInputChange function
   const handleInputChange = (e, field) => {
@@ -207,68 +207,276 @@ function OnboardingView() {
   };
 
   // Update the form submission handler
-  const handleCreateCandidate = async (e) => {
-    e.preventDefault();
+  // const handleCreateCandidate = async (e) => {
+  //   e.preventDefault();
 
-    const errors = {
-      phone: validatePhone(newCandidate.mobile) ? "" : "Invalid phone number",
-      email: validateEmail(newCandidate.email) ? "" : "Invalid email",
-      position: validatePosition(newCandidate.jobPosition)
-        ? ""
-        : "Invalid position",
-    };
+  //   const errors = {
+  //     phone: validatePhone(newCandidate.mobile) ? "" : "Invalid phone number",
+  //     email: validateEmail(newCandidate.email) ? "" : "Invalid email",
+  //     position: validatePosition(newCandidate.jobPosition)
+  //       ? ""
+  //       : "Invalid position",
+  //   };
 
-    setValidationErrors(errors);
+  //   setValidationErrors(errors);
 
-    if (Object.values(errors).some((error) => error !== "")) {
-      return;
-    }
+  //   if (Object.values(errors).some((error) => error !== "")) {
+  //     return;
+  //   }
 
-    try {
-      const response = await axios.post(
-        "http://localhost:5002/api/onboarding",
-        newCandidate
-      );
-      setCandidates([...candidates, response.data]);
-      setNewCandidate({
-        name: "",
-        email: "",
-        jobPosition: "",
-        mobile: "",
-        joiningDate: "",
-        stage: "Test",
-        portalStatus: "Active",
-        taskStatus: "Pending",
-      });
-      setValidationErrors({
-        phone: "",
-        email: "",
-        position: "",
-      });
-      setShowCreateForm(false);
-    } catch (error) {
-      console.error("Error creating candidate:", error);
-    }
-  };
+  //   try {
+  //     const response = await axios.post(
+  //       "http://localhost:5002/api/onboarding",
+  //       newCandidate
+  //     );
+  //     setCandidates([...candidates, response.data]);
+  //     setNewCandidate({
+  //       name: "",
+  //       email: "",
+  //       jobPosition: "",
+  //       mobile: "",
+  //       joiningDate: "",
+  //       stage: "Test",
+  //       portalStatus: "Active",
+  //       taskStatus: "Pending",
+  //     });
+  //     setValidationErrors({
+  //       phone: "",
+  //       email: "",
+  //       position: "",
+  //     });
+  //     setShowCreateForm(false);
+  //   } catch (error) {
+  //     console.error("Error creating candidate:", error);
+  //   }
+  // };
 
-  const sendMailToCandidate = async (candidate) => {
-    try {
-      await axios.post("http://localhost:5002/api/onboarding/send-email", {
-        email: candidate.email,
-        name: candidate.name,
-        jobPosition: candidate.jobPosition,
-        joiningDate: candidate.joiningDate,
-      });
-      alert("Onboarding email sent successfully!");
-    } catch (error) {
-      console.error("Error sending email:", error);
-      alert("Failed to send email. Please try again.");
-    }
-  };
+  // const sendMailToCandidate = async (candidate) => {
+  //   try {
+  //     await axios.post("http://localhost:5002/api/onboarding/send-email", {
+  //       email: candidate.email,
+  //       name: candidate.name,
+  //       jobPosition: candidate.jobPosition,
+  //       joiningDate: candidate.joiningDate,
+  //     });
+  //     alert("Onboarding email sent successfully!");
+  //   } catch (error) {
+  //     console.error("Error sending email:", error);
+  //     alert("Failed to send email. Please try again.");
+  //   }
+  // };
 
   const filteredCandidates = candidates.filter((candidate) =>
     candidate.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Update the fetchCandidates function
+const fetchCandidates = async () => {
+  try {
+    const token = getAuthToken();
+    const url =
+      stageFilter === "All"
+        ? "http://localhost:5002/api/onboarding"
+        : `http://localhost:5002/api/onboarding/filter?stage=${stageFilter}`;
+    
+    const response = await axios.get(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setCandidates(response.data);
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+  }
+};
+
+// Update the handleCreateCandidate function
+const handleCreateCandidate = async (e) => {
+  e.preventDefault();
+
+  const errors = {
+    phone: validatePhone(newCandidate.mobile) ? "" : "Invalid phone number",
+    email: validateEmail(newCandidate.email) ? "" : "Invalid email",
+    position: validatePosition(newCandidate.jobPosition)
+      ? ""
+      : "Invalid position",
+  };
+
+  setValidationErrors(errors);
+
+  if (Object.values(errors).some((error) => error !== "")) {
+    return;
+  }
+
+  try {
+    const token = getAuthToken();
+    const response = await axios.post(
+      "http://localhost:5002/api/onboarding",
+      newCandidate,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setCandidates([...candidates, response.data]);
+    setNewCandidate({
+      name: "",
+      email: "",
+      jobPosition: "",
+      mobile: "",
+      joiningDate: "",
+      stage: "Test",
+      portalStatus: "Active",
+      taskStatus: "Pending",
+    });
+    setValidationErrors({
+      phone: "",
+      email: "",
+      position: "",
+    });
+    setShowCreateForm(false);
+  } catch (error) {
+    console.error("Error creating candidate:", error);
+  }
+};
+
+// Update the handleUpdateCandidate function if it exists
+const handleUpdateCandidate = async (id, updatedData) => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.put(
+      `http://localhost:5002/api/onboarding/${id}`,
+      updatedData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setCandidates(
+      candidates.map((candidate) =>
+        candidate._id === id ? response.data : candidate
+      )
+    );
+  } catch (error) {
+    console.error("Error updating candidate:", error);
+  }
+};
+
+// Update the handleDeleteCandidate function
+const handleDeleteCandidate = async (id) => {
+  try {
+    const token = getAuthToken();
+    await axios.delete(`http://localhost:5002/api/onboarding/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setCandidates(candidates.filter((candidate) => candidate._id !== id));
+  } catch (error) {
+    console.error("Error deleting candidate:", error);
+  }
+};
+
+// Update the sendMailToCandidate function
+const sendMailToCandidate = async (candidate) => {
+  try {
+    const token = getAuthToken();
+    await axios.post(
+      "http://localhost:5002/api/onboarding/send-email", 
+      {
+        email: candidate.email,
+        name: candidate.name,
+        jobPosition: candidate.jobPosition,
+        joiningDate: candidate.joiningDate,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    alert("Onboarding email sent successfully!");
+  } catch (error) {
+    console.error("Error sending email:", error);
+    alert("Failed to send email. Please try again.");
+  }
+};
+
+// Update any other API calls in the component
+// For example, if there's a function to handle stage changes:
+const handleStageChange = async (id, newStage) => {
+  try {
+    const token = getAuthToken();
+    const candidate = candidates.find((c) => c._id === id);
+    if (candidate) {
+      const updatedCandidate = { ...candidate, stage: newStage };
+      await axios.put(
+        `http://localhost:5002/api/onboarding/${id}`,
+        updatedCandidate,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      fetchCandidates(); // Refresh the list
+    }
+  } catch (error) {
+    console.error("Error updating candidate stage:", error);
+  }
+};
+
+// Update the confirmDelete function if it exists
+const confirmDelete = async () => {
+  try {
+    const token = getAuthToken();
+    await axios.delete(
+      `http://localhost:5002/api/onboarding/${selectedCandidateId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    closeDeleteConfirm();
+    fetchCandidates();
+  } catch (error) {
+    console.error("Error deleting candidate:", error);
+  }
+};
+
+// Update the confirmSendMail function if it exists
+const confirmSendMail = async () => {
+  try {
+    const token = getAuthToken();
+    await axios.post(
+      "http://localhost:5002/api/onboarding/send-email",
+      {
+        email: selectedCandidateForMail.email,
+        name: selectedCandidateForMail.name,
+        jobPosition: selectedCandidateForMail.jobPosition,
+        joiningDate: selectedCandidateForMail.joiningDate,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    closeMailConfirm();
+  } catch (error) {
+    console.error("Error sending mail:", error);
+  }
+};
+
 
   return (
     <div className="onboarding-container">

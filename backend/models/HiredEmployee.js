@@ -35,7 +35,7 @@
 //     },
 //     status: {
 //         type: String,
-//         enum: ['Active', 'Pending', 'Inactive'],
+//         enum: ['Pending', 'Offer Letter Accepted', 'Offer Letter Rejected'],
 //         default: 'Pending'
 //     },
 //     createdAt: {
@@ -104,4 +104,11 @@ const hiredEmployeeSchema = new mongoose.Schema({
     timestamps: true
 });
 
-export default mongoose.model('HiredEmployee', hiredEmployeeSchema);
+// Create model for HiredEmployee in the main database (for backward compatibility)
+const HiredEmployee = mongoose.model('HiredEmployee', hiredEmployeeSchema);
+
+// Export the schema for company-specific models
+export { hiredEmployeeSchema };
+
+// Export the main model as default
+export default HiredEmployee;

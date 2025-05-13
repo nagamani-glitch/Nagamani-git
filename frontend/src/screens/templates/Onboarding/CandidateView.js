@@ -129,6 +129,11 @@ const CandidatesView = () => {
     candidateName: "",
   });
 
+// Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
   // Modify the handleDelete function to show confirmation first
   const handleDelete = (id, name) => {
     setDeleteConfirmDialog({
@@ -138,77 +143,175 @@ const CandidatesView = () => {
     });
   };
 
-  // Add a new function to handle the actual deletion after confirmation
-  const confirmDelete = async () => {
-    try {
-      setLoading(true);
-      await axios.delete(`${API_URL}/${deleteConfirmDialog.candidateId}`);
-      setCandidates((prev) =>
-        prev.filter((c) => c._id !== deleteConfirmDialog.candidateId)
-      );
-      showSnackbar("Candidate deleted successfully", "warning");
-    } catch (error) {
-      showSnackbar("Error deleting candidate", "error");
-    } finally {
-      // Close the confirmation dialog
-      setDeleteConfirmDialog({
-        open: false,
-        candidateId: null,
-        candidateName: "",
-      });
-      setLoading(false);
-    }
-  };
+  // // Add a new function to handle the actual deletion after confirmation
+  // const confirmDelete = async () => {
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(`${API_URL}/${deleteConfirmDialog.candidateId}`);
+  //     setCandidates((prev) =>
+  //       prev.filter((c) => c._id !== deleteConfirmDialog.candidateId)
+  //     );
+  //     showSnackbar("Candidate deleted successfully", "warning");
+  //   } catch (error) {
+  //     showSnackbar("Error deleting candidate", "error");
+  //   } finally {
+  //     // Close the confirmation dialog
+  //     setDeleteConfirmDialog({
+  //       open: false,
+  //       candidateId: null,
+  //       candidateName: "",
+  //     });
+  //     setLoading(false);
+  //   }
+  // };
+
+
+  // Update the confirmDelete function (this is your existing function for delete)
+const confirmDelete = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    await axios.delete(`${API_URL}/${deleteConfirmDialog.candidateId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setCandidates((prev) =>
+      prev.filter((c) => c._id !== deleteConfirmDialog.candidateId)
+    );
+    showSnackbar("Candidate deleted successfully", "warning");
+  } catch (error) {
+    showSnackbar(error.response?.data?.error || "Error deleting candidate", "error");
+  } finally {
+    // Close the confirmation dialog
+    setDeleteConfirmDialog({
+      open: false,
+      candidateId: null,
+      candidateName: "",
+    });
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchCandidates();
   }, []);
 
-  const fetchCandidates = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(API_URL);
-      setCandidates(response.data);
-    } catch (error) {
-      showSnackbar("Error fetching candidates", "error");
-    }
-    setLoading(false);
-  };
+  // const fetchCandidates = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.get(API_URL);
+  //     setCandidates(response.data);
+  //   } catch (error) {
+  //     showSnackbar("Error fetching candidates", "error");
+  //   }
+  //   setLoading(false);
+  // };
 
-  const handleFilterChange = async (type, value) => {
-    const newFilters = { ...filters, [type]: value };
-    setFilters(newFilters);
+// Update the fetchCandidates function
 
-    try {
-      const response = await axios.get(`${API_URL}/filter`, {
-        params: {
-          department:
-            newFilters.department !== "All" ? newFilters.department : "",
-          status: newFilters.status !== "All" ? newFilters.status : "",
-          search: searchTerm,
-        },
-      });
-      setCandidates(response.data);
-    } catch (error) {
-      showSnackbar("Error applying filters", "error");
-    }
-  };
 
-  const handleSearch = async (value) => {
-    setSearchTerm(value);
-    try {
-      const response = await axios.get(`${API_URL}/filter`, {
-        params: {
-          department: filters.department !== "All" ? filters.department : "",
-          status: filters.status !== "All" ? filters.status : "",
-          search: value,
-        },
-      });
-      setCandidates(response.data);
-    } catch (error) {
-      showSnackbar("Error applying search", "error");
-    }
-  };
+const fetchCandidates = async () => {
+  setLoading(true);
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(API_URL, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setCandidates(response.data);
+  } catch (error) {
+    showSnackbar("Error fetching candidates", "error");
+  }
+  setLoading(false);
+};
+
+
+
+  // const handleFilterChange = async (type, value) => {
+  //   const newFilters = { ...filters, [type]: value };
+  //   setFilters(newFilters);
+
+  //   try {
+  //     const response = await axios.get(`${API_URL}/filter`, {
+  //       params: {
+  //         department:
+  //           newFilters.department !== "All" ? newFilters.department : "",
+  //         status: newFilters.status !== "All" ? newFilters.status : "",
+  //         search: searchTerm,
+  //       },
+  //     });
+  //     setCandidates(response.data);
+  //   } catch (error) {
+  //     showSnackbar("Error applying filters", "error");
+  //   }
+  // };
+
+
+  // Update the handleFilterChange function
+const handleFilterChange = async (type, value) => {
+  const newFilters = { ...filters, [type]: value };
+  setFilters(newFilters);
+
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/filter`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      params: {
+        department:
+          newFilters.department !== "All" ? newFilters.department : "",
+        status: newFilters.status !== "All" ? newFilters.status : "",
+        search: searchTerm,
+      },
+    });
+    setCandidates(response.data);
+   } catch (error) {
+    console.error("Error filtering candidates:", error);
+    showSnackbar("Error filtering candidates", "error");
+  }
+};
+
+
+  // const handleSearch = async (value) => {
+  //   setSearchTerm(value);
+  //   try {
+  //     const response = await axios.get(`${API_URL}/filter`, {
+  //       params: {
+  //         department: filters.department !== "All" ? filters.department : "",
+  //         status: filters.status !== "All" ? filters.status : "",
+  //         search: value,
+  //       },
+  //     });
+  //     setCandidates(response.data);
+  //   } catch (error) {
+  //     showSnackbar("Error applying search", "error");
+  //   }
+  // };
+
+// Update the handleSearch function
+const handleSearch = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/filter`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      params: {
+        department: filters.department !== "All" ? filters.department : "",
+        status: filters.status !== "All" ? filters.status : "",
+        search: searchTerm,
+      },
+    });
+    setCandidates(response.data);
+  } catch (error) {
+    console.error("Error searching candidates:", error);
+    showSnackbar("Error searching candidates", "error");
+  }
+};
+
 
   const handleFormChange = (event) => {
     const { name, value } = event.target;
@@ -218,38 +321,82 @@ const CandidatesView = () => {
     }));
   };
 
-  const handleSubmit = async () => {
-    try {
-      const candidateData = {
-        ...formData,
-        probationEnds: new Date(formData.joiningDate).setMonth(
-          new Date(formData.joiningDate).getMonth() + 3
-        ),
-        recruitment: formData.recruitment || "Direct",
-      };
+  // const handleSubmit = async () => {
+  //   try {
+  //     const candidateData = {
+  //       ...formData,
+  //       probationEnds: new Date(formData.joiningDate).setMonth(
+  //         new Date(formData.joiningDate).getMonth() + 3
+  //       ),
+  //       recruitment: formData.recruitment || "Direct",
+  //     };
 
-      if (editMode) {
-        const response = await axios.put(
-          `${API_URL}/${selectedCandidate._id}`,
-          candidateData
-        );
-        setCandidates((prev) =>
-          prev.map((c) => (c._id === selectedCandidate._id ? response.data : c))
-        );
-        showSnackbar("Candidate updated successfully");
-      } else {
-        const response = await axios.post(API_URL, candidateData);
-        setCandidates((prev) => [...prev, response.data]);
-        showSnackbar("New candidate added successfully");
-      }
-      handleDialogClose();
-    } catch (error) {
-      showSnackbar(
-        error.response?.data?.message || "Operation failed",
-        "error"
+  //     if (editMode) {
+  //       const response = await axios.put(
+  //         `${API_URL}/${selectedCandidate._id}`,
+  //         candidateData
+  //       );
+  //       setCandidates((prev) =>
+  //         prev.map((c) => (c._id === selectedCandidate._id ? response.data : c))
+  //       );
+  //       showSnackbar("Candidate updated successfully");
+  //     } else {
+  //       const response = await axios.post(API_URL, candidateData);
+  //       setCandidates((prev) => [...prev, response.data]);
+  //       showSnackbar("New candidate added successfully");
+  //     }
+  //     handleDialogClose();
+  //   } catch (error) {
+  //     showSnackbar(
+  //       error.response?.data?.message || "Operation failed",
+  //       "error"
+  //     );
+  //   }
+  // };
+
+// Update the handleSubmit function (this is your existing function for both add and edit)
+const handleSubmit = async () => {
+  try {
+    const token = getAuthToken();
+    const candidateData = {
+      ...formData,
+      probationEnds: new Date(formData.joiningDate).setMonth(
+        new Date(formData.joiningDate).getMonth() + 3
+      ),
+      recruitment: formData.recruitment || "Direct",
+    };
+
+    if (editMode) {
+      const response = await axios.put(
+        `${API_URL}/${selectedCandidate._id}`,
+        candidateData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
+      setCandidates((prev) =>
+        prev.map((c) => (c._id === selectedCandidate._id ? response.data : c))
+      );
+      showSnackbar("Candidate updated successfully");
+    } else {
+      const response = await axios.post(API_URL, candidateData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      setCandidates((prev) => [...prev, response.data]);
+      showSnackbar("New candidate added successfully");
     }
-  };
+    handleDialogClose();
+  } catch (error) {
+    showSnackbar(
+      error.response?.data?.message || "Operation failed",
+      "error"
+    );
+  }
+};
 
   const handleEdit = (candidate) => {
     setSelectedCandidate(candidate);

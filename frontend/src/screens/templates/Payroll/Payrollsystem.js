@@ -132,6 +132,12 @@ const PayrollSystem = () => {
   const [selectedRegisteredEmployee, setSelectedRegisteredEmployee] =
     useState("");
 
+// Add this helper function to get the auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
+
   const handleDeductionSelection = (deductionType, isChecked) => {
     if (isChecked) {
       setSelectedDeductions([...selectedDeductions, deductionType]);
@@ -155,6 +161,8 @@ const PayrollSystem = () => {
   const [allowancePreviewDialogOpen, setAllowancePreviewDialogOpen] =
     useState(false);
   const [previewEmployee, setPreviewEmployee] = useState(null);
+
+
 
   // Handler for opening employee preview
   const handleOpenEmployeePreview = (empId) => {
@@ -282,119 +290,372 @@ const PayrollSystem = () => {
     }
   };
 
+  // const handleAddMultipleAllowances = async () => {
+  //   try {
+  //     // First validate the allowance percentages if any allowances are selected
+  //   if (selectedAllowances.length > 0) {
+  //     const shouldProceed = validateAllowancePercentages();
+  //     if (!shouldProceed) {
+  //       return; // User chose not to proceed
+  //     }
+  //   }
+  //     setIsLoading(true);
+
+  //     // Show loading indicator
+  //     setAlert({
+  //       open: true,
+  //       message: "Processing, please wait...",
+  //       severity: "info",
+  //       transition: Fade,
+  //     });
+
+  //     if (
+  //       !bulkEmployeeId ||
+  //       (selectedAllowances.length === 0 && selectedDeductions.length === 0)
+  //     ) {
+  //       showAlert(
+  //         "Please select an employee and at least one allowance or deduction",
+  //         "error"
+  //       );
+  //       setIsLoading(false);
+  //       return;
+  //     }
+
+  //     const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
+  //     if (!employee) {
+  //       showAlert("Invalid employee selected", "error");
+  //       setIsLoading(false);
+  //       return;
+  //     }
+
+  //     // In edit mode, we need to handle updates differently
+  //     if (editMode) {
+  //       // First, get current allowances and deductions
+  //       const currentAllowances = allowanceData.filter(
+  //         (a) => a.empId === bulkEmployeeId && a.status === "Active"
+  //       );
+  //       const currentDeductions = deductions.filter(
+  //         (d) => d.empId === bulkEmployeeId && d.status === "Active"
+  //       );
+
+  //       // For allowances: update existing ones and add new ones
+  //       for (const allowanceName of selectedAllowances) {
+  //         const percentage = parseFloat(
+  //           allowancePercentages[allowanceName] || 0
+  //         );
+  //         const amount = calculateAllowanceAmount(
+  //           employee.basicPay,
+  //           percentage
+  //         ).toString();
+
+  //         const existingAllowance = currentAllowances.find(
+  //           (a) => a.name === allowanceName
+  //         );
+
+  //         if (existingAllowance) {
+  //           // Update existing allowance
+  //           const id = `${bulkEmployeeId}_${allowanceName}`;
+  //           await axios.put(`${API_URL}/allowances/${id}`, {
+  //             empId: bulkEmployeeId,
+  //             name: allowanceName,
+  //             percentage,
+  //             amount,
+  //             category: existingAllowance.category || "Regular",
+  //             status: "Active",
+  //             isRecurring: true,
+  //           });
+  //         } else {
+  //           // Add new allowance
+  //           await axios.post(`${API_URL}/allowances`, {
+  //             empId: bulkEmployeeId,
+  //             name: allowanceName,
+  //             percentage,
+  //             amount,
+  //             category: "Regular",
+  //             status: "Active",
+  //             isRecurring: true,
+  //           });
+  //         }
+  //       }
+
+  //       // For deductions: update existing ones and add new ones
+  //       for (const deductionName of selectedDeductions) {
+  //         const amount = parseFloat(
+  //           manualDeductionAmounts[deductionName] || 0
+  //         ).toString();
+
+  //         const existingDeduction = currentDeductions.find(
+  //           (d) => d.name === deductionName
+  //         );
+
+  //         if (existingDeduction) {
+  //           // Update existing deduction
+  //           const id = `${bulkEmployeeId}_${deductionName}`;
+  //           await axios.put(`${API_URL}/deductions/${id}`, {
+  //             empId: bulkEmployeeId,
+  //             name: deductionName,
+  //             percentage: 0, // Always 0 for fixed amounts
+  //             amount,
+  //             category: existingDeduction.category || "Tax",
+  //             status: "Active",
+  //             isRecurring: true,
+  //             isFixedAmount: true,
+  //           });
+  //         } else {
+  //           // Add new deduction
+  //           await axios.post(`${API_URL}/deductions`, {
+  //             empId: bulkEmployeeId,
+  //             name: deductionName,
+  //             percentage: 0, // Always 0 for fixed amounts
+  //             amount,
+  //             category: "Tax",
+  //             status: "Active",
+  //             isRecurring: true,
+  //             isFixedAmount: true,
+  //           });
+  //         }
+  //       }
+
+  //       showAlert(`Successfully updated allowances and deductions`);
+  //     } else {
+  //       // Process allowances in add mode
+  //       for (const allowanceName of selectedAllowances) {
+  //         const percentage = parseFloat(
+  //           allowancePercentages[allowanceName] || 0
+  //         );
+  //         const amount = calculateAllowanceAmount(
+  //           employee.basicPay,
+  //           percentage
+  //         ).toString();
+
+  //         try {
+  //           await axios.post(`${API_URL}/allowances`, {
+  //             empId: bulkEmployeeId,
+  //             name: allowanceName,
+  //             percentage,
+  //             amount,
+  //             category: "Regular",
+  //             status: "Active",
+  //             isRecurring: true,
+  //           });
+  //         } catch (error) {
+  //           console.error(`Error adding allowance ${allowanceName}:`, error);
+  //           showAlert(`Error adding allowance ${allowanceName}`, "error");
+  //         }
+  //       }
+
+  //       // Process deductions in add mode
+  //       if (selectedDeductions.length > 0) {
+  //         for (const deductionName of selectedDeductions) {
+  //           // Use manual amount directly
+  //           const amount = parseFloat(
+  //             manualDeductionAmounts[deductionName] || 0
+  //           ).toString();
+
+  //           try {
+  //             await axios.post(`${API_URL}/deductions`, {
+  //               empId: bulkEmployeeId,
+  //               name: deductionName,
+  //               percentage: 0, // Always 0 for fixed amounts
+  //               amount,
+  //               category: "Tax",
+  //               status: "Active",
+  //               isRecurring: true,
+  //               isFixedAmount: true,
+  //             });
+  //           } catch (error) {
+  //             console.error(`Error adding deduction ${deductionName}:`, error);
+  //             showAlert(`Error adding deduction ${deductionName}`, "error");
+  //           }
+  //         }
+  //       }
+
+  //       showAlert(`Successfully added allowances and deductions`);
+  //     }
+
+  //     // Refresh the data after adding/updating allowances and deductions
+  //     await Promise.all([fetchAllowances(), fetchDeductions()]);
+  //     handleCloseDialog();
+  //     setIsLoading(false);
+  //   } catch (error) {
+  //     console.error("Error in handleAddMultipleAllowances:", error);
+  //     showAlert(
+  //       error.response?.data?.message ||
+  //         "Error saving allowances and deductions",
+  //       "error"
+  //     );
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleAddMultipleAllowances = async () => {
-    try {
-      // First validate the allowance percentages if any allowances are selected
+  try {
+    // First validate the allowance percentages if any allowances are selected
     if (selectedAllowances.length > 0) {
       const shouldProceed = validateAllowancePercentages();
       if (!shouldProceed) {
         return; // User chose not to proceed
       }
     }
-      setIsLoading(true);
+    setIsLoading(true);
 
-      // Show loading indicator
-      setAlert({
-        open: true,
-        message: "Processing, please wait...",
-        severity: "info",
-        transition: Fade,
-      });
+    // Show loading indicator
+    setAlert({
+      open: true,
+      message: "Processing, please wait...",
+      severity: "info",
+      transition: Fade,
+    });
 
-      if (
-        !bulkEmployeeId ||
-        (selectedAllowances.length === 0 && selectedDeductions.length === 0)
-      ) {
-        showAlert(
-          "Please select an employee and at least one allowance or deduction",
-          "error"
+    if (
+      !bulkEmployeeId ||
+      (selectedAllowances.length === 0 && selectedDeductions.length === 0)
+    ) {
+      showAlert(
+        "Please select an employee and at least one allowance or deduction",
+        "error"
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
+    if (!employee) {
+      showAlert("Invalid employee selected", "error");
+      setIsLoading(false);
+      return;
+    }
+
+    const token = getAuthToken();
+    const headers = {
+      Authorization: `Bearer ${token}`
+    };
+
+    // In edit mode, we need to handle updates differently
+    if (editMode) {
+      // First, get current allowances and deductions
+      const currentAllowances = allowanceData.filter(
+        (a) => a.empId === bulkEmployeeId && a.status === "Active"
+      );
+      const currentDeductions = deductions.filter(
+        (d) => d.empId === bulkEmployeeId && d.status === "Active"
+      );
+
+      // For allowances: update existing ones and add new ones
+      for (const allowanceName of selectedAllowances) {
+        const percentage = parseFloat(
+          allowancePercentages[allowanceName] || 0
         );
-        setIsLoading(false);
-        return;
-      }
+        const amount = calculateAllowanceAmount(
+          employee.basicPay,
+          percentage
+        ).toString();
 
-      const employee = employeeData.find((e) => e.empId === bulkEmployeeId);
-      if (!employee) {
-        showAlert("Invalid employee selected", "error");
-        setIsLoading(false);
-        return;
-      }
-
-      // In edit mode, we need to handle updates differently
-      if (editMode) {
-        // First, get current allowances and deductions
-        const currentAllowances = allowanceData.filter(
-          (a) => a.empId === bulkEmployeeId && a.status === "Active"
-        );
-        const currentDeductions = deductions.filter(
-          (d) => d.empId === bulkEmployeeId && d.status === "Active"
+        const existingAllowance = currentAllowances.find(
+          (a) => a.name === allowanceName
         );
 
-        // For allowances: update existing ones and add new ones
-        for (const allowanceName of selectedAllowances) {
-          const percentage = parseFloat(
-            allowancePercentages[allowanceName] || 0
-          );
-          const amount = calculateAllowanceAmount(
-            employee.basicPay,
-            percentage
-          ).toString();
-
-          const existingAllowance = currentAllowances.find(
-            (a) => a.name === allowanceName
-          );
-
-          if (existingAllowance) {
-            // Update existing allowance
-            const id = `${bulkEmployeeId}_${allowanceName}`;
-            await axios.put(`${API_URL}/allowances/${id}`, {
-              empId: bulkEmployeeId,
-              name: allowanceName,
-              percentage,
-              amount,
-              category: existingAllowance.category || "Regular",
-              status: "Active",
-              isRecurring: true,
-            });
-          } else {
-            // Add new allowance
-            await axios.post(`${API_URL}/allowances`, {
-              empId: bulkEmployeeId,
-              name: allowanceName,
-              percentage,
-              amount,
-              category: "Regular",
-              status: "Active",
-              isRecurring: true,
-            });
-          }
+        if (existingAllowance) {
+          // Update existing allowance
+          const id = `${bulkEmployeeId}_${allowanceName}`;
+          await axios.put(`${API_URL}/allowances/${id}`, {
+            empId: bulkEmployeeId,
+            name: allowanceName,
+            percentage,
+            amount,
+            category: existingAllowance.category || "Regular",
+            status: "Active",
+            isRecurring: true,
+          }, { headers });
+        } else {
+          // Add new allowance
+          await axios.post(`${API_URL}/allowances`, {
+            empId: bulkEmployeeId,
+            name: allowanceName,
+            percentage,
+            amount,
+            category: "Regular",
+            status: "Active",
+            isRecurring: true,
+          }, { headers });
         }
+      }
 
-        // For deductions: update existing ones and add new ones
+      // For deductions: update existing ones and add new ones
+      for (const deductionName of selectedDeductions) {
+        const amount = parseFloat(
+          manualDeductionAmounts[deductionName] || 0
+        ).toString();
+
+        const existingDeduction = currentDeductions.find(
+          (d) => d.name === deductionName
+        );
+
+        if (existingDeduction) {
+          // Update existing deduction
+          const id = `${bulkEmployeeId}_${deductionName}`;
+          await axios.put(`${API_URL}/deductions/${id}`, {
+            empId: bulkEmployeeId,
+            name: deductionName,
+            percentage: 0, // Always 0 for fixed amounts
+            amount,
+            category: existingDeduction.category || "Tax",
+            status: "Active",
+            isRecurring: true,
+            isFixedAmount: true,
+          }, { headers });
+        } else {
+          // Add new deduction
+          await axios.post(`${API_URL}/deductions`, {
+            empId: bulkEmployeeId,
+            name: deductionName,
+            percentage: 0, // Always 0 for fixed amounts
+            amount,
+            category: "Tax",
+            status: "Active",
+            isRecurring: true,
+            isFixedAmount: true,
+          }, { headers });
+        }
+      }
+
+      showAlert(`Successfully updated allowances and deductions`);
+    } else {
+      // Process allowances in add mode
+      for (const allowanceName of selectedAllowances) {
+        const percentage = parseFloat(
+          allowancePercentages[allowanceName] || 0
+        );
+        const amount = calculateAllowanceAmount(
+          employee.basicPay,
+          percentage
+        ).toString();
+
+        try {
+          await axios.post(`${API_URL}/allowances`, {
+            empId: bulkEmployeeId,
+            name: allowanceName,
+            percentage,
+            amount,
+            category: "Regular",
+            status: "Active",
+            isRecurring: true,
+          }, { headers });
+        } catch (error) {
+          console.error(`Error adding allowance ${allowanceName}:`, error);
+          showAlert(`Error adding allowance ${allowanceName}`, "error");
+        }
+      }
+
+      // Process deductions in add mode
+      if (selectedDeductions.length > 0) {
         for (const deductionName of selectedDeductions) {
+          // Use manual amount directly
           const amount = parseFloat(
             manualDeductionAmounts[deductionName] || 0
           ).toString();
 
-          const existingDeduction = currentDeductions.find(
-            (d) => d.name === deductionName
-          );
-
-          if (existingDeduction) {
-            // Update existing deduction
-            const id = `${bulkEmployeeId}_${deductionName}`;
-            await axios.put(`${API_URL}/deductions/${id}`, {
-              empId: bulkEmployeeId,
-              name: deductionName,
-              percentage: 0, // Always 0 for fixed amounts
-              amount,
-              category: existingDeduction.category || "Tax",
-              status: "Active",
-              isRecurring: true,
-              isFixedAmount: true,
-            });
-          } else {
-            // Add new deduction
+          try {
             await axios.post(`${API_URL}/deductions`, {
               empId: bulkEmployeeId,
               name: deductionName,
@@ -404,143 +665,115 @@ const PayrollSystem = () => {
               status: "Active",
               isRecurring: true,
               isFixedAmount: true,
-            });
-          }
-        }
-
-        showAlert(`Successfully updated allowances and deductions`);
-      } else {
-        // Process allowances in add mode
-        for (const allowanceName of selectedAllowances) {
-          const percentage = parseFloat(
-            allowancePercentages[allowanceName] || 0
-          );
-          const amount = calculateAllowanceAmount(
-            employee.basicPay,
-            percentage
-          ).toString();
-
-          try {
-            await axios.post(`${API_URL}/allowances`, {
-              empId: bulkEmployeeId,
-              name: allowanceName,
-              percentage,
-              amount,
-              category: "Regular",
-              status: "Active",
-              isRecurring: true,
-            });
+            }, { headers });
           } catch (error) {
-            console.error(`Error adding allowance ${allowanceName}:`, error);
-            showAlert(`Error adding allowance ${allowanceName}`, "error");
+            console.error(`Error adding deduction ${deductionName}:`, error);
+            showAlert(`Error adding deduction ${deductionName}`, "error");
           }
         }
-
-        // Process deductions in add mode
-        if (selectedDeductions.length > 0) {
-          for (const deductionName of selectedDeductions) {
-            // Use manual amount directly
-            const amount = parseFloat(
-              manualDeductionAmounts[deductionName] || 0
-            ).toString();
-
-            try {
-              await axios.post(`${API_URL}/deductions`, {
-                empId: bulkEmployeeId,
-                name: deductionName,
-                percentage: 0, // Always 0 for fixed amounts
-                amount,
-                category: "Tax",
-                status: "Active",
-                isRecurring: true,
-                isFixedAmount: true,
-              });
-            } catch (error) {
-              console.error(`Error adding deduction ${deductionName}:`, error);
-              showAlert(`Error adding deduction ${deductionName}`, "error");
-            }
-          }
-        }
-
-        showAlert(`Successfully added allowances and deductions`);
       }
 
-      // Refresh the data after adding/updating allowances and deductions
-      await Promise.all([fetchAllowances(), fetchDeductions()]);
-      handleCloseDialog();
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error in handleAddMultipleAllowances:", error);
-      showAlert(
-        error.response?.data?.message ||
-          "Error saving allowances and deductions",
-        "error"
-      );
-      setIsLoading(false);
+      showAlert(`Successfully added allowances and deductions`);
     }
-  };
 
-  const confirmDeleteAllowancesAndDeductions = async () => {
-    try {
-      if (!employeeToDeleteAllowances) return;
+    // Refresh the data after adding/updating allowances and deductions
+    await Promise.all([fetchAllowances(), fetchDeductions()]);
+    handleCloseDialog();
+    setIsLoading(false);
+  } catch (error) {
+    console.error("Error in handleAddMultipleAllowances:", error);
+    showAlert(
+      error.response?.data?.message ||
+        "Error saving allowances and deductions",
+      "error"
+    );
+    setIsLoading(false);
+  }
+};
 
-      // First delete all allowances for this employee
-      const employeeAllowances = allowanceData.filter(
-        (a) => a.empId === employeeToDeleteAllowances.empId
-      );
+  // const confirmDeleteAllowancesAndDeductions = async () => {
+  //   try {
+  //     if (!employeeToDeleteAllowances) return;
 
-      for (const allowance of employeeAllowances) {
-        const id = `${allowance.empId}_${allowance.name}`;
-        await axios.delete(`${API_URL}/allowances/${id}`);
-      }
+  //     // First delete all allowances for this employee
+  //     const employeeAllowances = allowanceData.filter(
+  //       (a) => a.empId === employeeToDeleteAllowances.empId
+  //     );
 
-      // Then delete all deductions for this employee
-      const employeeDeductions = deductions.filter(
-        (d) => d.empId === employeeToDeleteAllowances.empId
-      );
+  //     for (const allowance of employeeAllowances) {
+  //       const id = `${allowance.empId}_${allowance.name}`;
+  //       await axios.delete(`${API_URL}/allowances/${id}`);
+  //     }
 
-      for (const deduction of employeeDeductions) {
-        const id = `${deduction.empId}_${deduction.name}`;
-        await axios.delete(`${API_URL}/deductions/${id}`);
-      }
+  //     // Then delete all deductions for this employee
+  //     const employeeDeductions = deductions.filter(
+  //       (d) => d.empId === employeeToDeleteAllowances.empId
+  //     );
 
-      showAlert("Allowances and deductions deleted successfully");
-      await Promise.all([fetchAllowances(), fetchDeductions()]);
-      setDeleteAllowanceDialogOpen(false);
-      setEmployeeToDeleteAllowances(null);
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message ||
-          "Error deleting allowances and deductions",
-        "error"
-      );
-    }
-  };
+  //     for (const deduction of employeeDeductions) {
+  //       const id = `${deduction.empId}_${deduction.name}`;
+  //       await axios.delete(`${API_URL}/deductions/${id}`);
+  //     }
 
-//   // Add this function after your other helper functions
-// const validateAllowancePercentages = () => {
-//   // Calculate total percentage
-//   const totalPercentage = Object.values(allowancePercentages).reduce(
-//     (sum, percentage) => sum + parseFloat(percentage || 0),
-//     0
-//   );
-  
-//   // Check if total is not 100%
-//   if (totalPercentage !== 100) {
-//     // Show alert with option to proceed anyway
-//     const message = totalPercentage > 100 
-//       ? `Warning: Total allowance percentage (${totalPercentage}%) exceeds 100%.`
-//       : `Warning: Total allowance percentage (${totalPercentage}%) is less than 100%. Some of the employee's pay will not be allocated.`;
-      
-//     // Use the browser's confirm dialog to allow the user to proceed anyway
-//     return window.confirm(`${message}\n\nDo you want to proceed anyway?`);
-//   }
-  
-//   // If total is exactly 100%, no alert needed
-//   return true;
-// };
+  //     showAlert("Allowances and deductions deleted successfully");
+  //     await Promise.all([fetchAllowances(), fetchDeductions()]);
+  //     setDeleteAllowanceDialogOpen(false);
+  //     setEmployeeToDeleteAllowances(null);
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message ||
+  //         "Error deleting allowances and deductions",
+  //       "error"
+  //     );
+  //   }
+  // };
+
 
 // Update the validation function with a tolerance range
+
+const confirmDeleteAllowancesAndDeductions = async () => {
+  try {
+    if (!employeeToDeleteAllowances) return;
+
+    const token = getAuthToken();
+    const headers = {
+      Authorization: `Bearer ${token}`
+    };
+
+    // First delete all allowances for this employee
+    const employeeAllowances = allowanceData.filter(
+      (a) => a.empId === employeeToDeleteAllowances.empId
+    );
+
+    for (const allowance of employeeAllowances) {
+      const id = `${allowance.empId}_${allowance.name}`;
+      await axios.delete(`${API_URL}/allowances/${id}`, { headers });
+    }
+
+    // Then delete all deductions for this employee
+    const employeeDeductions = deductions.filter(
+      (d) => d.empId === employeeToDeleteAllowances.empId
+    );
+
+    for (const deduction of employeeDeductions) {
+      const id = `${deduction.empId}_${deduction.name}`;
+      await axios.delete(`${API_URL}/deductions/${id}`, { headers });
+    }
+
+    showAlert("Allowances and deductions deleted successfully");
+    await Promise.all([fetchAllowances(), fetchDeductions()]);
+    setDeleteAllowanceDialogOpen(false);
+    setEmployeeToDeleteAllowances(null);
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message ||
+        "Error deleting allowances and deductions",
+      "error"
+    );
+  }
+};
+
+
 const validateAllowancePercentages = () => {
   // Calculate total percentage
   const totalPercentage = Object.values(allowancePercentages).reduce(
@@ -606,121 +839,243 @@ const isPercentageWithinRange = (percentage) => {
     saveAs(data, "employees.xlsx");
   };
 
+  // const importFromExcel = async (event) => {
+  //   try {
+  //     const file = event.target.files[0];
+  //     if (!file) {
+  //       showAlert("No file selected", "error");
+  //       return;
+  //     }
+
+  //     const reader = new FileReader();
+
+  //     reader.onload = async (e) => {
+  //       try {
+  //         const data = new Uint8Array(e.target.result);
+  //         const workbook = XLSX.read(data, { type: "array" });
+  //         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+  //         const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+  //         // Validate and format each row before sending to API
+  //         const validEmployees = jsonData
+  //           .map((row) => {
+  //             // Check if we have LPA or monthly basic pay
+  //             let basicPay;
+  //             if (row["Annual Salary (LPA)"]) {
+  //               // Convert LPA to monthly
+  //               basicPay =
+  //                 (parseFloat(row["Annual Salary (LPA)"]) * 100000) / 12;
+  //             } else {
+  //               basicPay = parseFloat(row["Basic Pay (Monthly)"]) || 0;
+  //             }
+
+  //             return {
+  //               empId: String(row["Employee ID"] || "").trim(),
+  //               empName: String(row["Name"] || "").trim(),
+  //               department: String(row["Department"] || "").trim(),
+  //               designation: String(row["Designation"] || "").trim(),
+  //               basicPay: basicPay,
+  //               bankName: String(row["Bank Name"] || "").trim(),
+  //               bankAccountNo: String(row["Bank Account No"] || "").trim(),
+  //               pfNo: String(row["PF Number"] || "").trim(),
+  //               uanNo: String(row["UAN Number"] || "").trim(),
+  //               panNo: String(row["PAN Number"] || "").trim(),
+  //               payableDays: parseInt(row["Payable Days"]) || 30,
+  //               lop: parseFloat(row["LOP Days"]) || 0,
+  //               status: "Active",
+  //               email: row["Email"] || "",
+  //             };
+  //           })
+  //           .filter((emp) => emp.empId && emp.empName && emp.basicPay > 0);
+
+  //         if (validEmployees.length === 0) {
+  //           showAlert("No valid employee data found in Excel file", "error");
+  //           return;
+  //         }
+
+  //         // Show loading message
+  //         showAlert(`Importing ${validEmployees.length} employees...`, "info");
+
+  //         // Try individual employee creation instead of bulk
+  //         let successCount = 0;
+  //         for (const employee of validEmployees) {
+  //           try {
+  //             // Use the single employee creation endpoint instead of bulk
+  //             await axios.post(`${API_URL}/employees`, employee);
+  //             successCount++;
+  //           } catch (err) {
+  //             console.error(
+  //               `Failed to import employee ${employee.empId}:`,
+  //               err
+  //             );
+  //             // Continue with the next employee
+  //           }
+  //         }
+
+  //         // Clear the file input
+  //         event.target.value = "";
+
+  //         // Refresh all data
+  //         await fetchEmployees();
+
+  //         if (successCount > 0) {
+  //           showAlert(
+  //             `Successfully imported ${successCount} out of ${validEmployees.length} employees`
+  //           );
+  //         } else {
+  //           showAlert("Failed to import any employees", "error");
+  //         }
+  //       } catch (error) {
+  //         console.error("Error processing Excel file:", error);
+  //         showAlert(
+  //           error.response?.data?.message || "Error processing Excel file",
+  //           "error"
+  //         );
+  //         // Clear the file input
+  //         event.target.value = "";
+  //       }
+  //     };
+
+  //     reader.onerror = () => {
+  //       showAlert("Error reading file", "error");
+  //       event.target.value = "";
+  //     };
+
+  //     reader.readAsArrayBuffer(file);
+  //   } catch (error) {
+  //     console.error("Import error:", error);
+  //     showAlert(
+  //       "Import failed: " + (error.response?.data?.message || error.message),
+  //       "error"
+  //     );
+  //     // Clear the file input
+  //     if (event.target) {
+  //       event.target.value = "";
+  //     }
+  //   }
+  // };
+
   const importFromExcel = async (event) => {
-    try {
-      const file = event.target.files[0];
-      if (!file) {
-        showAlert("No file selected", "error");
-        return;
-      }
-
-      const reader = new FileReader();
-
-      reader.onload = async (e) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: "array" });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-          // Validate and format each row before sending to API
-          const validEmployees = jsonData
-            .map((row) => {
-              // Check if we have LPA or monthly basic pay
-              let basicPay;
-              if (row["Annual Salary (LPA)"]) {
-                // Convert LPA to monthly
-                basicPay =
-                  (parseFloat(row["Annual Salary (LPA)"]) * 100000) / 12;
-              } else {
-                basicPay = parseFloat(row["Basic Pay (Monthly)"]) || 0;
-              }
-
-              return {
-                empId: String(row["Employee ID"] || "").trim(),
-                empName: String(row["Name"] || "").trim(),
-                department: String(row["Department"] || "").trim(),
-                designation: String(row["Designation"] || "").trim(),
-                basicPay: basicPay,
-                bankName: String(row["Bank Name"] || "").trim(),
-                bankAccountNo: String(row["Bank Account No"] || "").trim(),
-                pfNo: String(row["PF Number"] || "").trim(),
-                uanNo: String(row["UAN Number"] || "").trim(),
-                panNo: String(row["PAN Number"] || "").trim(),
-                payableDays: parseInt(row["Payable Days"]) || 30,
-                lop: parseFloat(row["LOP Days"]) || 0,
-                status: "Active",
-                email: row["Email"] || "",
-              };
-            })
-            .filter((emp) => emp.empId && emp.empName && emp.basicPay > 0);
-
-          if (validEmployees.length === 0) {
-            showAlert("No valid employee data found in Excel file", "error");
-            return;
-          }
-
-          // Show loading message
-          showAlert(`Importing ${validEmployees.length} employees...`, "info");
-
-          // Try individual employee creation instead of bulk
-          let successCount = 0;
-          for (const employee of validEmployees) {
-            try {
-              // Use the single employee creation endpoint instead of bulk
-              await axios.post(`${API_URL}/employees`, employee);
-              successCount++;
-            } catch (err) {
-              console.error(
-                `Failed to import employee ${employee.empId}:`,
-                err
-              );
-              // Continue with the next employee
-            }
-          }
-
-          // Clear the file input
-          event.target.value = "";
-
-          // Refresh all data
-          await fetchEmployees();
-
-          if (successCount > 0) {
-            showAlert(
-              `Successfully imported ${successCount} out of ${validEmployees.length} employees`
-            );
-          } else {
-            showAlert("Failed to import any employees", "error");
-          }
-        } catch (error) {
-          console.error("Error processing Excel file:", error);
-          showAlert(
-            error.response?.data?.message || "Error processing Excel file",
-            "error"
-          );
-          // Clear the file input
-          event.target.value = "";
-        }
-      };
-
-      reader.onerror = () => {
-        showAlert("Error reading file", "error");
-        event.target.value = "";
-      };
-
-      reader.readAsArrayBuffer(file);
-    } catch (error) {
-      console.error("Import error:", error);
-      showAlert(
-        "Import failed: " + (error.response?.data?.message || error.message),
-        "error"
-      );
-      // Clear the file input
-      if (event.target) {
-        event.target.value = "";
-      }
+  try {
+    const file = event.target.files[0];
+    if (!file) {
+      showAlert("No file selected", "error");
+      return;
     }
-  };
+
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        // Validate and format each row before sending to API
+        const validEmployees = jsonData
+          .map((row) => {
+            // Check if we have LPA or monthly basic pay
+            let basicPay;
+            if (row["Annual Salary (LPA)"]) {
+              // Convert LPA to monthly
+              basicPay =
+                (parseFloat(row["Annual Salary (LPA)"]) * 100000) / 12;
+            } else {
+              basicPay = parseFloat(row["Basic Pay (Monthly)"]) || 0;
+            }
+
+            return {
+              empId: String(row["Employee ID"] || "").trim(),
+              empName: String(row["Name"] || "").trim(),
+              department: String(row["Department"] || "").trim(),
+              designation: String(row["Designation"] || "").trim(),
+              basicPay: basicPay,
+              bankName: String(row["Bank Name"] || "").trim(),
+              bankAccountNo: String(row["Bank Account No"] || "").trim(),
+              pfNo: String(row["PF Number"] || "").trim(),
+              uanNo: String(row["UAN Number"] || "").trim(),
+              panNo: String(row["PAN Number"] || "").trim(),
+              payableDays: parseInt(row["Payable Days"]) || 30,
+              lop: parseFloat(row["LOP Days"]) || 0,
+              status: "Active",
+              email: row["Email"] || "",
+            };
+          })
+          .filter((emp) => emp.empId && emp.empName && emp.basicPay > 0);
+
+        if (validEmployees.length === 0) {
+          showAlert("No valid employee data found in Excel file", "error");
+          return;
+        }
+
+        // Show loading message
+        showAlert(`Importing ${validEmployees.length} employees...`, "info");
+
+        const token = getAuthToken();
+        const headers = {
+          Authorization: `Bearer ${token}`
+        };
+
+        // Try individual employee creation instead of bulk
+        let successCount = 0;
+        for (const employee of validEmployees) {
+          try {
+            // Use the single employee creation endpoint instead of bulk
+            await axios.post(`${API_URL}/employees`, employee, { headers });
+            successCount++;
+          } catch (err) {
+            console.error(
+              `Failed to import employee ${employee.empId}:`,
+              err
+            );
+            // Continue with the next employee
+          }
+        }
+
+        // Clear the file input
+        event.target.value = "";
+
+        // Refresh all data
+        await fetchEmployees();
+
+        if (successCount > 0) {
+          showAlert(
+            `Successfully imported ${successCount} out of ${validEmployees.length} employees`
+          );
+        } else {
+          showAlert("Failed to import any employees", "error");
+        }
+      } catch (error) {
+        console.error("Error processing Excel file:", error);
+        showAlert(
+          error.response?.data?.message || "Error processing Excel file",
+          "error"
+        );
+        // Clear the file input
+        event.target.value = "";
+      }
+    };
+
+    reader.onerror = () => {
+      showAlert("Error reading file", "error");
+      event.target.value = "";
+    };
+
+    reader.readAsArrayBuffer(file);
+  } catch (error) {
+    console.error("Import error:", error);
+    showAlert(
+      "Import failed: " + (error.response?.data?.message || error.message),
+      "error"
+    );
+    // Clear the file input
+    if (event.target) {
+      event.target.value = "";
+    }
+  }
+};
+
 
   const [newEmployee, setNewEmployee] = useState({
     empId: "",
@@ -997,457 +1352,981 @@ const isPercentageWithinRange = (percentage) => {
     });
   };
 
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/employees`);
-      console.log("Employee data received:", response.data.data);
-      setEmployeeData(response.data.data);
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error fetching employees",
-        "error"
-      );
-    }
-  };
+  // const fetchEmployees = async () => {
+  //   try {
+  //     const response = await axios.get(`${API_URL}/employees`);
+  //     console.log("Employee data received:", response.data.data);
+  //     setEmployeeData(response.data.data);
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message || "Error fetching employees",
+  //       "error"
+  //     );
+  //   }
+  // };
 
-  const fetchAllowances = async () => {
-    try {
-      console.log("Fetching allowances...");
-      const response = await axios.get(`${API_URL}/allowances`);
-      console.log("Allowances fetched:", response.data.data.length);
-      setAllowanceData(response.data.data);
-      return response.data.data;
-    } catch (error) {
-      console.error("Error fetching allowances:", error);
-      showAlert(
-        error.response?.data?.message || "Error fetching allowances",
-        "error"
-      );
-      return [];
-    }
-  };
+  // const fetchAllowances = async () => {
+  //   try {
+  //     console.log("Fetching allowances...");
+  //     const response = await axios.get(`${API_URL}/allowances`);
+  //     console.log("Allowances fetched:", response.data.data.length);
+  //     setAllowanceData(response.data.data);
+  //     return response.data.data;
+  //   } catch (error) {
+  //     console.error("Error fetching allowances:", error);
+  //     showAlert(
+  //       error.response?.data?.message || "Error fetching allowances",
+  //       "error"
+  //     );
+  //     return [];
+  //   }
+  // };
 
-  const fetchDeductions = async () => {
-    try {
-      console.log("Fetching deductions...");
-      const response = await axios.get(`${API_URL}/deductions`);
-      console.log("Deductions fetched:", response.data.data.length);
-      setDeductions(response.data.data);
-      return response.data.data;
-    } catch (error) {
-      console.error("Error fetching deductions:", error);
-      showAlert(
-        error.response?.data?.message || "Error fetching deductions",
-        "error"
-      );
-      return [];
-    }
-  };
+  // const fetchDeductions = async () => {
+  //   try {
+  //     console.log("Fetching deductions...");
+  //     const response = await axios.get(`${API_URL}/deductions`);
+  //     console.log("Deductions fetched:", response.data.data.length);
+  //     setDeductions(response.data.data);
+  //     return response.data.data;
+  //   } catch (error) {
+  //     console.error("Error fetching deductions:", error);
+  //     showAlert(
+  //       error.response?.data?.message || "Error fetching deductions",
+  //       "error"
+  //     );
+  //     return [];
+  //   }
+  // };
 
-  const fetchPayslips = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/payslips`);
-      if (response.data.success) {
-        setPayslips(response.data.data);
-      } else {
-        showAlert("Failed to fetch payslips", "error");
-      }
-    } catch (error) {
-      console.error("Error fetching payslips:", error);
-      // If the endpoint doesn't exist yet, don't show an error to the user
-      // Just set an empty array
-      setPayslips([]);
-    }
-  };
+  // const fetchPayslips = async () => {
+  //   try {
+  //     const response = await axios.get(`${API_URL}/payslips`);
+  //     if (response.data.success) {
+  //       setPayslips(response.data.data);
+  //     } else {
+  //       showAlert("Failed to fetch payslips", "error");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching payslips:", error);
+  //     // If the endpoint doesn't exist yet, don't show an error to the user
+  //     // Just set an empty array
+  //     setPayslips([]);
+  //   }
+  // };
 
   // Add function to fetch registered employees
-  const fetchRegisteredEmployees = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:5002/api/employees/registered"
-      );
-      setRegisteredEmployees(response.data);
-    } catch (error) {
-      console.error("Error fetching registered employees:", error);
-      // Don't show an error alert to avoid confusing users if this is optional
-      setRegisteredEmployees([]);
+ 
+  // Update fetchEmployees function
+const fetchEmployees = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/employees`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    console.log("Employee data received:", response.data.data);
+    setEmployeeData(response.data.data);
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error fetching employees",
+      "error"
+    );
+  }
+};
+
+// Update fetchAllowances function
+const fetchAllowances = async () => {
+  try {
+    console.log("Fetching allowances...");
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/allowances`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    console.log("Allowances fetched:", response.data.data.length);
+    setAllowanceData(response.data.data);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching allowances:", error);
+    showAlert(
+      error.response?.data?.message || "Error fetching allowances",
+      "error"
+    );
+    return [];
+  }
+};
+
+// Update fetchDeductions function
+const fetchDeductions = async () => {
+  try {
+    console.log("Fetching deductions...");
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/deductions`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    console.log("Deductions fetched:", response.data.data.length);
+    setDeductions(response.data.data);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching deductions:", error);
+    showAlert(
+      error.response?.data?.message || "Error fetching deductions",
+      "error"
+    );
+    return [];
+  }
+};
+
+// Update fetchPayslips function
+const fetchPayslips = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/payslips`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    if (response.data.success) {
+      setPayslips(response.data.data);
+    } else {
+      showAlert("Failed to fetch payslips", "error");
     }
-  };
+  } catch (error) {
+    console.error("Error fetching payslips:", error);
+    // If the endpoint doesn't exist yet, don't show an error to the user
+    // Just set an empty array
+    setPayslips([]);
+  }
+};
+
+ 
+ 
+  // const fetchRegisteredEmployees = async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/employees/registered"
+  //     );
+  //     setRegisteredEmployees(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching registered employees:", error);
+  //     // Don't show an error alert to avoid confusing users if this is optional
+  //     setRegisteredEmployees([]);
+  //   }
+  // };
+
+  const fetchRegisteredEmployees = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      "http://localhost:5002/api/employees/registered",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    setRegisteredEmployees(response.data);
+  } catch (error) {
+    console.error("Error fetching registered employees:", error);
+    // Don't show an error alert to avoid confusing users if this is optional
+    setRegisteredEmployees([]);
+  }
+};
+
+  // const confirmDeleteEmployee = async () => {
+  //   try {
+  //     if (!employeeToDelete) return;
+
+  //     await axios.delete(`${API_URL}/employees/${employeeToDelete.empId}`);
+  //     showAlert("Employee deleted successfully");
+  //     await Promise.all([
+  //       fetchEmployees(),
+  //       fetchAllowances(),
+  //       fetchDeductions(),
+  //     ]);
+  //     setDeleteDialogOpen(false);
+  //     setEmployeeToDelete(null);
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message || "Error deleting employee",
+  //       "error"
+  //     );
+  //   }
+  // };
 
   const confirmDeleteEmployee = async () => {
-    try {
-      if (!employeeToDelete) return;
+  try {
+    if (!employeeToDelete) return;
+    
+    const token = getAuthToken();
+    await axios.delete(`${API_URL}/employees/${employeeToDelete.empId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    showAlert("Employee deleted successfully");
+    await Promise.all([
+      fetchEmployees(),
+      fetchAllowances(),
+      fetchDeductions(),
+    ]);
+    setDeleteDialogOpen(false);
+    setEmployeeToDelete(null);
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error deleting employee",
+      "error"
+    );
+  }
+};
 
-      await axios.delete(`${API_URL}/employees/${employeeToDelete.empId}`);
-      showAlert("Employee deleted successfully");
-      await Promise.all([
-        fetchEmployees(),
-        fetchAllowances(),
-        fetchDeductions(),
-      ]);
-      setDeleteDialogOpen(false);
-      setEmployeeToDelete(null);
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error deleting employee",
-        "error"
-      );
-    }
-  };
+  // const handleDeleteEmployee = async (empId) => {
+  //   try {
+  //     await axios.delete(`${API_URL}/employees/${empId}`);
+  //     showAlert("Employee deleted successfully");
+  //     await Promise.all([
+  //       fetchEmployees(),
+  //       fetchAllowances(),
+  //       fetchDeductions(),
+  //     ]);
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message || "Error deleting employee",
+  //       "error"
+  //     );
+  //   }
+  // };
 
-  const handleDeleteEmployee = async (empId) => {
-    try {
-      await axios.delete(`${API_URL}/employees/${empId}`);
-      showAlert("Employee deleted successfully");
-      await Promise.all([
-        fetchEmployees(),
-        fetchAllowances(),
-        fetchDeductions(),
-      ]);
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error deleting employee",
-        "error"
-      );
-    }
-  };
+const handleDeleteEmployee = async (empId) => {
+  try {
+    const token = getAuthToken();
+    await axios.delete(`${API_URL}/employees/${empId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    showAlert("Employee deleted successfully");
+    await Promise.all([
+      fetchEmployees(),
+      fetchAllowances(),
+      fetchDeductions(),
+    ]);
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error deleting employee",
+      "error"
+    );
+  }
+};
+
+  // const handleAddEmployee = async () => {
+  //   try {
+  //     if (!newEmployee.empId || !newEmployee.empName || !newEmployee.basicPay) {
+  //       showAlert("Please fill all required fields", "error");
+  //       return;
+  //     }
+  //     // Format the date properly
+  //     const formattedDate = newEmployee.dateOfJoining
+  //       ? new Date(newEmployee.dateOfJoining).toISOString()
+  //       : null;
+
+  //     const payload = {
+  //       ...newEmployee,
+  //       basicPay: parseFloat(newEmployee.basicPay),
+  //       payableDays: parseInt(newEmployee.payableDays),
+  //       lop: parseFloat(newEmployee.lop),
+  //       dateOfJoining: formattedDate, // Use the formatted date
+  //     };
+
+  //     if (editMode && selectedItem) {
+  //       await axios.put(`${API_URL}/employees/${selectedItem.empId}`, payload);
+  //       showAlert("Employee updated successfully");
+  //     } else {
+  //       await axios.post(`${API_URL}/employees`, payload);
+  //       showAlert("Employee added successfully");
+  //     }
+  //     await fetchEmployees();
+  //     handleCloseEmployeeDialog();
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message || "Error saving employee",
+  //       "error"
+  //     );
+  //   }
+  // };
 
   const handleAddEmployee = async () => {
-    try {
-      if (!newEmployee.empId || !newEmployee.empName || !newEmployee.basicPay) {
-        showAlert("Please fill all required fields", "error");
-        return;
-      }
-      // Format the date properly
-      const formattedDate = newEmployee.dateOfJoining
-        ? new Date(newEmployee.dateOfJoining).toISOString()
-        : null;
-
-      const payload = {
-        ...newEmployee,
-        basicPay: parseFloat(newEmployee.basicPay),
-        payableDays: parseInt(newEmployee.payableDays),
-        lop: parseFloat(newEmployee.lop),
-        dateOfJoining: formattedDate, // Use the formatted date
-      };
-
-      if (editMode && selectedItem) {
-        await axios.put(`${API_URL}/employees/${selectedItem.empId}`, payload);
-        showAlert("Employee updated successfully");
-      } else {
-        await axios.post(`${API_URL}/employees`, payload);
-        showAlert("Employee added successfully");
-      }
-      await fetchEmployees();
-      handleCloseEmployeeDialog();
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error saving employee",
-        "error"
-      );
+  try {
+    if (!newEmployee.empId || !newEmployee.empName || !newEmployee.basicPay) {
+      showAlert("Please fill all required fields", "error");
+      return;
     }
-  };
+    // Format the date properly
+    const formattedDate = newEmployee.dateOfJoining
+      ? new Date(newEmployee.dateOfJoining).toISOString()
+      : null;
+
+    const payload = {
+      ...newEmployee,
+      basicPay: parseFloat(newEmployee.basicPay),
+      payableDays: parseInt(newEmployee.payableDays),
+      lop: parseFloat(newEmployee.lop),
+      dateOfJoining: formattedDate, // Use the formatted date
+    };
+
+    const token = getAuthToken();
+    const headers = {
+      Authorization: `Bearer ${token}`
+    };
+
+    if (editMode && selectedItem) {
+      await axios.put(`${API_URL}/employees/${selectedItem.empId}`, payload, { headers });
+      showAlert("Employee updated successfully");
+    } else {
+      await axios.post(`${API_URL}/employees`, payload, { headers });
+      showAlert("Employee added successfully");
+    }
+    await fetchEmployees();
+    handleCloseEmployeeDialog();
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error saving employee",
+      "error"
+    );
+  }
+};
+
+  // const handleAddAllowance = async () => {
+  //   try {
+  //     if (
+  //       !newAllowance.empId ||
+  //       !newAllowance.name ||
+  //       !newAllowance.percentage
+  //     ) {
+  //       showAlert("Please fill all required fields", "error");
+  //       return;
+  //     }
+
+  //     const employee = employeeData.find((e) => e.empId === newAllowance.empId);
+  //     if (!employee) {
+  //       showAlert("Invalid employee selected", "error");
+  //       return;
+  //     }
+
+  //     // Calculate the amount based on the percentage of basic pay
+  //     const calculatedAmount = calculateAllowanceAmount(
+  //       employee.empId,
+  //       newAllowance.percentage
+  //     );
+
+  //     const payload = {
+  //       empId: newAllowance.empId,
+  //       name: newAllowance.name,
+  //       amount: calculatedAmount.toString(),
+  //       percentage: parseFloat(newAllowance.percentage),
+  //       category: newAllowance.category || "Regular",
+  //       status: newAllowance.status || "Active",
+  //       isRecurring: true,
+  //     };
+
+  //     if (editMode && selectedItem) {
+  //       // For edit mode, we need to use the virtual ID format: empId_allowanceName
+  //       const id = `${selectedItem.empId}_${selectedItem.name}`;
+  //       await axios.put(`${API_URL}/allowances/${id}`, payload);
+  //       showAlert("Allowance updated successfully");
+  //     } else {
+  //       await axios.post(`${API_URL}/allowances`, payload);
+  //       showAlert("Allowance added successfully");
+  //     }
+
+  //     await fetchAllowances();
+  //     handleCloseDialog();
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message || "Error saving allowance",
+  //       "error"
+  //     );
+  //   }
+  // };
 
   const handleAddAllowance = async () => {
-    try {
-      if (
-        !newAllowance.empId ||
-        !newAllowance.name ||
-        !newAllowance.percentage
-      ) {
-        showAlert("Please fill all required fields", "error");
-        return;
-      }
-
-      const employee = employeeData.find((e) => e.empId === newAllowance.empId);
-      if (!employee) {
-        showAlert("Invalid employee selected", "error");
-        return;
-      }
-
-      // Calculate the amount based on the percentage of basic pay
-      const calculatedAmount = calculateAllowanceAmount(
-        employee.empId,
-        newAllowance.percentage
-      );
-
-      const payload = {
-        empId: newAllowance.empId,
-        name: newAllowance.name,
-        amount: calculatedAmount.toString(),
-        percentage: parseFloat(newAllowance.percentage),
-        category: newAllowance.category || "Regular",
-        status: newAllowance.status || "Active",
-        isRecurring: true,
-      };
-
-      if (editMode && selectedItem) {
-        // For edit mode, we need to use the virtual ID format: empId_allowanceName
-        const id = `${selectedItem.empId}_${selectedItem.name}`;
-        await axios.put(`${API_URL}/allowances/${id}`, payload);
-        showAlert("Allowance updated successfully");
-      } else {
-        await axios.post(`${API_URL}/allowances`, payload);
-        showAlert("Allowance added successfully");
-      }
-
-      await fetchAllowances();
-      handleCloseDialog();
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error saving allowance",
-        "error"
-      );
+  try {
+    if (
+      !newAllowance.empId ||
+      !newAllowance.name ||
+      !newAllowance.percentage
+    ) {
+      showAlert("Please fill all required fields", "error");
+      return;
     }
-  };
+
+    const employee = employeeData.find((e) => e.empId === newAllowance.empId);
+    if (!employee) {
+      showAlert("Invalid employee selected", "error");
+      return;
+    }
+
+    // Calculate the amount based on the percentage of basic pay
+    const calculatedAmount = calculateAllowanceAmount(
+      employee.empId,
+      newAllowance.percentage
+    );
+
+    const payload = {
+      empId: newAllowance.empId,
+      name: newAllowance.name,
+      amount: calculatedAmount.toString(),
+      percentage: parseFloat(newAllowance.percentage),
+      category: newAllowance.category || "Regular",
+      status: newAllowance.status || "Active",
+      isRecurring: true,
+    };
+
+    const token = getAuthToken();
+    const headers = {
+      Authorization: `Bearer ${token}`
+    };
+
+    if (editMode && selectedItem) {
+      // For edit mode, we need to use the virtual ID format: empId_allowanceName
+      const id = `${selectedItem.empId}_${selectedItem.name}`;
+      await axios.put(`${API_URL}/allowances/${id}`, payload, { headers });
+      showAlert("Allowance updated successfully");
+    } else {
+      await axios.post(`${API_URL}/allowances`, payload, { headers });
+      showAlert("Allowance added successfully");
+    }
+
+    await fetchAllowances();
+    handleCloseDialog();
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error saving allowance",
+      "error"
+    );
+  }
+};
+
+  // const handleCloseEmployeeDialog = () => {
+  //   setOpenEmployeeDialog(false);
+  //   setEditMode(false);
+  //   setSelectedItem(null);
+  //   setSelectedRegisteredEmployee(""); // Reset the selected registered employee
+  //   setLpaValue(""); // Reset LPA value
+  //   setNewEmployee({
+  //     empId: "",
+  //     empName: "",
+  //     basicPay: "",
+  //     bankName: "",
+  //     bankAccountNo: "",
+  //     pfNo: "",
+  //     uanNo: "",
+  //     panNo: "",
+  //     payableDays: 30,
+  //     lop: 0,
+  //     department: "",
+  //     designation: "",
+  //     email: "",
+  //     status: "Active",
+  //   });
+  // };
+
+
+
+  // const handleCloseDialog = () => {
+  //   setOpenDialog(false);
+  //   setEditMode(false);
+  //   setSelectedItem(null);
+  //   setSelectedAllowances([]);
+  //   setAllowancePercentages({});
+  //   setBulkEmployeeId("");
+  //   setSelectedDeductions([]);
+  //   setManualDeductionAmounts({});
+  //   setIsEligibleForDeductions(false);
+  //   setShowDeductionSection(false); // Reset the checkbox
+  //   setIsLoading(false);
+  //   setNewAllowance({
+  //     empId: "",
+  //     name: "",
+  //     amount: "",
+  //     percentage: 0,
+  //     category: "Regular",
+  //     status: "Active",
+  //     description: "",
+  //     isRecurring: true,
+  //   });
+  // };
 
   const handleCloseEmployeeDialog = () => {
-    setOpenEmployeeDialog(false);
-    setEditMode(false);
-    setSelectedItem(null);
-    setSelectedRegisteredEmployee(""); // Reset the selected registered employee
-    setLpaValue(""); // Reset LPA value
-    setNewEmployee({
-      empId: "",
-      empName: "",
-      basicPay: "",
-      bankName: "",
-      bankAccountNo: "",
-      pfNo: "",
-      uanNo: "",
-      panNo: "",
-      payableDays: 30,
-      lop: 0,
-      department: "",
-      designation: "",
-      email: "",
-      status: "Active",
-    });
-  };
+  setOpenEmployeeDialog(false);
+  setEditMode(false);
+  setSelectedItem(null);
+  setSelectedRegisteredEmployee(""); // Reset the selected registered employee
+  setLpaValue(""); // Reset LPA value
+  setNewEmployee({
+    empId: "",
+    empName: "",
+    basicPay: "",
+    bankName: "",
+    bankAccountNo: "",
+    pfNo: "",
+    uanNo: "",
+    panNo: "",
+    payableDays: 30,
+    lop: 0,
+    department: "",
+    designation: "",
+    email: "",
+    status: "Active",
+  });
+};
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditMode(false);
-    setSelectedItem(null);
-    setSelectedAllowances([]);
-    setAllowancePercentages({});
-    setBulkEmployeeId("");
-    setSelectedDeductions([]);
-    setManualDeductionAmounts({});
-    setIsEligibleForDeductions(false);
-    setShowDeductionSection(false); // Reset the checkbox
-    setIsLoading(false);
-    setNewAllowance({
-      empId: "",
-      name: "",
-      amount: "",
-      percentage: 0,
-      category: "Regular",
-      status: "Active",
-      description: "",
-      isRecurring: true,
-    });
-  };
+const handleCloseDialog = () => {
+  setOpenDialog(false);
+  setEditMode(false);
+  setSelectedItem(null);
+  setSelectedAllowances([]);
+  setAllowancePercentages({});
+  setBulkEmployeeId("");
+  setSelectedDeductions([]);
+  setManualDeductionAmounts({});
+  setIsEligibleForDeductions(false);
+  setShowDeductionSection(false); // Reset the checkbox
+  setIsLoading(false);
+  setNewAllowance({
+    empId: "",
+    name: "",
+    amount: "",
+    percentage: 0,
+    category: "Regular",
+    status: "Active",
+    description: "",
+    isRecurring: true,
+  });
+};
 
-  const generatePayslip = async (empId) => {
-    try {
-      const employee = employeeData.find((e) => e.empId === empId);
-      if (!employee) {
-        showAlert("Employee not found", "error");
-        return null;
-      }
+  // const generatePayslip = async (empId) => {
+  //   try {
+  //     const employee = employeeData.find((e) => e.empId === empId);
+  //     if (!employee) {
+  //       showAlert("Employee not found", "error");
+  //       return null;
+  //     }
 
-      // Log the employee data to see if dateOfJoining exists
-      console.log("Employee data for payslip:", employee);
+  //     // Log the employee data to see if dateOfJoining exists
+  //     console.log("Employee data for payslip:", employee);
 
-      // Calculate attendance-adjusted pay
-      const attendanceAdjustedPay = calculateAttendanceBasedPay(
-        employee.basicPay,
-        employee.payableDays,
-        employee.lop
-      );
+  //     // Calculate attendance-adjusted pay
+  //     const attendanceAdjustedPay = calculateAttendanceBasedPay(
+  //       employee.basicPay,
+  //       employee.payableDays,
+  //       employee.lop
+  //     );
 
-      // Calculate base after deductions
-      const baseAfterDeductions = calculateBaseAfterDeductions(empId);
+  //     // Calculate base after deductions
+  //     const baseAfterDeductions = calculateBaseAfterDeductions(empId);
 
-      // Apply attendance adjustment to the base
-      const attendanceRatio =
-        (employee.payableDays - employee.lop) / employee.payableDays;
-      const attendanceAdjustedBase = baseAfterDeductions * attendanceRatio;
+  //     // Apply attendance adjustment to the base
+  //     const attendanceRatio =
+  //       (employee.payableDays - employee.lop) / employee.payableDays;
+  //     const attendanceAdjustedBase = baseAfterDeductions * attendanceRatio;
 
-      // Get all active allowances for this employee
-      const employeeAllowances = allowanceData.filter(
-        (a) => a.empId === empId && a.status === "Active"
-      );
+  //     // Get all active allowances for this employee
+  //     const employeeAllowances = allowanceData.filter(
+  //       (a) => a.empId === empId && a.status === "Active"
+  //     );
 
-      // Get all active deductions for this employee
-      const employeeDeductions = deductions.filter(
-        (d) => d.empId === empId && d.status === "Active"
-      );
+  //     // Get all active deductions for this employee
+  //     const employeeDeductions = deductions.filter(
+  //       (d) => d.empId === empId && d.status === "Active"
+  //     );
 
-      // Calculate total allowance amount directly
-      const totalAllowanceAmount = employeeAllowances.reduce(
-        (sum, allowance) => {
-          return sum + calculateAllowanceAmount(empId, allowance.percentage);
-        },
-        0
-      );
+  //     // Calculate total allowance amount directly
+  //     const totalAllowanceAmount = employeeAllowances.reduce(
+  //       (sum, allowance) => {
+  //         return sum + calculateAllowanceAmount(empId, allowance.percentage);
+  //       },
+  //       0
+  //     );
 
-      // Calculate total deduction amount directly
-      const totalDeductionAmount = employeeDeductions.reduce(
-        (sum, deduction) => {
-          if (deduction.percentage === 0 && parseFloat(deduction.amount) > 0) {
-            return sum + parseFloat(deduction.amount);
-          } else {
-            return (
-              sum +
-              calculateDeductionAmount(employee.basicPay, deduction.percentage)
-            );
-          }
-        },
-        0
-      );
+  //     // Calculate total deduction amount directly
+  //     const totalDeductionAmount = employeeDeductions.reduce(
+  //       (sum, deduction) => {
+  //         if (deduction.percentage === 0 && parseFloat(deduction.amount) > 0) {
+  //           return sum + parseFloat(deduction.amount);
+  //         } else {
+  //           return (
+  //             sum +
+  //             calculateDeductionAmount(employee.basicPay, deduction.percentage)
+  //           );
+  //         }
+  //       },
+  //       0
+  //     );
 
-      // Calculate net salary directly (this is the correct way)
-      const netSalary = totalAllowanceAmount;
+  //     // Calculate net salary directly (this is the correct way)
+  //     const netSalary = totalAllowanceAmount;
 
-      const payslipData = {
-        empId: employee.empId,
-        empName: employee.empName,
-        department: employee.department,
-        designation: employee.designation,
-        pfNo: employee.pfNo,
-        uanNo: employee.uanNo,
-        panNo: employee.panNo,
-        email: employee.email,
-        dateOfJoining: employee.dateOfJoining || employee.joiningDate, // Check both field
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear(),
-        basicPay: employee.basicPay,
-        payableDays: employee.payableDays,
-        lopDays: employee.lop,
-        bankDetails: {
-          bankName: employee.bankName,
-          accountNo: employee.bankAccountNo,
-        },
-        attendanceDetails: {
-          totalDays: employee.payableDays,
-          lopDays: employee.lop,
-          workingDays: employee.payableDays - employee.lop,
-          perDayPay: calculatePerDayPay(
-            employee.basicPay,
-            employee.payableDays
-          ),
-        },
-        totalPayBeforeDistribution: employee.basicPay,
-        attendanceAdjustedPay: attendanceAdjustedPay,
-        baseAfterDeductions: baseAfterDeductions,
-        attendanceAdjustedBase: attendanceAdjustedBase,
-        allowances: employeeAllowances.map((allowance) => ({
-          name: allowance.name,
-          amount: calculateAllowanceAmount(empId, allowance.percentage),
-          percentage: allowance.percentage,
-          isBasicPay: allowance.name === "BASIC PAY" ? true : false,
-        })),
-        deductions: employeeDeductions.map((deduction) => ({
-          name: deduction.name,
-          amount:
-            deduction.percentage === 0 && parseFloat(deduction.amount) > 0
-              ? parseFloat(deduction.amount)
-              : calculateDeductionAmount(
-                  employee.basicPay,
-                  deduction.percentage
-                ),
-          percentage: deduction.percentage,
-          isFixedAmount:
-            deduction.percentage === 0 && parseFloat(deduction.amount) > 0,
-        })),
-        grossSalary: totalAllowanceAmount,
-        totalDeductions: totalDeductionAmount,
-        netSalary: netSalary,
-        generatedOn: new Date(),
-        paymentStatus: "Pending",
-        paymentMethod: "Bank Transfer",
-        paymentDate: null,
-        notes: `Payslip for ${new Date().toLocaleString("default", {
-          month: "long",
-        })} ${new Date().getFullYear()}`,
-        lopImpact: {
-          totalPayBeforeLOP: employee.basicPay,
-          lopDeduction: employee.basicPay - attendanceAdjustedPay,
-          lopPercentage: (employee.lop / employee.payableDays) * 100,
-        },
-      };
+  //     const payslipData = {
+  //       empId: employee.empId,
+  //       empName: employee.empName,
+  //       department: employee.department,
+  //       designation: employee.designation,
+  //       pfNo: employee.pfNo,
+  //       uanNo: employee.uanNo,
+  //       panNo: employee.panNo,
+  //       email: employee.email,
+  //       dateOfJoining: employee.dateOfJoining || employee.joiningDate, // Check both field
+  //       month: new Date().getMonth() + 1,
+  //       year: new Date().getFullYear(),
+  //       basicPay: employee.basicPay,
+  //       payableDays: employee.payableDays,
+  //       lopDays: employee.lop,
+  //       bankDetails: {
+  //         bankName: employee.bankName,
+  //         accountNo: employee.bankAccountNo,
+  //       },
+  //       attendanceDetails: {
+  //         totalDays: employee.payableDays,
+  //         lopDays: employee.lop,
+  //         workingDays: employee.payableDays - employee.lop,
+  //         perDayPay: calculatePerDayPay(
+  //           employee.basicPay,
+  //           employee.payableDays
+  //         ),
+  //       },
+  //       totalPayBeforeDistribution: employee.basicPay,
+  //       attendanceAdjustedPay: attendanceAdjustedPay,
+  //       baseAfterDeductions: baseAfterDeductions,
+  //       attendanceAdjustedBase: attendanceAdjustedBase,
+  //       allowances: employeeAllowances.map((allowance) => ({
+  //         name: allowance.name,
+  //         amount: calculateAllowanceAmount(empId, allowance.percentage),
+  //         percentage: allowance.percentage,
+  //         isBasicPay: allowance.name === "BASIC PAY" ? true : false,
+  //       })),
+  //       deductions: employeeDeductions.map((deduction) => ({
+  //         name: deduction.name,
+  //         amount:
+  //           deduction.percentage === 0 && parseFloat(deduction.amount) > 0
+  //             ? parseFloat(deduction.amount)
+  //             : calculateDeductionAmount(
+  //                 employee.basicPay,
+  //                 deduction.percentage
+  //               ),
+  //         percentage: deduction.percentage,
+  //         isFixedAmount:
+  //           deduction.percentage === 0 && parseFloat(deduction.amount) > 0,
+  //       })),
+  //       grossSalary: totalAllowanceAmount,
+  //       totalDeductions: totalDeductionAmount,
+  //       netSalary: netSalary,
+  //       generatedOn: new Date(),
+  //       paymentStatus: "Pending",
+  //       paymentMethod: "Bank Transfer",
+  //       paymentDate: null,
+  //       notes: `Payslip for ${new Date().toLocaleString("default", {
+  //         month: "long",
+  //       })} ${new Date().getFullYear()}`,
+  //       lopImpact: {
+  //         totalPayBeforeLOP: employee.basicPay,
+  //         lopDeduction: employee.basicPay - attendanceAdjustedPay,
+  //         lopPercentage: (employee.lop / employee.payableDays) * 100,
+  //       },
+  //     };
 
-      const response = await axios.post(
-        `${API_URL}/payslips/generate`,
-        payslipData
-      );
-      showAlert("Payslip generated successfully");
-      await fetchPayslips();
-      return response.data.data;
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error generating payslip",
-        "error"
-      );
+  //     const response = await axios.post(
+  //       `${API_URL}/payslips/generate`,
+  //       payslipData
+  //     );
+  //     showAlert("Payslip generated successfully");
+  //     await fetchPayslips();
+  //     return response.data.data;
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message || "Error generating payslip",
+  //       "error"
+  //     );
+  //     return null;
+  //   }
+  // };
+
+const generatePayslip = async (empId) => {
+  try {
+    const employee = employeeData.find((e) => e.empId === empId);
+    if (!employee) {
+      showAlert("Employee not found", "error");
       return null;
     }
-  };
 
-  const downloadPayslip = async (payslipId) => {
-    try {
-      const response = await axios.get(
-        `${API_URL}/payslips/download/${payslipId}`,
-        {
-          responseType: "blob",
+    // Log the employee data to see if dateOfJoining exists
+    console.log("Employee data for payslip:", employee);
+
+    // Calculate attendance-adjusted pay
+    const attendanceAdjustedPay = calculateAttendanceBasedPay(
+      employee.basicPay,
+      employee.payableDays,
+      employee.lop
+    );
+
+    // Calculate base after deductions
+    const baseAfterDeductions = calculateBaseAfterDeductions(empId);
+
+    // Apply attendance adjustment to the base
+    const attendanceRatio =
+      (employee.payableDays - employee.lop) / employee.payableDays;
+    const attendanceAdjustedBase = baseAfterDeductions * attendanceRatio;
+
+    // Get all active allowances for this employee
+    const employeeAllowances = allowanceData.filter(
+      (a) => a.empId === empId && a.status === "Active"
+    );
+
+    // Get all active deductions for this employee
+    const employeeDeductions = deductions.filter(
+      (d) => d.empId === empId && d.status === "Active"
+    );
+
+    // Calculate total allowance amount directly
+    const totalAllowanceAmount = employeeAllowances.reduce(
+      (sum, allowance) => {
+        return sum + calculateAllowanceAmount(empId, allowance.percentage);
+      },
+      0
+    );
+
+    // Calculate total deduction amount directly
+    const totalDeductionAmount = employeeDeductions.reduce(
+      (sum, deduction) => {
+        if (deduction.percentage === 0 && parseFloat(deduction.amount) > 0) {
+          return sum + parseFloat(deduction.amount);
+        } else {
+          return (
+            sum +
+            calculateDeductionAmount(employee.basicPay, deduction.percentage)
+          );
         }
-      );
+      },
+      0
+    );
 
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `payslip_${payslipId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error downloading payslip",
-        "error"
-      );
-    }
-  };
+    // Calculate net salary directly (this is the correct way)
+    const netSalary = totalAllowanceAmount;
+
+    const payslipData = {
+      empId: employee.empId,
+      empName: employee.empName,
+      department: employee.department,
+      designation: employee.designation,
+      pfNo: employee.pfNo,
+      uanNo: employee.uanNo,
+      panNo: employee.panNo,
+      email: employee.email,
+      dateOfJoining: employee.dateOfJoining || employee.joiningDate, // Check both field
+      month: new Date().getMonth() + 1,
+      year: new Date().getFullYear(),
+      basicPay: employee.basicPay,
+      payableDays: employee.payableDays,
+      lopDays: employee.lop,
+      bankDetails: {
+        bankName: employee.bankName,
+        accountNo: employee.bankAccountNo,
+      },
+      attendanceDetails: {
+        totalDays: employee.payableDays,
+        lopDays: employee.lop,
+        workingDays: employee.payableDays - employee.lop,
+        perDayPay: calculatePerDayPay(
+          employee.basicPay,
+          employee.payableDays
+        ),
+      },
+      totalPayBeforeDistribution: employee.basicPay,
+      attendanceAdjustedPay: attendanceAdjustedPay,
+      baseAfterDeductions: baseAfterDeductions,
+      attendanceAdjustedBase: attendanceAdjustedBase,
+      allowances: employeeAllowances.map((allowance) => ({
+        name: allowance.name,
+        amount: calculateAllowanceAmount(empId, allowance.percentage),
+        percentage: allowance.percentage,
+        isBasicPay: allowance.name === "BASIC PAY" ? true : false,
+      })),
+      deductions: employeeDeductions.map((deduction) => ({
+        name: deduction.name,
+        amount:
+          deduction.percentage === 0 && parseFloat(deduction.amount) > 0
+            ? parseFloat(deduction.amount)
+            : calculateDeductionAmount(
+                employee.basicPay,
+                deduction.percentage
+              ),
+        percentage: deduction.percentage,
+        isFixedAmount:
+          deduction.percentage === 0 && parseFloat(deduction.amount) > 0,
+      })),
+      grossSalary: totalAllowanceAmount,
+      totalDeductions: totalDeductionAmount,
+      netSalary: netSalary,
+      generatedOn: new Date(),
+      paymentStatus: "Pending",
+      paymentMethod: "Bank Transfer",
+      paymentDate: null,
+      notes: `Payslip for ${new Date().toLocaleString("default", {
+        month: "long",
+      })} ${new Date().getFullYear()}`,
+      lopImpact: {
+        totalPayBeforeLOP: employee.basicPay,
+        lopDeduction: employee.basicPay - attendanceAdjustedPay,
+        lopPercentage: (employee.lop / employee.payableDays) * 100,
+      },
+    };
+
+    const token = getAuthToken();
+    const response = await axios.post(
+      `${API_URL}/payslips/generate`,
+      payslipData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    showAlert("Payslip generated successfully");
+    await fetchPayslips();
+    return response.data.data;
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error generating payslip",
+      "error"
+    );
+    return null;
+  }
+};
+
+  // const downloadPayslip = async (payslipId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${API_URL}/payslips/download/${payslipId}`,
+  //       {
+  //         responseType: "blob",
+  //       }
+  //     );
+
+  //     const blob = new Blob([response.data], { type: "application/pdf" });
+  //     const url = window.URL.createObjectURL(blob);
+  //     const link = document.createElement("a");
+  //     link.href = url;
+  //     link.setAttribute("download", `payslip_${payslipId}.pdf`);
+  //     document.body.appendChild(link);
+  //     link.click();
+  //     link.remove();
+  //     window.URL.revokeObjectURL(url);
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message || "Error downloading payslip",
+  //       "error"
+  //     );
+  //   }
+  // };
+
+
 
  
 
   // Helper function to delete an allowance
-  const handleDeleteAllowance = async (empId, name) => {
-    try {
-      const id = `${empId}_${name}`;
-      await axios.delete(`${API_URL}/allowances/${id}`);
-      showAlert("Allowance deleted successfully");
-      return true;
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error deleting allowance",
-        "error"
-      );
-      return false;
-    }
-  };
+ 
+ const downloadPayslip = async (payslipId) => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      `${API_URL}/payslips/download/${payslipId}`,
+      {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
 
-//   // Add this function to calculate the current total percentage
-//   const calculateTotalAllowancePercentage = () => {
-//   return Object.values(allowancePercentages).reduce(
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `payslip_${payslipId}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error downloading payslip",
+      "error"
+    );
+  }
+};
+ 
+  // const handleDeleteAllowance = async (empId, name) => {
+  //   try {
+  //     const id = `${empId}_${name}`;
+  //     await axios.delete(`${API_URL}/allowances/${id}`);
+  //     showAlert("Allowance deleted successfully");
+  //     return true;
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message || "Error deleting allowance",
+  //       "error"
+  //     );
+  //     return false;
+  //   }
+  // };
+
+
+
+// Update the calculate total function to handle floating-point precision
+
+// Helper function to delete an allowance
+const handleDeleteAllowance = async (empId, name) => {
+  try {
+    const id = `${empId}_${name}`;
+    const token = getAuthToken();
+    await axios.delete(`${API_URL}/allowances/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    showAlert("Allowance deleted successfully");
+    return true;
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error deleting allowance",
+      "error"
+    );
+    return false;
+  }
+};
+
+
+// const calculateTotalAllowancePercentage = () => {
+//   const total = Object.values(allowancePercentages).reduce(
 //     (sum, percentage) => sum + parseFloat(percentage || 0),
 //     0
 //   );
+  
+//   // Return with 2 decimal places for display
+//   return parseFloat(total.toFixed(2));
 // };
 
-// Update the calculate total function to handle floating-point precision
+
+
+
+  // Helper function to delete a deduction
+  
+  // Update the calculate total function to handle floating-point precision
 const calculateTotalAllowancePercentage = () => {
   const total = Object.values(allowancePercentages).reduce(
     (sum, percentage) => sum + parseFloat(percentage || 0),
@@ -1458,30 +2337,63 @@ const calculateTotalAllowancePercentage = () => {
   return parseFloat(total.toFixed(2));
 };
 
+  // const handleDeleteDeduction = async (empId, name) => {
+  //   try {
+  //     const id = `${empId}_${name}`;
+  //     await axios.delete(`${API_URL}/deductions/${id}`);
+  //     showAlert("Deduction deleted successfully");
+  //     return true;
+  //   } catch (error) {
+  //     showAlert(
+  //       error.response?.data?.message || "Error deleting deduction",
+  //       "error"
+  //     );
+  //     return false;
+  //   }
+  // };
 
-  // Helper function to delete a deduction
-  const handleDeleteDeduction = async (empId, name) => {
-    try {
-      const id = `${empId}_${name}`;
-      await axios.delete(`${API_URL}/deductions/${id}`);
-      showAlert("Deduction deleted successfully");
-      return true;
-    } catch (error) {
-      showAlert(
-        error.response?.data?.message || "Error deleting deduction",
-        "error"
-      );
-      return false;
-    }
-  };
+
+
   // Update the handler for manual deduction amount changes
-  const handleManualDeductionAmountChange = (deductionType, value) => {
-    const amount = Math.max(0, Number(value));
-    setManualDeductionAmounts({
-      ...manualDeductionAmounts,
-      [deductionType]: amount,
+  
+  // Helper function to delete a deduction
+const handleDeleteDeduction = async (empId, name) => {
+  try {
+    const id = `${empId}_${name}`;
+    const token = getAuthToken();
+    await axios.delete(`${API_URL}/deductions/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
-  };
+    showAlert("Deduction deleted successfully");
+    return true;
+  } catch (error) {
+    showAlert(
+      error.response?.data?.message || "Error deleting deduction",
+      "error"
+    );
+    return false;
+  }
+};
+  
+  // const handleManualDeductionAmountChange = (deductionType, value) => {
+  //   const amount = Math.max(0, Number(value));
+  //   setManualDeductionAmounts({
+  //     ...manualDeductionAmounts,
+  //     [deductionType]: amount,
+  //   });
+  // };
+
+  // Update the handler for manual deduction amount changes
+const handleManualDeductionAmountChange = (deductionType, value) => {
+  const amount = Math.max(0, Number(value));
+  setManualDeductionAmounts({
+    ...manualDeductionAmounts,
+    [deductionType]: amount,
+  });
+};
+
   return (
     <Container className="payroll-container">
       <Snackbar

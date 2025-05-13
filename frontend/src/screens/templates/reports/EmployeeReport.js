@@ -528,6 +528,7 @@ const EmployeeReport = () => {
     return Array.from(departments).sort();
   };
 
+
   // Columns for employee table
   const employeeColumns = [
     {
@@ -968,6 +969,9 @@ const EmployeeReport = () => {
           </Row>
         </TabPane>
 
+
+        
+
         <TabPane tab="Employee Data" key="2">
           <Card className="er-table-card">
             <div className="er-table-filters">
@@ -1000,6 +1004,9 @@ const EmployeeReport = () => {
                 <RangePicker
                   onChange={(dates) => setDateRange(dates)}
                   placeholder={["Start Date", "End Date"]}
+                  getPopupContainer={(trigger) => trigger.parentNode}
+                  style={{ width: '100%', maxWidth: '280px' }}
+                  dropdownClassName="er-calendar-dropdown"
                 />
                 <Button
                   icon={<FilterOutlined />}
@@ -1013,6 +1020,7 @@ const EmployeeReport = () => {
                 </Button>
               </Space>
             </div>
+
             <Table
               columns={employeeColumns}
               dataSource={getFilteredEmployeeData()}
@@ -1040,11 +1048,15 @@ const EmployeeReport = () => {
                       {dept}
                     </Option>
                   ))}
+    
                 </Select>
+                
                 <RangePicker
                   onChange={(dates) => setDateRange(dates)}
                   placeholder={["Start Date", "End Date"]}
+                  getPopupContainer={trigger => document.body}
                 />
+
                 <Button
                   icon={<FilterOutlined />}
                   onClick={() => {
@@ -1073,6 +1085,7 @@ const EmployeeReport = () => {
           </Card>
         </TabPane>
       </Tabs>
+
     </div>
   );
 };

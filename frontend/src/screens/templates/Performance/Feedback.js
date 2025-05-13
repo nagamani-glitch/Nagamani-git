@@ -188,27 +188,55 @@ const Feedback = () => {
   // Add the currentUser state here, inside the component
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Add the fetchCurrentUser function inside the component
+  // // Add the fetchCurrentUser function inside the component
+  // const fetchCurrentUser = async () => {
+  //   try {
+  //     // Get user ID from your auth system (localStorage, context, etc.)
+  //     const userId = localStorage.getItem("userId"); // Adjust based on your auth implementation
+
+  //     if (!userId) {
+  //       console.error("No user ID found in storage");
+  //       return;
+  //     }
+
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/employees/by-user/${userId}`
+  //     );
+  //     if (response.data.success) {
+  //       setCurrentUser(response.data.data);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching current user:", error);
+  //   }
+  // };
+
   const fetchCurrentUser = async () => {
-    try {
-      // Get user ID from your auth system (localStorage, context, etc.)
-      const userId = localStorage.getItem("userId"); // Adjust based on your auth implementation
+  try {
+    // Get user ID from your auth system (localStorage, context, etc.)
+    const userId = localStorage.getItem("userId"); // Adjust based on your auth implementation
+    const token = getAuthToken();
 
-      if (!userId) {
-        console.error("No user ID found in storage");
-        return;
-      }
-
-      const response = await axios.get(
-        `http://localhost:5002/api/employees/by-user/${userId}`
-      );
-      if (response.data.success) {
-        setCurrentUser(response.data.data);
-      }
-    } catch (error) {
-      console.error("Error fetching current user:", error);
+    if (!userId) {
+      console.error("No user ID found in storage");
+      return;
     }
-  };
+
+    const response = await axios.get(
+      `http://localhost:5002/api/employees/by-user/${userId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    if (response.data.success) {
+      setCurrentUser(response.data.data);
+    }
+  } catch (error) {
+    console.error("Error fetching current user:", error);
+  }
+};
+
 
   // Modify your existing useEffect to include fetchCurrentUser
   useEffect(() => {
@@ -233,32 +261,71 @@ const Feedback = () => {
     fetchEmployees();
   }, []);
 
-  // Fetch employees data
+  // Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
+  // // Fetch employees data
+  // const fetchEmployees = async () => {
+  //   try {
+  //     setLoadingEmployees(true);
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/employees/registered"
+  //     );
+
+  //     // Transform the data to the format we need
+  //     const formattedEmployees = response.data.map((emp) => ({
+  //       id: emp.Emp_ID,
+  //       name: `${emp.personalInfo?.firstName || ""} ${
+  //         emp.personalInfo?.lastName || ""
+  //       }`.trim(),
+  //       email: emp.personalInfo?.email || "",
+  //       designation: emp.joiningDetails?.initialDesignation || "No Designation",
+  //       department: emp.joiningDetails?.department || "No Department",
+  //     }));
+
+  //     setEmployees(formattedEmployees);
+  //     setLoadingEmployees(false);
+  //   } catch (error) {
+  //     console.error("Error fetching employees:", error);
+  //     setLoadingEmployees(false);
+  //   }
+  // };
+
   const fetchEmployees = async () => {
-    try {
-      setLoadingEmployees(true);
-      const response = await axios.get(
-        "http://localhost:5002/api/employees/registered"
-      );
+  try {
+    setLoadingEmployees(true);
+    const token = getAuthToken();
+    const response = await axios.get(
+      "http://localhost:5002/api/employees/registered",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
-      // Transform the data to the format we need
-      const formattedEmployees = response.data.map((emp) => ({
-        id: emp.Emp_ID,
-        name: `${emp.personalInfo?.firstName || ""} ${
-          emp.personalInfo?.lastName || ""
-        }`.trim(),
-        email: emp.personalInfo?.email || "",
-        designation: emp.joiningDetails?.initialDesignation || "No Designation",
-        department: emp.joiningDetails?.department || "No Department",
-      }));
+    // Transform the data to the format we need
+    const formattedEmployees = response.data.map((emp) => ({
+      id: emp.Emp_ID,
+      name: `${emp.personalInfo?.firstName || ""} ${
+        emp.personalInfo?.lastName || ""
+      }`.trim(),
+      email: emp.personalInfo?.email || "",
+      designation: emp.joiningDetails?.initialDesignation || "No Designation",
+      department: emp.joiningDetails?.department || "No Department",
+    }));
 
-      setEmployees(formattedEmployees);
-      setLoadingEmployees(false);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      setLoadingEmployees(false);
-    }
-  };
+    setEmployees(formattedEmployees);
+    setLoadingEmployees(false);
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    setLoadingEmployees(false);
+  }
+};
+
 
   // Check for overdue feedbacks and generate notifications
   useEffect(() => {
@@ -303,78 +370,178 @@ const Feedback = () => {
     }
   }, [feedbackData]);
 
-  const fetchFeedbacks = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get("http://localhost:5002/api/feedback");
+  // const fetchFeedbacks = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get("http://localhost:5002/api/feedback");
 
-      // Get the current user's employee ID
-      const userId = localStorage.getItem("userId");
-      const currentUserResponse = await axios.get(
-        `http://localhost:5002/api/employees/by-user/${userId}`
-      );
-      const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
+  //     // Get the current user's employee ID
+  //     const userId = localStorage.getItem("userId");
+  //     const currentUserResponse = await axios.get(
+  //       `http://localhost:5002/api/employees/by-user/${userId}`
+  //     );
+  //     const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
 
-      // Filter self-feedback to only show the current user's feedback
-      const feedbackData = response.data;
+  //     // Filter self-feedback to only show the current user's feedback
+  //     const feedbackData = response.data;
 
-      // Only filter selfFeedback, keep other tabs as they are
-      const filteredData = {
-        ...feedbackData,
-        selfFeedback: feedbackData.selfFeedback.filter(
-          (feedback) => feedback.employeeId === currentEmployeeId
-        ),
-      };
+  //     // Only filter selfFeedback, keep other tabs as they are
+  //     const filteredData = {
+  //       ...feedbackData,
+  //       selfFeedback: feedbackData.selfFeedback.filter(
+  //         (feedback) => feedback.employeeId === currentEmployeeId
+  //       ),
+  //     };
 
-      setFeedbackData(filteredData);
-      setError(null);
-    } catch (err) {
-      setError("Failed to fetch feedbacks");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setFeedbackData(filteredData);
+  //     setError(null);
+  //   } catch (err) {
+  //     setError("Failed to fetch feedbacks");
+  //     console.error("Error:", err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const handleAddFeedback = async (newFeedback, isEditing) => {
-    try {
-      // Get current user's employee ID
-      const userId = localStorage.getItem("userId");
-      const currentUserResponse = await axios.get(
-        `http://localhost:5002/api/employees/by-user/${userId}`
-      );
-      const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
+const fetchFeedbacks = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await axios.get("http://localhost:5002/api/feedback", {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
 
-      const feedbackData = {
-        ...newFeedback,
-        feedbackType: activeTab,
-        employeeId: currentEmployeeId, // Add the employee ID
-        createdBy: currentEmployeeId,
-      };
-
-      if (isEditing) {
-        await axios.put(
-          `http://localhost:5002/api/feedback/${newFeedback._id}`,
-          feedbackData
-        );
-      } else {
-        // For new self-feedback, set a flag to indicate it should be reviewed
-        if (activeTab === "selfFeedback") {
-          feedbackData.needsReview = true;
-          feedbackData.reviewStatus = "Pending";
+    // Get the current user's employee ID
+    const userId = localStorage.getItem("userId");
+    const currentUserResponse = await axios.get(
+      `http://localhost:5002/api/employees/by-user/${userId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
+      }
+    );
+    const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
 
-        await axios.post("http://localhost:5002/api/feedback", feedbackData);
+    // Filter self-feedback to only show the current user's feedback
+    const feedbackData = response.data;
+
+    // Only filter selfFeedback, keep other tabs as they are
+    const filteredData = {
+      ...feedbackData,
+      selfFeedback: feedbackData.selfFeedback.filter(
+        (feedback) => feedback.employeeId === currentEmployeeId
+      ),
+    };
+
+    setFeedbackData(filteredData);
+    setError(null);
+  } catch (err) {
+    setError("Failed to fetch feedbacks");
+    console.error("Error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // const handleAddFeedback = async (newFeedback, isEditing) => {
+  //   try {
+  //     // Get current user's employee ID
+  //     const userId = localStorage.getItem("userId");
+  //     const currentUserResponse = await axios.get(
+  //       `http://localhost:5002/api/employees/by-user/${userId}`
+  //     );
+  //     const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
+
+  //     const feedbackData = {
+  //       ...newFeedback,
+  //       feedbackType: activeTab,
+  //       employeeId: currentEmployeeId, // Add the employee ID
+  //       createdBy: currentEmployeeId,
+  //     };
+
+  //     if (isEditing) {
+  //       await axios.put(
+  //         `http://localhost:5002/api/feedback/${newFeedback._id}`,
+  //         feedbackData
+  //       );
+  //     } else {
+  //       // For new self-feedback, set a flag to indicate it should be reviewed
+  //       if (activeTab === "selfFeedback") {
+  //         feedbackData.needsReview = true;
+  //         feedbackData.reviewStatus = "Pending";
+  //       }
+
+  //       await axios.post("http://localhost:5002/api/feedback", feedbackData);
+  //     }
+
+  //     await fetchFeedbacks();
+  //     setIsCreateModalOpen(false);
+  //     setEditingFeedback(null);
+  //   } catch (error) {
+  //     console.error("Error saving feedback:", error);
+  //     setError("Failed to save feedback");
+  //   }
+  // };
+
+const handleAddFeedback = async (newFeedback, isEditing) => {
+  try {
+    // Get current user's employee ID
+    const userId = localStorage.getItem("userId");
+    const token = getAuthToken();
+    const currentUserResponse = await axios.get(
+      `http://localhost:5002/api/employees/by-user/${userId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    const currentEmployeeId = currentUserResponse.data.data.Emp_ID;
+
+    const feedbackData = {
+      ...newFeedback,
+      feedbackType: activeTab,
+      employeeId: currentEmployeeId, // Add the employee ID
+      createdBy: currentEmployeeId,
+    };
+
+    if (isEditing) {
+      await axios.put(
+        `http://localhost:5002/api/feedback/${newFeedback._id}`,
+        feedbackData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+    } else {
+      // For new self-feedback, set a flag to indicate it should be reviewed
+      if (activeTab === "selfFeedback") {
+        feedbackData.needsReview = true;
+        feedbackData.reviewStatus = "Pending";
       }
 
-      await fetchFeedbacks();
-      setIsCreateModalOpen(false);
-      setEditingFeedback(null);
-    } catch (error) {
-      console.error("Error saving feedback:", error);
-      setError("Failed to save feedback");
+      await axios.post("http://localhost:5002/api/feedback", feedbackData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
     }
-  };
+
+    await fetchFeedbacks();
+    setIsCreateModalOpen(false);
+    setEditingFeedback(null);
+  } catch (error) {
+    console.error("Error saving feedback:", error);
+    setError("Failed to save feedback");
+  }
+};
+
 
   const handleEdit = (feedback) => {
     setEditingFeedback(feedback);
@@ -388,24 +555,50 @@ const Feedback = () => {
     setDeleteDialogOpen(true);
   };
 
+  // const handleConfirmDelete = async () => {
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(
+  //       `http://localhost:5002/api/feedback/${
+  //         itemToDelete._id || itemToDelete.id
+  //       }`
+  //     );
+  //     await fetchFeedbacks();
+  //     setDeleteDialogOpen(false);
+  //     setItemToDelete(null);
+  //   } catch (error) {
+  //     console.error("Error deleting feedback:", error);
+  //     setError("Failed to delete feedback");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleConfirmDelete = async () => {
-    try {
-      setLoading(true);
-      await axios.delete(
-        `http://localhost:5002/api/feedback/${
-          itemToDelete._id || itemToDelete.id
-        }`
-      );
-      await fetchFeedbacks();
-      setDeleteDialogOpen(false);
-      setItemToDelete(null);
-    } catch (error) {
-      console.error("Error deleting feedback:", error);
-      setError("Failed to delete feedback");
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    await axios.delete(
+      `http://localhost:5002/api/feedback/${
+        itemToDelete._id || itemToDelete.id
+      }`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    await fetchFeedbacks();
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+  } catch (error) {
+    console.error("Error deleting feedback:", error);
+    setError("Failed to delete feedback");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleCloseDeleteDialog = () => {
     setDeleteDialogOpen(false);
@@ -429,46 +622,99 @@ const Feedback = () => {
     }));
   };
 
-  // Status change handler
-  const handleStatusChange = async (feedbackId, newStatus) => {
-    try {
-      await axios.put(`http://localhost:5002/api/feedback/${feedbackId}`, {
-        status: newStatus,
-      });
-      await fetchFeedbacks();
-    } catch (error) {
-      console.error("Error updating status:", error);
-      setError("Failed to update feedback status");
-    }
-  };
+  // // Status change handler
+  // const handleStatusChange = async (feedbackId, newStatus) => {
+  //   try {
+  //     await axios.put(`http://localhost:5002/api/feedback/${feedbackId}`, {
+  //       status: newStatus,
+  //     });
+  //     await fetchFeedbacks();
+  //   } catch (error) {
+  //     console.error("Error updating status:", error);
+  //     setError("Failed to update feedback status");
+  //   }
+  // };
 
-  // View history handler
+  const handleStatusChange = async (feedbackId, newStatus) => {
+  try {
+    const token = getAuthToken();
+    await axios.put(`http://localhost:5002/api/feedback/${feedbackId}`, {
+      status: newStatus
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    await fetchFeedbacks();
+  } catch (error) {
+    console.error("Error updating status:", error);
+    setError("Failed to update feedback status");
+  }
+};
+
+
+
+  // // View history handler
+  // const handleViewHistory = async (feedbackId) => {
+  //   try {
+  //     // In a real app, you would fetch the history from the backend
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/feedback/${feedbackId}/history`
+  //     );
+  //     setSelectedFeedback({
+  //       ...Object.values(feedbackData)
+  //         .flat()
+  //         .find((f) => f._id === feedbackId || f.id === feedbackId),
+  //       history: response.data.history || mockHistory(feedbackId),
+  //     });
+  //     setShowHistory(true);
+  //   } catch (error) {
+  //     console.error("Error fetching feedback history:", error);
+  //     // For demo purposes, show mock history if API fails
+  //     const feedback = Object.values(feedbackData)
+  //       .flat()
+  //       .find((f) => f._id === feedbackId || f.id === feedbackId);
+  //     setSelectedFeedback({
+  //       ...feedback,
+  //       history: mockHistory(feedbackId),
+  //     });
+  //     setShowHistory(true);
+  //   }
+  // };
+
   const handleViewHistory = async (feedbackId) => {
-    try {
-      // In a real app, you would fetch the history from the backend
-      const response = await axios.get(
-        `http://localhost:5002/api/feedback/${feedbackId}/history`
-      );
-      setSelectedFeedback({
-        ...Object.values(feedbackData)
-          .flat()
-          .find((f) => f._id === feedbackId || f.id === feedbackId),
-        history: response.data.history || mockHistory(feedbackId),
-      });
-      setShowHistory(true);
-    } catch (error) {
-      console.error("Error fetching feedback history:", error);
-      // For demo purposes, show mock history if API fails
-      const feedback = Object.values(feedbackData)
+  try {
+    // In a real app, you would fetch the history from the backend
+    const token = getAuthToken();
+    const response = await axios.get(
+      `http://localhost:5002/api/feedback/${feedbackId}/history`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setSelectedFeedback({
+      ...Object.values(feedbackData)
         .flat()
-        .find((f) => f._id === feedbackId || f.id === feedbackId);
-      setSelectedFeedback({
-        ...feedback,
-        history: mockHistory(feedbackId),
-      });
-      setShowHistory(true);
-    }
-  };
+        .find((f) => f._id === feedbackId || f.id === feedbackId),
+      history: response.data.history || mockHistory(feedbackId),
+    });
+    setShowHistory(true);
+  } catch (error) {
+    console.error("Error fetching feedback history:", error);
+    // For demo purposes, show mock history if API fails
+    const feedback = Object.values(feedbackData)
+      .flat()
+      .find((f) => f._id === feedbackId || f.id === feedbackId);
+    setSelectedFeedback({
+      ...feedback,
+      history: mockHistory(feedbackId),
+    });
+    setShowHistory(true);
+  }
+};
+
 
   // Mock history function for demo purposes
   const mockHistory = (feedbackId) => {
@@ -494,52 +740,105 @@ const Feedback = () => {
     ];
   };
 
-  // Add comment handler
+  // // Add comment handler
+  // const handleAddComment = async () => {
+  //   if (!comment.trim() || !selectedFeedback) return;
+
+  //   try {
+  //     // In a real app, you would send this to the backend
+  //     await axios.post(
+  //       `http://localhost:5002/api/feedback/${selectedFeedback._id}/comments`,
+  //       {
+  //         comment,
+  //       }
+  //     );
+
+  //     // Update the local state with the new comment
+  //     setSelectedFeedback({
+  //       ...selectedFeedback,
+  //       history: [
+  //         ...selectedFeedback.history,
+  //         {
+  //           date: new Date().toISOString(),
+  //           action: "Comment",
+  //           user: "Current User", // In a real app, use the logged-in user
+  //           details: comment,
+  //         },
+  //       ],
+  //     });
+
+  //     setComment("");
+  //   } catch (error) {
+  //     console.error("Error adding comment:", error);
+  //     // For demo purposes, update the UI anyway
+  //     setSelectedFeedback({
+  //       ...selectedFeedback,
+  //       history: [
+  //         ...selectedFeedback.history,
+  //         {
+  //           date: new Date().toISOString(),
+  //           action: "Comment",
+  //           user: "Current User", // In a real app, use the logged-in user
+  //           details: comment,
+  //         },
+  //       ],
+  //     });
+  //     setComment("");
+  //   }
+  // };
+
   const handleAddComment = async () => {
-    if (!comment.trim() || !selectedFeedback) return;
+  if (!comment.trim() || !selectedFeedback) return;
 
-    try {
-      // In a real app, you would send this to the backend
-      await axios.post(
-        `http://localhost:5002/api/feedback/${selectedFeedback._id}/comments`,
-        {
-          comment,
+  try {
+    // In a real app, you would send this to the backend
+    const token = getAuthToken();
+    await axios.post(
+      `http://localhost:5002/api/feedback/${selectedFeedback._id}/comments`,
+      {
+        comment,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      );
+      }
+    );
 
-      // Update the local state with the new comment
-      setSelectedFeedback({
-        ...selectedFeedback,
-        history: [
-          ...selectedFeedback.history,
-          {
-            date: new Date().toISOString(),
-            action: "Comment",
-            user: "Current User", // In a real app, use the logged-in user
-            details: comment,
-          },
-        ],
-      });
+    // Update the local state with the new comment
+    setSelectedFeedback({
+      ...selectedFeedback,
+      history: [
+        ...selectedFeedback.history,
+        {
+          date: new Date().toISOString(),
+          action: "Comment",
+          user: "Current User", // In a real app, use the logged-in user
+          details: comment,
+        },
+      ],
+    });
 
-      setComment("");
-    } catch (error) {
-      console.error("Error adding comment:", error);
-      // For demo purposes, update the UI anyway
-      setSelectedFeedback({
-        ...selectedFeedback,
-        history: [
-          ...selectedFeedback.history,
-          {
-            date: new Date().toISOString(),
-            action: "Comment",
-            user: "Current User", // In a real app, use the logged-in user
-            details: comment,
-          },
-        ],
-      });
-      setComment("");
-    }
-  };
+    setComment("");
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    // For demo purposes, update the UI anyway
+    setSelectedFeedback({
+      ...selectedFeedback,
+      history: [
+        ...selectedFeedback.history,
+        {
+          date: new Date().toISOString(),
+          action: "Comment",
+          user: "Current User", // In a real app, use the logged-in user
+          details: comment,
+        },
+      ],
+    });
+    setComment("");
+  }
+};
+
 
   // Export handler with working Excel and PDF exports
   const handleExport = (format) => {

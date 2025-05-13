@@ -24,45 +24,97 @@ const CreateFeedback = ({ addFeedback, editData, onClose, feedbackType, currentU
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // // Fetch employees data on component mount
+  // useEffect(() => {
+  //   const fetchEmployees = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const response = await axios.get('http://localhost:5002/api/employees/registered');
+        
+  //       // Transform the data to the format we need
+  //       const formattedEmployees = response.data.map(emp => ({
+  //         id: emp.Emp_ID,
+  //         name: `${emp.personalInfo?.firstName || ''} ${emp.personalInfo?.lastName || ''}`.trim(),
+  //         email: emp.personalInfo?.email || '',
+  //         designation: emp.joiningDetails?.initialDesignation || 'No Designation',
+  //         department: emp.joiningDetails?.department || 'No Department'
+  //       }));
+        
+  //       setEmployees(formattedEmployees);
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error('Error fetching employees:', error);
+  //       setError('Failed to load employees data');
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchEmployees();
+  // }, []);
+
   // Fetch employees data on component mount
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get('http://localhost:5002/api/employees/registered');
-        
-        // Transform the data to the format we need
-        const formattedEmployees = response.data.map(emp => ({
-          id: emp.Emp_ID,
-          name: `${emp.personalInfo?.firstName || ''} ${emp.personalInfo?.lastName || ''}`.trim(),
-          email: emp.personalInfo?.email || '',
-          designation: emp.joiningDetails?.initialDesignation || 'No Designation',
-          department: emp.joiningDetails?.department || 'No Department'
-        }));
-        
-        setEmployees(formattedEmployees);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching employees:', error);
-        setError('Failed to load employees data');
-        setLoading(false);
-      }
-    };
-
-    fetchEmployees();
-  }, []);
-
-
-  // In the CreateFeedback component, add:
 useEffect(() => {
-if (feedbackType === 'selfFeedback' && currentUser) {
-  setFormData(prev => ({
-    ...prev,
-    employee: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
-    employeeId: currentUser.Emp_ID
-  }));
-}
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      const token = getAuthToken();
+      const response = await axios.get('http://localhost:5002/api/employees/registered', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      // Transform the data to the format we need
+      const formattedEmployees = response.data.map(emp => ({
+        id: emp.Emp_ID,
+        name: `${emp.personalInfo?.firstName || ''} ${emp.personalInfo?.lastName || ''}`.trim(),
+        email: emp.personalInfo?.email || '',
+        designation: emp.joiningDetails?.initialDesignation || 'No Designation',
+        department: emp.joiningDetails?.department || 'No Department'
+      }));
+      
+      setEmployees(formattedEmployees);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      setError('Failed to load employees data');
+      setLoading(false);
+    }
+  };
+
+  fetchEmployees();
+}, []);
+
+
+
+//   // In the CreateFeedback component, add:
+// useEffect(() => {
+// if (feedbackType === 'selfFeedback' && currentUser) {
+//   setFormData(prev => ({
+//     ...prev,
+//     employee: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
+//     employeeId: currentUser.Emp_ID
+//   }));
+// }
+// }, [currentUser, feedbackType]);
+
+// In the CreateFeedback component, add:
+useEffect(() => {
+  if (feedbackType === 'selfFeedback' && currentUser) {
+    setFormData(prev => ({
+      ...prev,
+      employee: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
+      employeeId: currentUser.Emp_ID
+    }));
+  }
 }, [currentUser, feedbackType]);
+
+
+// Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
 
 
 

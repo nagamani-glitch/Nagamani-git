@@ -146,24 +146,55 @@ const ResignationReview = () => {
     }
   }, []);
 
-  // Fetch current user details
-  const fetchCurrentUser = async (userId) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5002/api/employees/by-user/${userId}`
-      );
-      setCurrentUser(response.data.data);
+  // Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
 
-      setIsHR(true);
-    } catch (error) {
-      console.error("Error fetching current user:", error);
-      setSnackbar({
-        open: true,
-        message: "Error fetching user information",
-        severity: "error",
-      });
-    }
-  };
+
+  // // Fetch current user details
+  // const fetchCurrentUser = async (userId) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/employees/by-user/${userId}`
+  //     );
+  //     setCurrentUser(response.data.data);
+
+  //     setIsHR(true);
+  //   } catch (error) {
+  //     console.error("Error fetching current user:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error fetching user information",
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  const fetchCurrentUser = async (userId) => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      `http://localhost:5002/api/employees/by-user/${userId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setCurrentUser(response.data.data);
+
+    setIsHR(true);
+  } catch (error) {
+    console.error("Error fetching current user:", error);
+    setSnackbar({
+      open: true,
+      message: "Error fetching user information",
+      severity: "error",
+    });
+  }
+};
+
 
   useEffect(() => {
     // Remove the isHR condition for testing
@@ -172,73 +203,153 @@ const ResignationReview = () => {
     // }
   }, [selectedTab]); // Keep the selectedTab dependency
 
-  // First, let's modify the fetchResignations function to include employee data
+  // // First, let's modify the fetchResignations function to include employee data
+  // const fetchResignations = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/resignations"
+  //     );
+
+  //     // Get employee data for each resignation
+  //     const resignationsWithEmployeeData = await Promise.all(
+  //       response.data.map(async (resignation) => {
+  //         if (resignation.userId) {
+  //           try {
+  //             // Fetch employee data using the userId
+  //             const employeeResponse = await axios.get(
+  //               `http://localhost:5002/api/employees/by-user/${resignation.userId}`
+  //             );
+  //             const employeeData = employeeResponse.data.data;
+
+  //             // Add Emp_ID to the resignation object
+  //             return {
+  //               ...resignation,
+  //               employeeId: employeeData?.Emp_ID || "Not available",
+  //             };
+  //           } catch (err) {
+  //             console.error("Error fetching employee data:", err);
+  //             return {
+  //               ...resignation,
+  //               employeeId: "Not available",
+  //             };
+  //           }
+  //         }
+  //         return {
+  //           ...resignation,
+  //           employeeId: "Not available",
+  //         };
+  //       })
+  //     );
+
+  //     // Filter based on tab
+  //     let filteredData = resignationsWithEmployeeData;
+  //     if (selectedTab === 1) {
+  //       // Pending
+  //       filteredData = resignationsWithEmployeeData.filter(
+  //         (item) => item.status === "Requested" || item.status === "Pending"
+  //       );
+  //     } else if (selectedTab === 2) {
+  //       // Approved
+  //       filteredData = resignationsWithEmployeeData.filter(
+  //         (item) => item.status === "Approved"
+  //       );
+  //     } else if (selectedTab === 3) {
+  //       // Rejected
+  //       filteredData = resignationsWithEmployeeData.filter(
+  //         (item) => item.status === "Rejected"
+  //       );
+  //     }
+
+  //     setResignations(filteredData);
+  //     setError(null);
+  //   } catch (err) {
+  //     setError("Failed to fetch resignations");
+  //     console.error("Error:", err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchResignations = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        "http://localhost:5002/api/resignations"
-      );
-
-      // Get employee data for each resignation
-      const resignationsWithEmployeeData = await Promise.all(
-        response.data.map(async (resignation) => {
-          if (resignation.userId) {
-            try {
-              // Fetch employee data using the userId
-              const employeeResponse = await axios.get(
-                `http://localhost:5002/api/employees/by-user/${resignation.userId}`
-              );
-              const employeeData = employeeResponse.data.data;
-
-              // Add Emp_ID to the resignation object
-              return {
-                ...resignation,
-                employeeId: employeeData?.Emp_ID || "Not available",
-              };
-            } catch (err) {
-              console.error("Error fetching employee data:", err);
-              return {
-                ...resignation,
-                employeeId: "Not available",
-              };
-            }
-          }
-          return {
-            ...resignation,
-            employeeId: "Not available",
-          };
-        })
-      );
-
-      // Filter based on tab
-      let filteredData = resignationsWithEmployeeData;
-      if (selectedTab === 1) {
-        // Pending
-        filteredData = resignationsWithEmployeeData.filter(
-          (item) => item.status === "Requested" || item.status === "Pending"
-        );
-      } else if (selectedTab === 2) {
-        // Approved
-        filteredData = resignationsWithEmployeeData.filter(
-          (item) => item.status === "Approved"
-        );
-      } else if (selectedTab === 3) {
-        // Rejected
-        filteredData = resignationsWithEmployeeData.filter(
-          (item) => item.status === "Rejected"
-        );
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await axios.get(
+      "http://localhost:5002/api/resignations",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       }
+    );
 
-      setResignations(filteredData);
-      setError(null);
-    } catch (err) {
-      setError("Failed to fetch resignations");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
+    // Get employee data for each resignation
+    const resignationsWithEmployeeData = await Promise.all(
+      response.data.map(async (resignation) => {
+        if (resignation.userId) {
+          try {
+            // Fetch employee data using the userId
+            const employeeResponse = await axios.get(
+              `http://localhost:5002/api/employees/by-user/${resignation.userId}`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              }
+            );
+            const employeeData = employeeResponse.data.data;
+
+            // Add Emp_ID to the resignation object
+            return {
+              ...resignation,
+              employeeId: employeeData?.Emp_ID || "Not available",
+            };
+          } catch (err) {
+            console.error("Error fetching employee data:", err);
+            return {
+              ...resignation,
+              employeeId: "Not available",
+            };
+          }
+        }
+        return {
+          ...resignation,
+          employeeId: "Not available",
+        };
+      })
+    );
+
+    // Filter based on tab
+    let filteredData = resignationsWithEmployeeData;
+    if (selectedTab === 1) {
+      // Pending
+      filteredData = resignationsWithEmployeeData.filter(
+        (item) => item.status === "Requested" || item.status === "Pending"
+      );
+    } else if (selectedTab === 2) {
+      // Approved
+      filteredData = resignationsWithEmployeeData.filter(
+        (item) => item.status === "Approved"
+      );
+    } else if (selectedTab === 3) {
+      // Rejected
+      filteredData = resignationsWithEmployeeData.filter(
+        (item) => item.status === "Rejected"
+      );
     }
-  };
+
+    setResignations(filteredData);
+    setError(null);
+  } catch (err) {
+    setError("Failed to fetch resignations");
+    console.error("Error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
@@ -301,121 +412,247 @@ const ResignationReview = () => {
   };
 
 
-  const handleReviewSubmit = async () => {
-    if (!selectedResignation) return;
+  // const handleReviewSubmit = async () => {
+  //   if (!selectedResignation) return;
 
-    try {
-      setLoading(true);
+  //   try {
+  //     setLoading(true);
 
-      const response = await axios.put(
-        `http://localhost:5002/api/resignations/${selectedResignation._id}`,
-        {
-          status: reviewStatus,
-          reviewNotes: reviewNotes,
-          reviewedBy: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
-          reviewedAt: new Date(),
-        }
-      );
+  //     const response = await axios.put(
+  //       `http://localhost:5002/api/resignations/${selectedResignation._id}`,
+  //       {
+  //         status: reviewStatus,
+  //         reviewNotes: reviewNotes,
+  //         reviewedBy: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
+  //         reviewedAt: new Date(),
+  //       }
+  //     );
 
-      // Update local state
-      setResignations(
-        resignations.map((item) =>
-          item._id === selectedResignation._id ? response.data : item
-        )
-      );
+  //     // Update local state
+  //     setResignations(
+  //       resignations.map((item) =>
+  //         item._id === selectedResignation._id ? response.data : item
+  //       )
+  //     );
 
-      // Send notification to the user
-      if (selectedResignation.userId) {
-        addResignationNotification(
-          selectedResignation.name,
-          reviewStatus.toLowerCase(), // "approved" or "rejected"
-          selectedResignation.userId
-        );
-      }
+  //     // Send notification to the user
+  //     if (selectedResignation.userId) {
+  //       addResignationNotification(
+  //         selectedResignation.name,
+  //         reviewStatus.toLowerCase(), // "approved" or "rejected"
+  //         selectedResignation.userId
+  //       );
+  //     }
       
 
-      setSnackbar({
-        open: true,
-        message: `Resignation ${
-          reviewStatus === "Approved" ? "approved" : "rejected"
-        } successfully`,
-        severity: "success",
-      });
+  //     setSnackbar({
+  //       open: true,
+  //       message: `Resignation ${
+  //         reviewStatus === "Approved" ? "approved" : "rejected"
+  //       } successfully`,
+  //       severity: "success",
+  //     });
 
-      // Send notification email about the status update
-      await sendStatusNotification(response.data);
+  //     // Send notification email about the status update
+  //     await sendStatusNotification(response.data);
 
-      handleCloseReview();
-      fetchResignations(); // Refresh the list
-    } catch (error) {
-      console.error("Error updating resignation status:", error);
-      setSnackbar({
-        open: true,
-        message: "Error updating resignation status",
-        severity: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     handleCloseReview();
+  //     fetchResignations(); // Refresh the list
+  //   } catch (error) {
+  //     console.error("Error updating resignation status:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error updating resignation status",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   
-  const handleSendEmail = async (resignation) => {
-    try {
-      setLoading(true);
-      await axios.post("http://localhost:5002/api/resignations/email", {
-        name: resignation.name,
-        email: resignation.email,
-        position: resignation.position,
-        status: resignation.status,
-        description: resignation.description,
-        reviewNotes: resignation.reviewNotes,
-      });
+const handleReviewSubmit = async () => {
+  if (!selectedResignation) return;
 
-      setSnackbar({
-        open: true,
-        message: `Notification email sent to ${resignation.name}`,
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error sending email:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to send email",
-        severity: "error",
-      });
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+
+    const response = await axios.put(
+      `http://localhost:5002/api/resignations/${selectedResignation._id}`,
+      {
+        status: reviewStatus,
+        reviewNotes: reviewNotes,
+        reviewedBy: `${currentUser.personalInfo.firstName} ${currentUser.personalInfo.lastName}`,
+        reviewedAt: new Date(),
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    // Update local state
+    setResignations(
+      resignations.map((item) =>
+        item._id === selectedResignation._id ? response.data : item
+      )
+    );
+
+    // Send notification to the user
+    if (selectedResignation.userId) {
+      addResignationNotification(
+        selectedResignation.name,
+        reviewStatus.toLowerCase(), // "approved" or "rejected"
+        selectedResignation.userId
+      );
     }
-  };
+    
+
+    setSnackbar({
+      open: true,
+      message: `Resignation ${
+        reviewStatus === "Approved" ? "approved" : "rejected"
+      } successfully`,
+      severity: "success",
+    });
+
+    // Send notification email about the status update
+    await sendStatusNotification(response.data);
+
+    handleCloseReview();
+    fetchResignations(); // Refresh the list
+  } catch (error) {
+    console.error("Error updating resignation status:", error);
+    setSnackbar({
+      open: true,
+      message: "Error updating resignation status",
+      severity: "error",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // const handleSendEmail = async (resignation) => {
+  //   try {
+  //     setLoading(true);
+  //     await axios.post("http://localhost:5002/api/resignations/email", {
+  //       name: resignation.name,
+  //       email: resignation.email,
+  //       position: resignation.position,
+  //       status: resignation.status,
+  //       description: resignation.description,
+  //       reviewNotes: resignation.reviewNotes,
+  //     });
+
+  //     setSnackbar({
+  //       open: true,
+  //       message: `Notification email sent to ${resignation.name}`,
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error sending email:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Failed to send email",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // Add this function to send notification after review
-  const sendStatusNotification = async (resignation) => {
-    try {
-      await axios.post("http://localhost:5002/api/resignations/email", {
+  
+const handleSendEmail = async (resignation) => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    await axios.post("http://localhost:5002/api/resignations/email", {
+      name: resignation.name,
+      email: resignation.email,
+      position: resignation.position,
+      status: resignation.status,
+      description: resignation.description,
+      reviewNotes: resignation.reviewNotes,
+    }, {
+            headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setSnackbar({
+      open: true,
+      message: `Email notification sent to ${resignation.email}`,
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    setSnackbar({
+      open: true,
+      message: "Failed to send email notification",
+      severity: "error",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // const sendStatusNotification = async (resignation) => {
+  //   try {
+  //     await axios.post("http://localhost:5002/api/resignations/email", {
+  //       name: resignation.name,
+  //       email: resignation.email,
+  //       position: resignation.position,
+  //       status: resignation.status,
+  //       description: resignation.description,
+  //       reviewNotes: resignation.reviewNotes,
+  //       reviewedBy: resignation.reviewedBy,
+  //       reviewedAt: resignation.reviewedAt,
+  //     });
+
+  //     setSnackbar({
+  //       open: true,
+  //       message: `Status notification email sent to ${resignation.name}`,
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error sending status notification:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Failed to send status notification email",
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+const sendStatusNotification = async (resignation) => {
+  try {
+    const token = getAuthToken();
+    await axios.post(
+      "http://localhost:5002/api/resignations/email",
+      {
         name: resignation.name,
         email: resignation.email,
         position: resignation.position,
         status: resignation.status,
         description: resignation.description,
-        reviewNotes: resignation.reviewNotes,
-        reviewedBy: resignation.reviewedBy,
-        reviewedAt: resignation.reviewedAt,
-      });
+        reviewNotes: resignation.reviewNotes || "No additional notes provided.",
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log("Status notification email sent");
+  } catch (error) {
+    console.error("Error sending status notification:", error);
+  }
+};
 
-      setSnackbar({
-        open: true,
-        message: `Status notification email sent to ${resignation.name}`,
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error sending status notification:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to send status notification email",
-        severity: "error",
-      });
-    }
-  };
 
   const getStatusColor = (status) => {
     switch (status) {

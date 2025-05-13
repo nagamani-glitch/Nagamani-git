@@ -78,46 +78,104 @@ registerCompany: async (formData) => {
 },
 
   
-  // Login user
-  login: async (credentials) => {
-    try {
-      console.log('Auth service: Making login request with:', {
-        companyCode: credentials.companyCode.toUpperCase(),
-        email: credentials.email.toLowerCase(),
-        passwordProvided: !!credentials.password
-      });
+  // // Login user
+  // login: async (credentials) => {
+  //   try {
+  //     console.log('Auth service: Making login request with:', {
+  //       companyCode: credentials.companyCode.toUpperCase(),
+  //       email: credentials.email.toLowerCase(),
+  //       passwordProvided: !!credentials.password
+  //     });
       
-      // Trim the password to remove any accidental whitespace
-      const trimmedPassword = credentials.password.trim();
+  //     // Trim the password to remove any accidental whitespace
+  //     const trimmedPassword = credentials.password.trim();
       
-      const response = await api.post('/companies/login', {
-        companyCode: credentials.companyCode.toUpperCase(),
-        email: credentials.email.toLowerCase(),
-        // Use trimmedPassword (with capital P) instead of trimmedpassword
-        password: trimmedPassword
-      });
+  //     const response = await api.post('/companies/login', {
+  //       companyCode: credentials.companyCode.toUpperCase(),
+  //       email: credentials.email.toLowerCase(),
+  //       // Use trimmedPassword (with capital P) instead of trimmedpassword
+  //       password: trimmedPassword
+  //     });
   
-      console.log('Auth service: Login response received:', {
-        success: response.data.success,
-        hasToken: !!response.data.token,
-        hasUser: !!response.data.user
-      });
+  //     console.log('Auth service: Login response received:', {
+  //       success: response.data.success,
+  //       hasToken: !!response.data.token,
+  //       hasUser: !!response.data.user
+  //     });
       
-      // Store auth data in localStorage only on successful login
-      if (response.data.success && response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        localStorage.setItem('userId', response.data.user._id || response.data.user.id);
-        localStorage.setItem('companyCode', credentials.companyCode.toUpperCase());
-        console.log('Auth service: User data stored in localStorage');
-      }
+  //     // Store auth data in localStorage only on successful login
+  //     if (response.data.success && response.data.token) {
+  //       localStorage.setItem('token', response.data.token);
+  //       localStorage.setItem('user', JSON.stringify(response.data.user));
+  //       localStorage.setItem('userId', response.data.user._id || response.data.user.id);
+  //       localStorage.setItem('companyCode', credentials.companyCode.toUpperCase());
+  //       console.log('Auth service: User data stored in localStorage');
+  //     }
       
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Login error in auth service:', error);
+  //     throw error;
+  //   }
+  // },
+
+  // Login user
+login: async (credentials) => {
+  try {
+    console.log('Auth service: Making login request with:', {
+      companyCode: credentials.companyCode.toUpperCase(),
+      email: credentials.email.toLowerCase(),
+      passwordProvided: !!credentials.password
+    });
+    
+    // Trim the password to remove any accidental whitespace
+    const trimmedPassword = credentials.password.trim();
+    
+    const response = await api.post('/companies/login', {
+      companyCode: credentials.companyCode.toUpperCase(),
+      email: credentials.email.toLowerCase(),
+      password: trimmedPassword
+    });
+    
+    // If login is successful, store token and user info
+    if (response.data.success) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('companyCode', response.data.user.companyCode);
+      localStorage.setItem('userId', response.data.user.id);
+      
+      // Set the default Authorization header for future requests
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      
+      console.log('Login successful, token stored');
       return response.data;
-    } catch (error) {
-      console.error('Login error in auth service:', error);
+    } else {
+      console.log('Login failed with response:', response.data);
+      throw new Error(response.data.message || 'Login failed');
+    }
+  } catch (error) {
+    console.log('Login error in auth service:', error);
+    
+    // Provide more detailed error information
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
+      
+      // Return the error message from the server if available
+      throw new Error(error.response.data.message || 'Authentication failed');
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received:', error.request);
+      throw new Error('No response from server. Please check your connection.');
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Request setup error:', error.message);
       throw error;
     }
-  },
+  }
+},
 
   
   // Logout user
@@ -224,4 +282,3 @@ registerCompany: async (formData) => {
 };
 
 export default authService;
-

@@ -56,52 +56,108 @@ const Interview = () => {
     setOpenDeleteDialog(true);
   };
 
-  // Add this function to handle the actual deletion
-  const confirmDelete = () => {
-    if (deleteId) {
-      axios
-        .delete(`http://localhost:5002/api/interviews/${deleteId}`)
-        .then(() => {
-          setData(data.filter((item) => item._id !== deleteId));
-          setSnackbar({
-            open: true,
-            message: "Interview deleted successfully",
-            severity: "success",
-          });
-        })
-        .catch((error) => {
-          console.error("Error deleting interview:", error);
-          setSnackbar({
-            open: true,
-            message: "Error deleting interview",
-            severity: "error",
-          });
+  // // Add this function to handle the actual deletion
+  // const confirmDelete = () => {
+  //   if (deleteId) {
+  //     axios
+  //       .delete(`http://localhost:5002/api/interviews/${deleteId}`)
+  //       .then(() => {
+  //         setData(data.filter((item) => item._id !== deleteId));
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Interview deleted successfully",
+  //           severity: "success",
+  //         });
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error deleting interview:", error);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Error deleting interview",
+  //           severity: "error",
+  //         });
+  //       });
+  //   }
+  //   setOpenDeleteDialog(false);
+  //   setDeleteId(null);
+  // };
+
+  // Update the confirmDelete function
+const confirmDelete = () => {
+  if (deleteId) {
+    const token = getAuthToken();
+    
+    axios
+      .delete(`http://localhost:5002/api/interviews/${deleteId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(() => {
+        setData(data.filter((item) => item._id !== deleteId));
+        setSnackbar({
+          open: true,
+          message: "Interview deleted successfully",
+          severity: "success",
         });
-    }
-    setOpenDeleteDialog(false);
-    setDeleteId(null);
-  };
+      })
+      .catch((error) => {
+        console.error("Error deleting interview:", error);
+        setSnackbar({
+          open: true,
+          message: error.response?.data?.error || "Error deleting interview",
+          severity: "error",
+        });
+      });
+  }
+  setOpenDeleteDialog(false);
+  setDeleteId(null);
+};
 
   useEffect(() => {
     fetchInterviews();
   }, [statusFilter]);
 
-  const fetchInterviews = () => {
-    const url = "http://localhost:5002/api/interviews";
-    axios
-      .get(url)
-      .then((response) => {
-        let filteredData = response.data;
-        if (statusFilter !== "All") {
-          filteredData = response.data.filter(
-            (item) => item.status === statusFilter
-          );
-        }
-        setData(filteredData);
-      })
-      .catch((error) => console.error("Error fetching interviews:", error));
-  };
+  // const fetchInterviews = () => {
+  //   const url = "http://localhost:5002/api/interviews";
+  //   axios
+  //     .get(url)
+  //     .then((response) => {
+  //       let filteredData = response.data;
+  //       if (statusFilter !== "All") {
+  //         filteredData = response.data.filter(
+  //           (item) => item.status === statusFilter
+  //         );
+  //       }
+  //       setData(filteredData);
+  //     })
+  //     .catch((error) => console.error("Error fetching interviews:", error));
+  // };
 
+  // Update the fetchInterviews function
+const fetchInterviews = () => {
+  const url = "http://localhost:5002/api/interviews";
+  const token = getAuthToken();
+  
+  axios
+    .get(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then((response) => {
+      let filteredData = response.data;
+      if (statusFilter !== "All") {
+        filteredData = response.data.filter(
+          (item) => item.status === statusFilter
+        );
+      }
+      setData(filteredData);
+    })
+    .catch((error) => console.error("Error fetching interviews:", error));
+};
+  
+  
   // Add this function to validate date (only current or future dates)
   const validateDate = (dateString) => {
     if (!dateString) return false;
@@ -214,73 +270,154 @@ const Interview = () => {
     setOpenDialog(true);
   };
 
-  const handleSave = () => {
-    // Check for date validation
-    if (!validateDate(date)) {
-      setDateError("Please select current or future date");
-      return;
-    }
+  // const handleSave = () => {
+  //   // Check for date validation
+  //   if (!validateDate(date)) {
+  //     setDateError("Please select current or future date");
+  //     return;
+  //   }
 
-    const interviewData = {
-      candidate,
-      interviewer,
-      date,
-      time,
-      description,
-      status: status || "Scheduled",
-    };
+  //   const interviewData = {
+  //     candidate,
+  //     interviewer,
+  //     date,
+  //     time,
+  //     description,
+  //     status: status || "Scheduled",
+  //   };
 
-    if (editMode && selectedRow) {
-      axios
-        .put(
-          `http://localhost:5002/api/interviews/${selectedRow._id}`,
-          interviewData
-        )
-        .then((response) => {
-          setData((prevData) =>
-            prevData.map((item) =>
-              item._id === selectedRow._id ? response.data : item
-            )
-          );
-          setOpenDialog(false);
-          setSnackbar({
-            open: true,
-            message: "Interview updated successfully",
-            severity: "success",
-          });
-        })
-        .catch((error) => {
-          console.error("Error updating interview:", error);
-          setSnackbar({
-            open: true,
-            message: "Error updating interview",
-            severity: "error",
-          });
-        });
-    } else {
-      axios
-        .post("http://localhost:5002/api/interviews", interviewData)
-        .then((response) => {
-          setData([...data, response.data]);
-          setOpenDialog(false);
-          setSnackbar({
-            open: true,
-            message: "Interview added successfully",
-            severity: "success",
-          });
-        })
-        .catch((error) => {
-          console.error("Error adding interview:", error);
-          setSnackbar({
-            open: true,
-            message: "Error adding interview",
-            severity: "error",
-          });
-        });
-    }
-  };
+  //   if (editMode && selectedRow) {
+  //     axios
+  //       .put(
+  //         `http://localhost:5002/api/interviews/${selectedRow._id}`,
+  //         interviewData
+  //       )
+  //       .then((response) => {
+  //         setData((prevData) =>
+  //           prevData.map((item) =>
+  //             item._id === selectedRow._id ? response.data : item
+  //           )
+  //         );
+  //         setOpenDialog(false);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Interview updated successfully",
+  //           severity: "success",
+  //         });
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error updating interview:", error);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Error updating interview",
+  //           severity: "error",
+  //         });
+  //       });
+  //   } else {
+  //     axios
+  //       .post("http://localhost:5002/api/interviews", interviewData)
+  //       .then((response) => {
+  //         setData([...data, response.data]);
+  //         setOpenDialog(false);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Interview added successfully",
+  //           severity: "success",
+  //         });
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error adding interview:", error);
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Error adding interview",
+  //           severity: "error",
+  //         });
+  //       });
+  //   }
+  // };
 
   // Add this function if it doesn't exist
+  
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Update the handleSave function
+const handleSave = () => {
+  // Check for date validation
+  if (!validateDate(date)) {
+    setDateError("Please select current or future date");
+    return;
+  }
+
+  const interviewData = {
+    candidate,
+    interviewer,
+    date,
+    time,
+    description,
+    status: status || "Scheduled",
+  };
+
+  // Get the authentication token
+  const token = getAuthToken();
+  const headers = {
+    'Authorization': `Bearer ${token}`
+  };
+
+  if (editMode && selectedRow) {
+    axios
+      .put(
+        `http://localhost:5002/api/interviews/${selectedRow._id}`,
+        interviewData,
+        { headers }
+      )
+      .then((response) => {
+        setData((prevData) =>
+          prevData.map((item) =>
+            item._id === selectedRow._id ? response.data : item
+          )
+        );
+        setOpenDialog(false);
+        setSnackbar({
+          open: true,
+          message: "Interview updated successfully",
+          severity: "success",
+        });
+      })
+      .catch((error) => {
+        console.error("Error updating interview:", error);
+        setSnackbar({
+          open: true,
+          message: error.response?.data?.error || "Error updating interview",
+          severity: "error",
+        });
+      });
+  } else {
+    axios
+      .post("http://localhost:5002/api/interviews", interviewData, { headers })
+      .then((response) => {
+        setData([...data, response.data]);
+        setOpenDialog(false);
+        setSnackbar({
+          open: true,
+          message: "Interview added successfully",
+          severity: "success",
+        });
+      })
+      .catch((error) => {
+        console.error("Error adding interview:", error);
+        setSnackbar({
+          open: true,
+          message: error.response?.data?.error || "Error adding interview",
+          severity: "error",
+        });
+      });
+  }
+};
+
+  
   const handleDialogClose = () => {
     setOpenDialog(false);
     setDateError("");

@@ -28,6 +28,7 @@ import {
   selectAuthError,
   selectVerificationNeeded,
   selectVerificationEmail,
+  setVerificationEmail,
   logoutUser
 } from '../../../redux/authSlice';
 
@@ -176,96 +177,230 @@ const LoginPage = () => {
     setShowPassword(prev => !prev);
   }, []);
 
-  const validateForm = useCallback(() => {
-    // Basic form validation
-    if (!formData.companyCode.trim()) {
-      dispatch(setAuthError('Company code is required'));
-      return false;
-    }
-    if (!formData.email.trim()) {
-      dispatch(setAuthError('Email is required'));
-      return false;
-    }
-    if (!formData.password) {
-      dispatch(setAuthError('Password is required'));
-      return false;
-    }
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      dispatch(setAuthError('Please enter a valid email address'));
-      return false;
-    }
-    return true;
-  }, [formData, dispatch]);
+  // const validateForm = useCallback(() => {
+  //   // Basic form validation
+  //   if (!formData.companyCode.trim()) {
+  //     dispatch(setAuthError('Company code is required'));
+  //     return false;
+  //   }
+  //   if (!formData.email.trim()) {
+  //     dispatch(setAuthError('Email is required'));
+  //     return false;
+  //   }
+  //   if (!formData.password) {
+  //     dispatch(setAuthError('Password is required'));
+  //     return false;
+  //   }
+  //   // Basic email validation
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   if (!emailRegex.test(formData.email)) {
+  //     dispatch(setAuthError('Please enter a valid email address'));
+  //     return false;
+  //   }
+  //   return true;
+  // }, [formData, dispatch]);
 
-  // Handle form submission
-  const handleSubmit = useCallback(async (e) => {
-    // Prevent default form submission behavior
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+//   // Handle form submission
+//   const handleSubmit = useCallback(async (e) => {
+//     // Prevent default form submission behavior
+//     if (e) {
+//       e.preventDefault();
+//       e.stopPropagation();
+//     }
     
-    // Prevent double submission
-    if (isSubmitting || loading) return;
+//     // Prevent double submission
+//     if (isSubmitting || loading) return;
     
-    // Validate form inputs
-    if (!validateForm()) {
-      return;
-    }
+//     // Validate form inputs
+//     if (!validateForm()) {
+//       return;
+//     }
     
-    // Save current form state to session storage in case of page reload
-    try {
-      sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
-    } catch (error) {
-      console.error('Error saving form data to session storage:', error);
-    }
+//     // Save current form state to session storage in case of page reload
+//     try {
+//       sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
+//     } catch (error) {
+//       console.error('Error saving form data to session storage:', error);
+//     }
     
-    // Set submission state
-    setIsSubmitting(true);
+//     // Set submission state
+//     setIsSubmitting(true);
     
-    try {
-      console.log('Submitting login form with:', {
-        email: formData.email,
-        companyCode: formData.companyCode,
-        passwordProvided: !!formData.password
-      });
+//     try {
+//       console.log('Submitting login form with:', {
+//         email: formData.email,
+//         companyCode: formData.companyCode,
+//         passwordProvided: !!formData.password
+//       });
       
-      // Attempt login using Redux action
-      const resultAction = await dispatch(loginUser(formData));
+//       // Attempt login using Redux action
+//       const resultAction = await dispatch(loginUser(formData));
       
-      console.log('Login response in component:', {
-        success: loginUser.fulfilled.match(resultAction),
-        payload: resultAction.payload
-      });
+//       console.log('Login response in component:', {
+//         success: loginUser.fulfilled.match(resultAction),
+//         payload: resultAction.payload
+//       });
       
-      // Clear pending login on success
+//       // Clear pending login on success
+//     if (loginUser.fulfilled.match(resultAction)) {
+//       sessionStorage.removeItem('pendingLogin');
+      
+//       // Navigate to dashboard on success - SIMPLIFIED NAVIGATION
+//       console.log('Login successful, navigating to dashboard');
+//       navigate('/Dashboards');
+//     }
+//   } catch (error) {
+//     console.log('Login failed, but error is handled in the reducer');
+//   } finally {
+//     if (isMounted.current) {
+//       setIsSubmitting(false);
+//     }
+//   }
+// }, [formData, isSubmitting, loading, validateForm, dispatch, navigate]);
+ 
+
+// Update the handleSubmit function
+
+
+// Update the validateForm function
+const validateForm = useCallback(() => {
+  // Basic form validation
+  if (!formData.companyCode.trim()) {
+    dispatch(setAuthError('Company code is required'));
+    return false;
+  }
+  if (!formData.email.trim()) {
+    dispatch(setAuthError('Email is required'));
+    return false;
+  }
+  if (!formData.password) {
+    dispatch(setAuthError('Password is required'));
+    return false;
+  }
+  
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(formData.email.trim())) {
+    dispatch(setAuthError('Please enter a valid email address'));
+    return false;
+  }
+  
+  // Company code validation - ensure it's alphanumeric
+  const companyCodeRegex = /^[a-zA-Z0-9]+$/;
+  if (!companyCodeRegex.test(formData.companyCode.trim())) {
+    dispatch(setAuthError('Company code should contain only letters and numbers'));
+    return false;
+  }
+  
+  return true;
+}, [formData, dispatch]);
+
+const handleSubmit = useCallback(async (e) => {
+  // Prevent default form submission behavior
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  
+  // Prevent double submission
+  if (isSubmitting || loading) return;
+  
+  // Validate form inputs
+  if (!validateForm()) {
+    return;
+  }
+  
+  // Save current form state to session storage in case of page reload
+  try {
+    sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
+  } catch (error) {
+    console.error('Error saving form data to session storage:', error);
+  }
+  
+  // Set submission state
+  setIsSubmitting(true);
+  
+  try {
+    console.log('Submitting login form with:', {
+      email: formData.email,
+      companyCode: formData.companyCode,
+      passwordProvided: !!formData.password,
+      passwordLength: formData.password.length
+    });
+    
+    // Attempt login using Redux action
+    const resultAction = await dispatch(loginUser({
+      email: formData.email.trim().toLowerCase(),
+      password: formData.password,
+      companyCode: formData.companyCode.trim().toUpperCase()
+    }));
+    
+    console.log('Login response in component:', {
+      success: loginUser.fulfilled.match(resultAction),
+      payload: resultAction.payload,
+      error: resultAction.error
+    });
+    
+    // Clear pending login on success
     if (loginUser.fulfilled.match(resultAction)) {
       sessionStorage.removeItem('pendingLogin');
       
-      // Navigate to dashboard on success - SIMPLIFIED NAVIGATION
+      // Navigate to dashboard on success
       console.log('Login successful, navigating to dashboard');
       navigate('/Dashboards');
+    } else if (loginUser.rejected.match(resultAction)) {
+      // Handle specific error cases
+      const errorPayload = resultAction.payload;
+      
+      if (errorPayload && errorPayload.requiresVerification) {
+        console.log('Verification required for:', errorPayload.email);
+        // The error message will be set by the reducer
+      } else {
+        console.log('Login failed:', errorPayload);
+      }
     }
   } catch (error) {
-    console.log('Login failed, but error is handled in the reducer');
+    console.error('Login error in component:', error);
+    dispatch(setAuthError(error.message || 'Login failed. Please try again.'));
   } finally {
     if (isMounted.current) {
       setIsSubmitting(false);
     }
   }
 }, [formData, isSubmitting, loading, validateForm, dispatch, navigate]);
-  // Handle verification request
-  const handleRequestVerification = useCallback(() => {
-    if (!verificationEmail) return;
+
+// // Handle verification request
+//   const handleRequestVerification = useCallback(() => {
+//     if (!verificationEmail) return;
     
-    // Save the current login attempt for after verification
-    sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
+//     // Save the current login attempt for after verification
+//     sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
     
-    // Redirect to verification page with email
-    navigate(`/verify-otp?email=${encodeURIComponent(verificationEmail)}`);
-  }, [verificationEmail, formData, navigate]);
+//     // Redirect to verification page with email
+//     navigate(`/verify-otp?email=${encodeURIComponent(verificationEmail)}`);
+//   }, [verificationEmail, formData, navigate]);
+
+// Update the handleRequestVerification function
+const handleRequestVerification = useCallback(() => {
+  if (!verificationEmail) {
+    const email = formData.email.trim().toLowerCase();
+    if (email) {
+      console.log('Using form email for verification:', email);
+      dispatch(setVerificationEmail(email));
+    } else {
+      console.error('No email available for verification');
+      return;
+    }
+  }
+  
+  // Save the current login attempt for after verification
+  sessionStorage.setItem('pendingLogin', JSON.stringify(formData));
+  
+  // Redirect to verification page with email
+  const emailToVerify = verificationEmail || formData.email.trim().toLowerCase();
+  navigate(`/verify-otp?email=${encodeURIComponent(emailToVerify)}`);
+}, [verificationEmail, formData, navigate, dispatch]);
+
 
   // Custom text field styling
   const textFieldSx = {
@@ -581,6 +716,5 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-
 
 

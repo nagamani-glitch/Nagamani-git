@@ -82,7 +82,14 @@ const RecruitmentPipeline = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState(null);
 
-  // Replace the existing handleDeleteCandidate function with these two functions:
+ // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
+
+
 
   // This function will open the confirmation dialog
   const handleDeleteClick = (candidate) => {
@@ -91,21 +98,21 @@ const RecruitmentPipeline = () => {
   };
 
   // This function will perform the actual deletion after confirmation
-  const handleDeleteCandidate = async () => {
-    if (!candidateToDelete) return;
+  // const handleDeleteCandidate = async () => {
+  //   if (!candidateToDelete) return;
 
-    const selectedTabLabel = tabLabels[tabIndex];
-    try {
-      await axios.delete(
-        `http://localhost:5002/api/recruitment/${candidateToDelete._id}`
-      );
-      fetchCandidates(selectedTabLabel);
-      setDeleteDialogOpen(false);
-      setCandidateToDelete(null);
-    } catch (error) {
-      console.error("Error deleting candidate:", error);
-    }
-  };
+  //   const selectedTabLabel = tabLabels[tabIndex];
+  //   try {
+  //     await axios.delete(
+  //       `http://localhost:5002/api/recruitment/${candidateToDelete._id}`
+  //     );
+  //     fetchCandidates(selectedTabLabel);
+  //     setDeleteDialogOpen(false);
+  //     setCandidateToDelete(null);
+  //   } catch (error) {
+  //     console.error("Error deleting candidate:", error);
+  //   }
+  // };
 
   // Add this function to close the delete dialog
   const handleCloseDeleteDialog = () => {
@@ -157,30 +164,30 @@ const RecruitmentPipeline = () => {
     setTabIndex(newValue);
   };
 
-  const fetchCandidates = async (recruitment) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5002/api/recruitment/${recruitment}`
-      );
-      setCandidates(response.data);
-    } catch (error) {
-      console.error("Error fetching candidates:", error);
-    }
-  };
+  // const fetchCandidates = async (recruitment) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/recruitment/${recruitment}`
+  //     );
+  //     setCandidates(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching candidates:", error);
+  //   }
+  // };
 
-  const fetchRegisteredEmployees = async () => {
-    try {
-      setLoadingEmployees(true);
-      const response = await axios.get(
-        "http://localhost:5002/api/employees/registered"
-      );
-      setRegisteredEmployees(response.data);
-      setLoadingEmployees(false);
-    } catch (error) {
-      console.error("Error fetching registered employees:", error);
-      setLoadingEmployees(false);
-    }
-  };
+  // const fetchRegisteredEmployees = async () => {
+  //   try {
+  //     setLoadingEmployees(true);
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/employees/registered"
+  //     );
+  //     setRegisteredEmployees(response.data);
+  //     setLoadingEmployees(false);
+  //   } catch (error) {
+  //     console.error("Error fetching registered employees:", error);
+  //     setLoadingEmployees(false);
+  //   }
+  // };
 
   const handleEmployeeSelect = (event, employee) => {
     setSelectedEmployee(employee);
@@ -278,34 +285,34 @@ const RecruitmentPipeline = () => {
     }
   };
 
-  const handleAddOrEditCandidate = async () => {
-    if (
-      !validateName(newCandidate.name) ||
-      !validateEmail(newCandidate.email) ||
-      !validateDepartment(newCandidate.department)
-    ) {
-      return;
-    }
+  // const handleAddOrEditCandidate = async () => {
+  //   if (
+  //     !validateName(newCandidate.name) ||
+  //     !validateEmail(newCandidate.email) ||
+  //     !validateDepartment(newCandidate.department)
+  //   ) {
+  //     return;
+  //   }
 
-    const selectedTabLabel = tabLabels[tabIndex];
-    try {
-      if (editingCandidate) {
-        await axios.put(
-          `http://localhost:5002/api/recruitment/${editingCandidate._id}`,
-          newCandidate
-        );
-      } else {
-        await axios.post("http://localhost:5002/api/recruitment", {
-          ...newCandidate,
-          recruitment: selectedTabLabel,
-        });
-      }
-      fetchCandidates(selectedTabLabel);
-      setIsDialogOpen(false);
-    } catch (error) {
-      console.error("Error adding/editing candidate:", error);
-    }
-  };
+  //   const selectedTabLabel = tabLabels[tabIndex];
+  //   try {
+  //     if (editingCandidate) {
+  //       await axios.put(
+  //         `http://localhost:5002/api/recruitment/${editingCandidate._id}`,
+  //         newCandidate
+  //       );
+  //     } else {
+  //       await axios.post("http://localhost:5002/api/recruitment", {
+  //         ...newCandidate,
+  //         recruitment: selectedTabLabel,
+  //       });
+  //     }
+  //     fetchCandidates(selectedTabLabel);
+  //     setIsDialogOpen(false);
+  //   } catch (error) {
+  //     console.error("Error adding/editing candidate:", error);
+  //   }
+  // };
 
   const handleSearchChange = (event) => setSearchTerm(event.target.value);
 
@@ -314,6 +321,119 @@ const RecruitmentPipeline = () => {
   );
 
   const columns = initialColumns[tabLabels[tabIndex]];
+
+
+
+// Update the fetchCandidates function
+const fetchCandidates = async (recruitment) => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      `http://localhost:5002/api/recruitment/${recruitment}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setCandidates(response.data);
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+  }
+};
+
+// Update the handleAddOrEditCandidate function
+const handleAddOrEditCandidate = async () => {
+  if (
+    !validateName(newCandidate.name) ||
+    !validateEmail(newCandidate.email) ||
+    !validateDepartment(newCandidate.department)
+  ) {
+    return;
+  }
+
+  const selectedTabLabel = tabLabels[tabIndex];
+  const token = getAuthToken();
+  
+  try {
+    if (editingCandidate) {
+      await axios.put(
+        `http://localhost:5002/api/recruitment/${editingCandidate._id}`,
+        newCandidate,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+    } else {
+      await axios.post(
+        "http://localhost:5002/api/recruitment", 
+        {
+          ...newCandidate,
+          recruitment: selectedTabLabel,
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+    }
+    fetchCandidates(selectedTabLabel);
+    setIsDialogOpen(false);
+  } catch (error) {
+    console.error("Error adding/editing candidate:", error);
+  }
+};
+
+// Update the handleDeleteCandidate function
+const handleDeleteCandidate = async () => {
+  if (!candidateToDelete) return;
+
+  const selectedTabLabel = tabLabels[tabIndex];
+  const token = getAuthToken();
+  
+  try {
+    await axios.delete(
+      `http://localhost:5002/api/recruitment/${candidateToDelete._id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    fetchCandidates(selectedTabLabel);
+    setDeleteDialogOpen(false);
+    setCandidateToDelete(null);
+  } catch (error) {
+    console.error("Error deleting candidate:", error);
+  }
+};
+
+// Update the fetchRegisteredEmployees function
+const fetchRegisteredEmployees = async () => {
+  try {
+    setLoadingEmployees(true);
+    const token = getAuthToken();
+    const response = await axios.get(
+      "http://localhost:5002/api/employees/registered",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setRegisteredEmployees(response.data);
+    setLoadingEmployees(false);
+  } catch (error) {
+    console.error("Error fetching registered employees:", error);
+    setLoadingEmployees(false);
+  }
+};
+
+
+
 
   return (
     <Box sx={{ p: 4, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>

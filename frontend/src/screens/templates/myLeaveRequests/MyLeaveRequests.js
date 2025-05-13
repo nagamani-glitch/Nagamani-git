@@ -163,6 +163,96 @@ useEffect(() => {
 }, [formData]);
 
 
+// Add this helper function to get the auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
+  // const fetchEmployeeData = async () => {
+  //   try {
+  //     setLoading(true);
+  //     // Get the user ID from localStorage or your auth context
+  //     const userId = localStorage.getItem('userId'); // Adjust based on your auth implementation
+      
+  //     if (!userId) {
+  //       showSnackbar("User not authenticated", "error");
+  //       setLoading(false);
+  //       return;
+  //     }
+      
+  //     const response = await axios.get(`${EMPLOYEE_API_URL}/by-user/${userId}`);
+      
+  //     if (response.data.success && response.data.data) {
+  //       const employeeData = response.data.data;
+  //       setEmployee({
+  //         code: employeeData.Emp_ID,
+  //         name: `${employeeData.personalInfo?.firstName || ''} ${employeeData.personalInfo?.lastName || ''}`,
+  //         department: employeeData.joiningDetails?.department || 'Not Assigned'
+  //       });
+  //       console.log("Employee data fetched:", employeeData);
+  //     } else {
+  //       showSnackbar("Failed to fetch employee data", "error");
+  //     }
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error fetching employee data:", error);
+  //     showSnackbar("Error fetching employee data", "error");
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const fetchLeaveRequests = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(`${API_URL}/employee/${employee.code}`);
+  //     setLeaveRequests(response.data);
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error fetching leave requests:", error);
+  //     showSnackbar("Error fetching leave requests", "error");
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const fetchLeaveBalance = async () => {
+  //   try {
+  //     const response = await axios.get(`${API_URL}/balance/${employee.code}`);
+  //     setLeaveBalance(response.data);
+  //     console.log("Leave balance fetched:", response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching leave balance:", error);
+  //     showSnackbar("Error fetching leave balance", "error");
+  //   }
+  // };
+
+  // const fetchLeaveStatistics = async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${API_URL}/statistics/${employee.code}`
+  //     );
+  //     setStatistics(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching leave statistics:", error);
+  //   }
+  // };
+
+  // const fetchUpdatedEarnedLeaveBalance = async () => {
+  //   try {
+  //     // Call the new endpoint to update earned leave balance
+  //     await axios.post(`${API_URL}/update-earned-leave`);
+
+  //     // Then fetch the updated balance
+  //     await fetchLeaveBalance();
+
+  //     showSnackbar("Earned leave balance updated successfully");
+  //   } catch (error) {
+  //     console.error("Error updating earned leave balance:", error);
+  //     showSnackbar("Error updating earned leave balance", "error");
+  //   }
+  // };
+
+
+    // Update the fetchEmployeeData function
   const fetchEmployeeData = async () => {
     try {
       setLoading(true);
@@ -175,7 +265,15 @@ useEffect(() => {
         return;
       }
       
-      const response = await axios.get(`${EMPLOYEE_API_URL}/by-user/${userId}`);
+      const token = getAuthToken();
+      const response = await axios.get(
+        `${EMPLOYEE_API_URL}/by-user/${userId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
       
       if (response.data.success && response.data.data) {
         const employeeData = response.data.data;
@@ -196,10 +294,21 @@ useEffect(() => {
     }
   };
 
+  // Update the fetchLeaveRequests function
   const fetchLeaveRequests = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/employee/${employee.code}`);
+      const token = getAuthToken();
+      
+      const response = await axios.get(
+        `${API_URL}/employee/${employee.code}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
       setLeaveRequests(response.data);
       setLoading(false);
     } catch (error) {
@@ -209,9 +318,20 @@ useEffect(() => {
     }
   };
 
+  // Update the fetchLeaveBalance function
   const fetchLeaveBalance = async () => {
     try {
-      const response = await axios.get(`${API_URL}/balance/${employee.code}`);
+      const token = getAuthToken();
+      
+      const response = await axios.get(
+        `${API_URL}/balance/${employee.code}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
       setLeaveBalance(response.data);
       console.log("Leave balance fetched:", response.data);
     } catch (error) {
@@ -220,21 +340,41 @@ useEffect(() => {
     }
   };
 
+  // Update the fetchLeaveStatistics function
   const fetchLeaveStatistics = async () => {
     try {
+      const token = getAuthToken();
+      
       const response = await axios.get(
-        `${API_URL}/statistics/${employee.code}`
+        `${API_URL}/statistics/${employee.code}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
+      
       setStatistics(response.data);
     } catch (error) {
       console.error("Error fetching leave statistics:", error);
     }
   };
 
+  // Update the fetchUpdatedEarnedLeaveBalance function
   const fetchUpdatedEarnedLeaveBalance = async () => {
     try {
+      const token = getAuthToken();
+      
       // Call the new endpoint to update earned leave balance
-      await axios.post(`${API_URL}/update-earned-leave`);
+      await axios.post(
+        `${API_URL}/update-earned-leave`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
       // Then fetch the updated balance
       await fetchLeaveBalance();
@@ -385,6 +525,117 @@ const handleInputChange = (field, value) => {
   return count;
 };
 
+  // const handleSubmit = async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     const numberOfDays = calculateBusinessDays(
+  //       formData.startDate,
+  //       formData.endDate,
+  //       formData.halfDay
+  //     );
+
+  //     // Check if there's sufficient balance
+  //     const availableBalance = getAvailableBalance(formData.leaveType);
+  //     console.log(
+  //       `Requesting ${numberOfDays} days of ${formData.leaveType} leave`
+  //     );
+  //     console.log(`Available balance: ${availableBalance} days`);
+
+  //     // Add this check to prevent submission when balance is insufficient
+  //     if (numberOfDays > availableBalance) {
+  //       showSnackbar(
+  //         `Insufficient ${formData.leaveType} leave balance. Available: ${availableBalance} days, Requested: ${numberOfDays} days`,
+  //         "error"
+  //       );
+  //       setLoading(false);
+  //       return; // Stop execution here to prevent the API call
+  //     }
+
+  //     // Format dates as strings in YYYY-MM-DD format
+  //     const formatDateToString = (date) => {
+  //       return format(date, "yyyy-MM-dd");
+  //     };
+
+  //     const leaveData = {
+  //       employeeCode: employee.code,
+  //       employeeName: employee.name,
+  //       leaveType: formData.leaveType,
+  //       startDate: formatDateToString(formData.startDate),
+  //       endDate: formatDateToString(formData.endDate),
+  //       reason: formData.reason,
+  //       halfDay: formData.halfDay,
+  //       halfDayType: formData.halfDayType,
+  //       numberOfDays,
+  //     };
+
+  //     console.log("Submitting leave request:", leaveData);
+
+  //     const response = await axios.post(API_URL, leaveData);
+  //     console.log("Response:", response.data);
+
+  //     setOpenDialog(false);
+  //     fetchLeaveRequests();
+  //     fetchLeaveBalance();
+  //     fetchLeaveStatistics();
+  //     showSnackbar("Leave request submitted successfully");
+  //   } catch (error) {
+  //     console.error("Error submitting leave request:", error);
+
+  //     // Extract detailed error message from response
+  //     let errorMessage = "Error submitting leave request";
+  //     if (error.response) {
+  //       console.log("Server error details:", error.response.data);
+  //       errorMessage =
+  //         error.response.data.message ||
+  //         error.response.data.error ||
+  //         errorMessage;
+  //     }
+
+  //     showSnackbar(errorMessage, "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+
+  // const handleDeleteRequest = async (id) => {
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(`${API_URL}/${id}`);
+  //     fetchLeaveRequests();
+  //     fetchLeaveBalance();
+  //     fetchLeaveStatistics();
+  //     showSnackbar("Leave request deleted successfully");
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error deleting leave request:", error);
+  //     showSnackbar("Error deleting leave request", "error");
+  //     setLoading(false);
+  //   }
+  // };
+  
+  // const refreshLeaveBalance = async () => {
+  //   try {
+  //     setLoading(true);
+  //     // Call the recalculate endpoint
+  //     await axios.post(`${API_URL}/recalculate-balance/${employee.code}`);
+  //     // Then fetch the updated balance
+  //     await fetchLeaveBalance();
+  //     await fetchLeaveStatistics();
+  //     showSnackbar("Leave balance recalculated successfully");
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error recalculating leave balance:", error);
+  //     showSnackbar("Error recalculating leave balance", "error");
+  //     setLoading(false);
+  //   }
+  // };
+
+// Update the refreshLeaveBalance function
+ 
+ // Update the handleSubmit function
   const handleSubmit = async () => {
     try {
       setLoading(true);
@@ -431,7 +682,17 @@ const handleInputChange = (field, value) => {
 
       console.log("Submitting leave request:", leaveData);
 
-      const response = await axios.post(API_URL, leaveData);
+      const token = getAuthToken();
+      const response = await axios.post(
+        API_URL, 
+        leaveData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
       console.log("Response:", response.data);
 
       setOpenDialog(false);
@@ -458,10 +719,21 @@ const handleInputChange = (field, value) => {
     }
   };
 
+  // Update the handleDeleteRequest function
   const handleDeleteRequest = async (id) => {
     try {
       setLoading(true);
-      await axios.delete(`${API_URL}/${id}`);
+      const token = getAuthToken();
+      
+      await axios.delete(
+        `${API_URL}/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
       fetchLeaveRequests();
       fetchLeaveBalance();
       fetchLeaveStatistics();
@@ -473,29 +745,28 @@ const handleInputChange = (field, value) => {
       setLoading(false);
     }
   };
-  //   // Add this function to refresh the leave balance
-  // const refreshLeaveBalance = async () => {
-  //   try {
-  //     setLoading(true);
-  //     await fetchLeaveBalance();
-  //     await fetchLeaveStatistics();
-  //     showSnackbar("Leave balance refreshed successfully");
-  //     setLoading(false);
-  //   } catch (error) {
-  //     console.error("Error refreshing leave balance:", error);
-  //     showSnackbar("Error refreshing leave balance", "error");
-  //     setLoading(false);
-  //   }
-  // };
-  // Add this function to refresh the leave balance
-  const refreshLeaveBalance = async () => {
+
+
+const refreshLeaveBalance = async () => {
     try {
       setLoading(true);
+      const token = getAuthToken();
+      
       // Call the recalculate endpoint
-      await axios.post(`${API_URL}/recalculate-balance/${employee.code}`);
+      await axios.post(
+        `${API_URL}/recalculate-balance/${employee.code}`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
       // Then fetch the updated balance
       await fetchLeaveBalance();
       await fetchLeaveStatistics();
+      
       showSnackbar("Leave balance recalculated successfully");
       setLoading(false);
     } catch (error) {

@@ -130,128 +130,221 @@ const AssetHistory = () => {
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5002";
 
+  // Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
+  // const handleAssetNameClick = async (asset) => {
+  //   setSelectedAsset(asset);
+
+  //   // If the asset has a batch, fetch the batch details
+  //   if (asset.batch) {
+  //     try {
+  //       // First try to find the batch in the already loaded batches
+  //       const batchDetails = batches.find((b) => b.batchNumber === asset.batch);
+
+  //       if (batchDetails) {
+  //         setSelectedBatchDetails(batchDetails);
+  //         setIsBatchDetailsOpen(true);
+  //       } else {
+  //         // If not found locally, fetch from API
+  //         const response = await axios.get(
+  //           `${API_URL}/api/asset-batches/by-number/${asset.batch}`
+  //         );
+  //         if (response.data) {
+  //           setSelectedBatchDetails(response.data);
+  //           setIsBatchDetailsOpen(true);
+  //         } else {
+  //           // Show a more user-friendly message
+  //           alert(
+  //             `No batch found with number ${asset.batch}. Please check the batch number.`
+  //           );
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching batch details:", error);
+  //       alert("Failed to load batch details. Please try again later.");
+  //     }
+  //   } else {
+  //     // Show a more user-friendly message
+  //     alert(
+  //       "This asset is not associated with any batch. You can edit the asset to add a batch."
+  //     );
+  //   }
+  // };
+
+  // const fetchAssets = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(`${API_URL}/api/assets`);
+  //     console.log("Fetched assets:", response.data);
+
+  //     // Update the assets state with the fresh data
+  //     setAssets(response.data);
+
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error fetching asset history:", error);
+  //     setError("Failed to load assets");
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleAssetNameClick = async (asset) => {
-    setSelectedAsset(asset);
+  setSelectedAsset(asset);
 
-    // If the asset has a batch, fetch the batch details
-    if (asset.batch) {
-      try {
-        // First try to find the batch in the already loaded batches
-        const batchDetails = batches.find((b) => b.batchNumber === asset.batch);
+  // If the asset has a batch, fetch the batch details
+  if (asset.batch) {
+    try {
+      // First try to find the batch in the already loaded batches
+      const batchDetails = batches.find((b) => b.batchNumber === asset.batch);
 
-        if (batchDetails) {
-          setSelectedBatchDetails(batchDetails);
+      if (batchDetails) {
+        setSelectedBatchDetails(batchDetails);
+        setIsBatchDetailsOpen(true);
+      } else {
+        // If not found locally, fetch from API
+        const token = getAuthToken();
+        const response = await axios.get(
+          `${API_URL}/api/asset-batches/by-number/${asset.batch}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        if (response.data) {
+          setSelectedBatchDetails(response.data);
           setIsBatchDetailsOpen(true);
         } else {
-          // If not found locally, fetch from API
-          const response = await axios.get(
-            `${API_URL}/api/asset-batches/by-number/${asset.batch}`
+          // Show a more user-friendly message
+          alert(
+            `No batch found with number ${asset.batch}. Please check the batch number.`
           );
-          if (response.data) {
-            setSelectedBatchDetails(response.data);
-            setIsBatchDetailsOpen(true);
-          } else {
-            // Show a more user-friendly message
-            alert(
-              `No batch found with number ${asset.batch}. Please check the batch number.`
-            );
-          }
         }
-      } catch (error) {
-        console.error("Error fetching batch details:", error);
-        alert("Failed to load batch details. Please try again later.");
       }
-    } else {
-      // Show a more user-friendly message
-      alert(
-        "This asset is not associated with any batch. You can edit the asset to add a batch."
-      );
+    } catch (error) {
+      console.error("Error fetching batch details:", error);
+      alert("Failed to load batch details. Please try again later.");
     }
-  };
+  } else {
+    // Show a more user-friendly message
+    alert(
+      "This asset is not associated with any batch. You can edit the asset to add a batch."
+    );
+  }
+};
+
 
   const fetchAssets = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_URL}/api/assets`);
-      console.log("Fetched assets:", response.data);
-
-      // Update the assets state with the fresh data
-      setAssets(response.data);
-
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching asset history:", error);
-      setError("Failed to load assets");
-      setLoading(false);
-    }
-  };
-
-  const fetchBatches = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/asset-batches`);
-      console.log("Fetched batches:", response.data);
-      setBatches(response.data);
-    } catch (error) {
-      console.error("Error fetching batches:", error);
-    }
-  };
-
-  useEffect(() => {
-    // Initial data fetch
-    fetchAssets();
-    fetchBatches();
-
-    // Listen for asset updates from AssetView or other components
-    const handleAssetsUpdated = () => {
-      console.log("Assets updated event received, refreshing assets list");
-      fetchAssets();
-    };
-
-    // Listen for batch updates from AssetBatch
-    const handleBatchesUpdated = () => {
-      console.log("Batches updated event received, refreshing batches list");
-      fetchBatches();
-    };
-
-    window.addEventListener("assetsUpdated", handleAssetsUpdated);
-    window.addEventListener("batchesUpdated", handleBatchesUpdated);
-    window.addEventListener("storage", (e) => {
-      if (e.key === "assetsUpdated") {
-        fetchAssets();
-      }
-      if (e.key === "batchesUpdated") {
-        fetchBatches();
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/api/assets`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
     });
+    console.log("Fetched assets:", response.data);
 
-    return () => {
-      window.removeEventListener("assetsUpdated", handleAssetsUpdated);
-      window.removeEventListener("batchesUpdated", handleBatchesUpdated);
-    };
-  }, []);
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this asset?")) {
-      try {
-        setLoading(true);
-        await axios.delete(`${API_URL}/api/assets/${id}`);
-        fetchAssets();
+    // Update the assets state with the fresh data
+    setAssets(response.data);
 
-        // Notify other components about the update
-        const timestamp = Date.now().toString();
-        localStorage.setItem("assetsUpdated", timestamp);
+    setLoading(false);
+  } catch (error) {
+    console.error("Error fetching asset history:", error);
+    setError("Failed to load assets");
+    setLoading(false);
+  }
+};
 
-        const event = new CustomEvent("assetsUpdated", {
-          detail: { timestamp },
-        });
-        window.dispatchEvent(event);
-      } catch (error) {
-        console.error("Error deleting asset:", error);
-        setError("Failed to delete asset");
-      } finally {
-        setLoading(false);
+
+  // const fetchBatches = async () => {
+  //   try {
+  //     const response = await axios.get(`${API_URL}/api/asset-batches`);
+  //     console.log("Fetched batches:", response.data);
+  //     setBatches(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching batches:", error);
+  //   }
+  // };
+
+const fetchBatches = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/api/asset-batches`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-    }
-  };
+    });
+    console.log("Fetched batches:", response.data);
+    setBatches(response.data);
+  } catch (error) {
+    console.error("Error fetching batches:", error);
+  }
+};
+
+
+  // useEffect(() => {
+  //   // Initial data fetch
+  //   fetchAssets();
+  //   fetchBatches();
+
+  //   // Listen for asset updates from AssetView or other components
+  //   const handleAssetsUpdated = () => {
+  //     console.log("Assets updated event received, refreshing assets list");
+  //     fetchAssets();
+  //   };
+
+  //   // Listen for batch updates from AssetBatch
+  //   const handleBatchesUpdated = () => {
+  //     console.log("Batches updated event received, refreshing batches list");
+  //     fetchBatches();
+  //   };
+
+  //   window.addEventListener("assetsUpdated", handleAssetsUpdated);
+  //   window.addEventListener("batchesUpdated", handleBatchesUpdated);
+  //   window.addEventListener("storage", (e) => {
+  //     if (e.key === "assetsUpdated") {
+  //       fetchAssets();
+  //     }
+  //     if (e.key === "batchesUpdated") {
+  //       fetchBatches();
+  //     }
+  //   });
+
+  //   return () => {
+  //     window.removeEventListener("assetsUpdated", handleAssetsUpdated);
+  //     window.removeEventListener("batchesUpdated", handleBatchesUpdated);
+  //   };
+  // }, []);
+
+
+  // const handleDelete = async (id) => {
+  //   if (window.confirm("Are you sure you want to delete this asset?")) {
+  //     try {
+  //       setLoading(true);
+  //       await axios.delete(`${API_URL}/api/assets/${id}`);
+  //       fetchAssets();
+
+  //       // Notify other components about the update
+  //       const timestamp = Date.now().toString();
+  //       localStorage.setItem("assetsUpdated", timestamp);
+
+  //       const event = new CustomEvent("assetsUpdated", {
+  //         detail: { timestamp },
+  //       });
+  //       window.dispatchEvent(event);
+  //     } catch (error) {
+  //       console.error("Error deleting asset:", error);
+  //       setError("Failed to delete asset");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  // };
 
   // const handleEditClick = (asset) => {
   //   setEditingAssetId(asset._id);
@@ -272,6 +365,71 @@ const AssetHistory = () => {
   //   console.log("Editing asset:", asset);
   //   console.log("Edit data initialized:", editData);
   // };
+
+useEffect(() => {
+  // Initial data fetch
+  fetchAssets();
+  fetchBatches();
+
+  // Listen for asset updates from AssetView or other components
+  const handleAssetsUpdated = () => {
+    console.log("Assets updated event received, refreshing assets list");
+    fetchAssets();
+  };
+
+  // Listen for batch updates from AssetBatch
+  const handleBatchesUpdated = () => {
+    console.log("Batches updated event received, refreshing batches list");
+    fetchBatches();
+  };
+
+  window.addEventListener("assetsUpdated", handleAssetsUpdated);
+  window.addEventListener("batchesUpdated", handleBatchesUpdated);
+  window.addEventListener("storage", (e) => {
+    if (e.key === "assetsUpdated") {
+      fetchAssets();
+    }
+    if (e.key === "batchesUpdated") {
+      fetchBatches();
+    }
+  });
+
+  return () => {
+    window.removeEventListener("assetsUpdated", handleAssetsUpdated);
+    window.removeEventListener("batchesUpdated", handleBatchesUpdated);
+  };
+}, []);
+
+
+  const handleDelete = async (id) => {
+  if (window.confirm("Are you sure you want to delete this asset?")) {
+    try {
+      setLoading(true);
+      const token = getAuthToken();
+      await axios.delete(`${API_URL}/api/assets/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      fetchAssets();
+
+      // Notify other components about the update
+      const timestamp = Date.now().toString();
+      localStorage.setItem("assetsUpdated", timestamp);
+
+      const event = new CustomEvent("assetsUpdated", {
+        detail: { timestamp },
+      });
+      window.dispatchEvent(event);
+    } catch (error) {
+      console.error("Error deleting asset:", error);
+      setError("Failed to delete asset");
+    } finally {
+      setLoading(false);
+    }
+  }
+};
+
 
   const handleEditClick = (asset) => {
     setEditingAssetId(asset._id);
@@ -309,128 +467,263 @@ const AssetHistory = () => {
 
 
 
-  const handleAddAsset = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      const formattedData = {
-        name: newAssetData.name,
-        category: newAssetData.category,
-        status: newAssetData.status,
-        currentEmployee: newAssetData.currentEmployee,
-        previousEmployees: newAssetData.previousEmployees || [],
-        batch: newAssetData.batch || "", // Make sure batch is included and properly formatted
-        allottedDate: newAssetData.allottedDate
-          ? new Date(newAssetData.allottedDate).toISOString()
-          : null,
-        returnDate: newAssetData.returnDate
-          ? new Date(newAssetData.returnDate).toISOString()
-          : null,
-      };
+  // const handleAddAsset = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     setLoading(true);
+  //     const formattedData = {
+  //       name: newAssetData.name,
+  //       category: newAssetData.category,
+  //       status: newAssetData.status,
+  //       currentEmployee: newAssetData.currentEmployee,
+  //       previousEmployees: newAssetData.previousEmployees || [],
+  //       batch: newAssetData.batch || "", // Make sure batch is included and properly formatted
+  //       allottedDate: newAssetData.allottedDate
+  //         ? new Date(newAssetData.allottedDate).toISOString()
+  //         : null,
+  //       returnDate: newAssetData.returnDate
+  //         ? new Date(newAssetData.returnDate).toISOString()
+  //         : null,
+  //     };
 
-      console.log("Sending asset data:", formattedData);
+  //     console.log("Sending asset data:", formattedData);
 
-      const response = await axios.post(`${API_URL}/api/assets`, formattedData);
-      console.log("Response from server:", response.data); // Add this to debug the response
+  //     const response = await axios.post(`${API_URL}/api/assets`, formattedData);
+  //     console.log("Response from server:", response.data); // Add this to debug the response
 
-      // Immediately fetch the updated assets to ensure we have the latest data
-      await fetchAssets();
+  //     // Immediately fetch the updated assets to ensure we have the latest data
+  //     await fetchAssets();
 
-      setNewAssetData({
-        name: "",
-        category: "",
-        status: "",
-        returnDate: "",
-        allottedDate: "",
-        currentEmployee: "",
-        previousEmployees: [],
-        batch: "",
-      });
-      setIsAddModalOpen(false);
+  //     setNewAssetData({
+  //       name: "",
+  //       category: "",
+  //       status: "",
+  //       returnDate: "",
+  //       allottedDate: "",
+  //       currentEmployee: "",
+  //       previousEmployees: [],
+  //       batch: "",
+  //     });
+  //     setIsAddModalOpen(false);
 
-      // Notify other components about the update
-      const timestamp = Date.now().toString();
-      localStorage.setItem("assetsUpdated", timestamp);
+  //     // Notify other components about the update
+  //     const timestamp = Date.now().toString();
+  //     localStorage.setItem("assetsUpdated", timestamp);
 
-      const event = new CustomEvent("assetsUpdated", { detail: { timestamp } });
-      window.dispatchEvent(event);
-    } catch (error) {
-      console.error("Error adding new asset:", error);
-      setError("Failed to add asset: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     const event = new CustomEvent("assetsUpdated", { detail: { timestamp } });
+  //     window.dispatchEvent(event);
+  //   } catch (error) {
+  //     console.error("Error adding new asset:", error);
+  //     setError("Failed to add asset: " + error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
+const handleAddAsset = async (e) => {
+  e.preventDefault();
+  try {
+    setLoading(true);
+    const formattedData = {
+      name: newAssetData.name,
+      category: newAssetData.category,
+      status: newAssetData.status,
+      currentEmployee: newAssetData.currentEmployee,
+      previousEmployees: newAssetData.previousEmployees || [],
+      batch: newAssetData.batch || "", // Make sure batch is included and properly formatted
+      allottedDate: newAssetData.allottedDate
+        ? new Date(newAssetData.allottedDate).toISOString()
+        : null,
+      returnDate: newAssetData.returnDate
+        ? new Date(newAssetData.returnDate).toISOString()
+        : null,
+    };
 
-      // Log the current state before formatting
-      console.log("Current edit data before formatting:", editData);
+    console.log("Sending asset data:", formattedData);
 
-      const updatedData = {
-        name: editData.name,
-        category: editData.category,
-        status: editData.status,
-        currentEmployee: editData.currentEmployee,
-        previousEmployees: Array.isArray(editData.previousEmployees)
-          ? editData.previousEmployees
-          : editData.previousEmployees
-          ? editData.previousEmployees.split(",").map((emp) => emp.trim())
-          : [],
-        batch: editData.batch || "",
-        // Format the dates
-        allottedDate: editData.allottedDate
-          ? new Date(editData.allottedDate).toISOString()
-          : null,
-        returnDate: editData.returnDate
-          ? new Date(editData.returnDate).toISOString()
-          : null,
-      };
+    const token = getAuthToken();
+    const response = await axios.post(`${API_URL}/api/assets`, formattedData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    console.log("Response from server:", response.data); // Add this to debug the response
 
-      console.log("Updating asset with data:", updatedData);
-      console.log("Asset ID being updated:", editingAssetId);
+    // Immediately fetch the updated assets to ensure we have the latest data
+    await fetchAssets();
 
-      const response = await axios.put(
-        `${API_URL}/api/assets/${editingAssetId}`,
-        updatedData
-      );
-      console.log("Update response:", response.data);
+    setNewAssetData({
+      name: "",
+      category: "",
+      status: "",
+      returnDate: "",
+      allottedDate: "",
+      currentEmployee: "",
+      previousEmployees: [],
+      batch: "",
+    });
+    setIsAddModalOpen(false);
 
-      // Close the edit modal
-      setEditingAssetId(null);
+    // Notify other components about the update
+    const timestamp = Date.now().toString();
+    localStorage.setItem("assetsUpdated", timestamp);
 
-      // Immediately fetch the updated assets to ensure we have the latest data
-      await fetchAssets();
+    const event = new CustomEvent("assetsUpdated", { detail: { timestamp } });
+    window.dispatchEvent(event);
+  } catch (error) {
+    console.error("Error adding new asset:", error);
+    setError("Failed to add asset: " + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
-      // Show success message
-      alert("Asset updated successfully!");
 
-      // Notify other components about the update
-      const timestamp = Date.now().toString();
-      localStorage.setItem("assetsUpdated", timestamp);
+  // const handleUpdate = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     setLoading(true);
 
-      const event = new CustomEvent("assetsUpdated", { detail: { timestamp } });
-      window.dispatchEvent(event);
-    } catch (error) {
-      console.error("Error updating asset:", error);
-      console.error(
-        "Error details:",
-        error.response ? error.response.data : "No response data"
-      );
-      setError(
-        "Failed to update asset: " +
-          (error.response ? error.response.data.message : error.message)
-      );
-      alert("Failed to update asset. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     // Log the current state before formatting
+  //     console.log("Current edit data before formatting:", editData);
+
+  //     const updatedData = {
+  //       name: editData.name,
+  //       category: editData.category,
+  //       status: editData.status,
+  //       currentEmployee: editData.currentEmployee,
+  //       previousEmployees: Array.isArray(editData.previousEmployees)
+  //         ? editData.previousEmployees
+  //         : editData.previousEmployees
+  //         ? editData.previousEmployees.split(",").map((emp) => emp.trim())
+  //         : [],
+  //       batch: editData.batch || "",
+  //       // Format the dates
+  //       allottedDate: editData.allottedDate
+  //         ? new Date(editData.allottedDate).toISOString()
+  //         : null,
+  //       returnDate: editData.returnDate
+  //         ? new Date(editData.returnDate).toISOString()
+  //         : null,
+  //     };
+
+  //     console.log("Updating asset with data:", updatedData);
+  //     console.log("Asset ID being updated:", editingAssetId);
+
+  //     const response = await axios.put(
+  //       `${API_URL}/api/assets/${editingAssetId}`,
+  //       updatedData
+  //     );
+  //     console.log("Update response:", response.data);
+
+  //     // Close the edit modal
+  //     setEditingAssetId(null);
+
+  //     // Immediately fetch the updated assets to ensure we have the latest data
+  //     await fetchAssets();
+
+  //     // Show success message
+  //     alert("Asset updated successfully!");
+
+  //     // Notify other components about the update
+  //     const timestamp = Date.now().toString();
+  //     localStorage.setItem("assetsUpdated", timestamp);
+
+  //     const event = new CustomEvent("assetsUpdated", { detail: { timestamp } });
+  //     window.dispatchEvent(event);
+  //   } catch (error) {
+  //     console.error("Error updating asset:", error);
+  //     console.error(
+  //       "Error details:",
+  //       error.response ? error.response.data : "No response data"
+  //     );
+  //     setError(
+  //       "Failed to update asset: " +
+  //         (error.response ? error.response.data.message : error.message)
+  //     );
+  //     alert("Failed to update asset. Please try again.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // Update this whenever assets or searchTerm changes
+  
+  const handleUpdate = async (e) => {
+  e.preventDefault();
+  try {
+    setLoading(true);
+
+    // Log the current state before formatting
+    console.log("Current edit data before formatting:", editData);
+
+    const updatedData = {
+      name: editData.name,
+      category: editData.category,
+      status: editData.status,
+      currentEmployee: editData.currentEmployee,
+      previousEmployees: Array.isArray(editData.previousEmployees)
+        ? editData.previousEmployees
+        : editData.previousEmployees
+        ? editData.previousEmployees.split(",").map((emp) => emp.trim())
+        : [],
+      batch: editData.batch || "",
+      // Format the dates
+      allottedDate: editData.allottedDate
+        ? new Date(editData.allottedDate).toISOString()
+        : null,
+      returnDate: editData.returnDate
+        ? new Date(editData.returnDate).toISOString()
+        : null,
+    };
+
+    console.log("Updating asset with data:", updatedData);
+    console.log("Asset ID being updated:", editingAssetId);
+
+    const token = getAuthToken();
+    const response = await axios.put(
+      `${API_URL}/api/assets/${editingAssetId}`,
+      updatedData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log("Update response:", response.data);
+
+    // Close the edit modal
+    setEditingAssetId(null);
+
+    // Immediately fetch the updated assets to ensure we have the latest data
+    await fetchAssets();
+
+    // Show success message
+    alert("Asset updated successfully!");
+
+    // Notify other components about the update
+    const timestamp = Date.now().toString();
+    localStorage.setItem("assetsUpdated", timestamp);
+
+    const event = new CustomEvent("assetsUpdated", { detail: { timestamp } });
+    window.dispatchEvent(event);
+  } catch (error) {
+    console.error("Error updating asset:", error);
+    console.error(
+      "Error details:",
+      error.response ? error.response.data : "No response data"
+    );
+    setError(
+      "Failed to update asset: " +
+        (error.response ? error.response.data.message : error.message)
+    );
+    alert("Failed to update asset. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   const filteredAssets = React.useMemo(() => {
     return assets.filter(
       (asset) =>

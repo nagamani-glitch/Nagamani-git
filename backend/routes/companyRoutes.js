@@ -18,10 +18,15 @@ import {
 } from '../controllers/authControllerCompany.js';
 import { authenticate, authorize } from '../middleware/companyAuth.js';
 import User from '../models/User.js';
+import Company from '../models/Company.js';
+import bcrypt from 'bcrypt'; // Add this import for the debug-reset-password route
 
 const router = express.Router();
 
-// Public routes
+// PUBLIC ROUTES - NO AUTHENTICATION REQUIRED
+// ==========================================
+
+// Company registration and authentication
 router.post('/register', registerCompany);
 router.post('/login', login);
 
@@ -29,48 +34,12 @@ router.post('/login', login);
 router.post('/verify-otp', verifyOtp);
 router.post('/resend-otp', resendOtp);
 
-// Add this route for debugging (remove in production)
-router.get('/debug-otp/:email', async (req, res) => {
-  try {
-    const { email } = req.params;
-    const user = await User.findOne({ email });
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    res.json({
-      email: user.email,
-      otp: user.otp,
-      otpExpires: user.otpExpires,
-      isVerified: user.isVerified,
-      now: new Date()
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Password reset routes (public)
+// Password reset routes - public
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-reset-token', verifyResetToken);
 router.post('/reset-password', resetPassword);
 
-// Protected routes - require authentication
-router.use(authenticate);
-
-// Company management routes
-router.get('/', getCompanyDetails);
-router.put('/', authorize(['manage_company_settings']), updateCompanyDetails);
-router.put('/settings', authorize(['manage_company_settings']), updateCompanySettings);
-
-// User management routes
-router.post('/users', authorize(['create_employees']), createUser);
-
-// Change password (for authenticated users)
-router.post('/change-password', changePassword);
-
-// Add this route to check company verification status
+// Verification status route - public
 router.get('/verification-status/:companyCode', async (req, res) => {
   try {
     const { companyCode } = req.params;
@@ -95,7 +64,28 @@ router.get('/verification-status/:companyCode', async (req, res) => {
   }
 });
 
-// Debug route to reset a user's password (remove in production)
+// Debug routes - should be removed in production
+router.get('/debug-otp/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({
+      email: user.email,
+      otp: user.otp,
+      otpExpires: user.otpExpires,
+      isVerified: user.isVerified,
+      now: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.post('/debug-reset-password', async (req, res) => {
   try {
     const { email, companyCode, newPassword } = req.body;
@@ -131,6 +121,20 @@ router.post('/debug-reset-password', async (req, res) => {
   }
 });
 
+// PROTECTED ROUTES - AUTHENTICATION REQUIRED
+// =========================================
+// Apply authentication middleware to all routes below this point
+router.use(authenticate);
 
+// Company management routes
+router.get('/', getCompanyDetails);
+router.put('/', authorize(['manage_company_settings']), updateCompanyDetails);
+router.put('/settings', authorize(['manage_company_settings']), updateCompanySettings);
+
+// User management routes
+router.post('/users', authorize(['create_employees']), createUser);
+
+// Change password (for authenticated users)
+router.post('/change-password', changePassword);
 
 export default router;
