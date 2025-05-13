@@ -175,96 +175,212 @@ const ShiftRequest = () => {
     initializeData();
   }, []);
 
-  // Update the fetchCurrentUser function to properly handle state updates
-  const fetchCurrentUser = async () => {
-    try {
-      setLoadingCurrentUser(true);
-      const userId = localStorage.getItem("userId");
+  // Add this function to get the auth token if it doesn't exist
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
 
-      if (!userId) {
-        console.error("No user ID found in localStorage");
-        setSnackbar({
-          open: true,
-          message: "User ID not found. Please log in again.",
-          severity: "error",
-        });
-        return;
-      }
+  // // Update the fetchCurrentUser function to properly handle state updates
+  // const fetchCurrentUser = async () => {
+  //   try {
+  //     setLoadingCurrentUser(true);
+  //     const userId = localStorage.getItem("userId");
 
-      const response = await axios.get(
-        `http://localhost:5002/api/employees/by-user/${userId}`
-      );
+  //     if (!userId) {
+  //       console.error("No user ID found in localStorage");
+  //       setSnackbar({
+  //         open: true,
+  //         message: "User ID not found. Please log in again.",
+  //         severity: "error",
+  //       });
+  //       return;
+  //     }
 
-      if (response.data.success) {
-        const userData = response.data.data;
+  //     const response = await axios.get(
+  //       `http://localhost:5002/api/employees/by-user/${userId}`
+  //     );
 
-        // Set the current user
-        setCurrentUser(userData);
+  //     if (response.data.success) {
+  //       const userData = response.data.data;
 
-        // Pre-fill the form with the current user's details
-        setFormData((prev) => ({
-          ...prev,
-          employee: `${userData.personalInfo?.firstName || ""} ${
-            userData.personalInfo?.lastName || ""
-          }`,
-          employeeCode: userData.Emp_ID,
-          currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
-        }));
+  //       // Set the current user
+  //       setCurrentUser(userData);
 
-        // Set the selected employee
-        setSelectedEmployee({
-          id: userData.Emp_ID,
-          name: `${userData.personalInfo?.firstName || ""} ${
-            userData.personalInfo?.lastName || ""
-          }`,
-          employeeCode: userData.Emp_ID,
-          department: userData.joiningDetails?.department || "Not Assigned",
-          currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
-        });
+  //       // Pre-fill the form with the current user's details
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         employee: `${userData.personalInfo?.firstName || ""} ${
+  //           userData.personalInfo?.lastName || ""
+  //         }`,
+  //         employeeCode: userData.Emp_ID,
+  //         currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
+  //       }));
 
-        console.log("Current user loaded successfully:", userData.Emp_ID);
-        return userData; // Return the user data for chaining
-      } else {
-        throw new Error("Failed to load user data");
-      }
-    } catch (error) {
-      console.error("Error fetching current user:", error);
+  //       // Set the selected employee
+  //       setSelectedEmployee({
+  //         id: userData.Emp_ID,
+  //         name: `${userData.personalInfo?.firstName || ""} ${
+  //           userData.personalInfo?.lastName || ""
+  //         }`,
+  //         employeeCode: userData.Emp_ID,
+  //         department: userData.joiningDetails?.department || "Not Assigned",
+  //         currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
+  //       });
+
+  //       console.log("Current user loaded successfully:", userData.Emp_ID);
+  //       return userData; // Return the user data for chaining
+  //     } else {
+  //       throw new Error("Failed to load user data");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching current user:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error loading user data: " + error.message,
+  //       severity: "error",
+  //     });
+  //     return null;
+  //   } finally {
+  //     setLoadingCurrentUser(false);
+  //   }
+  // };
+
+  // const fetchRegisteredEmployees = async () => {
+  //   try {
+  //     setLoadingEmployees(true);
+  //     const response = await axios.get(EMPLOYEES_API_URL);
+
+  //     // Format the employee data for the dropdown
+  //     const formattedEmployees = response.data.map((emp) => ({
+  //       id: emp.Emp_ID,
+  //       name: `${emp.personalInfo?.firstName || ""} ${
+  //         emp.personalInfo?.lastName || ""
+  //       }`,
+  //       employeeCode: emp.Emp_ID,
+  //       department: emp.joiningDetails?.department || "Not Assigned",
+  //       // Use the actual shiftType from joiningDetails instead of defaulting to "Regular Shift"
+  //       currentShift: emp.joiningDetails?.shiftType || "Not Assigned",
+  //       // Add any other relevant fields from the employee data
+  //     }));
+
+  //     setRegisteredEmployees(formattedEmployees);
+  //   } catch (error) {
+  //     console.error("Error fetching registered employees:", error);
+  //   } finally {
+  //     setLoadingEmployees(false);
+  //   }
+  // };
+
+  // Update the fetchCurrentUser function
+const fetchCurrentUser = async () => {
+  try {
+    setLoadingCurrentUser(true);
+    const userId = localStorage.getItem("userId");
+    const token = getAuthToken();
+
+    if (!userId) {
+      console.error("No user ID found in localStorage");
       setSnackbar({
         open: true,
-        message: "Error loading user data: " + error.message,
+        message: "User ID not found. Please log in again.",
         severity: "error",
       });
-      return null;
-    } finally {
-      setLoadingCurrentUser(false);
+      return;
     }
-  };
 
-  const fetchRegisteredEmployees = async () => {
-    try {
-      setLoadingEmployees(true);
-      const response = await axios.get(EMPLOYEES_API_URL);
+    const response = await axios.get(
+      `http://localhost:5002/api/employees/by-user/${userId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
-      // Format the employee data for the dropdown
-      const formattedEmployees = response.data.map((emp) => ({
-        id: emp.Emp_ID,
-        name: `${emp.personalInfo?.firstName || ""} ${
-          emp.personalInfo?.lastName || ""
+    if (response.data.success) {
+      const userData = response.data.data;
+
+      // Set the current user
+      setCurrentUser(userData);
+
+      // Pre-fill the form with the current user's details
+      setFormData((prev) => ({
+        ...prev,
+        employee: `${userData.personalInfo?.firstName || ""} ${
+          userData.personalInfo?.lastName || ""
         }`,
-        employeeCode: emp.Emp_ID,
-        department: emp.joiningDetails?.department || "Not Assigned",
-        // Use the actual shiftType from joiningDetails instead of defaulting to "Regular Shift"
-        currentShift: emp.joiningDetails?.shiftType || "Not Assigned",
-        // Add any other relevant fields from the employee data
+        employeeCode: userData.Emp_ID,
+        currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
       }));
 
-      setRegisteredEmployees(formattedEmployees);
-    } catch (error) {
-      console.error("Error fetching registered employees:", error);
-    } finally {
-      setLoadingEmployees(false);
+      // Set the selected employee
+      setSelectedEmployee({
+        id: userData.Emp_ID,
+        name: `${userData.personalInfo?.firstName || ""} ${
+          userData.personalInfo?.lastName || ""
+        }`,
+        employeeCode: userData.Emp_ID,
+        department: userData.joiningDetails?.department || "Not Assigned",
+        currentShift: userData.joiningDetails?.shiftType || "Not Assigned",
+      });
+
+      console.log("Current user loaded successfully:", userData.Emp_ID);
+      return userData; // Return the user data for chaining
+    } else {
+      throw new Error("Failed to load user data");
     }
-  };
+  } catch (error) {
+    console.error("Error fetching current user:", error);
+    setSnackbar({
+      open: true,
+      message: "Error loading user data: " + error.message,
+      severity: "error",
+    });
+    return null;
+  } finally {
+    setLoadingCurrentUser(false);
+  }
+};
+
+// Update the fetchRegisteredEmployees function
+const fetchRegisteredEmployees = async () => {
+  try {
+    setLoadingEmployees(true);
+    const token = getAuthToken();
+    
+    const response = await axios.get(EMPLOYEES_API_URL, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    // Format the employee data for the dropdown
+    const formattedEmployees = response.data.map((emp) => ({
+      id: emp.Emp_ID,
+      name: `${emp.personalInfo?.firstName || ""} ${
+        emp.personalInfo?.lastName || ""
+      }`,
+      employeeCode: emp.Emp_ID,
+      department: emp.joiningDetails?.department || "Not Assigned",
+      // Use the actual shiftType from joiningDetails instead of defaulting to "Regular Shift"
+      currentShift: emp.joiningDetails?.shiftType || "Not Assigned",
+      // Add any other relevant fields from the employee data
+    }));
+
+    setRegisteredEmployees(formattedEmployees);
+  } catch (error) {
+    console.error("Error fetching registered employees:", error);
+    setSnackbar({
+      open: true,
+      message: "Error loading employees: " + error.message,
+      severity: "error",
+    });
+  } finally {
+    setLoadingEmployees(false);
+  }
+};
+
+
 
   const handleEmployeeSelect = (event, employee) => {
     setSelectedEmployee(employee);
@@ -305,49 +421,101 @@ const ShiftRequest = () => {
     setItemToDelete(null);
   };
 
-  // Update the handleConfirmDelete function to include userId
-  const handleConfirmDelete = async () => {
-    try {
-      setLoading(true);
-      const userId = localStorage.getItem("userId");
+  // // Update the handleConfirmDelete function to include userId
+  // const handleConfirmDelete = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const userId = localStorage.getItem("userId");
 
-      if (deleteType === "shift" && itemToDelete) {
-        await axios.delete(`${API_URL}/${itemToDelete._id}`, {
-          params: { userId }, // Pass userId as a query parameter
-        });
-        await loadShiftRequests();
-        showSnackbar("Shift request deleted successfully");
-      } else if (deleteType === "bulk" && selectedAllocations.length > 0) {
-        // For bulk operations, we'll need to ensure these are only the user's own requests
-        // This might require backend changes to filter by userId in bulk operations
-        await Promise.all(
-          selectedAllocations.map((id) =>
-            axios.delete(`${API_URL}/${id}`, {
-              params: { userId },
-            })
-          )
-        );
-        await loadShiftRequests();
-        setSelectedAllocations([]);
-        setShowSelectionButtons(false);
-        showSnackbar(
-          `${selectedAllocations.length} ${itemToDelete.type} deleted successfully`
-        );
-      }
+  //     if (deleteType === "shift" && itemToDelete) {
+  //       await axios.delete(`${API_URL}/${itemToDelete._id}`, {
+  //         params: { userId }, // Pass userId as a query parameter
+  //       });
+  //       await loadShiftRequests();
+  //       showSnackbar("Shift request deleted successfully");
+  //     } else if (deleteType === "bulk" && selectedAllocations.length > 0) {
+  //       // For bulk operations, we'll need to ensure these are only the user's own requests
+  //       // This might require backend changes to filter by userId in bulk operations
+  //       await Promise.all(
+  //         selectedAllocations.map((id) =>
+  //           axios.delete(`${API_URL}/${id}`, {
+  //             params: { userId },
+  //           })
+  //         )
+  //       );
+  //       await loadShiftRequests();
+  //       setSelectedAllocations([]);
+  //       setShowSelectionButtons(false);
+  //       showSnackbar(
+  //         `${selectedAllocations.length} ${itemToDelete.type} deleted successfully`
+  //       );
+  //     }
 
-      handleCloseDeleteDialog();
-    } catch (error) {
-      console.error(`Error deleting ${deleteType}:`, error);
-      showSnackbar(
-        `Error deleting ${deleteType}: ${
-          error.response?.data?.message || error.message
-        }`,
-        "error"
+  //     handleCloseDeleteDialog();
+  //   } catch (error) {
+  //     console.error(`Error deleting ${deleteType}:`, error);
+  //     showSnackbar(
+  //       `Error deleting ${deleteType}: ${
+  //         error.response?.data?.message || error.message
+  //       }`,
+  //       "error"
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+// Update the handleConfirmDelete function
+const handleConfirmDelete = async () => {
+  try {
+    setLoading(true);
+    const userId = localStorage.getItem("userId");
+    const token = getAuthToken();
+
+    if (deleteType === "shift" && itemToDelete) {
+      await axios.delete(`${API_URL}/${itemToDelete._id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: { userId }, // Pass userId as a query parameter
+      });
+      await loadShiftRequests();
+      showSnackbar("Shift request deleted successfully");
+    } else if (deleteType === "bulk" && selectedAllocations.length > 0) {
+      // For bulk operations, we'll need to ensure these are only the user's own requests
+      // This might require backend changes to filter by userId in bulk operations
+      await Promise.all(
+        selectedAllocations.map((id) =>
+          axios.delete(`${API_URL}/${id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            params: { userId },
+          })
+        )
       );
-    } finally {
-      setLoading(false);
+      await loadShiftRequests();
+      setSelectedAllocations([]);
+      setShowSelectionButtons(false);
+      showSnackbar(
+        `${selectedAllocations.length} ${itemToDelete.type} deleted successfully`
+      );
     }
-  };
+
+    handleCloseDeleteDialog();
+  } catch (error) {
+    console.error(`Error deleting ${deleteType}:`, error);
+    showSnackbar(
+      `Error deleting ${deleteType}: ${
+        error.response?.data?.message || error.message
+      }`,
+      "error"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Add a showSnackbar function if it doesn't exist
   const showSnackbar = (message, severity = "success") => {
@@ -403,33 +571,69 @@ const ShiftRequest = () => {
     };
   }, []);
 
-  // Now, let's modify the loadShiftRequests function to handle the new workflow
-  const loadShiftRequests = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
+  // // Now, let's modify the loadShiftRequests function to handle the new workflow
+  // const loadShiftRequests = async () => {
+  //   try {
+  //     const userId = localStorage.getItem("userId");
 
-      if (tabValue === 0) {
-        // For Shift Requests tab, only show the current user's requests
-        const endpoint = userId ? USER_API_URL(userId) : API_URL;
-        const response = await axios.get(endpoint);
-        setShiftRequests(response.data);
-      } else {
-        // For Review tab, show all requests that need review (admin view)
-        // You might want to add role-based checks here
-        const response = await axios.get(API_URL, {
-          params: { forReview: true },
-        });
-        setAllocatedShifts(response.data);
-      }
-    } catch (error) {
-      console.error("Error loading shift requests:", error);
-      setSnackbar({
-        open: true,
-        message: "Error loading shift requests: " + error.message,
-        severity: "error",
+  //     if (tabValue === 0) {
+  //       // For Shift Requests tab, only show the current user's requests
+  //       const endpoint = userId ? USER_API_URL(userId) : API_URL;
+  //       const response = await axios.get(endpoint);
+  //       setShiftRequests(response.data);
+  //     } else {
+  //       // For Review tab, show all requests that need review (admin view)
+  //       // You might want to add role-based checks here
+  //       const response = await axios.get(API_URL, {
+  //         params: { forReview: true },
+  //       });
+  //       setAllocatedShifts(response.data);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error loading shift requests:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Error loading shift requests: " + error.message,
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  // Update the loadShiftRequests function
+const loadShiftRequests = async () => {
+  try {
+    const userId = localStorage.getItem("userId");
+    const token = getAuthToken();
+
+    if (tabValue === 0) {
+      // For Shift Requests tab, only show the current user's requests
+      const endpoint = userId ? USER_API_URL(userId) : API_URL;
+      const response = await axios.get(endpoint, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
+      setShiftRequests(response.data);
+    } else {
+      // For Review tab, show all requests that need review (admin view)
+      // You might want to add role-based checks here
+      const response = await axios.get(API_URL, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: { forReview: true },
+      });
+      setAllocatedShifts(response.data);
     }
-  };
+  } catch (error) {
+    console.error("Error loading shift requests:", error);
+    setSnackbar({
+      open: true,
+      message: "Error loading shift requests: " + error.message,
+      severity: "error",
+    });
+  }
+};
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -457,77 +661,321 @@ const ShiftRequest = () => {
   };
 
   
-  const handleBulkApprove = async () => {
-    try {
-      const reviewerName = localStorage.getItem("userName") || "Admin";
+  // const handleBulkApprove = async () => {
+  //   try {
+  //     const reviewerName = localStorage.getItem("userName") || "Admin";
       
-      await axios.post(`${API_URL}/bulk-approve`, {
-        ids: selectedAllocations,
-        isForReview: false, // Remove from review after approval
-        reviewedBy: reviewerName
-      });
+  //     await axios.post(`${API_URL}/bulk-approve`, {
+  //       ids: selectedAllocations,
+  //       isForReview: false, // Remove from review after approval
+  //       reviewedBy: reviewerName
+  //     });
       
-      await loadShiftRequests();
-      setSelectedAllocations([]);
-      setShowSelectionButtons(false);
-      setAnchorEl(null);
-      setSnackbar({
-        open: true,
-        message: "Shift requests approved successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error bulk approving shifts:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error approving shift requests: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
+  //     await loadShiftRequests();
+  //     setSelectedAllocations([]);
+  //     setShowSelectionButtons(false);
+  //     setAnchorEl(null);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Shift requests approved successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error bulk approving shifts:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error approving shift requests: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
 
-  const handleBulkReject = async () => {
-    try {
-      const reviewerName = localStorage.getItem("userName") || "Admin";
+  // const handleBulkReject = async () => {
+  //   try {
+  //     const reviewerName = localStorage.getItem("userName") || "Admin";
       
-      await axios.post(`${API_URL}/bulk-reject`, {
-        ids: selectedAllocations,
-        isForReview: false, // Remove from review after rejection
-        reviewedBy: reviewerName
-      });
+  //     await axios.post(`${API_URL}/bulk-reject`, {
+  //       ids: selectedAllocations,
+  //       isForReview: false, // Remove from review after rejection
+  //       reviewedBy: reviewerName
+  //     });
       
-      await loadShiftRequests();
-      setSelectedAllocations([]);
-      setShowSelectionButtons(false);
-      setAnchorEl(null);
-      setSnackbar({
-        open: true,
-        message: "Shift requests rejected successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error bulk rejecting shifts:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error rejecting shift requests: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
+  //     await loadShiftRequests();
+  //     setSelectedAllocations([]);
+  //     setShowSelectionButtons(false);
+  //     setAnchorEl(null);
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Shift requests rejected successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error bulk rejecting shifts:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error rejecting shift requests: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
 
 
-const handleApprove = async (id, e) => {
+// const handleApprove = async (id, e) => {
+//   e.stopPropagation();
+//   try {
+//     const reviewerName = localStorage.getItem("userName") || "Admin";
+    
+//     await axios.put(`${API_URL}/${id}/approve`, {
+//       isForReview: false, // Remove from review after approval
+//       reviewedBy: reviewerName
+//     });
+    
+//     await loadShiftRequests();
+//     setSnackbar({
+//       open: true,
+//       message: "Shift request approved successfully",
+//       severity: "success",
+//     });
+//   } catch (error) {
+//     console.error("Error approving shift:", error);
+//     setSnackbar({
+//       open: true,
+//       message:
+//         "Error approving shift request: " +
+//         (error.response?.data?.message || error.message),
+//       severity: "error",
+//     });
+//   }
+// };
+
+
+// const handleReject = async (id, e) => {
+//   e.stopPropagation();
+//   try {
+//     const reviewerName = localStorage.getItem("userName") || "Admin";
+    
+//     await axios.put(`${API_URL}/${id}/reject`, {
+//       isForReview: false, // Remove from review after rejection
+//       reviewedBy: reviewerName
+//     });
+    
+//     await loadShiftRequests();
+//     setSnackbar({
+//       open: true,
+//       message: "Shift request rejected successfully",
+//       severity: "success",
+//     });
+//   } catch (error) {
+//     console.error("Error rejecting shift:", error);
+//     setSnackbar({
+//       open: true,
+//       message:
+//         "Error rejecting shift request: " +
+//         (error.response?.data?.message || error.message),
+//       severity: "error",
+//     });
+//   }
+// };
+
+
+
+  // const handleCreateShift = async () => {
+  //   try {
+  //     const userId = localStorage.getItem("userId");
+  //     if (!userId) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Unable to create shift request: User ID not available",
+  //         severity: "error",
+  //       });
+  //       return;
+  //     }
+
+  //     // If currentUser is not loaded yet, try to fetch it again
+  //     let userToUse = currentUser;
+  //     if (!userToUse) {
+  //       console.log("Current user not loaded, fetching again...");
+  //       userToUse = await fetchCurrentUser();
+
+  //       if (!userToUse) {
+  //         setSnackbar({
+  //           open: true,
+  //           message: "Unable to create shift request: Failed to load user data",
+  //           severity: "error",
+  //         });
+  //         return;
+  //       }
+  //     }
+
+  //     // Validate form data
+  //     if (!formData.requestShift) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Please select a shift type",
+  //         severity: "warning",
+  //       });
+  //       return;
+  //     }
+
+  //     if (!formData.requestedDate) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Please select a requested date",
+  //         severity: "warning",
+  //       });
+  //       return;
+  //     }
+
+  //     if (!formData.requestedTill) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Please select a requested till date",
+  //         severity: "warning",
+  //       });
+  //       return;
+  //     }
+
+  //     const shiftData = {
+  //       name: `${userToUse.personalInfo?.firstName || ""} ${
+  //         userToUse.personalInfo?.lastName || ""
+  //       }`,
+  //       employeeCode: userToUse.Emp_ID,
+  //       requestedShift: formData.requestShift,
+  //       currentShift: userToUse.joiningDetails?.shiftType || "Not Assigned",
+  //       requestedDate: formData.requestedDate,
+  //       requestedTill: formData.requestedTill,
+  //       description: formData.description || "",
+  //       isPermanentRequest,
+  //       isForReview: true, // Changed from isAllocated to isForReview
+  //       userId: userId,
+  //     };
+
+  //     console.log("Creating shift request with data:", shiftData);
+
+  //     const response = await axios.post(API_URL, shiftData);
+  //     console.log("Shift request created:", response.data);
+
+  //     await loadShiftRequests();
+  //     setCreateDialogOpen(false);
+  //     resetFormData();
+
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Shift request created successfully and sent for review",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error creating shift:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error creating shift request: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+
+  // Update the handleCreateShift function
+
+
+  // Update the handleApprove function
+
+
+  // Update the handleBulkApprove function
+const handleBulkApprove = async () => {
+  try {
+    const reviewerName = localStorage.getItem("userName") || "Admin";
+    const token = getAuthToken();
+    
+    await axios.post(`${API_URL}/bulk-approve`, {
+      ids: selectedAllocations,
+      isForReview: false, // Remove from review after approval
+      reviewedBy: reviewerName
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    await loadShiftRequests();
+    setSelectedAllocations([]);
+    setShowSelectionButtons(false);
+    setAnchorEl(null);
+    setSnackbar({
+      open: true,
+      message: "Shift requests approved successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error bulk approving shifts:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error approving shift requests: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
+
+// Update the handleBulkReject function
+const handleBulkReject = async () => {
+  try {
+    const reviewerName = localStorage.getItem("userName") || "Admin";
+    const token = getAuthToken();
+    
+    await axios.post(`${API_URL}/bulk-reject`, {
+      ids: selectedAllocations,
+      isForReview: false, // Remove from review after rejection
+      reviewedBy: reviewerName
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    await loadShiftRequests();
+    setSelectedAllocations([]);
+    setShowSelectionButtons(false);
+    setAnchorEl(null);
+    setSnackbar({
+      open: true,
+      message: "Shift requests rejected successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error bulk rejecting shifts:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error rejecting shift requests: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
+
+
+
+  const handleApprove = async (id, e) => {
   e.stopPropagation();
   try {
     const reviewerName = localStorage.getItem("userName") || "Admin";
+    const token = getAuthToken();
     
     await axios.put(`${API_URL}/${id}/approve`, {
       isForReview: false, // Remove from review after approval
       reviewedBy: reviewerName
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
     
     await loadShiftRequests();
@@ -548,15 +996,20 @@ const handleApprove = async (id, e) => {
   }
 };
 
-
+// Update the handleReject function
 const handleReject = async (id, e) => {
   e.stopPropagation();
   try {
     const reviewerName = localStorage.getItem("userName") || "Admin";
+    const token = getAuthToken();
     
     await axios.put(`${API_URL}/${id}/reject`, {
       isForReview: false, // Remove from review after rejection
       reviewedBy: reviewerName
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
     
     await loadShiftRequests();
@@ -577,102 +1030,112 @@ const handleReject = async (id, e) => {
   }
 };
 
+
+
   const handleCreateShift = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
+  try {
+    const userId = localStorage.getItem("userId");
+    const token = getAuthToken();
+    
+    if (!userId) {
+      setSnackbar({
+        open: true,
+        message: "Unable to create shift request: User ID not available",
+        severity: "error",
+      });
+      return;
+    }
+
+    // If currentUser is not loaded yet, try to fetch it again
+    let userToUse = currentUser;
+    if (!userToUse) {
+      console.log("Current user not loaded, fetching again...");
+      userToUse = await fetchCurrentUser();
+
+      if (!userToUse) {
         setSnackbar({
           open: true,
-          message: "Unable to create shift request: User ID not available",
+          message: "Unable to create shift request: Failed to load user data",
           severity: "error",
         });
         return;
       }
-
-      // If currentUser is not loaded yet, try to fetch it again
-      let userToUse = currentUser;
-      if (!userToUse) {
-        console.log("Current user not loaded, fetching again...");
-        userToUse = await fetchCurrentUser();
-
-        if (!userToUse) {
-          setSnackbar({
-            open: true,
-            message: "Unable to create shift request: Failed to load user data",
-            severity: "error",
-          });
-          return;
-        }
-      }
-
-      // Validate form data
-      if (!formData.requestShift) {
-        setSnackbar({
-          open: true,
-          message: "Please select a shift type",
-          severity: "warning",
-        });
-        return;
-      }
-
-      if (!formData.requestedDate) {
-        setSnackbar({
-          open: true,
-          message: "Please select a requested date",
-          severity: "warning",
-        });
-        return;
-      }
-
-      if (!formData.requestedTill) {
-        setSnackbar({
-          open: true,
-          message: "Please select a requested till date",
-          severity: "warning",
-        });
-        return;
-      }
-
-      const shiftData = {
-        name: `${userToUse.personalInfo?.firstName || ""} ${
-          userToUse.personalInfo?.lastName || ""
-        }`,
-        employeeCode: userToUse.Emp_ID,
-        requestedShift: formData.requestShift,
-        currentShift: userToUse.joiningDetails?.shiftType || "Not Assigned",
-        requestedDate: formData.requestedDate,
-        requestedTill: formData.requestedTill,
-        description: formData.description || "",
-        isPermanentRequest,
-        isForReview: true, // Changed from isAllocated to isForReview
-        userId: userId,
-      };
-
-      console.log("Creating shift request with data:", shiftData);
-
-      const response = await axios.post(API_URL, shiftData);
-      console.log("Shift request created:", response.data);
-
-      await loadShiftRequests();
-      setCreateDialogOpen(false);
-      resetFormData();
-
-      setSnackbar({
-        open: true,
-        message: "Shift request created successfully and sent for review",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error creating shift:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error creating shift request: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
     }
-  };
+
+    // Validate form data
+    if (!formData.requestShift) {
+      setSnackbar({
+        open: true,
+        message: "Please select a shift type",
+        severity: "warning",
+      });
+      return;
+    }
+
+    if (!formData.requestedDate) {
+      setSnackbar({
+        open: true,
+        message: "Please select a requested date",
+        severity: "warning",
+      });
+      return;
+    }
+
+    if (!formData.requestedTill) {
+      setSnackbar({
+        open: true,
+        message: "Please select a requested till date",
+        severity: "warning",
+      });
+      return;
+    }
+
+    const shiftData = {
+      name: `${userToUse.personalInfo?.firstName || ""} ${
+        userToUse.personalInfo?.lastName || ""
+      }`,
+      employeeCode: userToUse.Emp_ID,
+      requestedShift: formData.requestShift,
+      currentShift: userToUse.joiningDetails?.shiftType || "Not Assigned",
+      requestedDate: formData.requestedDate,
+      requestedTill: formData.requestedTill,
+      description: formData.description || "",
+      isPermanentRequest,
+      isForReview: true, // Changed from isAllocated to isForReview
+      userId: userId,
+    };
+
+    console.log("Creating shift request with data:", shiftData);
+
+    const response = await axios.post(API_URL, shiftData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    console.log("Shift request created:", response.data);
+
+    await loadShiftRequests();
+    setCreateDialogOpen(false);
+    resetFormData();
+
+    setSnackbar({
+      open: true,
+      message: "Shift request created successfully and sent for review",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error creating shift:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error creating shift request: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
+
+
   const handleEdit = (shift, e) => {
     e.stopPropagation();
     setEditingShift(shift);
@@ -687,44 +1150,88 @@ const handleReject = async (id, e) => {
     setEditDialogOpen(true);
   };
 
-  // Update the handleSaveEdit function to include userId
-  const handleSaveEdit = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
+  // // Update the handleSaveEdit function to include userId
+  // const handleSaveEdit = async () => {
+  //   try {
+  //     const userId = localStorage.getItem("userId");
 
-      const updatedData = {
-        name: formData.employee,
-        employeeCode: formData.employeeCode,
-        requestedShift: formData.requestShift,
-        requestedDate: formData.requestedDate,
-        requestedTill: formData.requestedTill,
-        description: formData.description,
-        isAllocated: tabValue === 1,
-        userId: userId, // Include userId for ownership verification
-      };
+  //     const updatedData = {
+  //       name: formData.employee,
+  //       employeeCode: formData.employeeCode,
+  //       requestedShift: formData.requestShift,
+  //       requestedDate: formData.requestedDate,
+  //       requestedTill: formData.requestedTill,
+  //       description: formData.description,
+  //       isAllocated: tabValue === 1,
+  //       userId: userId, // Include userId for ownership verification
+  //     };
 
-      await axios.put(`${API_URL}/${editingShift._id}`, updatedData);
-      await loadShiftRequests();
-      setEditDialogOpen(false);
-      setEditingShift(null);
-      resetFormData();
+  //     await axios.put(`${API_URL}/${editingShift._id}`, updatedData);
+  //     await loadShiftRequests();
+  //     setEditDialogOpen(false);
+  //     setEditingShift(null);
+  //     resetFormData();
 
-      setSnackbar({
-        open: true,
-        message: "Shift request updated successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error updating shift:", error);
-      setSnackbar({
-        open: true,
-        message:
-          "Error updating shift request: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
+  //     setSnackbar({
+  //       open: true,
+  //       message: "Shift request updated successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating shift:", error);
+  //     setSnackbar({
+  //       open: true,
+  //       message:
+  //         "Error updating shift request: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
+  // Update the handleSaveEdit function
+const handleSaveEdit = async () => {
+  try {
+    const userId = localStorage.getItem("userId");
+    const token = getAuthToken();
+
+    const updatedData = {
+      name: formData.employee,
+      employeeCode: formData.employeeCode,
+      requestedShift: formData.requestShift,
+      requestedDate: formData.requestedDate,
+      requestedTill: formData.requestedTill,
+      description: formData.description,
+      isAllocated: tabValue === 1,
+      userId: userId, // Include userId for ownership verification
+    };
+
+    await axios.put(`${API_URL}/${editingShift._id}`, updatedData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    await loadShiftRequests();
+    setEditDialogOpen(false);
+    setEditingShift(null);
+    resetFormData();
+
+    setSnackbar({
+      open: true,
+      message: "Shift request updated successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error updating shift:", error);
+    setSnackbar({
+      open: true,
+      message:
+        "Error updating shift request: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
 
   const resetFormData = () => {
     // If we have current user data, preserve the employee info

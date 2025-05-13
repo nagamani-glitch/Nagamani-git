@@ -139,35 +139,71 @@ const DisciplinaryActions = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [actionToDelete, setActionToDelete] = useState(null);
 
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
   // Replace the current handleDelete function with these two functions
   const handleDeleteClick = (action) => {
     setActionToDelete(action);
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!actionToDelete) return;
+  // const handleConfirmDelete = async () => {
+  //   if (!actionToDelete) return;
 
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `http://localhost:5002/api/disciplinary-actions/${actionToDelete._id}`,
-        {
-          method: "DELETE",
+  //   try {
+  //     setLoading(true);
+  //     const response = await fetch(
+  //       `http://localhost:5002/api/disciplinary-actions/${actionToDelete._id}`,
+  //       {
+  //         method: "DELETE",
+  //       }
+  //     );
+
+  //     if (!response.ok) throw new Error("Failed to delete action");
+
+  //     showSnackbar("Action deleted successfully");
+  //     fetchActions();
+  //   } catch (error) {
+  //     showSnackbar("Error deleting action", "error");
+  //   } finally {
+  //     setLoading(false);
+  //     handleCloseDeleteDialog();
+  //   }
+  // };
+
+
+  // Update the handleConfirmDelete function to include the auth token
+const handleConfirmDelete = async () => {
+  if (!actionToDelete) return;
+
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await fetch(
+      `http://localhost:5002/api/disciplinary-actions/${actionToDelete._id}`,
+      {
+        method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      );
+      }
+    );
 
-      if (!response.ok) throw new Error("Failed to delete action");
+    if (!response.ok) throw new Error("Failed to delete action");
 
-      showSnackbar("Action deleted successfully");
-      fetchActions();
-    } catch (error) {
-      showSnackbar("Error deleting action", "error");
-    } finally {
-      setLoading(false);
-      handleCloseDeleteDialog();
-    }
-  };
+    showSnackbar("Action deleted successfully");
+    fetchActions();
+  } catch (error) {
+    showSnackbar("Error deleting action", "error");
+  } finally {
+    setLoading(false);
+    handleCloseDeleteDialog();
+  }
+};
+
 
   const handleCloseDeleteDialog = () => {
     setDeleteDialogOpen(false);
@@ -179,36 +215,82 @@ const DisciplinaryActions = () => {
     fetchRegisteredEmployees();
   }, [searchQuery, filterStatus]);
 
-  const fetchActions = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `http://localhost:5002/api/disciplinary-actions?searchQuery=${searchQuery}&status=${filterStatus}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch actions");
-      const data = await response.json();
-      setActions(data);
-    } catch (error) {
-      showSnackbar("Error fetching actions", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchActions = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await fetch(
+  //       `http://localhost:5002/api/disciplinary-actions?searchQuery=${searchQuery}&status=${filterStatus}`
+  //     );
+  //     if (!response.ok) throw new Error("Failed to fetch actions");
+  //     const data = await response.json();
+  //     setActions(data);
+  //   } catch (error) {
+  //     showSnackbar("Error fetching actions", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const fetchRegisteredEmployees = async () => {
-    try {
-      setLoadingEmployees(true);
-      const response = await axios.get(
-        "http://localhost:5002/api/employees/registered"
-      );
-      setRegisteredEmployees(response.data);
-      setLoadingEmployees(false);
-    } catch (error) {
-      console.error("Error fetching registered employees:", error);
-      showSnackbar("Error fetching employees", "error");
-      setLoadingEmployees(false);
-    }
-  };
+  // const fetchRegisteredEmployees = async () => {
+  //   try {
+  //     setLoadingEmployees(true);
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/employees/registered"
+  //     );
+  //     setRegisteredEmployees(response.data);
+  //     setLoadingEmployees(false);
+  //   } catch (error) {
+  //     console.error("Error fetching registered employees:", error);
+  //     showSnackbar("Error fetching employees", "error");
+  //     setLoadingEmployees(false);
+  //   }
+  // };
+
+// Update the fetchActions function to include the auth token
+const fetchActions = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await fetch(
+      `http://localhost:5002/api/disciplinary-actions?searchQuery=${searchQuery}&status=${filterStatus}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    if (!response.ok) throw new Error("Failed to fetch actions");
+    const data = await response.json();
+    setActions(data);
+  } catch (error) {
+    showSnackbar("Error fetching actions", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Update the fetchRegisteredEmployees function to include the auth token
+const fetchRegisteredEmployees = async () => {
+  try {
+    setLoadingEmployees(true);
+    const token = getAuthToken();
+    const response = await axios.get(
+      "http://localhost:5002/api/employees/registered",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setRegisteredEmployees(response.data);
+    setLoadingEmployees(false);
+  } catch (error) {
+    console.error("Error fetching registered employees:", error);
+    showSnackbar("Error fetching employees", "error");
+    setLoadingEmployees(false);
+  }
+};
+
 
   const handleEmployeeSelect = (event, employee) => {
     setSelectedEmployee(employee);
@@ -270,47 +352,95 @@ const DisciplinaryActions = () => {
     setSnackbar({ open: true, message, severity });
   };
 
-  const handleSave = async () => {
-    try {
-      setLoading(true);
-      const formDataToSend = new FormData();
+  // const handleSave = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const formDataToSend = new FormData();
 
-      // Add all form fields to FormData
-      Object.keys(formData).forEach((key) => {
-        if (key !== "attachments") {
-          formDataToSend.append(key, formData[key]);
-        }
-      });
+  //     // Add all form fields to FormData
+  //     Object.keys(formData).forEach((key) => {
+  //       if (key !== "attachments") {
+  //         formDataToSend.append(key, formData[key]);
+  //       }
+  //     });
 
-      if (formData.attachments) {
-        formDataToSend.append("attachments", formData.attachments);
+  //     if (formData.attachments) {
+  //       formDataToSend.append("attachments", formData.attachments);
+  //     }
+
+  //     const method = editingAction ? "PUT" : "POST";
+  //     const url = editingAction
+  //       ? `http://localhost:5002/api/disciplinary-actions/${editingAction._id}`
+  //       : "http://localhost:5002/api/disciplinary-actions";
+
+  //     const response = await fetch(url, {
+  //       method,
+  //       body: formDataToSend,
+  //     });
+
+  //     if (!response.ok) throw new Error("Failed to save action");
+
+  //     showSnackbar(
+  //       editingAction
+  //         ? "Action updated successfully"
+  //         : "Action created successfully"
+  //     );
+  //     fetchActions();
+  //     handleClose();
+  //   } catch (error) {
+  //     showSnackbar("Error saving action", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+// Update the handleSave function to include the auth token
+const handleSave = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const formDataToSend = new FormData();
+
+    // Add all form fields to FormData
+    Object.keys(formData).forEach((key) => {
+      if (key !== "attachments") {
+        formDataToSend.append(key, formData[key]);
       }
+    });
 
-      const method = editingAction ? "PUT" : "POST";
-      const url = editingAction
-        ? `http://localhost:5002/api/disciplinary-actions/${editingAction._id}`
-        : "http://localhost:5002/api/disciplinary-actions";
-
-      const response = await fetch(url, {
-        method,
-        body: formDataToSend,
-      });
-
-      if (!response.ok) throw new Error("Failed to save action");
-
-      showSnackbar(
-        editingAction
-          ? "Action updated successfully"
-          : "Action created successfully"
-      );
-      fetchActions();
-      handleClose();
-    } catch (error) {
-      showSnackbar("Error saving action", "error");
-    } finally {
-      setLoading(false);
+    if (formData.attachments) {
+      formDataToSend.append("attachments", formData.attachments);
     }
-  };
+
+    const method = editingAction ? "PUT" : "POST";
+    const url = editingAction
+      ? `http://localhost:5002/api/disciplinary-actions/${editingAction._id}`
+      : "http://localhost:5002/api/disciplinary-actions";
+
+    const response = await fetch(url, {
+      method,
+      body: formDataToSend,
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) throw new Error("Failed to save action");
+
+    showSnackbar(
+      editingAction
+        ? "Action updated successfully"
+        : "Action created successfully"
+    );
+    fetchActions();
+    handleClose();
+  } catch (error) {
+    showSnackbar("Error saving action", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleEdit = (action) => {
     setEditingAction(action);
@@ -330,26 +460,54 @@ const DisciplinaryActions = () => {
     setOpen(true);
   };
 
-  const downloadFile = async (filename, originalName) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5002/api/disciplinary-actions/download/${filename}`
-      );
-      if (!response.ok) throw new Error("Failed to download file");
+  // const downloadFile = async (filename, originalName) => {
+  //   try {
+  //     const response = await fetch(
+  //       `http://localhost:5002/api/disciplinary-actions/download/${filename}`
+  //     );
+  //     if (!response.ok) throw new Error("Failed to download file");
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = originalName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      showSnackbar("Error downloading file", "error");
-    }
-  };
+  //     const blob = await response.blob();
+  //     const url = window.URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = originalName;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     document.body.removeChild(a);
+  //     window.URL.revokeObjectURL(url);
+  //   } catch (error) {
+  //     showSnackbar("Error downloading file", "error");
+  //   }
+  // };
+
+// Update the downloadFile function to include the auth token
+const downloadFile = async (filename, originalName) => {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(
+      `http://localhost:5002/api/disciplinary-actions/download/${filename}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    if (!response.ok) throw new Error("Failed to download file");
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = originalName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    showSnackbar("Error downloading file", "error");
+  }
+};
 
   const getStatusColor = (status) => {
     const colors = {

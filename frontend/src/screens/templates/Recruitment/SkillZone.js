@@ -138,105 +138,187 @@ const SkillZone = () => {
     return nameRegex.test(name);
   };
 
-  // Add this function to handle the confirmed deletion
-  const handleConfirmDelete = async () => {
-    try {
-      setLoading(true);
 
-      if (deleteType === "skill" && itemToDelete) {
-        await axios.delete(
-          `http://localhost:5002/api/skill-zone/${itemToDelete._id}`
-        );
-        setSkills((prevSkills) =>
-          prevSkills.filter((skill) => skill._id !== itemToDelete._id)
-        );
-        showSnackbar("Skill deleted successfully");
-      } else if (deleteType === "candidate" && itemToDelete && parentSkillId) {
-        await axios.delete(
-          `http://localhost:5002/api/skill-zone/${parentSkillId}/candidates/${itemToDelete._id}`
-        );
-        setSkills((prevSkills) =>
-          prevSkills.map((skill) =>
-            skill._id === parentSkillId
-              ? {
-                  ...skill,
-                  candidates: skill.candidates.filter(
-                    (c) => c._id !== itemToDelete._id
-                  ),
-                }
-              : skill
-          )
-        );
-        showSnackbar("Candidate deleted successfully");
-      }
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
 
-      handleCloseDeleteDialog();
-    } catch (error) {
-      console.error(`Error deleting ${deleteType}:`, error);
-      showSnackbar(`Error deleting ${deleteType}`, "error");
-    } finally {
-      setLoading(false);
+
+  // // Add this function to handle the confirmed deletion
+  // const handleConfirmDelete = async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     if (deleteType === "skill" && itemToDelete) {
+  //       await axios.delete(
+  //         `http://localhost:5002/api/skill-zone/${itemToDelete._id}`
+  //       );
+  //       setSkills((prevSkills) =>
+  //         prevSkills.filter((skill) => skill._id !== itemToDelete._id)
+  //       );
+  //       showSnackbar("Skill deleted successfully");
+  //     } else if (deleteType === "candidate" && itemToDelete && parentSkillId) {
+  //       await axios.delete(
+  //         `http://localhost:5002/api/skill-zone/${parentSkillId}/candidates/${itemToDelete._id}`
+  //       );
+  //       setSkills((prevSkills) =>
+  //         prevSkills.map((skill) =>
+  //           skill._id === parentSkillId
+  //             ? {
+  //                 ...skill,
+  //                 candidates: skill.candidates.filter(
+  //                   (c) => c._id !== itemToDelete._id
+  //                 ),
+  //               }
+  //             : skill
+  //         )
+  //       );
+  //       showSnackbar("Candidate deleted successfully");
+  //     }
+
+  //     handleCloseDeleteDialog();
+  //   } catch (error) {
+  //     console.error(`Error deleting ${deleteType}:`, error);
+  //     showSnackbar(`Error deleting ${deleteType}`, "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+// Update the handleConfirmDelete function
+const handleConfirmDelete = async () => {
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+
+    if (deleteType === "skill" && itemToDelete) {
+      await axios.delete(
+        `http://localhost:5002/api/skill-zone/${itemToDelete._id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      setSkills((prevSkills) =>
+        prevSkills.filter((skill) => skill._id !== itemToDelete._id)
+      );
+      showSnackbar("Skill deleted successfully");
+    } else if (deleteType === "candidate" && itemToDelete && parentSkillId) {
+      await axios.delete(
+        `http://localhost:5002/api/skill-zone/${parentSkillId}/candidates/${itemToDelete._id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      setSkills((prevSkills) =>
+        prevSkills.map((skill) =>
+          skill._id === parentSkillId
+            ? {
+                ...skill,
+                candidates: skill.candidates.filter(
+                  (c) => c._id !== itemToDelete._id
+                ),
+              }
+            : skill
+        )
+      );
+      showSnackbar("Candidate deleted successfully");
     }
-  };
+
+    handleCloseDeleteDialog();
+  } catch (error) {
+    console.error(`Error deleting ${deleteType}:`, error);
+    showSnackbar(error.response?.data?.error || `Error deleting ${deleteType}`, "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchSkills();
     fetchRegisteredEmployees();
   }, []);
 
-  const fetchSkills = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get("http://localhost:5002/api/skill-zone");
-      console.log("Fetched skills:", response.data);
-      setSkills(response.data);
-    } catch (error) {
-      console.error("Error fetching skills:", error);
-      showSnackbar("Error fetching skills", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchRegisteredEmployees = async () => {
-    try {
-      setLoadingEmployees(true);
-      const response = await axios.get(
-        "http://localhost:5002/api/employees/registered"
-      );
-      console.log("Fetched employees:", response.data);
-      setRegisteredEmployees(response.data);
-      setLoadingEmployees(false);
-    } catch (error) {
-      console.error("Error fetching registered employees:", error);
-      showSnackbar("Error fetching employees", "error");
-      setLoadingEmployees(false);
-    }
-  };
-
-  // const handleEmployeeSelect = (event, employee) => {
-  //   console.log("Selected employee:", employee);
-  //   setSelectedEmployee(employee);
-  //   if (employee) {
-  //     // Populate the candidate form with employee data
-  //     const fullName = `${employee.personalInfo?.firstName || ""} ${
-  //       employee.personalInfo?.lastName || ""
-  //     }`.trim();
-  //     setNewCandidateName(fullName);
-
-  //     // Store additional employee data to be used when adding candidate
-  //     const employeeDataObj = {
-  //       employeeId: employee.Emp_ID,
-  //       email: employee.personalInfo?.email || "",
-  //       department: employee.joiningDetails?.department || "",
-  //       designation: employee.joiningDetails?.initialDesignation || "",
-  //     };
-  //     console.log("Setting employee data:", employeeDataObj);
-  //     setEmployeeData(employeeDataObj);
-  //   } else {
-  //     setEmployeeData(null);
+  // const fetchSkills = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.get("http://localhost:5002/api/skill-zone");
+  //     console.log("Fetched skills:", response.data);
+  //     setSkills(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching skills:", error);
+  //     showSnackbar("Error fetching skills", "error");
+  //   } finally {
+  //     setLoading(false);
   //   }
   // };
+
+  
+// Update the fetchSkills function
+
+const fetchSkills = async () => {
+  setLoading(true);
+  try {
+    const token = getAuthToken();
+    const response = await axios.get("http://localhost:5002/api/skill-zone", {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    console.log("Fetched skills:", response.data);
+    setSkills(response.data);
+  } catch (error) {
+    console.error("Error fetching skills:", error);
+    showSnackbar("Error fetching skills", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // const fetchRegisteredEmployees = async () => {
+  //   try {
+  //     setLoadingEmployees(true);
+  //     const response = await axios.get(
+  //       "http://localhost:5002/api/employees/registered"
+  //     );
+  //     console.log("Fetched employees:", response.data);
+  //     setRegisteredEmployees(response.data);
+  //     setLoadingEmployees(false);
+  //   } catch (error) {
+  //     console.error("Error fetching registered employees:", error);
+  //     showSnackbar("Error fetching employees", "error");
+  //     setLoadingEmployees(false);
+  //   }
+  // };
+
+// Update the fetchRegisteredEmployees function
+const fetchRegisteredEmployees = async () => {
+  try {
+    setLoadingEmployees(true);
+    const token = getAuthToken();
+    const response = await axios.get(
+      "http://localhost:5002/api/employees/registered",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log("Fetched employees:", response.data);
+    setRegisteredEmployees(response.data);
+    setLoadingEmployees(false);
+  } catch (error) {
+    console.error("Error fetching registered employees:", error);
+    showSnackbar("Error fetching employees", "error");
+    setLoadingEmployees(false);
+  }
+};
+
 
   const handleEmployeeSelect = (event, employee) => {
     console.log("Selected employee:", employee);
@@ -335,18 +417,20 @@ const SkillZone = () => {
     setValidationErrors({ skillName: "", candidateName: "" });
   };
 
-  // const handleCloseAddCandidateDialog = () => {
-  //   setAddCandidateDialogOpen(false);
-  //   setCurrentSkillId(null);
-  //   setNewCandidateName("");
-  //   setNewReason("");
-  //   setSelectedEmployee(null);
-  //   setEmployeeData(null);
-  // };
 
   // const handleAddSkill = async () => {
   //   if (!newSkillName) {
   //     showSnackbar("Please enter a skill name", "error");
+  //     return;
+  //   }
+
+  //   // Validate skill name
+  //   if (!validateName(newSkillName)) {
+  //     setValidationErrors({
+  //       ...validationErrors,
+  //       skillName:
+  //         "Skill name should contain only letters and be 2-30 characters long",
+  //     });
   //     return;
   //   }
 
@@ -371,48 +455,20 @@ const SkillZone = () => {
   //   }
   // };
 
-  // Update the handleAddSkill function to include validation
-
-  const handleAddSkill = async () => {
-    if (!newSkillName) {
-      showSnackbar("Please enter a skill name", "error");
-      return;
-    }
-
-    // Validate skill name
-    if (!validateName(newSkillName)) {
-      setValidationErrors({
-        ...validationErrors,
-        skillName:
-          "Skill name should contain only letters and be 2-30 characters long",
-      });
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await axios.post(
-        "http://localhost:5002/api/skill-zone",
-        {
-          name: newSkillName,
-          candidates: [], // Start with empty candidates array
-        }
-      );
-
-      setSkills([...skills, response.data]);
-      handleClose();
-      showSnackbar("Skill added successfully");
-    } catch (error) {
-      console.error("Error adding skill:", error);
-      showSnackbar("Error adding skill", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // const handleAddCandidate = async () => {
   //   if (!newCandidateName || !newReason) {
   //     showSnackbar("Please fill all required fields", "error");
+  //     return;
+  //   }
+
+  //   // Validate candidate name
+  //   if (!validateName(newCandidateName)) {
+  //     setValidationErrors({
+  //       ...validationErrors,
+  //       candidateName:
+  //         "Candidate name should contain only letters and be 2-30 characters long",
+  //     });
   //     return;
   //   }
 
@@ -460,66 +516,117 @@ const SkillZone = () => {
   //   }
   // };
 
-  // Update the handleAddCandidate function to include validation
-  const handleAddCandidate = async () => {
-    if (!newCandidateName || !newReason) {
-      showSnackbar("Please fill all required fields", "error");
-      return;
-    }
+// Update the handleAddSkill function
+const handleAddSkill = async () => {
+  if (!newSkillName) {
+    showSnackbar("Please enter a skill name", "error");
+    return;
+  }
 
-    // Validate candidate name
-    if (!validateName(newCandidateName)) {
-      setValidationErrors({
-        ...validationErrors,
-        candidateName:
-          "Candidate name should contain only letters and be 2-30 characters long",
-      });
-      return;
-    }
+  // Validate skill name
+  if (!validateName(newSkillName)) {
+    setValidationErrors({
+      ...validationErrors,
+      skillName:
+        "Skill name should contain only letters and be 2-30 characters long",
+    });
+    return;
+  }
 
-    try {
-      setLoading(true);
-
-      // Create the candidate data object
-      const candidateData = {
-        name: newCandidateName,
-        reason: newReason,
-        addedOn: new Date().toLocaleDateString(),
-      };
-
-      // Add employee data if available
-      if (employeeData) {
-        console.log("Adding employee data to candidate:", employeeData);
-        candidateData.employeeId = employeeData.employeeId;
-        candidateData.email = employeeData.email;
-        candidateData.department = employeeData.department;
-        candidateData.designation = employeeData.designation;
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    const response = await axios.post(
+      "http://localhost:5002/api/skill-zone",
+      {
+        name: newSkillName,
+        candidates: [], // Start with empty candidates array
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       }
+    );
 
-      console.log("Sending candidate data:", candidateData);
+    setSkills([...skills, response.data]);
+    handleClose();
+    showSnackbar("Skill added successfully");
+  } catch (error) {
+    console.error("Error adding skill:", error);
+    showSnackbar(error.response?.data?.error || "Error adding skill", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
-      const response = await axios.post(
-        `http://localhost:5002/api/skill-zone/${currentSkillId}/candidates`,
-        candidateData
-      );
+// Update the handleAddCandidate function
+const handleAddCandidate = async () => {
+  if (!newCandidateName || !newReason) {
+    showSnackbar("Please fill all required fields", "error");
+    return;
+  }
 
-      console.log("Response after adding candidate:", response.data);
+  // Validate candidate name
+  if (!validateName(newCandidateName)) {
+    setValidationErrors({
+      ...validationErrors,
+      candidateName:
+        "Candidate name should contain only letters and be 2-30 characters long",
+    });
+    return;
+  }
 
-      setSkills((prevSkills) =>
-        prevSkills.map((skill) =>
-          skill._id === currentSkillId ? response.data : skill
-        )
-      );
+  try {
+    setLoading(true);
+    const token = getAuthToken();
 
-      handleCloseAddCandidateDialog();
-      showSnackbar("Candidate added successfully");
-    } catch (error) {
-      console.error("Error adding candidate:", error);
-      showSnackbar("Error adding candidate", "error");
-    } finally {
-      setLoading(false);
+    // Create the candidate data object
+    const candidateData = {
+      name: newCandidateName,
+      reason: newReason,
+      addedOn: new Date().toLocaleDateString(),
+    };
+
+    // Add employee data if available
+    if (employeeData) {
+      console.log("Adding employee data to candidate:", employeeData);
+      candidateData.employeeId = employeeData.employeeId;
+      candidateData.email = employeeData.email;
+      candidateData.department = employeeData.department;
+      candidateData.designation = employeeData.designation;
     }
-  };
+
+    console.log("Sending candidate data:", candidateData);
+
+    const response = await axios.post(
+      `http://localhost:5002/api/skill-zone/${currentSkillId}/candidates`,
+      candidateData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log("Response after adding candidate:", response.data);
+
+    setSkills((prevSkills) =>
+      prevSkills.map((skill) =>
+        skill._id === currentSkillId ? response.data : skill
+      )
+    );
+
+    handleCloseAddCandidateDialog();
+    showSnackbar("Candidate added successfully");
+  } catch (error) {
+    console.error("Error adding candidate:", error);
+    showSnackbar(error.response?.data?.error || "Error adding candidate", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleEditCandidate = (skillId, candidateId) => {
     const skill = skills.find((s) => s._id === skillId);
@@ -558,7 +665,19 @@ const SkillZone = () => {
     setOpen(true);
   };
 
+
+ 
   // const handleSaveEdit = async () => {
+  //   // Validate candidate name
+  //   if (!validateName(newCandidateName)) {
+  //     setValidationErrors({
+  //       ...validationErrors,
+  //       candidateName:
+  //         "Candidate name should contain only letters and be 2-30 characters long",
+  //     });
+  //     return;
+  //   }
+
   //   try {
   //     setLoading(true);
 
@@ -601,61 +720,69 @@ const SkillZone = () => {
   //   }
   // };
 
-  // Update the handleSaveEdit function to include validation
-  const handleSaveEdit = async () => {
-    // Validate candidate name
-    if (!validateName(newCandidateName)) {
-      setValidationErrors({
-        ...validationErrors,
-        candidateName:
-          "Candidate name should contain only letters and be 2-30 characters long",
-      });
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      // Create the updated candidate data
-      const updatedCandidate = {
-        name: newCandidateName,
-        reason: newReason,
-      };
-
-      // Include employee data if available
-      if (employeeData) {
-        console.log("Including employee data in update:", employeeData);
-        updatedCandidate.employeeId = employeeData.employeeId;
-        updatedCandidate.email = employeeData.email;
-        updatedCandidate.department = employeeData.department;
-        updatedCandidate.designation = employeeData.designation;
-      }
-
-      console.log("Sending updated candidate data:", updatedCandidate);
-
-      const response = await axios.put(
-        `http://localhost:5002/api/skill-zone/${currentSkillId}/candidates/${currentCandidateId}`,
-        updatedCandidate
-      );
-
-      console.log("Response after updating candidate:", response.data);
-
-      setSkills((prevSkills) =>
-        prevSkills.map((skill) =>
-          skill._id === currentSkillId ? response.data : skill
-        )
-      );
-      handleClose();
-      showSnackbar("Candidate updated successfully");
-    } catch (error) {
-      console.error("Error updating candidate:", error);
-      showSnackbar("Error updating candidate", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Add a function to handle input changes with validation
+
+  // Update the handleSaveEdit function
+const handleSaveEdit = async () => {
+  // Validate candidate name
+  if (!validateName(newCandidateName)) {
+    setValidationErrors({
+      ...validationErrors,
+      candidateName:
+        "Candidate name should contain only letters and be 2-30 characters long",
+    });
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+
+    // Create the updated candidate data
+    const updatedCandidate = {
+      name: newCandidateName,
+      reason: newReason,
+    };
+
+    // Include employee data if available
+    if (employeeData) {
+      console.log("Including employee data in update:", employeeData);
+      updatedCandidate.employeeId = employeeData.employeeId;
+      updatedCandidate.email = employeeData.email;
+      updatedCandidate.department = employeeData.department;
+      updatedCandidate.designation = employeeData.designation;
+    }
+
+    console.log("Sending updated candidate data:", updatedCandidate);
+
+    const response = await axios.put(
+      `http://localhost:5002/api/skill-zone/${currentSkillId}/candidates/${currentCandidateId}`,
+      updatedCandidate,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log("Response after updating candidate:", response.data);
+
+    setSkills((prevSkills) =>
+      prevSkills.map((skill) =>
+        skill._id === currentSkillId ? response.data : skill
+      )
+    );
+    handleClose();
+    showSnackbar("Candidate updated successfully");
+  } catch (error) {
+    console.error("Error updating candidate:", error);
+    showSnackbar(error.response?.data?.error || "Error updating candidate", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+ 
+ 
   const handleSkillNameChange = (e) => {
     const value = e.target.value;
     setNewSkillName(value);

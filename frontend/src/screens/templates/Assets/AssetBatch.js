@@ -57,18 +57,43 @@ function AssetBatch() {
     fetchAssetBatches();
   }, []);
 
-  const fetchAssetBatches = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${API_URL}/api/asset-batches`);
-      setAssetBatches(response.data);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error fetching asset batches:', err.message);
-      setError('Failed to fetch asset batches. Please check the server.');
-      setLoading(false);
-    }
-  };
+// Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
+  // const fetchAssetBatches = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.get(`${API_URL}/api/asset-batches`);
+  //     setAssetBatches(response.data);
+  //     setLoading(false);
+  //   } catch (err) {
+  //     console.error('Error fetching asset batches:', err.message);
+  //     setError('Failed to fetch asset batches. Please check the server.');
+  //     setLoading(false);
+  //   }
+  // };
+
+const fetchAssetBatches = async () => {
+  setLoading(true);
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/api/asset-batches`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setAssetBatches(response.data);
+    setLoading(false);
+  } catch (err) {
+    console.error('Error fetching asset batches:', err.message);
+    setError('Failed to fetch asset batches. Please check the server.');
+    setLoading(false);
+  }
+};
+
 
   const handleSearch = async (e) => {
     const searchValue = e.target.value;
@@ -115,69 +140,160 @@ function AssetBatch() {
     setFormData({ ...formData, [name]: transformedValue });
   };
 
-  useEffect(() => {
-    const handleBatchesUpdated = () => {
-      console.log('Batches updated event received, refreshing batches list');
+  // useEffect(() => {
+  //   const handleBatchesUpdated = () => {
+  //     console.log('Batches updated event received, refreshing batches list');
+  //     fetchAssetBatches();
+  //   };
+    
+  //   window.addEventListener('batchesUpdated', handleBatchesUpdated);
+    
+  //   const lastUpdate = localStorage.getItem('batchesUpdated');
+  //   if (lastUpdate) {
+  //     const currentTimestamp = Date.now();
+  //     const lastUpdateTimestamp = parseInt(lastUpdate, 10);
+  //     if (currentTimestamp - lastUpdateTimestamp < 5002) {
+  //       fetchAssetBatches();
+  //     }
+  //   }
+    
+  //   return () => {
+  //     window.removeEventListener('batchesUpdated', handleBatchesUpdated);
+  //   };
+  // }, []);
+
+  // const handleCreateBatch = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     if (isEditing) {
+  //       await axios.put(`${API_URL}/api/asset-batches/${editBatchId}`, formData);
+  //       setAssetBatches(assetBatches.map(batch => batch._id === editBatchId ? { ...batch, ...formData } : batch));
+  //       setIsEditing(false);
+  //       setEditBatchId(null);
+  //     } else {
+  //       const response = await axios.post(`${API_URL}/api/asset-batches`, formData);
+  //       setAssetBatches([...assetBatches, response.data]);
+  //     }
+  //     setFormData({ batchNumber: '', description: '', numberOfAssets: '' });
+  //     setShowForm(false);
+      
+  //     const timestamp = Date.now().toString();
+  //     localStorage.setItem('batchesUpdated', timestamp);
+      
+  //     const event = new CustomEvent('batchesUpdated', { detail: { timestamp } });
+  //     window.dispatchEvent(event);
+  //   } catch (err) {
+  //     console.error('Error creating/updating asset batch:', err.message);
+  //     setError('Failed to save asset batch. Please try again.');
+  //   }
+  // };
+
+useEffect(() => {
+  const handleBatchesUpdated = () => {
+    console.log('Batches updated event received, refreshing batches list');
+    fetchAssetBatches();
+  };
+  
+  window.addEventListener('batchesUpdated', handleBatchesUpdated);
+  
+  const lastUpdate = localStorage.getItem('batchesUpdated');
+  if (lastUpdate) {
+    const currentTimestamp = Date.now();
+    const lastUpdateTimestamp = parseInt(lastUpdate, 10);
+    if (currentTimestamp - lastUpdateTimestamp < 5002) {
       fetchAssetBatches();
-    };
-    
-    window.addEventListener('batchesUpdated', handleBatchesUpdated);
-    
-    const lastUpdate = localStorage.getItem('batchesUpdated');
-    if (lastUpdate) {
-      const currentTimestamp = Date.now();
-      const lastUpdateTimestamp = parseInt(lastUpdate, 10);
-      if (currentTimestamp - lastUpdateTimestamp < 5002) {
-        fetchAssetBatches();
-      }
     }
-    
-    return () => {
-      window.removeEventListener('batchesUpdated', handleBatchesUpdated);
-    };
-  }, []);
-
-  const handleCreateBatch = async (e) => {
-    e.preventDefault();
-    try {
-      if (isEditing) {
-        await axios.put(`${API_URL}/api/asset-batches/${editBatchId}`, formData);
-        setAssetBatches(assetBatches.map(batch => batch._id === editBatchId ? { ...batch, ...formData } : batch));
-        setIsEditing(false);
-        setEditBatchId(null);
-      } else {
-        const response = await axios.post(`${API_URL}/api/asset-batches`, formData);
-        setAssetBatches([...assetBatches, response.data]);
-      }
-      setFormData({ batchNumber: '', description: '', numberOfAssets: '' });
-      setShowForm(false);
-      
-      const timestamp = Date.now().toString();
-      localStorage.setItem('batchesUpdated', timestamp);
-      
-      const event = new CustomEvent('batchesUpdated', { detail: { timestamp } });
-      window.dispatchEvent(event);
-    } catch (err) {
-      console.error('Error creating/updating asset batch:', err.message);
-      setError('Failed to save asset batch. Please try again.');
-    }
+  }
+  
+  return () => {
+    window.removeEventListener('batchesUpdated', handleBatchesUpdated);
   };
+}, []);
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/api/asset-batches/${id}`);
-      setAssetBatches(assetBatches.filter(batch => batch._id !== id));
-      
-      const timestamp = Date.now().toString();
-      localStorage.setItem('batchesUpdated', timestamp);
-      
-      const event = new CustomEvent('batchesUpdated', { detail: { timestamp } });
-      window.dispatchEvent(event);
-    } catch (err) {
-      console.error('Error deleting asset batch:', err.message);
-      setError('Failed to delete asset batch. Please try again.');
+
+
+const handleCreateBatch = async (e) => {
+  e.preventDefault();
+  try {
+    const token = getAuthToken();
+    
+    if (isEditing) {
+      await axios.put(
+        `${API_URL}/api/asset-batches/${editBatchId}`, 
+        formData, 
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      setAssetBatches(assetBatches.map(batch => batch._id === editBatchId ? { ...batch, ...formData } : batch));
+      setIsEditing(false);
+      setEditBatchId(null);
+    } else {
+      const response = await axios.post(
+        `${API_URL}/api/asset-batches`, 
+        formData, 
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      setAssetBatches([...assetBatches, response.data]);
     }
-  };
+    setFormData({ batchNumber: '', description: '', numberOfAssets: '' });
+    setShowForm(false);
+    
+    const timestamp = Date.now().toString();
+    localStorage.setItem('batchesUpdated', timestamp);
+    
+    const event = new CustomEvent('batchesUpdated', { detail: { timestamp } });
+    window.dispatchEvent(event);
+  } catch (err) {
+    console.error('Error creating/updating asset batch:', err.message);
+    setError('Failed to save asset batch. Please try again.');
+  }
+};
+
+
+  // const handleDelete = async (id) => {
+  //   try {
+  //     await axios.delete(`${API_URL}/api/asset-batches/${id}`);
+  //     setAssetBatches(assetBatches.filter(batch => batch._id !== id));
+      
+  //     const timestamp = Date.now().toString();
+  //     localStorage.setItem('batchesUpdated', timestamp);
+      
+  //     const event = new CustomEvent('batchesUpdated', { detail: { timestamp } });
+  //     window.dispatchEvent(event);
+  //   } catch (err) {
+  //     console.error('Error deleting asset batch:', err.message);
+  //     setError('Failed to delete asset batch. Please try again.');
+  //   }
+  // };
+
+const handleDelete = async (id) => {
+  try {
+    const token = getAuthToken();
+    await axios.delete(`${API_URL}/api/asset-batches/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setAssetBatches(assetBatches.filter(batch => batch._id !== id));
+    
+    const timestamp = Date.now().toString();
+    localStorage.setItem('batchesUpdated', timestamp);
+    
+    const event = new CustomEvent('batchesUpdated', { detail: { timestamp } });
+    window.dispatchEvent(event);
+  } catch (err) {
+    console.error('Error deleting asset batch:', err.message);
+    setError('Failed to delete asset batch. Please try again.');
+  }
+};
+
 
   const handleEdit = (batch) => {
     setFormData({
@@ -190,40 +306,82 @@ function AssetBatch() {
     setShowForm(true);
   };
 
-  const handleCreateAssetsFromBatch = async (batch) => {
-    try {
-      if (window.confirm(`Are you sure you want to create ${batch.numberOfAssets} assets from batch ${batch.batchNumber}?`)) {
-        setLoading(true);
+  // const handleCreateAssetsFromBatch = async (batch) => {
+  //   try {
+  //     if (window.confirm(`Are you sure you want to create ${batch.numberOfAssets} assets from batch ${batch.batchNumber}?`)) {
+  //       setLoading(true);
         
-        // Generate asset names based on batch number
-        const assetNames = [];
-        for (let i = 1; i <= batch.numberOfAssets; i++) {
-          assetNames.push(`${batch.batchNumber}-Asset-${i}`);
-        }
+  //       // Generate asset names based on batch number
+  //       const assetNames = [];
+  //       for (let i = 1; i <= batch.numberOfAssets; i++) {
+  //         assetNames.push(`${batch.batchNumber}-Asset-${i}`);
+  //       }
         
-        await axios.post(`${API_URL}/api/assets/from-batch`, {
-          batchId: batch._id,
-          assetNames,
-          category: 'Hardware',
-          batch: batch.batchNumber // Make sure to include the batch number
-        });
+  //       await axios.post(`${API_URL}/api/assets/from-batch`, {
+  //         batchId: batch._id,
+  //         assetNames,
+  //         category: 'Hardware',
+  //         batch: batch.batchNumber // Make sure to include the batch number
+  //       });
         
-        // Notify other components about the update
-        const timestamp = Date.now().toString();
-        localStorage.setItem('assetsUpdated', timestamp);
+  //       // Notify other components about the update
+  //       const timestamp = Date.now().toString();
+  //       localStorage.setItem('assetsUpdated', timestamp);
         
-        const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
-        window.dispatchEvent(event);
+  //       const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
+  //       window.dispatchEvent(event);
         
-        setLoading(false);
-        alert(`${batch.numberOfAssets} assets created successfully from batch ${batch.batchNumber}`);
+  //       setLoading(false);
+  //       alert(`${batch.numberOfAssets} assets created successfully from batch ${batch.batchNumber}`);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error creating assets from batch:', error);
+  //     setError('Failed to create assets from batch. Please try again.');
+  //     setLoading(false);
+  //   }
+  // };
+
+const handleCreateAssetsFromBatch = async (batch) => {
+  try {
+    if (window.confirm(`Are you sure you want to create ${batch.numberOfAssets} assets from batch ${batch.batchNumber}?`)) {
+      setLoading(true);
+      
+      // Generate asset names based on batch number
+      const assetNames = [];
+      for (let i = 1; i <= batch.numberOfAssets; i++) {
+        assetNames.push(`${batch.batchNumber}-Asset-${i}`);
       }
-    } catch (error) {
-      console.error('Error creating assets from batch:', error);
-      setError('Failed to create assets from batch. Please try again.');
+      
+      const token = getAuthToken();
+      await axios.post(`${API_URL}/api/assets/from-batch`, {
+        batchId: batch._id,
+        assetNames,
+        category: 'Hardware',
+        batch: batch.batchNumber // Make sure to include the batch number
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      // Notify other components about the update
+      const timestamp = Date.now().toString();
+      localStorage.setItem('assetsUpdated', timestamp);
+      
+      const event = new CustomEvent('assetsUpdated', { detail: { timestamp } });
+      window.dispatchEvent(event);
+      
       setLoading(false);
+      alert(`${batch.numberOfAssets} assets created successfully from batch ${batch.batchNumber}`);
     }
-  };
+  } catch (error) {
+    console.error('Error creating assets from batch:', error);
+    setError('Failed to create assets from batch. Please try again.');
+    setLoading(false);
+  }
+};
+
+
   return (
     <Box
       sx={{
