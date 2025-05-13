@@ -84,39 +84,39 @@ const OrganizationChart = () => {
     fetchRegisteredEmployees();
   }, []);
 
-  const fetchOrganizationChart = async () => {
-    try {
-      setIsLoading(true);
-      const response = await axios.get(`${API_URL}/organization-chart`);
-      setTreeData(response.data);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching organization chart:", error);
-      setIsLoading(false);
-      setAlert({
-        open: true,
-        message: "Error loading organization chart",
-        severity: "error",
-      });
-    }
-  };
+  // const fetchOrganizationChart = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     const response = await axios.get(`${API_URL}/organization-chart`);
+  //     setTreeData(response.data);
+  //     setIsLoading(false);
+  //   } catch (error) {
+  //     console.error("Error fetching organization chart:", error);
+  //     setIsLoading(false);
+  //     setAlert({
+  //       open: true,
+  //       message: "Error loading organization chart",
+  //       severity: "error",
+  //     });
+  //   }
+  // };
 
-  const fetchRegisteredEmployees = async () => {
-    try {
-      setLoadingEmployees(true);
-      const response = await axios.get(`${API_URL}/employees/registered`);
-      setRegisteredEmployees(response.data);
-      setLoadingEmployees(false);
-    } catch (error) {
-      console.error("Error fetching registered employees:", error);
-      setAlert({
-        open: true,
-        message: "Error loading employees",
-        severity: "error",
-      });
-      setLoadingEmployees(false);
-    }
-  };
+  // const fetchRegisteredEmployees = async () => {
+  //   try {
+  //     setLoadingEmployees(true);
+  //     const response = await axios.get(`${API_URL}/employees/registered`);
+  //     setRegisteredEmployees(response.data);
+  //     setLoadingEmployees(false);
+  //   } catch (error) {
+  //     console.error("Error fetching registered employees:", error);
+  //     setAlert({
+  //       open: true,
+  //       message: "Error loading employees",
+  //       severity: "error",
+  //     });
+  //     setLoadingEmployees(false);
+  //   }
+  // };
 
   const handleEmployeeSelect = (event, employee) => {
     setSelectedEmployee(employee);
@@ -150,35 +150,38 @@ const OrganizationChart = () => {
     }
   };
 
-  const handleAddPosition = async () => {
-    try {
-      // Rename designation to title for API compatibility
-      const positionData = {
-        ...newPosition,
-        title: newPosition.designation,
-      };
-      delete positionData.designation;
+  // const handleAddPosition = async () => {
+  //   try {
+  //     // Rename designation to title for API compatibility
+  //     const positionData = {
+  //       ...newPosition,
+  //       title: newPosition.designation,
+  //     };
+  //     delete positionData.designation;
 
-      const response = await axios.post(`${API_URL}/positions`, positionData);
+  //     const response = await axios.post(`${API_URL}/positions`, positionData);
 
-      await fetchOrganizationChart();
-      setIsDialogOpen(false);
-      resetForm();
-      setAlert({
-        open: true,
-        message: "Position added successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error adding position:", error);
-      setAlert({
-        open: true,
-        message: "Error adding position",
-        severity: "error",
-      });
-    }
-  };
+  //     await fetchOrganizationChart();
+  //     setIsDialogOpen(false);
+  //     resetForm();
+  //     setAlert({
+  //       open: true,
+  //       message: "Position added successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error adding position:", error);
+  //     setAlert({
+  //       open: true,
+  //       message: "Error adding position",
+  //       severity: "error",
+  //     });
+  //   }
+  // };
 
+
+
+  
   // const handleUpdatePosition = async () => {
   //   try {
   //     if (!editingPosition) return;
@@ -215,50 +218,50 @@ const OrganizationChart = () => {
   // Updated to show delete confirmation dialog
 
   // Now, fix the handleUpdatePosition function to properly use the editingNodeId
-  const handleUpdatePosition = async () => {
-    try {
-      if (!editingNodeId) {
-        console.error("No position ID found for update");
-        setAlert({
-          open: true,
-          message: "Error: No position ID found",
-          severity: "error",
-        });
-        return;
-      }
+  // const handleUpdatePosition = async () => {
+  //   try {
+  //     if (!editingNodeId) {
+  //       console.error("No position ID found for update");
+  //       setAlert({
+  //         open: true,
+  //         message: "Error: No position ID found",
+  //         severity: "error",
+  //       });
+  //       return;
+  //     }
 
-      // Rename designation to title for API compatibility
-      const positionData = {
-        ...newPosition,
-        title: newPosition.designation,
-      };
-      delete positionData.designation;
+  //     // Rename designation to title for API compatibility
+  //     const positionData = {
+  //       ...newPosition,
+  //       title: newPosition.designation,
+  //     };
+  //     delete positionData.designation;
 
-      console.log("Updating position with ID:", editingNodeId);
-      console.log("Update data:", positionData);
+  //     console.log("Updating position with ID:", editingNodeId);
+  //     console.log("Update data:", positionData);
 
-      // Use the editingNodeId directly
-      await axios.put(`${API_URL}/positions/${editingNodeId}`, positionData);
+  //     // Use the editingNodeId directly
+  //     await axios.put(`${API_URL}/positions/${editingNodeId}`, positionData);
 
-      await fetchOrganizationChart();
-      setIsEditDialogOpen(false);
-      resetForm();
-      setAlert({
-        open: true,
-        message: "Position updated successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error updating position:", error);
-      setAlert({
-        open: true,
-        message:
-          "Error updating position: " +
-          (error.response?.data?.message || error.message),
-        severity: "error",
-      });
-    }
-  };
+  //     await fetchOrganizationChart();
+  //     setIsEditDialogOpen(false);
+  //     resetForm();
+  //     setAlert({
+  //       open: true,
+  //       message: "Position updated successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating position:", error);
+  //     setAlert({
+  //       open: true,
+  //       message:
+  //         "Error updating position: " +
+  //         (error.response?.data?.message || error.message),
+  //       severity: "error",
+  //     });
+  //   }
+  // };
 
   const handleDeleteClick = (node) => {
     setPositionToDelete(node);
@@ -272,58 +275,32 @@ const OrganizationChart = () => {
   };
 
   // Confirm delete action
-  const handleConfirmDelete = async () => {
-    if (!positionToDelete) return;
+  // const handleConfirmDelete = async () => {
+  //   if (!positionToDelete) return;
 
-    try {
-      setIsLoading(true);
-      await axios.delete(`${API_URL}/positions/${positionToDelete._id}`);
-      await fetchOrganizationChart();
-      setAlert({
-        open: true,
-        message: "Position deleted successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error deleting position:", error);
-      setAlert({
-        open: true,
-        message: error.response?.data?.message || "Error deleting position",
-        severity: "error",
-      });
-    } finally {
-      setIsLoading(false);
-      handleCloseDeleteDialog();
-    }
-  };
-
-  // const resetForm = () => {
-  //   setNewPosition({
-  //     name: "",
-  //     designation: "",
-  //     parentId: "",
-  //     department: "",
-  //     employeeId: "",
-  //     email: "",
-  //     status: "active",
-  //   });
-  //   setSelectedEmployee(null);
-  //   setEditingPosition(null);
+  //   try {
+  //     setIsLoading(true);
+  //     await axios.delete(`${API_URL}/positions/${positionToDelete._id}`);
+  //     await fetchOrganizationChart();
+  //     setAlert({
+  //       open: true,
+  //       message: "Position deleted successfully",
+  //       severity: "success",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error deleting position:", error);
+  //     setAlert({
+  //       open: true,
+  //       message: error.response?.data?.message || "Error deleting position",
+  //       severity: "error",
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //     handleCloseDeleteDialog();
+  //   }
   // };
 
-  // const resetForm = () => {
-  //   setNewPosition({
-  //     name: "",
-  //     designation: "",
-  //     email: "",
-  //     employeeId: "",
-  //     department: "",
-  //     parentId: "",
-  //     status: "active",
-  //   });
-  //   setSelectedEmployee(null);
-  //   setEditingNodeId(null); // Add this line
-  // };
+  
   // Update the resetForm function to clear both editingPosition and editingNodeId
   const resetForm = () => {
     setNewPosition({
@@ -619,6 +596,177 @@ const OrganizationChart = () => {
 
     setIsEditDialogOpen(true);
   };
+
+
+
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Update the fetchOrganizationChart function
+const fetchOrganizationChart = async () => {
+  try {
+    setIsLoading(true);
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/organization-chart`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setTreeData(response.data);
+    setIsLoading(false);
+  } catch (error) {
+    console.error("Error fetching organization chart:", error);
+    setIsLoading(false);
+    setAlert({
+      open: true,
+      message: "Error loading organization chart",
+      severity: "error",
+    });
+  }
+};
+
+// Update the fetchRegisteredEmployees function
+const fetchRegisteredEmployees = async () => {
+  try {
+    setLoadingEmployees(true);
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/employees/registered`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setRegisteredEmployees(response.data);
+    setLoadingEmployees(false);
+  } catch (error) {
+    console.error("Error fetching registered employees:", error);
+    setAlert({
+      open: true,
+      message: "Error loading employees",
+      severity: "error",
+    });
+    setLoadingEmployees(false);
+  }
+};
+
+// Update the handleAddPosition function
+const handleAddPosition = async () => {
+  try {
+    // Rename designation to title for API compatibility
+    const positionData = {
+      ...newPosition,
+      title: newPosition.designation,
+    };
+    delete positionData.designation;
+
+    const token = getAuthToken();
+    const response = await axios.post(`${API_URL}/positions`, positionData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    await fetchOrganizationChart();
+    setIsDialogOpen(false);
+    resetForm();
+    setAlert({
+      open: true,
+      message: "Position added successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error adding position:", error);
+    setAlert({
+      open: true,
+      message: error.response?.data?.error || "Error adding position",
+      severity: "error",
+    });
+  }
+};
+
+// Update the handleUpdatePosition function
+const handleUpdatePosition = async () => {
+  try {
+    if (!editingNodeId) {
+      console.error("No position ID found for update");
+      setAlert({
+        open: true,
+        message: "Error: No position ID found",
+        severity: "error",
+      });
+      return;
+    }
+
+    // Rename designation to title for API compatibility
+    const positionData = {
+      ...newPosition,
+      title: newPosition.designation,
+    };
+    delete positionData.designation;
+
+    console.log("Updating position with ID:", editingNodeId);
+    console.log("Update data:", positionData);
+
+    const token = getAuthToken();
+    // Use the editingNodeId directly
+    await axios.put(`${API_URL}/positions/${editingNodeId}`, positionData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    await fetchOrganizationChart();
+    setIsEditDialogOpen(false);
+    resetForm();
+    setAlert({
+      open: true,
+      message: "Position updated successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error updating position:", error);
+    setAlert({
+      open: true,
+      message:
+        "Error updating position: " +
+        (error.response?.data?.message || error.message),
+      severity: "error",
+    });
+  }
+};
+
+// Update the handleConfirmDelete function
+const handleConfirmDelete = async () => {
+  if (!positionToDelete) return;
+
+  try {
+    setIsLoading(true);
+    const token = getAuthToken();
+    await axios.delete(`${API_URL}/positions/${positionToDelete._id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    await fetchOrganizationChart();
+    setAlert({
+      open: true,
+      message: "Position deleted successfully",
+      severity: "success",
+    });
+  } catch (error) {
+    console.error("Error deleting position:", error);
+    setAlert({
+      open: true,
+      message: error.response?.data?.message || "Error deleting position",
+      severity: "error",
+    });
+  } finally {
+    setIsLoading(false);
+    handleCloseDeleteDialog();
+  }
+};
+
 
   return (
     <Box sx={{ p: isMobile ? 2 : 3, position: "relative" }}>

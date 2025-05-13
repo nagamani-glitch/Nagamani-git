@@ -139,8 +139,6 @@ const Header = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  
-
   useEffect(() => {
     if (isLoggedIn) {
       initializeTimesheet();
@@ -185,8 +183,6 @@ const Header = () => {
       clearInterval(timerIntervalRef.current);
     }
   };
-
-
 
   const handleTimerClick = async () => {
     if (isLoading) return;
@@ -410,11 +406,11 @@ const Header = () => {
 
   return (
     <>
-    {isLoggedIn && (
-      <NotificationSidebar
-        show={showNotificationSidebar}
-        onClose={() => setShowNotificationSidebar(false)}
-      />
+      {isLoggedIn && (
+        <NotificationSidebar
+          show={showNotificationSidebar}
+          onClose={() => setShowNotificationSidebar(false)}
+        />
       )}
       <header className="mb-5">
         <Navbar
@@ -427,13 +423,11 @@ const Header = () => {
           ref={navbarCollapseRef}
         >
           <Container fluid>
-           
             {isLoggedIn && (
-  <Button variant="link" className="me-3" onClick={toggleSidebar}>
-    <FaBars size={28} color="white" />
-  </Button>
-)}
-
+              <Button variant="link" className="me-3" onClick={toggleSidebar}>
+                <FaBars size={28} color="white" />
+              </Button>
+            )}
 
             <LinkContainer to="/">
               <Navbar.Brand className="brand">
@@ -460,51 +454,51 @@ const Header = () => {
             >
               <Nav className="ms-auto align-items-center">
                 <div className="d-flex align-items-center">
-                {isLoggedIn && (
-                  <div className="check-in-out-box">
-                    <Button
-                      className={`timer-button ${
-                        isTimerRunning ? "active" : ""
-                      }`}
-                      onClick={() => {
-                        handleTimerClick();
-                        closeNavbar();
-                      }}
-                      title={
-                        isTimerRunning
-                          ? "Click to Check-out"
-                          : "Click to Check-in"
-                      }
-                      aria-label={isTimerRunning ? "Check out" : "Check in"}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <Spinner animation="border" size="sm" />
-                      ) : isTimerRunning ? (
-                        <>
-                          <div className="timer-icon-container">
-                            <FaSignOutAlt className="timer-icon rotate" />
-                          </div>
-                          <div className="timer-content">
-                            <span className="timer-label">Check-out</span>
-                            <span className="timer-value">{`${formatTime(
-                              timer
-                            )}`}</span>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="timer-icon-container">
-                            <FaSignInAlt className="timer-icon beat" />
-                          </div>
-                          <div className="timer-content">
-                            <span className="timer-label">Check-in</span>
-                          </div>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
+                  {isLoggedIn && (
+                    <div className="check-in-out-box">
+                      <Button
+                        className={`timer-button ${
+                          isTimerRunning ? "active" : ""
+                        }`}
+                        onClick={() => {
+                          handleTimerClick();
+                          closeNavbar();
+                        }}
+                        title={
+                          isTimerRunning
+                            ? "Click to Check-out"
+                            : "Click to Check-in"
+                        }
+                        aria-label={isTimerRunning ? "Check out" : "Check in"}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <Spinner animation="border" size="sm" />
+                        ) : isTimerRunning ? (
+                          <>
+                            <div className="timer-icon-container">
+                              <FaSignOutAlt className="timer-icon rotate" />
+                            </div>
+                            <div className="timer-content">
+                              <span className="timer-label">Check-out</span>
+                              <span className="timer-value">{`${formatTime(
+                                timer
+                              )}`}</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="timer-icon-container">
+                              <FaSignInAlt className="timer-icon beat" />
+                            </div>
+                            <div className="timer-content">
+                              <span className="timer-label">Check-in</span>
+                            </div>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
 
                   <Nav.Link
                     className="icon-link ms-3"
@@ -516,28 +510,28 @@ const Header = () => {
                     <FaHome size={32} title="Home" />
                   </Nav.Link>
                   {isLoggedIn && (
-                  <Nav.Link
-                    className="icon-link ms-3 position-relative"
-                    onClick={toggleNotificationSidebar}
-                    title="Notifications"
-                  >
-                    <FaBell size={24} />
-                    {userUnreadCount > 0 && (
-                      <Badge
-                        pill
-                        bg="danger"
-                        className="position-absolute"
-                        style={{
-                          top: "-5px",
-                          right: "-5px",
-                          fontSize: "0.6rem",
-                          padding: "0.25em 0.4em",
-                        }}
-                      >
-                        {userUnreadCount > 99 ? "99+" : userUnreadCount}
-                      </Badge>
-                    )}
-                  </Nav.Link>
+                    <Nav.Link
+                      className="icon-link ms-3 position-relative"
+                      onClick={toggleNotificationSidebar}
+                      title="Notifications"
+                    >
+                      <FaBell size={24} />
+                      {userUnreadCount > 0 && (
+                        <Badge
+                          pill
+                          bg="danger"
+                          className="position-absolute"
+                          style={{
+                            top: "-5px",
+                            right: "-5px",
+                            fontSize: "0.6rem",
+                            padding: "0.25em 0.4em",
+                          }}
+                        >
+                          {userUnreadCount > 99 ? "99+" : userUnreadCount}
+                        </Badge>
+                      )}
+                    </Nav.Link>
                   )}
                   <div className="profile-dropdown-container">
                     {/* Use a custom implementation for mobile/tablet */}
@@ -781,205 +775,248 @@ const Header = () => {
                       </NavDropdown>
                     )} */}
                     {windowWidth <= 1024 ? (
-  <>
-    <div
-      className="profile-dropdown-toggle"
-      onClick={(e) => {
-        e.stopPropagation();
-        setShowProfileMenu(!showProfileMenu);
-      }}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        cursor: "pointer",
-      }}
-    >
-      {profileLoading ? (
-        <Spinner animation="border" size="sm" variant="light" />
-      ) : isLoggedIn && getProfileImageUrl() ? (
-        <img
-          src={getProfileImageUrl()}
-          alt="Profile"
-          style={{
-            width: "28px",
-            height: "28px",
-            borderRadius: "50%",
-            objectFit: "cover",
-            border: "1px solid white",
-          }}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = `${process.env.PUBLIC_URL}/default-avatar.png`;
-          }}
-        />
-      ) : (
-        <FaUserCircle size={28} color="white" />
-      )}
-    </div>
+                      <>
+                        <div
+                          className="profile-dropdown-toggle"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowProfileMenu(!showProfileMenu);
+                          }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {profileLoading ? (
+                            <Spinner
+                              animation="border"
+                              size="sm"
+                              variant="light"
+                            />
+                          ) : isLoggedIn && getProfileImageUrl() ? (
+                            <img
+                              src={getProfileImageUrl()}
+                              alt="Profile"
+                              style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                border: "1px solid white",
+                              }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `${process.env.PUBLIC_URL}/default-avatar.png`;
+                              }}
+                            />
+                          ) : (
+                            <FaUserCircle size={28} color="white" />
+                          )}
+                        </div>
 
-    {showProfileMenu && (
-      <div className="custom-dropdown-menu">
-        {isLoggedIn ? (
-          <>
-            <div className="dropdown-header d-flex align-items-center px-3 py-2">
-              <strong>{getUserDisplayName()}</strong>
-              {profileData?.Emp_ID && (
-                <small className="ms-2 text-muted">({profileData.Emp_ID})</small>
-              )}
-            </div>
-            <div
-              className="dropdown-item"
-              onClick={() => {
-                setShowProfileMenu(false);
-                closeNavbar();
-                navigate("Dashboards/profile");
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                <FaUserCircle style={{ fontSize: "24px", marginBottom: "5px" }} />
-                <span>My Profile</span>
-              </div>
-            </div>
-            <div
-              className="dropdown-item"
-              onClick={() => {
-                setShowProfileMenu(false);
-                closeNavbar();
-                navigate("/reset-password");
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                <FaCog style={{ fontSize: "24px", marginBottom: "5px" }} />
-                <span>Change Password</span>
-              </div>
-            </div>
-            <div
-              className="dropdown-item logout-item"
-              onClick={() => {
-                setShowProfileMenu(false);
-                closeNavbar();
-                handleLogout();
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                <FaSignOutAlt style={{ fontSize: "24px", marginBottom: "5px" }} />
-                <span>Logout</span>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div
-            className="dropdown-item login-item"
-            onClick={() => {
-              setShowProfileMenu(false);
-              closeNavbar();
-              navigate("/login");
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <FaSignInAlt style={{ fontSize: "24px", marginBottom: "5px" }} />
-              <span>Login</span>
-            </div>
-          </div>
-        )}
-      </div>
-    )}
-  </>
-) : (
-  // Desktop version with similar changes
-  <NavDropdown
-    title={
-      profileLoading ? (
-        <Spinner animation="border" size="sm" variant="light" />
-      ) : isLoggedIn && getProfileImageUrl() ? (
-        <img
-          src={getProfileImageUrl()}
-          alt="Profile"
-          style={{
-            width: "28px",
-            height: "28px",
-            borderRadius: "50%",
-            objectFit: "cover",
-            border: "1px solid white",
-          }}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = `${process.env.PUBLIC_URL}/default-avatar.png`;
-          }}
-        />
-      ) : (
-        <FaUserCircle size={28} color="white" />
-      )
-    }
-    id="profile-dropdown"
-    show={showProfileMenu}
-    onClick={handleProfileToggle}
-    ref={profileMenuRef}
-    align="end"
-    className="profile-dropdown ms-3"
-    menuVariant="dark"
-  >
-    {isLoggedIn ? (
-      <>
-        <div className="dropdown-header d-flex align-items-center px-3 py-2">
-          <strong>{getUserDisplayName()}</strong>
-          {profileData?.Emp_ID && (
-            <small className="ms-2 text-muted">({profileData.Emp_ID})</small>
-          )}
-        </div>
-        <NavDropdown.Item
-          onClick={() => handleDropdownItemClick(() => navigate("/Dashboards/profile"))}
-        >
-          My Profile
-        </NavDropdown.Item>
-        <NavDropdown.Item
-          onClick={() => handleDropdownItemClick(() => navigate("/reset-password"))}
-        >
-          Change Password
-        </NavDropdown.Item>
-        <NavDropdown.Divider />
-        <NavDropdown.Item
-          onClick={() => handleDropdownItemClick(handleLogout)}
-          className="logout-item"
-        >
-          <FaSignOutAlt className="me-2" /> Logout
-        </NavDropdown.Item>
-      </>
-    ) : (
-      <NavDropdown.Item
-        onClick={() => handleDropdownItemClick(() => navigate("/login"))}
-        className="login-item"
-      >
-        <FaSignInAlt className="me-2" /> Login
-      </NavDropdown.Item>
-    )}
-  </NavDropdown>
-)}
-
+                        {showProfileMenu && (
+                          <div className="custom-dropdown-menu">
+                            {isLoggedIn ? (
+                              <>
+                                <div className="dropdown-header d-flex align-items-center px-3 py-2">
+                                  <strong>{getUserDisplayName()}</strong>
+                                  {profileData?.Emp_ID && (
+                                    <small className="ms-2 text-muted">
+                                      ({profileData.Emp_ID})
+                                    </small>
+                                  )}
+                                </div>
+                                <div
+                                  className="dropdown-item"
+                                  onClick={() => {
+                                    setShowProfileMenu(false);
+                                    closeNavbar();
+                                    navigate("Dashboards/profile");
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <FaUserCircle
+                                      style={{
+                                        fontSize: "24px",
+                                        marginBottom: "5px",
+                                      }}
+                                    />
+                                    <span>My Profile</span>
+                                  </div>
+                                </div>
+                                <div
+                                  className="dropdown-item"
+                                  onClick={() => {
+                                    setShowProfileMenu(false);
+                                    closeNavbar();
+                                    navigate("/reset-password");
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <FaCog
+                                      style={{
+                                        fontSize: "24px",
+                                        marginBottom: "5px",
+                                      }}
+                                    />
+                                    <span>Change Password</span>
+                                  </div>
+                                </div>
+                                <div
+                                  className="dropdown-item logout-item"
+                                  onClick={() => {
+                                    setShowProfileMenu(false);
+                                    closeNavbar();
+                                    handleLogout();
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <FaSignOutAlt
+                                      style={{
+                                        fontSize: "24px",
+                                        marginBottom: "5px",
+                                      }}
+                                    />
+                                    <span>Logout</span>
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              <div
+                                className="dropdown-item login-item"
+                                onClick={() => {
+                                  setShowProfileMenu(false);
+                                  closeNavbar();
+                                  navigate("/login");
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <FaSignInAlt
+                                    style={{
+                                      fontSize: "24px",
+                                      marginBottom: "5px",
+                                    }}
+                                  />
+                                  <span>Login</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      // Desktop version with similar changes
+                      <NavDropdown
+                        title={
+                          profileLoading ? (
+                            <Spinner
+                              animation="border"
+                              size="sm"
+                              variant="light"
+                            />
+                          ) : isLoggedIn && getProfileImageUrl() ? (
+                            <img
+                              src={getProfileImageUrl()}
+                              alt="Profile"
+                              style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                border: "1px solid white",
+                              }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `${process.env.PUBLIC_URL}/default-avatar.png`;
+                              }}
+                            />
+                          ) : (
+                            <FaUserCircle size={28} color="white" />
+                          )
+                        }
+                        id="profile-dropdown"
+                        show={showProfileMenu}
+                        onClick={handleProfileToggle}
+                        ref={profileMenuRef}
+                        align="end"
+                        className="profile-dropdown ms-3"
+                        menuVariant="dark"
+                      >
+                        {isLoggedIn ? (
+                          <>
+                            <div className="dropdown-header d-flex align-items-center px-3 py-2">
+                              <strong>{getUserDisplayName()}</strong>
+                              {profileData?.Emp_ID && (
+                                <small className="ms-2 text-muted">
+                                  ({profileData.Emp_ID})
+                                </small>
+                              )}
+                            </div>
+                            <NavDropdown.Item
+                              onClick={() =>
+                                handleDropdownItemClick(() =>
+                                  navigate("/Dashboards/profile")
+                                )
+                              }
+                            >
+                              My Profile
+                            </NavDropdown.Item>
+                            <NavDropdown.Item
+                              onClick={() =>
+                                handleDropdownItemClick(() =>
+                                  navigate("/reset-password")
+                                )
+                              }
+                            >
+                              Change Password
+                            </NavDropdown.Item>
+                            <NavDropdown.Divider />
+                            <NavDropdown.Item
+                              onClick={() =>
+                                handleDropdownItemClick(handleLogout)
+                              }
+                              className="logout-item"
+                            >
+                              <FaSignOutAlt className="me-2" /> Logout
+                            </NavDropdown.Item>
+                          </>
+                        ) : (
+                          <NavDropdown.Item
+                            onClick={() =>
+                              handleDropdownItemClick(() => navigate("/login"))
+                            }
+                            className="login-item"
+                          >
+                            <FaSignInAlt className="me-2" /> Login
+                          </NavDropdown.Item>
+                        )}
+                      </NavDropdown>
+                    )}
                   </div>
                 </div>
               </Nav>
