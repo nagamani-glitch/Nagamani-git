@@ -80,41 +80,96 @@ export default function FaqPage() {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-  const fetchFaqs = useCallback(async () => {
-    if (!categoryId) return;
+  // Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
 
-    setLoading(true);
-    try {
-      const { data } = await axios.get(
-        `${apiBaseURL}/api/faqs/category/${categoryId}`
-      );
-      setFaqs(data);
-      setFilteredFaqs(data);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching FAQs:", err.response?.data || err.message);
-      setError("Failed to fetch FAQs.");
-      showSnackbar("Failed to fetch FAQs", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [categoryId]);
+  // const fetchFaqs = useCallback(async () => {
+  //   if (!categoryId) return;
 
-  const fetchCategoryTitle = async () => {
-    if (!categoryId) return;
+  //   setLoading(true);
+  //   try {
+  //     const { data } = await axios.get(
+  //       `${apiBaseURL}/api/faqs/category/${categoryId}`
+  //     );
+  //     setFaqs(data);
+  //     setFilteredFaqs(data);
+  //     setError(null);
+  //   } catch (err) {
+  //     console.error("Error fetching FAQs:", err.response?.data || err.message);
+  //     setError("Failed to fetch FAQs.");
+  //     showSnackbar("Failed to fetch FAQs", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [categoryId]);
 
-    try {
-      const response = await axios.get(
-        `${apiBaseURL}/api/faqCategories/${categoryId}`
-      );
-      if (response.data) {
-        setCategoryTitle(response.data.title);
+// Update the fetchFaqs function
+const fetchFaqs = useCallback(async () => {
+  if (!categoryId) return;
+
+  setLoading(true);
+  try {
+    const token = getAuthToken();
+    const { data } = await axios.get(
+      `${apiBaseURL}/api/faqs/category/${categoryId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       }
-    } catch (err) {
-      setCategoryTitle("Category Not Found");
-      showSnackbar("Category not found", "error");
+    );
+    setFaqs(data);
+    setFilteredFaqs(data);
+    setError(null);
+  } catch (err) {
+    console.error("Error fetching FAQs:", err.response?.data || err.message);
+    setError("Failed to fetch FAQs.");
+    showSnackbar("Failed to fetch FAQs", "error");
+  } finally {
+    setLoading(false);
+  }
+}, [categoryId]);
+
+  // const fetchCategoryTitle = async () => {
+  //   if (!categoryId) return;
+
+  //   try {
+  //     const response = await axios.get(
+  //       `${apiBaseURL}/api/faqCategories/${categoryId}`
+  //     );
+  //     if (response.data) {
+  //       setCategoryTitle(response.data.title);
+  //     }
+  //   } catch (err) {
+  //     setCategoryTitle("Category Not Found");
+  //     showSnackbar("Category not found", "error");
+  //   }
+  // };
+
+// Update the fetchCategoryTitle function
+const fetchCategoryTitle = async () => {
+  if (!categoryId) return;
+
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      `${apiBaseURL}/api/faqCategories/${categoryId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    if (response.data) {
+      setCategoryTitle(response.data.title);
     }
-  };
+  } catch (err) {
+    setCategoryTitle("Category Not Found");
+    showSnackbar("Category not found", "error");
+  }
+};
 
   useEffect(() => {
     fetchCategoryTitle();
@@ -187,35 +242,72 @@ export default function FaqPage() {
   //   }
   // };
 
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
+  // const handleEditSubmit = async (e) => {
+  //   e.preventDefault();
 
-    if (!editingFaq) return;
+  //   if (!editingFaq) return;
 
-    try {
-      setLoading(true);
-      console.log("Editing FAQ:", editingFaq);
-      const { data: updatedFaq } = await axios.put(
-        `${apiBaseURL}/api/faqs/${editingFaq._id}`,
-        editingFaq
-      );
-      const updatedFaqs = faqs.map((faq) =>
-        faq._id === editingFaq._id ? updatedFaq : faq
-      );
-      setFaqs(updatedFaqs);
-      setFilteredFaqs(updatedFaqs);
-      setIsEditModalOpen(false);
-      setEditingFaq(null);
-      setError(null);
-      showSnackbar("FAQ updated successfully");
-    } catch (err) {
-      console.error("Error editing FAQ:", err.response?.data || err.message);
-      setError("Failed to edit FAQ.");
-      showSnackbar("Failed to edit FAQ", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     setLoading(true);
+  //     console.log("Editing FAQ:", editingFaq);
+  //     const { data: updatedFaq } = await axios.put(
+  //       `${apiBaseURL}/api/faqs/${editingFaq._id}`,
+  //       editingFaq
+  //     );
+  //     const updatedFaqs = faqs.map((faq) =>
+  //       faq._id === editingFaq._id ? updatedFaq : faq
+  //     );
+  //     setFaqs(updatedFaqs);
+  //     setFilteredFaqs(updatedFaqs);
+  //     setIsEditModalOpen(false);
+  //     setEditingFaq(null);
+  //     setError(null);
+  //     showSnackbar("FAQ updated successfully");
+  //   } catch (err) {
+  //     console.error("Error editing FAQ:", err.response?.data || err.message);
+  //     setError("Failed to edit FAQ.");
+  //     showSnackbar("Failed to edit FAQ", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+// Update the handleEditSubmit function
+const handleEditSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!editingFaq) return;
+
+  try {
+    setLoading(true);
+    console.log("Editing FAQ:", editingFaq);
+    const token = getAuthToken();
+    const { data: updatedFaq } = await axios.put(
+      `${apiBaseURL}/api/faqs/${editingFaq._id}`,
+      editingFaq,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    const updatedFaqs = faqs.map((faq) =>
+      faq._id === editingFaq._id ? updatedFaq : faq
+    );
+    setFaqs(updatedFaqs);
+    setFilteredFaqs(updatedFaqs);
+    setIsEditModalOpen(false);
+    setEditingFaq(null);
+    setError(null);
+    showSnackbar("FAQ updated successfully");
+  } catch (err) {
+    console.error("Error editing FAQ:", err.response?.data || err.message);
+    setError("Failed to edit FAQ.");
+    showSnackbar("Failed to edit FAQ", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDeleteClick = (faq) => {
     setFaqToDelete(faq);
@@ -227,70 +319,146 @@ export default function FaqPage() {
     setFaqToDelete(null);
   };
 
-  // In the handleAddSubmit function, after successfully adding a new FAQ:S
-  const handleAddSubmit = async (e) => {
-    e.preventDefault();
+  // // In the handleAddSubmit function, after successfully adding a new FAQ:S
+  // const handleAddSubmit = async (e) => {
+  //   e.preventDefault();
 
-    if (!categoryId) {
-      setError("Category ID is missing.");
-      showSnackbar("Category ID is missing", "error");
-      return;
-    }
-    if (!formData.question || !formData.answer) {
-      setError("Both question and answer are required.");
-      showSnackbar("Both question and answer are required", "error");
-      return;
-    }
+  //   if (!categoryId) {
+  //     setError("Category ID is missing.");
+  //     showSnackbar("Category ID is missing", "error");
+  //     return;
+  //   }
+  //   if (!formData.question || !formData.answer) {
+  //     setError("Both question and answer are required.");
+  //     showSnackbar("Both question and answer are required", "error");
+  //     return;
+  //   }
 
-    try {
-      setLoading(true);
-      console.log("Adding FAQ:", { ...formData, categoryId });
-      const { data: newFaq } = await axios.post(
-        `${apiBaseURL}/api/faqs/category/${categoryId}`,
-        formData
-      );
-      setFaqs([...faqs, newFaq]);
-      setFilteredFaqs([...faqs, newFaq]);
-      setIsAddModalOpen(false);
-      setFormData({ question: "", answer: "" });
-      setError(null);
-      showSnackbar("FAQ added successfully");
+  //   try {
+  //     setLoading(true);
+  //     console.log("Adding FAQ:", { ...formData, categoryId });
+  //     const { data: newFaq } = await axios.post(
+  //       `${apiBaseURL}/api/faqs/category/${categoryId}`,
+  //       formData
+  //     );
+  //     setFaqs([...faqs, newFaq]);
+  //     setFilteredFaqs([...faqs, newFaq]);
+  //     setIsAddModalOpen(false);
+  //     setFormData({ question: "", answer: "" });
+  //     setError(null);
+  //     showSnackbar("FAQ added successfully");
 
-      // Update the category title with new count
-      fetchCategoryTitle();
-    } catch (err) {
-      console.error("Error adding FAQ:", err.response?.data || err.message);
-      setError("Failed to add FAQ.");
-      showSnackbar("Failed to add FAQ", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     // Update the category title with new count
+  //     fetchCategoryTitle();
+  //   } catch (err) {
+  //     console.error("Error adding FAQ:", err.response?.data || err.message);
+  //     setError("Failed to add FAQ.");
+  //     showSnackbar("Failed to add FAQ", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  // Similarly, in the handleConfirmDelete function:
-  const handleConfirmDelete = async () => {
-    if (!faqToDelete) return;
+  // Update the handleAddSubmit function
+const handleAddSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      setLoading(true);
-      await axios.delete(`${apiBaseURL}/api/faqs/${faqToDelete._id}`);
-      const updatedFaqs = faqs.filter((faq) => faq._id !== faqToDelete._id);
-      setFaqs(updatedFaqs);
-      setFilteredFaqs(updatedFaqs);
-      setError(null);
-      showSnackbar("FAQ deleted successfully");
+  if (!categoryId) {
+    setError("Category ID is missing.");
+    showSnackbar("Category ID is missing", "error");
+    return;
+  }
+  if (!formData.question || !formData.answer) {
+    setError("Both question and answer are required.");
+    showSnackbar("Both question and answer are required", "error");
+    return;
+  }
 
-      // Update the category title with new count
-      fetchCategoryTitle();
-    } catch (err) {
-      console.error("Error deleting FAQ:", err.response?.data || err.message);
-      setError("Failed to delete FAQ.");
-      showSnackbar("Failed to delete FAQ", "error");
-    } finally {
-      setLoading(false);
-      handleCloseDeleteDialog();
-    }
-  };
+  try {
+    setLoading(true);
+    console.log("Adding FAQ:", { ...formData, categoryId });
+    const token = getAuthToken();
+    const { data: newFaq } = await axios.post(
+      `${apiBaseURL}/api/faqs/category/${categoryId}`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    setFaqs([...faqs, newFaq]);
+    setFilteredFaqs([...faqs, newFaq]);
+    setIsAddModalOpen(false);
+    setFormData({ question: "", answer: "" });
+    setError(null);
+    showSnackbar("FAQ added successfully");
+
+    // Update the category title with new count
+    fetchCategoryTitle();
+  } catch (err) {
+    console.error("Error adding FAQ:", err.response?.data || err.message);
+    setError("Failed to add FAQ.");
+    showSnackbar("Failed to add FAQ", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // // Similarly, in the handleConfirmDelete function:
+  // const handleConfirmDelete = async () => {
+  //   if (!faqToDelete) return;
+
+  //   try {
+  //     setLoading(true);
+  //     await axios.delete(`${apiBaseURL}/api/faqs/${faqToDelete._id}`);
+  //     const updatedFaqs = faqs.filter((faq) => faq._id !== faqToDelete._id);
+  //     setFaqs(updatedFaqs);
+  //     setFilteredFaqs(updatedFaqs);
+  //     setError(null);
+  //     showSnackbar("FAQ deleted successfully");
+
+  //     // Update the category title with new count
+  //     fetchCategoryTitle();
+  //   } catch (err) {
+  //     console.error("Error deleting FAQ:", err.response?.data || err.message);
+  //     setError("Failed to delete FAQ.");
+  //     showSnackbar("Failed to delete FAQ", "error");
+  //   } finally {
+  //     setLoading(false);
+  //     handleCloseDeleteDialog();
+  //   }
+  // };
+
+  // Update the handleConfirmDelete function
+const handleConfirmDelete = async () => {
+  if (!faqToDelete) return;
+
+  try {
+    setLoading(true);
+    const token = getAuthToken();
+    await axios.delete(`${apiBaseURL}/api/faqs/${faqToDelete._id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const updatedFaqs = faqs.filter((faq) => faq._id !== faqToDelete._id);
+    setFaqs(updatedFaqs);
+    setFilteredFaqs(updatedFaqs);
+    setError(null);
+    showSnackbar("FAQ deleted successfully");
+
+    // Update the category title with new count
+    fetchCategoryTitle();
+  } catch (err) {
+    console.error("Error deleting FAQ:", err.response?.data || err.message);
+    setError("Failed to delete FAQ.");
+    showSnackbar("Failed to delete FAQ", "error");
+  } finally {
+    setLoading(false);
+    handleCloseDeleteDialog();
+  }
+};
 
   const [viewType, setViewType] = useState("grid");
 
