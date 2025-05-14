@@ -17,35 +17,86 @@ const FamilyDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedFami
     { name: '', relation: '', dob: '', dependent: 'No', employed: 'unemployed', sameCompany: false, empCode: '', department: '' },
   ]);
 
-  const formik = useFormik({
-    initialValues: { familyDetails: familyMembers },
-    validationSchema: Yup.object({
-      familyDetails: Yup.array().of(
-        Yup.object().shape({
-          name: Yup.string().required('Name is required'),
-          relation: Yup.string().required('Relation is required'),
-          dob: Yup.string().required('Date of birth is required'),
-        })        
-      ),
-    }),
-    enableReinitialize: true,
-    onSubmit: async (values) => {
-      try {
-        const employeeId = localStorage.getItem('Emp_ID');
-        const response = await axios.post('http://localhost:5002/api/employees/family-details', {
+  // Add this function at the top of your component or before the component definition
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
+  // const formik = useFormik({
+  //   initialValues: { familyDetails: familyMembers },
+  //   validationSchema: Yup.object({
+  //     familyDetails: Yup.array().of(
+  //       Yup.object().shape({
+  //         name: Yup.string().required('Name is required'),
+  //         relation: Yup.string().required('Relation is required'),
+  //         dob: Yup.string().required('Date of birth is required'),
+  //       })        
+  //     ),
+  //   }),
+  //   enableReinitialize: true,
+  //   onSubmit: async (values) => {
+  //     try {
+  //       const employeeId = localStorage.getItem('Emp_ID');
+  //       const response = await axios.post('http://localhost:5002/api/employees/family-details', {
+  //         employeeId,
+  //         familyDetails: values.familyDetails
+  //       });
+  
+  //       if (response.data.success) {
+  //         nextStep();
+  //       }
+  //     } catch (error) {
+  //       console.error('Error saving family details:', error);
+  //     }
+  //   },
+  // });
+  
+
+  // Update the formik configuration
+const formik = useFormik({
+  initialValues: { familyDetails: familyMembers },
+  validationSchema: Yup.object({
+    familyDetails: Yup.array().of(
+      Yup.object().shape({
+        name: Yup.string().required('Name is required'),
+        relation: Yup.string().required('Relation is required'),
+        dob: Yup.string().required('Date of birth is required'),
+      })        
+    ),
+  }),
+  enableReinitialize: true,
+  onSubmit: async (values) => {
+    try {
+      const employeeId = localStorage.getItem('Emp_ID');
+      
+      // Get the authentication token
+      const token = getAuthToken();
+      
+      const response = await axios.post('http://localhost:5002/api/employees/family-details', 
+        {
           employeeId,
           familyDetails: values.familyDetails
-        });
-  
-        if (response.data.success) {
-          nextStep();
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         }
-      } catch (error) {
-        console.error('Error saving family details:', error);
+      );
+
+      if (response.data.success) {
+        nextStep();
       }
-    },
-  });
-  
+    } catch (error) {
+      console.error('Error saving family details:', error);
+      // Add better error handling
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+    }
+  },
+});
+
 
   
   

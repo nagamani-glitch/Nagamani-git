@@ -135,36 +135,6 @@ const SearchContainer = styled(motion.div)(({ theme }) => ({
   marginBottom: theme.spacing(3),
 }));
 
-// const StyledCard = styled(motion.div)(({ theme }) => ({
-//   background: '#ffffff',
-//   borderRadius: '16px',
-//   boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
-//   backdropFilter: 'blur(5px)',
-//   border: '1px solid rgba(255, 255, 255, 0.3)',
-//   padding: theme.spacing(3),
-//   cursor: 'pointer',
-//   transition: 'all 0.3s ease-in-out',
-//   '&:hover': {
-//     transform: 'translateY(-5px)',
-//     boxShadow: '0 8px 40px rgba(0, 0, 0, 0.15)',
-//   }
-// }));
-
-// const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-//   borderRadius: '16px',
-//   boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-//   background: '#ffffff',
-//   backdropFilter: 'blur(4px)',
-//   border: '1px solid rgba(255, 255, 255, 0.18)',
-// }));
-
-// const StyledTableRow = styled(TableRow)(({ theme }) => ({
-//   transition: 'all 0.3s ease',
-//   '&:hover': {
-//     background: 'rgba(0, 0, 0, 0.04)',
-//     transform: 'scale(1.01)',
-//   }
-// }));
 
 const ActionButton = styled(Button)(({ theme }) => ({
   borderRadius: "12px",
@@ -285,135 +255,29 @@ const EmployeeListing = ({ onNavigate }) => {
     });
   }, []);
 
-  // useEffect(() => {
-  //   const fetchEmployees = async () => {
-  //     try {
-  //       const response = await axios.get("/api/employees/registered");
-  //       const employeeData = response.data.map((employee) => ({
-  //         _id: employee.Emp_ID || "",
-  //         name: employee.personalInfo
-  //           ? `${employee.personalInfo.firstName || ""} ${
-  //               employee.personalInfo.lastName || ""
-  //             }`.trim()
-  //           : "",
-  //         email: employee.personalInfo?.email || "",
-  //         phone: employee.personalInfo?.mobileNumber || "",
-  //         department: employee.joiningDetails?.department || "Not Assigned",
-  //         role: employee.joiningDetails?.initialDesignation || "Not Assigned",
-  //         location:
-  //           employee.addressDetails?.presentAddress?.city || "Not Specified",
-  //         // Add profile image URL - adjust the path based on your actual data structure
-  //         profileImage: employee.personalInfo?.profileImage || "",
-  //       }));
+  // Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
 
-  //       setProfiles(employeeData);
-  //       setFilteredEmployeesList(employeeData);
-  //     } catch (error) {
-  //       console.error("Error fetching employees:", error);
-  //     }
-  //   };
-  //   fetchEmployees();
-
-  //   gsap.from(".search-container", {
-  //     y: -50,
-  //     opacity: 0,
-  //     duration: 1,
-  //     ease: "power3.out",
-  //   });
-  // }, []);
-  // In the useEffect where you fetch employees, make sure the profileImage path is complete
-  // useEffect(() => {
-  //   const fetchEmployees = async () => {
-  //     try {
-  //       const response = await axios.get("/api/employees/registered");
-  //       console.log("Employee data from API:", response.data); // Add this for debugging
-
-  //       const employeeData = response.data.map((employee) => ({
-  //         _id: employee.Emp_ID || "",
-  //         name: employee.personalInfo
-  //           ? `${employee.personalInfo.firstName || ""} ${
-  //               employee.personalInfo.lastName || ""
-  //             }`.trim()
-  //           : "",
-  //         email: employee.personalInfo?.email || "",
-  //         phone: employee.personalInfo?.mobileNumber || "",
-  //         department: employee.joiningDetails?.department || "Not Assigned",
-  //         role: employee.joiningDetails?.initialDesignation || "Not Assigned",
-  //         location:
-  //           employee.addressDetails?.presentAddress?.city || "Not Specified",
-  //         // Use the correct field name (employeeImage instead of profileImage)
-  //         profileImage: employee.personalInfo?.employeeImage
-  //           ? (employee.personalInfo.employeeImage.startsWith('http')
-  //               ? employee.personalInfo.employeeImage
-  //               : `/uploads/${employee.personalInfo.employeeImage}`) // Remove the /api prefix
-  //           : "",
-  //       }));
-
-  //       console.log("Processed employee data:", employeeData); // Add this for debugging
-  //       setProfiles(employeeData);
-  //       setFilteredEmployeesList(employeeData);
-  //     } catch (error) {
-  //       console.error("Error fetching employees:", error);
-  //     }
-  //   };
-  //   fetchEmployees();
-
-  //   gsap.from(".search-container", {
-  //     y: -50,
-  //     opacity: 0,
-  //     duration: 1,
-  //     ease: "power3.out",
-  //   });
-  // }, []);
-
-  // useEffect(() => {
-  //   const fetchEmployees = async () => {
-  //     try {
-  //       const response = await axios.get("/api/employees/registered");
-  //       console.log("Employee data from API:", response.data); // Add this for debugging
-
-  //       const employeeData = response.data.map((employee) => ({
-  //         _id: employee.Emp_ID || "",
-  //         name: employee.personalInfo
-  //           ? `${employee.personalInfo.firstName || ""} ${
-  //               employee.personalInfo.lastName || ""
-  //             }`.trim()
-  //           : "",
-  //         email: employee.personalInfo?.email || "",
-  //         phone: employee.personalInfo?.mobileNumber || "",
-  //         department: employee.joiningDetails?.department || "Not Assigned",
-  //         role: employee.joiningDetails?.initialDesignation || "Not Assigned",
-  //         location:
-  //           employee.addressDetails?.presentAddress?.city || "Not Specified",
-  //         // Use the correct field name (employeeImage instead of profileImage)
-  //         profileImage: employee.personalInfo?.employeeImage
-  //           ? `http://localhost:5002${employee.personalInfo.employeeImage}`
-  //           : null,
-  //       }));
-
-  //       console.log("Processed employee data:", employeeData); // Add this for debugging
-  //       setProfiles(employeeData);
-  //       setFilteredEmployeesList(employeeData);
-  //     } catch (error) {
-  //       console.error("Error fetching employees:", error);
-  //     }
-  //   };
-  //   fetchEmployees();
-
-  //   gsap.from(".search-container", {
-  //     y: -50,
-  //     opacity: 0,
-  //     duration: 1,
-  //     ease: "power3.out",
-  //   });
-  // }, []);
-
-  // First, modify the useEffect where you fetch employees to extract unique departments
 useEffect(() => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/employees/registered");
+      const token = getAuthToken();
+      
+      if (!token) {
+        console.error('Authentication token not found');
+        setLoading(false);
+        return;
+      }
+      
+      const response = await axios.get("/api/employees/registered", {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
       console.log("Employee data from API:", response.data);
 
       const employeeData = response.data.map((employee) => ({
@@ -445,6 +309,13 @@ useEffect(() => {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching employees:", error);
+      
+      if (error.response && error.response.status === 401) {
+        console.error("Authentication failed. Please log in again.");
+        // Optionally redirect to login page
+        // window.location.href = '/login';
+      }
+      
       setLoading(false);
     }
   };
@@ -459,7 +330,59 @@ useEffect(() => {
 }, []);
 
 
+//   useEffect(() => {
+//   const fetchEmployees = async () => {
+//     try {
+//       setLoading(true);
+//       const response = await axios.get("/api/employees/registered");
+//       console.log("Employee data from API:", response.data);
+
+//       const employeeData = response.data.map((employee) => ({
+//         _id: employee.Emp_ID || "",
+//         name: employee.personalInfo
+//           ? `${employee.personalInfo.firstName || ""} ${
+//               employee.personalInfo.lastName || ""
+//             }`.trim()
+//           : "",
+//         email: employee.personalInfo?.email || "",
+//         phone: employee.personalInfo?.mobileNumber || "",
+//         department: employee.joiningDetails?.department || "Not Assigned",
+//         role: employee.joiningDetails?.initialDesignation || "Not Assigned",
+//         location:
+//           employee.addressDetails?.presentAddress?.city || "Not Specified",
+//         profileImage: employee.personalInfo?.employeeImage
+//           ? `http://localhost:5002${employee.personalInfo.employeeImage}`
+//           : null,
+//       }));
+
+//       console.log("Processed employee data:", employeeData);
+      
+//       // Extract unique departments for the filter dropdown
+//       const uniqueDepartments = [...new Set(employeeData.map(emp => emp.department))].filter(Boolean);
+//       setDepartments(["All", ...uniqueDepartments]);
+      
+//       setProfiles(employeeData);
+//       setFilteredEmployeesList(employeeData);
+//       setLoading(false);
+//     } catch (error) {
+//       console.error("Error fetching employees:", error);
+//       setLoading(false);
+//     }
+//   };
+//   fetchEmployees();
+
+//   gsap.from(".search-container", {
+//     y: -50,
+//     opacity: 0,
+//     duration: 1,
+//     ease: "power3.out",
+//   });
+// }, []);
+
+
+
 // Then update the useEffect that handles filtering when searchText, statusFilter, or departmentFilter changes
+
 useEffect(() => {
   let filtered = [...profiles];
   

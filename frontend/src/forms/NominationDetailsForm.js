@@ -38,50 +38,92 @@ const NominationDetailsForm = ({ onComplete
     sameAsEmployeeAddress: false
   };
 
-  useEffect(() => {
-    const fetchEmployeeData = async () => {
-      const employeeId = localStorage.getItem('Emp_ID');
-      try {
-        const response = await axios.get(`http://localhost:5002/api/employees/get-employee/${employeeId}`);
-        if (response.data.success && response.data.data) {
-          const { familyDetails, addressDetails } = response.data.data;
+  // useEffect(() => {
+  //   const fetchEmployeeData = async () => {
+  //     const employeeId = localStorage.getItem('Emp_ID');
+  //     try {
+  //       const response = await axios.get(`http://localhost:5002/api/employees/get-employee/${employeeId}`);
+  //       if (response.data.success && response.data.data) {
+  //         const { familyDetails, addressDetails } = response.data.data;
           
-          if (familyDetails) {
-            setFamilyMembers(familyDetails);
-          }
+  //         if (familyDetails) {
+  //           setFamilyMembers(familyDetails);
+  //         }
           
-          if (addressDetails && addressDetails.presentAddress) {
-            setEmployeeAddress(addressDetails.presentAddress);
+  //         if (addressDetails && addressDetails.presentAddress) {
+  //           setEmployeeAddress(addressDetails.presentAddress);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching employee data:', error);
+  //     }
+  //   };
+  //   fetchEmployeeData();
+  // }, []);
+
+  // Add this function at the top of your component or before the component definition
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Update the useEffect for fetching employee data
+useEffect(() => {
+  const fetchEmployeeData = async () => {
+    const employeeId = localStorage.getItem('Emp_ID');
+    try {
+      // Get the authentication token
+      const token = getAuthToken();
+      
+      const response = await axios.get(
+        `http://localhost:5002/api/employees/get-employee/${employeeId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
         }
-      } catch (error) {
-        console.error('Error fetching employee data:', error);
-      }
-    };
-    fetchEmployeeData();
-  }, []);
-  
-  const handleSubmit = async (values) => {
-    try {
-      if (totalPercentage !== 100) {
-        alert('Total nomination percentage must be 100%');
-        return;
-      }
-  
-      const employeeId = localStorage.getItem('Emp_ID');
-      const response = await axios.post('http://localhost:5002/api/employees/nomination-details', {
-        employeeId,
-        nominationDetails: values.nominees
-      });
-  
-      if (response.data.success) {
-        // Call onComplete instead of nextStep
-        onComplete();
+      );
+      
+      if (response.data.success && response.data.data) {
+        const { familyDetails, addressDetails } = response.data.data;
+        
+        if (familyDetails) {
+          setFamilyMembers(familyDetails);
+        }
+        
+        if (addressDetails && addressDetails.presentAddress) {
+          setEmployeeAddress(addressDetails.presentAddress);
+        }
       }
     } catch (error) {
-      console.error('Error saving nomination details:', error);
+      console.error('Error fetching employee data:', error);
+      console.error('Error response:', error.response?.data);
     }
   };
+  fetchEmployeeData();
+}, []);
+
+  
+  // const handleSubmit = async (values) => {
+  //   try {
+  //     if (totalPercentage !== 100) {
+  //       alert('Total nomination percentage must be 100%');
+  //       return;
+  //     }
+  
+  //     const employeeId = localStorage.getItem('Emp_ID');
+  //     const response = await axios.post('http://localhost:5002/api/employees/nomination-details', {
+  //       employeeId,
+  //       nominationDetails: values.nominees
+  //     });
+  
+  //     if (response.data.success) {
+  //       // Call onComplete instead of nextStep
+  //       onComplete();
+  //     }
+  //   } catch (error) {
+  //     console.error('Error saving nomination details:', error);
+  //   }
+  // };
   
   // const handleSubmit = async (values) => {
   //   try {
@@ -109,6 +151,43 @@ const NominationDetailsForm = ({ onComplete
   //   }
   // };
   
+// Update the handleSubmit function
+const handleSubmit = async (values) => {
+  try {
+    if (totalPercentage !== 100) {
+      alert('Total nomination percentage must be 100%');
+      return;
+    }
+
+    const employeeId = localStorage.getItem('Emp_ID');
+    
+    // Get the authentication token
+    const token = getAuthToken();
+    
+    const response = await axios.post(
+      'http://localhost:5002/api/employees/nomination-details',
+      {
+        employeeId,
+        nominationDetails: values.nominees
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    if (response.data.success) {
+      // Call onComplete instead of nextStep
+      onComplete();
+    }
+  } catch (error) {
+    console.error('Error saving nomination details:', error);
+    console.error('Error response:', error.response?.data);
+    console.error('Error status:', error.response?.status);
+  }
+};
+
 
   const handleAddressCheckbox = (setFieldValue, index) => {
     if (employeeAddress) {

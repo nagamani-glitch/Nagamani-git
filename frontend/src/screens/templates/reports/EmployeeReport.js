@@ -81,76 +81,172 @@ const EmployeeReport = () => {
   const { RangePicker } = DatePicker;
   const { Option } = Select;
 
-  // Fetch report data from backend
-  const fetchReportData = async (period = "6m") => {
-    setLoading(true);
-    try {
-      // Get the current date
-      const today = new Date();
 
-      // Calculate the start date based on the selected time period
-      let startDate = new Date();
-      switch (period) {
-        case "1m":
-          startDate.setMonth(today.getMonth() - 1);
-          break;
-        case "3m":
-          startDate.setMonth(today.getMonth() - 3);
-          break;
-        case "6m":
-          startDate.setMonth(today.getMonth() - 6);
-          break;
-        case "1y":
-          startDate.setFullYear(today.getFullYear() - 1);
-          break;
-        default:
-          startDate.setMonth(today.getMonth() - 6);
-      }
+  // Add this function at the top of your component
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
 
-      // Fetch employee data
-      const employeeResponse = await axios.get(
-        `/api/employees/report?period=${period}&startDate=${startDate.toISOString()}`
-      );
 
-      // Fetch offboarding data
-      const offboardingResponse = await axios.get(
-        "http://localhost:5002/api/offboarding"
-      );
 
-      // Process offboarding data
-      const offboardingData = offboardingResponse.data || [];
+  // // Fetch report data from backend
+  // const fetchReportData = async (period = "6m") => {
+  //   setLoading(true);
+  //   try {
+  //     // Get the current date
+  //     const today = new Date();
+
+  //     // Calculate the start date based on the selected time period
+  //     let startDate = new Date();
+  //     switch (period) {
+  //       case "1m":
+  //         startDate.setMonth(today.getMonth() - 1);
+  //         break;
+  //       case "3m":
+  //         startDate.setMonth(today.getMonth() - 3);
+  //         break;
+  //       case "6m":
+  //         startDate.setMonth(today.getMonth() - 6);
+  //         break;
+  //       case "1y":
+  //         startDate.setFullYear(today.getFullYear() - 1);
+  //         break;
+  //       default:
+  //         startDate.setMonth(today.getMonth() - 6);
+  //     }
+
+  //     // Fetch employee data
+  //     const employeeResponse = await axios.get(
+  //       `/api/employees/report?period=${period}&startDate=${startDate.toISOString()}`
+  //     );
+
+  //     // Fetch offboarding data
+  //     const offboardingResponse = await axios.get(
+  //       "http://localhost:5002/api/offboarding"
+  //     );
+
+  //     // Process offboarding data
+  //     const offboardingData = offboardingResponse.data || [];
       
-      // Calculate offboarding statistics
-      const offboardingStats = processOffboardingData(offboardingData, startDate);
+  //     // Calculate offboarding statistics
+  //     const offboardingStats = processOffboardingData(offboardingData, startDate);
 
-      if (employeeResponse.data.success) {
-        setReportData({
-          ...employeeResponse.data.data,
-          offboardingData: offboardingData,
-          offboardingReasons: offboardingStats.reasonsData,
-          offboardingByDepartment: offboardingStats.departmentData,
-          stats: {
-            ...employeeResponse.data.data.stats,
-            totalOffboarded: offboardingStats.totalOffboarded,
-            recentOffboardings: offboardingStats.recentOffboardings,
-          }
-        });
-      } else {
-        message.error("Failed to load report data");
+  //     if (employeeResponse.data.success) {
+  //       setReportData({
+  //         ...employeeResponse.data.data,
+  //         offboardingData: offboardingData,
+  //         offboardingReasons: offboardingStats.reasonsData,
+  //         offboardingByDepartment: offboardingStats.departmentData,
+  //         stats: {
+  //           ...employeeResponse.data.data.stats,
+  //           totalOffboarded: offboardingStats.totalOffboarded,
+  //           recentOffboardings: offboardingStats.recentOffboardings,
+  //         }
+  //       });
+  //     } else {
+  //       message.error("Failed to load report data");
         
-        // Set demo data with offboarding information
-        setDemoData(startDate);
-      }
-    } catch (error) {
-      console.error("Error fetching report data:", error);
-      message.error("Error loading report data");
+  //       // Set demo data with offboarding information
+  //       setDemoData(startDate);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching report data:", error);
+  //     message.error("Error loading report data");
 
-      // Set demo data with offboarding information
-      setDemoData(new Date());
-    } finally {
-      setLoading(false);
+  //     // Set demo data with offboarding information
+  //     setDemoData(new Date());
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const fetchReportData = async (period = "6m") => {
+  setLoading(true);
+  try {
+    // Get authentication token
+    const token = getAuthToken();
+    if (!token) {
+      message.error("Authentication required. Please log in again.");
+      return;
     }
-  };
+
+    // Get the current date
+    const today = new Date();
+
+    // Calculate the start date based on the selected time period
+    let startDate = new Date();
+    switch (period) {
+      case "1m":
+        startDate.setMonth(today.getMonth() - 1);
+        break;
+      case "3m":
+        startDate.setMonth(today.getMonth() - 3);
+        break;
+      case "6m":
+        startDate.setMonth(today.getMonth() - 6);
+        break;
+      case "1y":
+        startDate.setFullYear(today.getFullYear() - 1);
+        break;
+      default:
+        startDate.setMonth(today.getMonth() - 6);
+    }
+
+    // Fetch employee data with authentication
+    const employeeResponse = await axios.get(
+      `/api/employees/report?period=${period}&startDate=${startDate.toISOString()}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    // Fetch offboarding data with authentication
+    const offboardingResponse = await axios.get(
+      "http://localhost:5002/api/offboarding",
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    // Process offboarding data
+    const offboardingData = offboardingResponse.data || [];
+    
+    // Calculate offboarding statistics
+    const offboardingStats = processOffboardingData(offboardingData, startDate);
+
+    if (employeeResponse.data.success) {
+      setReportData({
+        ...employeeResponse.data.data,
+        offboardingData: offboardingData,
+        offboardingReasons: offboardingStats.reasonsData,
+        offboardingByDepartment: offboardingStats.departmentData,
+        stats: {
+          ...employeeResponse.data.data.stats,
+          totalOffboarded: offboardingStats.totalOffboarded,
+          recentOffboardings: offboardingStats.recentOffboardings,
+        }
+      });
+    } else {
+      message.error("Failed to load report data");
+      
+      // Set demo data with offboarding information
+      setDemoData(startDate);
+    }
+  } catch (error) {
+    console.error("Error fetching report data:", error);
+    message.error("Error loading report data");
+
+    // Set demo data with offboarding information
+    setDemoData(new Date());
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Process offboarding data to get statistics
   const processOffboardingData = (offboardingData, startDate) => {
@@ -324,14 +420,39 @@ const EmployeeReport = () => {
     });
   };
 
-  useEffect(() => {
-    fetchReportData(timePeriod);
-  }, [timePeriod]);
+  // useEffect(() => {
+  //   fetchReportData(timePeriod);
+  // }, [timePeriod]);
 
-  const handleRefresh = () => {
-    fetchReportData(timePeriod);
-    message.success("Report data refreshed");
-  };
+  useEffect(() => {
+  // Check if user is authenticated
+  const token = getAuthToken();
+  if (!token) {
+    message.error("Authentication required. Please log in again.");
+    // You might want to redirect to login page here
+    return;
+  }
+  
+  fetchReportData(timePeriod);
+}, [timePeriod]);
+
+const handleRefresh = () => {
+  const token = getAuthToken();
+  if (!token) {
+    message.error("Authentication required. Please log in again.");
+    return;
+  }
+  
+  fetchReportData(timePeriod);
+  message.success("Report data refreshed");
+};
+
+
+
+  // const handleRefresh = () => {
+  //   fetchReportData(timePeriod);
+  //   message.success("Report data refreshed");
+  // };
   
   // Export data to Excel
   const handleExport = () => {

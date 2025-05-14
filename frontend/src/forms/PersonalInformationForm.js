@@ -44,41 +44,101 @@ const PersonalInformationForm = ({ nextStep, setEmployeeId, onSave, userEmail, u
 
   const userIdentifier = userId || userID || getUserIdFromToken() || localStorage.getItem('userId');
 
-  // Fetch user data when component mounts if userEmail is provided
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (userEmail) {
-        try {
-          // First get the userId
-          const userIdResponse = await axios.post('http://localhost:5002/api/auth/get-user-id', {
-            email: userEmail
-          });
+// Add this function near the top of your file, after imports
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
+  // // Fetch user data when component mounts if userEmail is provided
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     if (userEmail) {
+  //       try {
+  //         // First get the userId
+  //         const userIdResponse = await axios.post('http://localhost:5002/api/auth/get-user-id', {
+  //           email: userEmail
+  //         });
           
-          if (userIdResponse.data.success) {
-            setUserId(userIdResponse.data.userId);
+  //         if (userIdResponse.data.success) {
+  //           setUserId(userIdResponse.data.userId);
             
-            // Then fetch the user details
-            const userDetailsResponse = await axios.get(`http://localhost:5002/api/auth/user/${userIdResponse.data.userId}`);
+  //           // Then fetch the user details
+  //           const userDetailsResponse = await axios.get(`http://localhost:5002/api/auth/user/${userIdResponse.data.userId}`);
             
-            if (userDetailsResponse.data.success) {
-              const user = userDetailsResponse.data.user;
-              setUserData({
-                firstName: user.firstName || '',
-                middleName: user.middleName || '',
-                lastName: user.lastName || '',
-                email: user.email || userEmail
-              });
+  //           if (userDetailsResponse.data.success) {
+  //             const user = userDetailsResponse.data.user;
+  //             setUserData({
+  //               firstName: user.firstName || '',
+  //               middleName: user.middleName || '',
+  //               lastName: user.lastName || '',
+  //               email: user.email || userEmail
+  //             });
+  //           }
+  //         }
+  //       } catch (error) {
+  //         console.error('Error fetching user data:', error);
+  //         toast.error('Could not retrieve user information. Please try again.');
+  //       }
+  //     }
+  //   };
+    
+  //   fetchUserData();
+  // }, [userEmail]);
+
+  // Update the useEffect for fetching user data
+useEffect(() => {
+  const fetchUserData = async () => {
+    if (userEmail) {
+      try {
+        // Get the authentication token
+        const token = getAuthToken();
+        
+        // First get the userId
+        const userIdResponse = await axios.post('http://localhost:5002/api/auth/get-user-id', 
+          {
+            email: userEmail
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
             }
           }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          toast.error('Could not retrieve user information. Please try again.');
+        );
+        
+        if (userIdResponse.data.success) {
+          setUserId(userIdResponse.data.userId);
+          
+          // Then fetch the user details
+          const userDetailsResponse = await axios.get(
+            `http://localhost:5002/api/auth/user/${userIdResponse.data.userId}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+          
+          if (userDetailsResponse.data.success) {
+            const user = userDetailsResponse.data.user;
+            setUserData({
+              firstName: user.firstName || '',
+              middleName: user.middleName || '',
+              lastName: user.lastName || '',
+              email: user.email || userEmail
+            });
+          }
         }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        toast.error('Could not retrieve user information. Please try again.');
       }
-    };
-    
-    fetchUserData();
-  }, [userEmail]);
+    }
+  };
+  
+  fetchUserData();
+}, [userEmail]);
+
   
   const validationSchema = Yup.object().shape({
     firstName: Yup.string().required('First name is required'),
@@ -241,56 +301,114 @@ const PersonalInformationForm = ({ nextStep, setEmployeeId, onSave, userEmail, u
     }
   };
   
-  // Helper function to submit the form with a userId
-  const submitFormWithUserId = async (userIdentifier, values, setErrors) => {
-    // Collect form data from the Formik values
-    const personalInfoData = {
-      prefix: values.prefix,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      dob: values.dob,
-      gender: values.gender,
-      maritalStatus: values.maritalStatus,
-      bloodGroup: values.bloodGroup,
-      nationality: values.nationality,
-      aadharNumber: values.aadharNumber || undefined,
-      panNumber: values.panNumber || undefined,
-      mobileNumber: values.mobileNumber,
-      email: values.email || undefined
-    };
+  // // Helper function to submit the form with a userId
+  // const submitFormWithUserId = async (userIdentifier, values, setErrors) => {
+  //   // Collect form data from the Formik values
+  //   const personalInfoData = {
+  //     prefix: values.prefix,
+  //     firstName: values.firstName,
+  //     lastName: values.lastName,
+  //     dob: values.dob,
+  //     gender: values.gender,
+  //     maritalStatus: values.maritalStatus,
+  //     bloodGroup: values.bloodGroup,
+  //     nationality: values.nationality,
+  //     aadharNumber: values.aadharNumber || undefined,
+  //     panNumber: values.panNumber || undefined,
+  //     mobileNumber: values.mobileNumber,
+  //     email: values.email || undefined
+  //   };
     
-    // Create FormData object for file upload
-    const formData = new FormData();
+  //   // Create FormData object for file upload
+  //   const formData = new FormData();
     
-    // Include userId in the form data
-    formData.append('formData', JSON.stringify({ 
-      userId: userIdentifier,
-      personalInfo: personalInfoData 
-    }));
+  //   // Include userId in the form data
+  //   formData.append('formData', JSON.stringify({ 
+  //     userId: userIdentifier,
+  //     personalInfo: personalInfoData 
+  //   }));
     
-    // Add image file if it exists
-    if (values.employeeImage) {
-      formData.append('employeeImage', values.employeeImage);
-    }
+  //   // Add image file if it exists
+  //   if (values.employeeImage) {
+  //     formData.append('employeeImage', values.employeeImage);
+  //   }
   
-    const response = await axios.post(
-      'http://localhost:5002/api/employees/personal-info',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }
-    );
+  //   const response = await axios.post(
+  //     'http://localhost:5002/api/employees/personal-info',
+  //     formData,
+  //     {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data'
+  //       }
+  //     }
+  //   );
   
-    if (response.data.success) {
-      // Call onSave with the employee ID
-      onSave(response.data.employeeId);
-      // Navigate to next step
-      nextStep();
-      toast.success('Personal information saved successfully');
-    }
+  //   if (response.data.success) {
+  //     // Call onSave with the employee ID
+  //     onSave(response.data.employeeId);
+  //     // Navigate to next step
+  //     nextStep();
+  //     toast.success('Personal information saved successfully');
+  //   }
+  // };
+
+  // Update the submitFormWithUserId function
+const submitFormWithUserId = async (userIdentifier, values, setErrors) => {
+  // Collect form data from the Formik values
+  const personalInfoData = {
+    prefix: values.prefix,
+    firstName: values.firstName,
+    lastName: values.lastName,
+    dob: values.dob,
+    gender: values.gender,
+    maritalStatus: values.maritalStatus,
+    bloodGroup: values.bloodGroup,
+    nationality: values.nationality,
+    aadharNumber: values.aadharNumber || undefined,
+    panNumber: values.panNumber || undefined,
+    mobileNumber: values.mobileNumber,
+    email: values.email || undefined
   };
+  
+  // Create FormData object for file upload
+  const formData = new FormData();
+  
+  // Include userId in the form data
+  formData.append('formData', JSON.stringify({ 
+    userId: userIdentifier,
+    personalInfo: personalInfoData 
+  }));
+  
+  // Add image file if it exists
+  if (values.employeeImage) {
+    formData.append('employeeImage', values.employeeImage);
+  }
+
+  // Get the authentication token
+  const token = getAuthToken();
+
+  const response = await axios.post(
+    'http://localhost:5002/api/employees/personal-info',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+
+  if (response.data.success) {
+    // Call onSave with the employee ID
+    onSave(response.data.employeeId);
+    // Navigate to next step
+    nextStep();
+    toast.success('Personal information saved successfully');
+  }
+};
+
+
+
   
   
   const handleError = (error) => {
