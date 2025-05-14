@@ -116,11 +116,95 @@ const MainDashboard = () => {
     fetchUserLeaveData(); // Add this line
   }, [timeRange]);
 
-// Add this function to fetch user leave data
+// Add this helper function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Helper function to create headers with auth token
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  };
+};
+
+
+// // Add this function to fetch user leave data
+// const fetchUserLeaveData = async () => {
+//   try {
+//     // Get the user ID from localStorage
+//     const userId = localStorage.getItem('userId');
+    
+//     if (!userId) {
+//       console.log("No user ID found in localStorage");
+//       return;
+//     }
+    
+//     // First get the employee data using the user ID
+//     const employeeResponse = await axios.get(`${apiBaseURL}/api/employees/by-user/${userId}`);
+    
+//     if (!employeeResponse.data.success || !employeeResponse.data.data) {
+//       console.log("No employee data found for this user");
+//       return;
+//     }
+    
+//     const employeeData = employeeResponse.data.data;
+//     const employeeCode = employeeData.Emp_ID;
+    
+//     if (!employeeCode) {
+//       console.log("No employee code found");
+//       return;
+//     }
+    
+//     // Now fetch leave requests for this employee
+//     const leaveRequestsResponse = await axios.get(`${apiBaseURL}/api/leave-requests/employee/${employeeCode}`);
+    
+//     // Fetch leave balance
+//     const leaveBalanceResponse = await axios.get(`${apiBaseURL}/api/leave-requests/balance/${employeeCode}`);
+    
+//     // Fetch leave statistics
+//     const leaveStatsResponse = await axios.get(`${apiBaseURL}/api/leave-requests/statistics/${employeeCode}`);
+    
+//     // Get upcoming leaves (pending or approved)
+//     const upcomingLeaves = leaveRequestsResponse.data
+//       .filter(leave => {
+//         // Filter for pending or approved leaves that are in the future
+//         const isRelevantStatus = leave.status === 'pending' || leave.status === 'approved';
+//         const leaveStartDate = new Date(leave.startDate);
+//         const today = new Date();
+//         return isRelevantStatus && leaveStartDate >= today;
+//       })
+//       .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+//       .slice(0, 3); // Get only the next 3 upcoming leaves
+    
+//     setUserLeaveData({
+//       upcomingLeaves,
+//       leaveBalance: leaveBalanceResponse.data,
+//       leaveStats: leaveStatsResponse.data,
+//       loading: false,
+//       error: null
+//     });
+    
+//   } catch (error) {
+//     console.error("Error fetching user leave data:", error);
+//     setUserLeaveData({
+//       upcomingLeaves: [],
+//       leaveBalance: null,
+//       leaveStats: null,
+//       loading: false,
+//       error: "Failed to load leave data"
+//     });
+//   }
+// };
+
 const fetchUserLeaveData = async () => {
   try {
     // Get the user ID from localStorage
     const userId = localStorage.getItem('userId');
+    const token = getAuthToken();
     
     if (!userId) {
       console.log("No user ID found in localStorage");
@@ -128,7 +212,14 @@ const fetchUserLeaveData = async () => {
     }
     
     // First get the employee data using the user ID
-    const employeeResponse = await axios.get(`${apiBaseURL}/api/employees/by-user/${userId}`);
+    const employeeResponse = await axios.get(
+      `${apiBaseURL}/api/employees/by-user/${userId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
     
     if (!employeeResponse.data.success || !employeeResponse.data.data) {
       console.log("No employee data found for this user");
@@ -144,13 +235,34 @@ const fetchUserLeaveData = async () => {
     }
     
     // Now fetch leave requests for this employee
-    const leaveRequestsResponse = await axios.get(`${apiBaseURL}/api/leave-requests/employee/${employeeCode}`);
+    const leaveRequestsResponse = await axios.get(
+      `${apiBaseURL}/api/leave-requests/employee/${employeeCode}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
     
     // Fetch leave balance
-    const leaveBalanceResponse = await axios.get(`${apiBaseURL}/api/leave-requests/balance/${employeeCode}`);
+    const leaveBalanceResponse = await axios.get(
+      `${apiBaseURL}/api/leave-requests/balance/${employeeCode}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
     
     // Fetch leave statistics
-    const leaveStatsResponse = await axios.get(`${apiBaseURL}/api/leave-requests/statistics/${employeeCode}`);
+    const leaveStatsResponse = await axios.get(
+      `${apiBaseURL}/api/leave-requests/statistics/${employeeCode}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
     
     // Get upcoming leaves (pending or approved)
     const upcomingLeaves = leaveRequestsResponse.data
@@ -184,146 +296,331 @@ const fetchUserLeaveData = async () => {
   }
 };
 
-  // Function to fetch all types of announcements
-  const fetchAllAnnouncements = async () => {
-    setLoadingAnnouncements(true);
-    try {
-      // Fetch holidays using the imported function
-      const holidaysResponse = await fetchHolidays();
-      const holidays = holidaysResponse.data.map((holiday) => ({
-        id: holiday._id,
-        title: holiday.name,
-        date: holiday.startDate,
-        content: `Holiday${
-          holiday.recurring ? " (Recurring)" : ""
-        } from ${new Date(
-          holiday.startDate
-        ).toLocaleDateString()} to ${new Date(
-          holiday.endDate
-        ).toLocaleDateString()}`,
-        type: "holiday",
-        icon: <Event />,
-        color: "#2196F3",
-        bgColor: "#E3F2FD",
-      }));
 
-      // Fetch company holidays
-      const companyHolidaysResponse = await axios.get(
-        `${apiBaseURL}/api/companyHolidays`
-      );
-      const companyHolidays = companyHolidaysResponse.data.map((holiday) => ({
-        id: holiday._id,
-        title: `${holiday.week} ${holiday.day}`,
-        date: new Date().toISOString(), // Current date as these are recurring
-        content: `Weekly holiday on ${holiday.day}`,
-        type: "companyHoliday",
-        icon: <Weekend />,
-        color: "#FF9800",
-        bgColor: "#FFF3E0",
-      }));
+  // // Function to fetch all types of announcements
+  // const fetchAllAnnouncements = async () => {
+  //   setLoadingAnnouncements(true);
+  //   try {
+  //     // Fetch holidays using the imported function
+  //     const holidaysResponse = await fetchHolidays();
+  //     const holidays = holidaysResponse.data.map((holiday) => ({
+  //       id: holiday._id,
+  //       title: holiday.name,
+  //       date: holiday.startDate,
+  //       content: `Holiday${
+  //         holiday.recurring ? " (Recurring)" : ""
+  //       } from ${new Date(
+  //         holiday.startDate
+  //       ).toLocaleDateString()} to ${new Date(
+  //         holiday.endDate
+  //       ).toLocaleDateString()}`,
+  //       type: "holiday",
+  //       icon: <Event />,
+  //       color: "#2196F3",
+  //       bgColor: "#E3F2FD",
+  //     }));
 
-      // Fetch restricted leaves
-      const restrictLeavesResponse = await axios.get(
-        `${apiBaseURL}/api/restrictLeaves`
-      );
-      const restrictLeaves = restrictLeavesResponse.data.map((leave) => ({
-        id: leave._id,
-        title: leave.title,
-        date: leave.startDate,
-        content: `${leave.description} (${leave.department}, ${leave.jobPosition})`,
-        endDate: leave.endDate,
-        type: "restrictLeave",
-        icon: <Block />,
-        color: "#F44336",
-        bgColor: "#FFEBEE",
-      }));
+  //     // Fetch company holidays
+  //     const companyHolidaysResponse = await axios.get(
+  //       `${apiBaseURL}/api/companyHolidays`
+  //     );
+  //     const companyHolidays = companyHolidaysResponse.data.map((holiday) => ({
+  //       id: holiday._id,
+  //       title: `${holiday.week} ${holiday.day}`,
+  //       date: new Date().toISOString(), // Current date as these are recurring
+  //       content: `Weekly holiday on ${holiday.day}`,
+  //       type: "companyHoliday",
+  //       icon: <Weekend />,
+  //       color: "#FF9800",
+  //       bgColor: "#FFF3E0",
+  //     }));
 
-      // Combine all announcements and sort by date (most recent first)
-      const allAnnouncements = [
-        ...holidays,
-        ...companyHolidays,
-        ...restrictLeaves,
-      ].sort((a, b) => new Date(b.date) - new Date(a.date));
+  //     // Fetch restricted leaves
+  //     const restrictLeavesResponse = await axios.get(
+  //       `${apiBaseURL}/api/restrictLeaves`
+  //     );
+  //     const restrictLeaves = restrictLeavesResponse.data.map((leave) => ({
+  //       id: leave._id,
+  //       title: leave.title,
+  //       date: leave.startDate,
+  //       content: `${leave.description} (${leave.department}, ${leave.jobPosition})`,
+  //       endDate: leave.endDate,
+  //       type: "restrictLeave",
+  //       icon: <Block />,
+  //       color: "#F44336",
+  //       bgColor: "#FFEBEE",
+  //     }));
 
-      setAnnouncements(allAnnouncements);
-    } catch (err) {
-      console.error("Error fetching announcements:", err);
-    } finally {
-      setLoadingAnnouncements(false);
-    }
-  };
+  //     // Combine all announcements and sort by date (most recent first)
+  //     const allAnnouncements = [
+  //       ...holidays,
+  //       ...companyHolidays,
+  //       ...restrictLeaves,
+  //     ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await axios.get(
-        `${apiBaseURL}/api/employees/report?period=${timeRange}`
-      );
+  //     setAnnouncements(allAnnouncements);
+  //   } catch (err) {
+  //     console.error("Error fetching announcements:", err);
+  //   } finally {
+  //     setLoadingAnnouncements(false);
+  //   }
+  // };
 
-      // Get the original data
-      const dashData = response.data.data;
+const fetchAllAnnouncements = async () => {
+  setLoadingAnnouncements(true);
+  try {
+    const token = getAuthToken();
+    
+    // Fetch holidays using the imported function with authentication
+    // Note: You'll need to update the fetchHolidays function in api/holidays.js
+    // to include authentication tokens as shown in previous implementations
+    const holidaysResponse = await fetchHolidays();
+    
+    const holidays = holidaysResponse.data.map((holiday) => ({
+      id: holiday._id,
+      title: holiday.name,
+      date: holiday.startDate,
+      content: `Holiday${
+        holiday.recurring ? " (Recurring)" : ""
+      } from ${new Date(
+        holiday.startDate
+      ).toLocaleDateString()} to ${new Date(
+        holiday.endDate
+      ).toLocaleDateString()}`,
+      type: "holiday",
+      icon: <Event />,
+      color: "#2196F3",
+      bgColor: "#E3F2FD",
+    }));
 
-      // Fetch all employees to get gender information
-      const employeesResponse = await axios.get(
-        `${apiBaseURL}/api/employees/registered`
-      );
+    // Fetch company holidays
+    const companyHolidaysResponse = await axios.get(
+      `${apiBaseURL}/api/companyHolidays`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    const companyHolidays = companyHolidaysResponse.data.map((holiday) => ({
+      id: holiday._id,
+      title: `${holiday.week} ${holiday.day}`,
+      date: new Date().toISOString(), // Current date as these are recurring
+      content: `Weekly holiday on ${holiday.day}`,
+      type: "companyHoliday",
+      icon: <Weekend />,
+      color: "#FF9800",
+      bgColor: "#FFF3E0",
+    }));
 
-      // Fetch offboarding data to get total offboarded count
-      const offboardingResponse = await axios.get(
-        `http://localhost:5002/api/offboarding`
-      );
-      const totalOffboarded = offboardingResponse.data.length || 0;
+    // Fetch restricted leaves
+    const restrictLeavesResponse = await axios.get(
+      `${apiBaseURL}/api/restrictLeaves`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    const restrictLeaves = restrictLeavesResponse.data.map((leave) => ({
+      id: leave._id,
+      title: leave.title,
+      date: leave.startDate,
+      content: `${leave.description} (${leave.department}, ${leave.jobPosition})`,
+      endDate: leave.endDate,
+      type: "restrictLeave",
+      icon: <Block />,
+      color: "#F44336",
+      bgColor: "#FFEBEE",
+    }));
 
-      // Extract gender information
-      const genderData = employeesResponse.data.map((emp) => ({
-        gender: emp.personalInfo?.gender || "Other",
-      }));
+    // Combine all announcements and sort by date (most recent first)
+    const allAnnouncements = [
+      ...holidays,
+      ...companyHolidays,
+      ...restrictLeaves,
+    ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      // Add gender data and updated offboarding count to dashboard data
-      setDashboardData({
-        ...dashData,
-        genderData: genderData,
-        stats: {
-          ...dashData.stats,
-          totalOffboarded: totalOffboarded,
-        },
-      });
-    } catch (err) {
-      console.error("Error fetching dashboard data:", err);
-      setError("Failed to load dashboard data. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setAnnouncements(allAnnouncements);
+  } catch (err) {
+    console.error("Error fetching announcements:", err);
+  } finally {
+    setLoadingAnnouncements(false);
+  }
+};
 
-  const fetchRecentJoins = async () => {
-    try {
-      const response = await axios.get(
-        `${apiBaseURL}/api/employees/registered`
-      );
 
-      // Sort by joining date (most recent first) and take the top 5
-      const sortedEmployees = response.data
-        .filter((emp) => emp.joiningDetails && emp.joiningDetails.dateOfJoining)
-        .sort((a, b) => {
-          const dateA = new Date(a.joiningDetails.dateOfJoining);
-          const dateB = new Date(b.joiningDetails.dateOfJoining);
-          return dateB - dateA;
-        })
-        .slice(0, 5);
 
-      setRecentJoins(sortedEmployees);
-    } catch (err) {
-      console.error("Error fetching recent joins:", err);
-    }
-  };
+  // const fetchDashboardData = async () => {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const response = await axios.get(
+  //       `${apiBaseURL}/api/employees/report?period=${timeRange}`
+  //     );
+
+  //     // Get the original data
+  //     const dashData = response.data.data;
+
+  //     // Fetch all employees to get gender information
+  //     const employeesResponse = await axios.get(
+  //       `${apiBaseURL}/api/employees/registered`
+  //     );
+
+  //     // Fetch offboarding data to get total offboarded count
+  //     const offboardingResponse = await axios.get(
+  //       `http://localhost:5002/api/offboarding`
+  //     );
+  //     const totalOffboarded = offboardingResponse.data.length || 0;
+
+  //     // Extract gender information
+  //     const genderData = employeesResponse.data.map((emp) => ({
+  //       gender: emp.personalInfo?.gender || "Other",
+  //     }));
+
+  //     // Add gender data and updated offboarding count to dashboard data
+  //     setDashboardData({
+  //       ...dashData,
+  //       genderData: genderData,
+  //       stats: {
+  //         ...dashData.stats,
+  //         totalOffboarded: totalOffboarded,
+  //       },
+  //     });
+  //   } catch (err) {
+  //     console.error("Error fetching dashboard data:", err);
+  //     setError("Failed to load dashboard data. Please try again later.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+const fetchDashboardData = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      `${apiBaseURL}/api/employees/report?period=${timeRange}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    // Get the original data
+    const dashData = response.data.data;
+
+    // Fetch all employees to get gender information
+    const employeesResponse = await axios.get(
+      `${apiBaseURL}/api/employees/registered`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    // Fetch offboarding data to get total offboarded count
+    const offboardingResponse = await axios.get(
+      `${apiBaseURL}/api/offboarding`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    const totalOffboarded = offboardingResponse.data.length || 0;
+
+    // Extract gender information
+    const genderData = employeesResponse.data.map((emp) => ({
+      gender: emp.personalInfo?.gender || "Other",
+    }));
+
+    // Add gender data and updated offboarding count to dashboard data
+    setDashboardData({
+      ...dashData,
+      genderData: genderData,
+      stats: {
+        ...dashData.stats,
+        totalOffboarded: totalOffboarded,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching dashboard data:", err);
+    setError("Failed to load dashboard data. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // const fetchRecentJoins = async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${apiBaseURL}/api/employees/registered`
+  //     );
+
+  //     // Sort by joining date (most recent first) and take the top 5
+  //     const sortedEmployees = response.data
+  //       .filter((emp) => emp.joiningDetails && emp.joiningDetails.dateOfJoining)
+  //       .sort((a, b) => {
+  //         const dateA = new Date(a.joiningDetails.dateOfJoining);
+  //         const dateB = new Date(b.joiningDetails.dateOfJoining);
+  //         return dateB - dateA;
+  //       })
+  //       .slice(0, 5);
+
+  //     setRecentJoins(sortedEmployees);
+  //   } catch (err) {
+  //     console.error("Error fetching recent joins:", err);
+  //   }
+  // };
+
+const fetchRecentJoins = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      `${apiBaseURL}/api/employees/registered`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    // Sort by joining date (most recent first) and take the top 5
+    const sortedEmployees = response.data
+      .filter((emp) => emp.joiningDetails && emp.joiningDetails.dateOfJoining)
+      .sort((a, b) => {
+        const dateA = new Date(a.joiningDetails.dateOfJoining);
+        const dateB = new Date(b.joiningDetails.dateOfJoining);
+        return dateB - dateA;
+      })
+      .slice(0, 5);
+
+    setRecentJoins(sortedEmployees);
+  } catch (err) {
+    console.error("Error fetching recent joins:", err);
+  }
+};
+
+
+
+  // const handleRefresh = () => {
+  //   fetchDashboardData();
+  //   fetchRecentJoins();
+  //   fetchAllAnnouncements();
+  // };
 
   const handleRefresh = () => {
-    fetchDashboardData();
-    fetchRecentJoins();
-    fetchAllAnnouncements();
-  };
+  fetchDashboardData();
+  fetchRecentJoins();
+  fetchAllAnnouncements();
+  fetchUserLeaveData();
+};
+
 
   const handleTimeRangeChange = (event) => {
     setTimeRange(event.target.value);
