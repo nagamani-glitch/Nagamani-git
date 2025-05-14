@@ -157,59 +157,125 @@ const JoiningDetailsForm = ({ nextStep, prevStep, handleFormDataChange, savedJoi
     employeeType: ''
   };
 
-  const handleSubmit = async (values) => {
-    try {
-      // Create actual Date objects
-      const appointmentDate = new Date(
-        values.appointmentYear,
-        months.indexOf(values.appointmentMonth),
-        values.appointmentDay
-      );
+  // Add this function at the top of your component or before the component definition
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
+  // const handleSubmit = async (values) => {
+  //   try {
+  //     // Create actual Date objects
+  //     const appointmentDate = new Date(
+  //       values.appointmentYear,
+  //       months.indexOf(values.appointmentMonth),
+  //       values.appointmentDay
+  //     );
       
-      const joiningDate = new Date(
-        values.joiningYear,
-        months.indexOf(values.joiningMonth),
-        values.joiningDay
-      );
+  //     const joiningDate = new Date(
+  //       values.joiningYear,
+  //       months.indexOf(values.joiningMonth),
+  //       values.joiningDay
+  //     );
       
-      const formData = {
-        dateOfAppointment: appointmentDate,
-        dateOfJoining: joiningDate,
-        department: values.department,
-        initialDesignation: values.initialDesignation,
-        modeOfRecruitment: values.modeOfRecruitment,
-        employeeType: values.employeeType
-      };
+  //     const formData = {
+  //       dateOfAppointment: appointmentDate,
+  //       dateOfJoining: joiningDate,
+  //       department: values.department,
+  //       initialDesignation: values.initialDesignation,
+  //       modeOfRecruitment: values.modeOfRecruitment,
+  //       employeeType: values.employeeType
+  //     };
     
-      console.log('Request payload:', {
+  //     console.log('Request payload:', {
+  //       employeeId,
+  //       formData
+  //     });
+    
+  //     const response = await axios.post(
+  //       'http://localhost:5002/api/employees/joining-details',
+  //       {
+  //         employeeId,
+  //         formData
+  //       },
+  //       {
+  //         headers: { 'Content-Type': 'application/json' }
+  //       }
+  //     );
+    
+  //     console.log('Server response:', response.data);
+    
+  //     if (response.data.success) {
+  //       console.log('Joining details saved successfully:', response.data);
+  //       toast.success('Joining details saved successfully');
+  //       nextStep();
+  //     }
+  //   } catch (error) {
+  //     console.log('Error details:', error.response?.data);
+  //     toast.error('Failed to save joining details');
+  //   }
+  // };
+  
+const handleSubmit = async (values) => {
+  try {
+    // Create actual Date objects
+    const appointmentDate = new Date(
+      values.appointmentYear,
+      months.indexOf(values.appointmentMonth),
+      values.appointmentDay
+    );
+    
+    const joiningDate = new Date(
+      values.joiningYear,
+      months.indexOf(values.joiningMonth),
+      values.joiningDay
+    );
+    
+    const formData = {
+      dateOfAppointment: appointmentDate,
+      dateOfJoining: joiningDate,
+      department: values.department,
+      initialDesignation: values.initialDesignation,
+      modeOfRecruitment: values.modeOfRecruitment,
+      employeeType: values.employeeType
+    };
+  
+    console.log('Request payload:', {
+      employeeId,
+      formData
+    });
+  
+    // Get the authentication token
+    const token = getAuthToken();
+    
+    const response = await axios.post(
+      'http://localhost:5002/api/employees/joining-details',
+      {
         employeeId,
         formData
-      });
-    
-      const response = await axios.post(
-        'http://localhost:5002/api/employees/joining-details',
-        {
-          employeeId,
-          formData
-        },
-        {
-          headers: { 'Content-Type': 'application/json' }
+      },
+      {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-      );
-    
-      console.log('Server response:', response.data);
-    
-      if (response.data.success) {
-        console.log('Joining details saved successfully:', response.data);
-        toast.success('Joining details saved successfully');
-        nextStep();
       }
-    } catch (error) {
-      console.log('Error details:', error.response?.data);
-      toast.error('Failed to save joining details');
-    }
-  };
+    );
   
+    console.log('Server response:', response.data);
+  
+    if (response.data.success) {
+      console.log('Joining details saved successfully:', response.data);
+      toast.success('Joining details saved successfully');
+      nextStep();
+    }
+  } catch (error) {
+    console.log('Error details:', error.response?.data);
+    toast.error(error.response?.data?.error || 'Failed to save joining details');
+  }
+};
+
+
     
 
   return (

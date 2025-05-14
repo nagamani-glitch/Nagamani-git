@@ -30,22 +30,64 @@ const ServiceHistoryForm = ({ nextStep, prevStep, savedServiceHistory }) => {
     }]
   };
 
-  const handleSubmit = async (values) => {
-    try {
-      const employeeId = localStorage.getItem('Emp_ID');
-      const response = await axios.post('http://localhost:5002/api/employees/service-history', {
+  // Add this function near the top of your file, after imports
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
+  // const handleSubmit = async (values) => {
+  //   try {
+  //     const employeeId = localStorage.getItem('Emp_ID');
+  //     const response = await axios.post('http://localhost:5002/api/employees/service-history', {
+  //       employeeId,
+  //       hasServiceHistory: hasPreviousExperience,
+  //       serviceHistory: hasPreviousExperience ? values.serviceHistory : []
+  //     });
+
+  //     if (response.data.success) {
+  //       nextStep();
+  //     }
+  //   } catch (error) {
+  //     console.error('Error saving service history:', error);
+  //   }
+  // };
+
+// Update the handleSubmit function
+const handleSubmit = async (values) => {
+  try {
+    const employeeId = localStorage.getItem('Emp_ID');
+    
+    // Get the authentication token
+    const token = getAuthToken();
+    
+    const response = await axios.post(
+      'http://localhost:5002/api/employees/service-history', 
+      {
         employeeId,
         hasServiceHistory: hasPreviousExperience,
         serviceHistory: hasPreviousExperience ? values.serviceHistory : []
-      });
-
-      if (response.data.success) {
-        nextStep();
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       }
-    } catch (error) {
-      console.error('Error saving service history:', error);
+    );
+
+    if (response.data.success) {
+      nextStep();
     }
-  };
+  } catch (error) {
+    console.error('Error saving service history:', error);
+    // Add better error handling
+    console.error('Error response:', error.response?.data);
+    console.error('Error status:', error.response?.status);
+    // You can add toast notifications here if you're using them
+  }
+};
+
+
 
   return (
     <motion.div
@@ -222,13 +264,45 @@ const ServiceHistoryForm = ({ nextStep, prevStep, savedServiceHistory }) => {
           </Typography>
           <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between' }}>
             <Button variant="outlined" onClick={prevStep}>Previous</Button>
-            <Button 
+            {/* <Button 
               variant="contained" 
               color="primary" 
               onClick={() => handleSubmit({ serviceHistory: [] })}
             >
               Next
-            </Button>
+            </Button> */}
+            <Button 
+  variant="contained" 
+  color="primary" 
+  onClick={() => {
+    // Get the authentication token
+    const token = getAuthToken();
+    
+    axios.post(
+      'http://localhost:5002/api/employees/service-history',
+      {
+        employeeId: localStorage.getItem('Emp_ID'),
+        hasServiceHistory: false,
+        serviceHistory: []
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    )
+    .then(response => {
+      if (response.data.success) {
+        nextStep();
+      }
+    })
+    .catch(error => {
+      console.error('Error saving service history:', error);
+    });
+  }}
+>
+  Next
+</Button>
           </div>
         </div>
       )}

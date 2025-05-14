@@ -48,6 +48,11 @@ const [educationDetails, setEducationDetails] = useState(savedEducationDetails?.
     return newErrors;
   };
   
+  // Add this function at the top of your component or before the component definition
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
  
  
  
@@ -85,41 +90,115 @@ const [educationDetails, setEducationDetails] = useState(savedEducationDetails?.
   };
  
    
-  // Handle form submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log('Starting form submission...');
+  // // Handle form submit
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   console.log('Starting form submission...');
   
-    const validBasicEducation = educationDetails.basic.map(edu => {
-      console.log('Processing basic education:', edu);
-      return {
-        education: edu.education,
-        institute: edu.institute,
-        board: edu.board,
-        marks: Number(edu.marks),
-        year: Number(edu.year),
-        grade: edu.grade,
-        stream: edu.stream
-      };
-    });
+  //   const validBasicEducation = educationDetails.basic.map(edu => {
+  //     console.log('Processing basic education:', edu);
+  //     return {
+  //       education: edu.education,
+  //       institute: edu.institute,
+  //       board: edu.board,
+  //       marks: Number(edu.marks),
+  //       year: Number(edu.year),
+  //       grade: edu.grade,
+  //       stream: edu.stream
+  //     };
+  //   });
   
-    const validProfessionalEducation = educationDetails.professional.map(edu => {
-      console.log('Processing professional education:', edu);
-      return {
-        education: edu.education,
-        institute: edu.institute,
-        board: edu.board,
-        marks: Number(edu.marks),
-        year: Number(edu.year),
-        grade: edu.grade,
-        stream: edu.stream
-      };
-    });
+  //   const validProfessionalEducation = educationDetails.professional.map(edu => {
+  //     console.log('Processing professional education:', edu);
+  //     return {
+  //       education: edu.education,
+  //       institute: edu.institute,
+  //       board: edu.board,
+  //       marks: Number(edu.marks),
+  //       year: Number(edu.year),
+  //       grade: edu.grade,
+  //       stream: edu.stream
+  //     };
+  //   });
   
-    console.log('Training status:', hasTraining);
+  //   console.log('Training status:', hasTraining);
     
-    const formattedTrainingData = hasTraining === 'yes' ? 
-    trainingInIndia.map(train => ({
+  //   const formattedTrainingData = hasTraining === 'yes' ? 
+  //   trainingInIndia.map(train => ({
+  //   type: train.type.toString(),
+  //   topic: train.topic.toString(),
+  //   institute: train.institute.toString(),
+  //   country: train.country.toString(),
+  //   sponsor: train.sponsor.toString(),
+  //   from: new Date(train.from).toISOString(),
+  //   to: new Date(train.to).toISOString()
+  // })) : [];
+
+  
+  //   const payload = {
+  //     employeeId: localStorage.getItem('Emp_ID'),
+  //     educationDetails: {
+  //       basic: validBasicEducation,
+  //       professional: validProfessionalEducation
+  //     },
+  //     trainingStatus: hasTraining,
+  //     trainingDetails: {
+  //       trainingInIndia: formattedTrainingData
+  //     }
+  //   };
+  
+  //   console.log('Final payload:', JSON.stringify(payload, null, 2));
+  
+  //   try {
+  //     const response = await axios.post('http://localhost:5002/api/employees/education-details', payload);
+  //     console.log('Server response:', response.data);
+  //     if (response.data.success) {
+  //       console.log('Submission successful, moving to next step');
+  //       nextStep();
+  //     }
+  //   } catch (error) {
+  //     console.log('Submission failed');
+  //     console.log('Error response:', error.response?.data);
+  //     console.log('Error status:', error.response?.status);
+  //     console.log('Error details:', error.message);
+  //   }
+  // };  
+
+ // Update the handleSubmit function
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  console.log('Starting form submission...');
+
+  const validBasicEducation = educationDetails.basic.map(edu => {
+    console.log('Processing basic education:', edu);
+    return {
+      education: edu.education,
+      institute: edu.institute,
+      board: edu.board,
+      marks: Number(edu.marks),
+      year: Number(edu.year),
+      grade: edu.grade,
+      stream: edu.stream
+    };
+  });
+
+  const validProfessionalEducation = educationDetails.professional.map(edu => {
+    console.log('Processing professional education:', edu);
+    return {
+      education: edu.education,
+      institute: edu.institute,
+      board: edu.board,
+      marks: Number(edu.marks),
+      year: Number(edu.year),
+      grade: edu.grade,
+      stream: edu.stream
+    };
+  });
+
+  console.log('Training status:', hasTraining);
+  
+  const formattedTrainingData = hasTraining === 'yes' ? 
+  trainingInIndia.map(train => ({
     type: train.type.toString(),
     topic: train.topic.toString(),
     institute: train.institute.toString(),
@@ -129,35 +208,46 @@ const [educationDetails, setEducationDetails] = useState(savedEducationDetails?.
     to: new Date(train.to).toISOString()
   })) : [];
 
-  
-    const payload = {
-      employeeId: localStorage.getItem('Emp_ID'),
-      educationDetails: {
-        basic: validBasicEducation,
-        professional: validProfessionalEducation
-      },
-      trainingStatus: hasTraining,
-      trainingDetails: {
-        trainingInIndia: formattedTrainingData
-      }
-    };
-  
-    console.log('Final payload:', JSON.stringify(payload, null, 2));
-  
-    try {
-      const response = await axios.post('http://localhost:5002/api/employees/education-details', payload);
-      console.log('Server response:', response.data);
-      if (response.data.success) {
-        console.log('Submission successful, moving to next step');
-        nextStep();
-      }
-    } catch (error) {
-      console.log('Submission failed');
-      console.log('Error response:', error.response?.data);
-      console.log('Error status:', error.response?.status);
-      console.log('Error details:', error.message);
+  const payload = {
+    employeeId: localStorage.getItem('Emp_ID'),
+    educationDetails: {
+      basic: validBasicEducation,
+      professional: validProfessionalEducation
+    },
+    trainingStatus: hasTraining,
+    trainingDetails: {
+      trainingInIndia: formattedTrainingData
     }
-  };  
+  };
+
+  console.log('Final payload:', JSON.stringify(payload, null, 2));
+
+  try {
+    // Get the authentication token
+    const token = getAuthToken();
+    
+    const response = await axios.post('http://localhost:5002/api/employees/education-details', 
+      payload,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    
+    console.log('Server response:', response.data);
+    if (response.data.success) {
+      console.log('Submission successful, moving to next step');
+      nextStep();
+    }
+  } catch (error) {
+    console.log('Submission failed');
+    console.log('Error response:', error.response?.data);
+    console.log('Error status:', error.response?.status);
+    console.log('Error details:', error.message);
+  }
+};
+ 
 
   const [selectedBasicEducation, setSelectedBasicEducation] = useState([]);
   const [selectedProfEducation, setSelectedProfEducation] = useState([]);

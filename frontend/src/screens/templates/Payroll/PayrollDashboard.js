@@ -71,6 +71,23 @@ const PayrollDashboard = () => {
     transition: Fade,
   });
 
+// Add these helper functions after your imports
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Helper function to create headers with auth token
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  };
+};
+
+
+
   // Fetch data on component mount and when selected date changes
   useEffect(() => {
     const fetchAllData = async () => {
@@ -102,89 +119,205 @@ const PayrollDashboard = () => {
     }
   }, [employeeData, allowanceData, deductionData, payslipData]);
 
-  // API calls
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/employees`);
-      const employees = response.data.data || [];
-      setEmployeeData(employees);
+  // // // API calls
+  // // const fetchEmployees = async () => {
+  // //   try {
+  // //     const response = await axios.get(`${API_URL}/employees`);
+  // //     const employees = response.data.data || [];
+  // //     setEmployeeData(employees);
       
-      // Set default selected employee if available
-      if (employees.length > 0) {
-        setSelectedEmployee(employees[0]);
-      }
+  // //     // Set default selected employee if available
+  // //     if (employees.length > 0) {
+  // //       setSelectedEmployee(employees[0]);
+  // //     }
       
-      return employees;
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      showAlert("Error fetching employees", "error");
-      return [];
-    }
-  };
+  // //     return employees;
+  // //   } catch (error) {
+  // //     console.error("Error fetching employees:", error);
+  // //     showAlert("Error fetching employees", "error");
+  // //     return [];
+  // //   }
+  // // };
 
-  const fetchAllowances = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/allowances`);
-      const allowances = response.data.data || [];
-      setAllowanceData(allowances);
-      return allowances;
-    } catch (error) {
-      console.error("Error fetching allowances:", error);
-      showAlert("Error fetching allowances", "error");
-      return [];
-    }
-  };
 
-  const fetchDeductions = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/deductions`);
-      const deductions = response.data.data || [];
-      setDeductionData(deductions);
-      return deductions;
-    } catch (error) {
-      console.error("Error fetching deductions:", error);
-      showAlert("Error fetching deductions", "error");
-      return [];
-    }
-  };
 
-  const fetchPayslips = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/payslips`);
-      if (response.data.success) {
-        const payslips = response.data.data || [];
-        setPayslipData(payslips);
-        return payslips;
-      } else {
-        console.warn("No payslips found or endpoint returned error");
-        setPayslipData([]);
-        return [];
+  // const fetchAllowances = async () => {
+  //   try {
+  //     const response = await axios.get(`${API_URL}/allowances`);
+  //     const allowances = response.data.data || [];
+  //     setAllowanceData(allowances);
+  //     return allowances;
+  //   } catch (error) {
+  //     console.error("Error fetching allowances:", error);
+  //     showAlert("Error fetching allowances", "error");
+  //     return [];
+  //   }
+  // };
+
+  // const fetchDeductions = async () => {
+  //   try {
+  //     const response = await axios.get(`${API_URL}/deductions`);
+  //     const deductions = response.data.data || [];
+  //     setDeductionData(deductions);
+  //     return deductions;
+  //   } catch (error) {
+  //     console.error("Error fetching deductions:", error);
+  //     showAlert("Error fetching deductions", "error");
+  //     return [];
+  //   }
+  // };
+
+  // const fetchPayslips = async () => {
+  //   try {
+  //     const response = await axios.get(`${API_URL}/payslips`);
+  //     if (response.data.success) {
+  //       const payslips = response.data.data || [];
+  //       setPayslipData(payslips);
+  //       return payslips;
+  //     } else {
+  //       console.warn("No payslips found or endpoint returned error");
+  //       setPayslipData([]);
+  //       return [];
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching payslips:", error);
+  //     setPayslipData([]);
+  //     return [];
+  //   }
+  // };
+
+  // const fetchContracts = async () => {
+  //   try {
+  //     const response = await axios.get(CONTRACTS_API_URL);
+  //     if (response.data.success) {
+  //       const contracts = response.data.data || [];
+  //       setContractsData(contracts);
+  //       return contracts;
+  //     } else {
+  //       console.warn("No contracts found or endpoint returned error");
+  //       setContractsData([]);
+  //       return [];
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching contracts:", error);
+  //     setContractsData([]);
+  //     return [];
+  //   }
+  // };
+
+  // Update fetchEmployees function
+const fetchEmployees = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/employees`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-    } catch (error) {
-      console.error("Error fetching payslips:", error);
+    });
+    const employees = response.data.data || [];
+    setEmployeeData(employees);
+    
+    // Set default selected employee if available
+    if (employees.length > 0) {
+      setSelectedEmployee(employees[0]);
+    }
+    
+    return employees;
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    showAlert("Error fetching employees", "error");
+    return [];
+  }
+};
+
+// Update fetchAllowances function
+const fetchAllowances = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/allowances`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const allowances = response.data.data || [];
+    setAllowanceData(allowances);
+    return allowances;
+  } catch (error) {
+    console.error("Error fetching allowances:", error);
+    showAlert("Error fetching allowances", "error");
+    return [];
+  }
+};
+
+// Update fetchDeductions function
+const fetchDeductions = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/deductions`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const deductions = response.data.data || [];
+    setDeductionData(deductions);
+    return deductions;
+  } catch (error) {
+    console.error("Error fetching deductions:", error);
+    showAlert("Error fetching deductions", "error");
+    return [];
+  }
+};
+
+// Update fetchPayslips function
+const fetchPayslips = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_URL}/payslips`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (response.data.success) {
+      const payslips = response.data.data || [];
+      setPayslipData(payslips);
+      return payslips;
+    } else {
+      console.warn("No payslips found or endpoint returned error");
       setPayslipData([]);
       return [];
     }
-  };
+  } catch (error) {
+    console.error("Error fetching payslips:", error);
+    setPayslipData([]);
+    return [];
+  }
+};
 
-  const fetchContracts = async () => {
-    try {
-      const response = await axios.get(CONTRACTS_API_URL);
-      if (response.data.success) {
-        const contracts = response.data.data || [];
-        setContractsData(contracts);
-        return contracts;
-      } else {
-        console.warn("No contracts found or endpoint returned error");
-        setContractsData([]);
-        return [];
+// Update fetchContracts function
+const fetchContracts = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(CONTRACTS_API_URL, {
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-    } catch (error) {
-      console.error("Error fetching contracts:", error);
+    });
+    if (response.data.success) {
+      const contracts = response.data.data || [];
+      setContractsData(contracts);
+      return contracts;
+    } else {
+      console.warn("No contracts found or endpoint returned error");
       setContractsData([]);
       return [];
     }
-  };
+  } catch (error) {
+    console.error("Error fetching contracts:", error);
+    setContractsData([]);
+    return [];
+  }
+};
+
 
   // Data processing functions
   const processPayrollData = () => {

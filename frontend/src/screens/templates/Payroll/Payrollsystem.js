@@ -1436,7 +1436,29 @@ const fetchEmployees = async () => {
   }
 };
 
-// Update fetchAllowances function
+// // Update fetchAllowances function
+// const fetchAllowances = async () => {
+//   try {
+//     console.log("Fetching allowances...");
+//     const token = getAuthToken();
+//     const response = await axios.get(`${API_URL}/allowances`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`
+//       }
+//     });
+//     console.log("Allowances fetched:", response.data.data.length);
+//     setAllowanceData(response.data.data);
+//     return response.data.data;
+//   } catch (error) {
+//     console.error("Error fetching allowances:", error);
+//     showAlert(
+//       error.response?.data?.message || "Error fetching allowances",
+//       "error"
+//     );
+//     return [];
+//   }
+// };
+
 const fetchAllowances = async () => {
   try {
     console.log("Fetching allowances...");
@@ -1446,11 +1468,21 @@ const fetchAllowances = async () => {
         Authorization: `Bearer ${token}`
       }
     });
-    console.log("Allowances fetched:", response.data.data.length);
-    setAllowanceData(response.data.data);
-    return response.data.data;
+    console.log("Raw allowances response:", response);
+    console.log("Allowances data structure:", response.data);
+    console.log("Allowances fetched:", response.data.data ? response.data.data.length : 'No data array found');
+    
+    if (response.data.data) {
+      setAllowanceData(response.data.data);
+      return response.data.data;
+    } else {
+      console.error("Unexpected allowance data structure:", response.data);
+      setAllowanceData([]);
+      return [];
+    }
   } catch (error) {
     console.error("Error fetching allowances:", error);
+    console.error("Error response:", error.response);
     showAlert(
       error.response?.data?.message || "Error fetching allowances",
       "error"
@@ -1459,7 +1491,30 @@ const fetchAllowances = async () => {
   }
 };
 
-// Update fetchDeductions function
+
+// // Update fetchDeductions function
+// const fetchDeductions = async () => {
+//   try {
+//     console.log("Fetching deductions...");
+//     const token = getAuthToken();
+//     const response = await axios.get(`${API_URL}/deductions`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`
+//       }
+//     });
+//     console.log("Deductions fetched:", response.data.data.length);
+//     setDeductions(response.data.data);
+//     return response.data.data;
+//   } catch (error) {
+//     console.error("Error fetching deductions:", error);
+//     showAlert(
+//       error.response?.data?.message || "Error fetching deductions",
+//       "error"
+//     );
+//     return [];
+//   }
+// };
+
 const fetchDeductions = async () => {
   try {
     console.log("Fetching deductions...");
@@ -1469,11 +1524,21 @@ const fetchDeductions = async () => {
         Authorization: `Bearer ${token}`
       }
     });
-    console.log("Deductions fetched:", response.data.data.length);
-    setDeductions(response.data.data);
-    return response.data.data;
+    console.log("Raw deductions response:", response);
+    console.log("Deductions data structure:", response.data);
+    console.log("Deductions fetched:", response.data.data ? response.data.data.length : 'No data array found');
+    
+    if (response.data.data) {
+      setDeductions(response.data.data);
+      return response.data.data;
+    } else {
+      console.error("Unexpected deduction data structure:", response.data);
+      setDeductions([]);
+      return [];
+    }
   } catch (error) {
     console.error("Error fetching deductions:", error);
+    console.error("Error response:", error.response);
     showAlert(
       error.response?.data?.message || "Error fetching deductions",
       "error"
@@ -1481,6 +1546,7 @@ const fetchDeductions = async () => {
     return [];
   }
 };
+
 
 // Update fetchPayslips function
 const fetchPayslips = async () => {
