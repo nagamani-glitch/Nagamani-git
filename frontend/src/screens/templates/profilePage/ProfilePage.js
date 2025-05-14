@@ -63,36 +63,35 @@ const ProfilePage = () => {
 
   const [editWorkInfoMode, setEditWorkInfoMode] = useState(false);
 
+  // Add this function to get the auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+
   // Add this function to handle work info updates
   const updateWorkInfo = async () => {
-    console.log("Updating work info for employee ID:", id);
-    try {
-      // Validate work info before submitting
-      if (editWorkInfoMode) {
-        // Create the data object with the values from your form
-        const workInfoData = {
-          shiftType: workInfo.shiftType,
-          workType: workInfo.workType,
-          uanNumber: workInfo.uanNumber,
-          pfNumber: workInfo.pfNumber,
-        };
+  console.log("Updating work info for employee ID:", id);
+  try {
+    if (editWorkInfoMode) {
+      const token = getAuthToken();
+      const workInfoData = {
+        shiftType: workInfo.shiftType,
+        workType: workInfo.workType,
+        uanNumber: workInfo.uanNumber,
+        pfNumber: workInfo.pfNumber,
+      };
 
-        console.log(
-          "Sending work info update:",
-          workInfoData,
-          "to employee ID:",
-          id
-        );
-
-        const response = await axios.put(
-          `http://localhost:5002/api/employees/work-info/${id}`,
-          workInfoData,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+      const response = await axios.put(
+        `http://localhost:5002/api/employees/work-info/${id}`,
+        workInfoData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
         if (response.status === 200) {
           toast.success("Work information updated successfully");
@@ -130,87 +129,21 @@ const ProfilePage = () => {
     }
   };
 
-  // // Update the fetchProfileData function in ProfilePage.js
-  // const fetchProfileData = useCallback(async () => {
-  //   if (!id) return;
-
-  //   setLoading(true);
-  //   try {
-  //     // Use the get-employee endpoint from employeesRouter.js
-  //     const response = await axios.get(`http://localhost:5002/api/employees/get-employee/${id}`);
-
-  //     if (response.data.success) {
-  //       const employeeData = response.data.data;
-
-  //       setEmployeeId(employeeData.Emp_ID);
-
-  //       // Set personal info from the employee data
-  //       setPersonalInfo({
-  //         employeeId: employeeData.Emp_ID,
-  //         name: `${employeeData.personalInfo?.firstName || ''} ${employeeData.personalInfo?.lastName || ''}`,
-  //         email: employeeData.personalInfo?.email || '',
-  //         phone: employeeData.personalInfo?.mobileNumber || '',
-  //         department: employeeData.joiningDetails?.department || '',
-  //         designation: employeeData.joiningDetails?.initialDesignation || '',
-  //         bloodGroup: employeeData.personalInfo?.bloodGroup || '',
-  //         gender: employeeData.personalInfo?.gender || '',
-  //         maritalStatus: employeeData.personalInfo?.maritalStatus || '',
-  //         panNumber: employeeData.personalInfo?.panNumber || '',
-  //         aadharNumber: employeeData.personalInfo?.aadharNumber || '',
-  //         // Include all other fields from personalInfo
-  //         ...employeeData.personalInfo,
-  //         // Include nested objects
-  //         addressInfo: employeeData.addressDetails || {},
-  //         joiningDetails: employeeData.joiningDetails || {},
-  //         educationDetails: employeeData.educationDetails || {},
-  //         trainingDetails: employeeData.trainingDetails || {},
-  //         familyDetails: employeeData.familyDetails || [],
-  //         serviceHistory: employeeData.serviceHistory || [],
-  //         nominationDetails: employeeData.nominationDetails || []
-  //       });
-
-  //       // Set bank info
-  //       setBankInfo(employeeData.bankInfo || {});
-
-  //       // Set work info
-  //       setWorkInfo({
-  //         department: employeeData.joiningDetails?.department || '',
-  //         designation: employeeData.joiningDetails?.initialDesignation || '',
-  //         employeeType: employeeData.joiningDetails?.employeeType || '',
-  //         dateOfJoining: employeeData.joiningDetails?.dateOfJoining || '',
-  //         dateOfAppointment: employeeData.joiningDetails?.dateOfAppointment || '',
-  //         modeOfRecruitment: employeeData.joiningDetails?.modeOfRecruitment || '',
-  //         shiftType: employeeData.joiningDetails?.shiftType || '',
-  //         workType: employeeData.joiningDetails?.workType || '',
-  //         uanNumber: employeeData.joiningDetails?.uanNumber || '',
-  //         pfNumber: employeeData.joiningDetails?.pfNumber || ''
-  //       });
-
-  //       // Set profile image
-  //       const imageUrl = employeeData.personalInfo?.employeeImage
-  //         ? `http://localhost:5002${employeeData.personalInfo.employeeImage}`
-  //         : null;
-  //       setProfileImage(imageUrl);
-
-  //       console.log('Fetched employee data:', employeeData);
-  //     } else {
-  //       console.error('Failed to fetch employee data');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching profile data:', error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [id]);
   const fetchProfileData = useCallback(async () => {
-    if (!id) return;
+  if (!id) return;
 
-    setLoading(true);
-    try {
-      // Use the get-employee endpoint from employeesRouter.js
-      const response = await axios.get(
-        `http://localhost:5002/api/employees/get-employee/${id}`
-      );
+  setLoading(true);
+  try {
+    const token = getAuthToken();
+    // Use the get-employee endpoint with authentication
+    const response = await axios.get(
+      `http://localhost:5002/api/employees/get-employee/${id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
       if (response.data.success) {
         const employeeData = response.data.data;
@@ -283,78 +216,18 @@ const ProfilePage = () => {
     }
   }, [id]);
 
-  //   // Add this function to your ProfilePage component
-  // const fetchProfileByUserId = async (userId) => {
-  //   setLoading(true);
-  //   try {
-  //     const response = await axios.get(`http://localhost:5002/api/employees/by-user/${userId}`);
-
-  //     if (response.data.success) {
-  //       const employeeData = response.data.data;
-
-  //       setEmployeeId(employeeData.Emp_ID);
-
-  //       // Set personal info from the employee data
-  //       setPersonalInfo({
-  //         employeeId: employeeData.Emp_ID,
-  //         name: `${employeeData.personalInfo?.firstName || ''} ${employeeData.personalInfo?.lastName || ''}`,
-  //         email: employeeData.personalInfo?.email || '',
-  //         phone: employeeData.personalInfo?.mobileNumber || '',
-  //         dob: employeeData.personalInfo?.dob ? new Date(employeeData.personalInfo.dob).toLocaleDateString() : '',
-  //         gender: employeeData.personalInfo?.gender || '',
-  //         department: employeeData.joiningDetails?.department || '',
-  //         designation: employeeData.joiningDetails?.initialDesignation || '',
-  //         bloodGroup: employeeData.personalInfo?.bloodGroup || '',
-  //         maritalStatus: employeeData.personalInfo?.maritalStatus || '',
-  //         nationality: employeeData.personalInfo?.nationality || '',
-  //         aadharNumber: employeeData.personalInfo?.aadharNumber || '',
-  //         panNumber: employeeData.personalInfo?.panNumber || '',
-  //         joiningDetails: employeeData.joiningDetails || {}
-  //       });
-
-  //       // Set bank info
-  //       setBankInfo(employeeData.bankInfo || {});
-
-  //       // Set work info
-  //       setWorkInfo({
-  //         department: employeeData.joiningDetails?.department || '',
-  //         designation: employeeData.joiningDetails?.initialDesignation || '',
-  //         employeeType: employeeData.joiningDetails?.employeeType || '',
-  //         dateOfJoining: employeeData.joiningDetails?.dateOfJoining || '',
-  //         dateOfAppointment: employeeData.joiningDetails?.dateOfAppointment || '',
-  //         modeOfRecruitment: employeeData.joiningDetails?.modeOfRecruitment || '',
-  //         shiftType: employeeData.joiningDetails?.shiftType || '',
-  //         workType: employeeData.joiningDetails?.workType || '',
-  //         uanNumber: employeeData.joiningDetails?.uanNumber || '',
-  //         pfNumber: employeeData.joiningDetails?.pfNumber || ''
-  //       });
-
-  //       // Set profile image
-  //       const imageUrl = employeeData.personalInfo?.employeeImage
-  //         ? `http://localhost:5002${employeeData.personalInfo.employeeImage}`
-  //         : null;
-  //       setProfileImage(imageUrl);
-
-  //       console.log('Fetched employee data by userId:', employeeData);
-  //       return true;
-  //     } else {
-  //       console.error('Failed to fetch employee data by userId');
-  //       return false;
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching profile data by userId:', error);
-  //     return false;
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchProfileByUserId = async (userId) => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `http://localhost:5002/api/employees/by-user/${userId}`
-      );
+  setLoading(true);
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(
+      `http://localhost:5002/api/employees/by-user/${userId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
       if (response.data.success) {
         const employeeData = response.data.data;
@@ -469,28 +342,50 @@ const ProfilePage = () => {
     loadProfile();
   }, [id, fetchProfileData]);
 
-  const fetchContracts = useCallback(async () => {
-    if (!id) return;
+  // const fetchContracts = useCallback(async () => {
+  //   if (!id) return;
 
-    try {
-      const data = await getContractsByEmployeeId(id);
-      setContracts(data);
-    } catch (error) {
-      console.error("Error fetching contracts:", error);
-    }
-  }, [id]);
+  //   try {
+  //     const data = await getContractsByEmployeeId(id);
+  //     setContracts(data);
+  //   } catch (error) {
+  //     console.error("Error fetching contracts:", error);
+  //   }
+  // }, [id]);
+
+const fetchContracts = useCallback(async () => {
+  if (!id) return;
+
+  try {
+    const token = getAuthToken();
+    // Assuming you need to update the contract services to accept auth token
+    const data = await getContractsByEmployeeId(id, token);
+    setContracts(data);
+  } catch (error) {
+    console.error("Error fetching contracts:", error);
+  }
+}, [id]);
+
 
   useEffect(() => {
     fetchProfileData();
     fetchContracts();
   }, [fetchProfileData, fetchContracts]);
 
+  // const handleDelete = async (contractId) => {
+  //   if (window.confirm("Are you sure you want to delete this contract?")) {
+  //     await deleteContract(contractId);
+  //     fetchContracts();
+  //   }
+  // };
+
   const handleDelete = async (contractId) => {
-    if (window.confirm("Are you sure you want to delete this contract?")) {
-      await deleteContract(contractId);
-      fetchContracts();
-    }
-  };
+  if (window.confirm("Are you sure you want to delete this contract?")) {
+    const token = getAuthToken();
+    await deleteContract(contractId, token);
+    fetchContracts();
+  }
+};
 
   const handleUpdate = (contract) => {
     setSelectedContract(contract);
@@ -541,13 +436,22 @@ const ProfilePage = () => {
     }
   };
 
+  // const handleSaveChanges = async () => {
+  //   if (selectedContract) {
+  //     await updateContract(selectedContract._id, formData);
+  //     fetchContracts();
+  //     setShowModal(false);
+  //   }
+  // };
+
   const handleSaveChanges = async () => {
-    if (selectedContract) {
-      await updateContract(selectedContract._id, formData);
-      fetchContracts();
-      setShowModal(false);
-    }
-  };
+  if (selectedContract) {
+    const token = getAuthToken();
+    await updateContract(selectedContract._id, formData, token);
+    fetchContracts();
+    setShowModal(false);
+  }
+};
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -570,19 +474,20 @@ const ProfilePage = () => {
   };
 
   // Update the updateBankInfo function in ProfilePage.js
-  const updateBankInfo = async () => {
-    try {
-      // Validate bank info before submitting
-      if (editMode && bankInfo.accountNumber) {
-        const response = await axios.put(
-          `http://localhost:5002/api/employees/bank-info/${id}`,
-          bankInfo,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+ const updateBankInfo = async () => {
+  try {
+    if (editMode && bankInfo.accountNumber) {
+      const token = getAuthToken();
+      const response = await axios.put(
+        `http://localhost:5002/api/employees/bank-info/${id}`,
+        bankInfo,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
         if (response.status === 200) {
           toast.success("Bank information updated successfully");
