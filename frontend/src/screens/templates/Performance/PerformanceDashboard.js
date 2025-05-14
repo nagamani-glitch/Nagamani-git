@@ -78,59 +78,131 @@ const PerformanceDashboard = () => {
     fetchDashboardData();
   }, [timeRange]);
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Fetch objectives data
-      const objectivesResponse = await axios.get('http://localhost:5002/api/objectives');
+  // const fetchDashboardData = async () => {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     // Fetch objectives data
+  //     const objectivesResponse = await axios.get('http://localhost:5002/api/objectives');
       
-      // Fetch feedback data
-      const feedbackResponse = await axios.get('http://localhost:5002/api/feedback');
+  //     // Fetch feedback data
+  //     const feedbackResponse = await axios.get('http://localhost:5002/api/feedback');
       
-      // Process objectives data
-      const objectives = objectivesResponse.data;
+  //     // Process objectives data
+  //     const objectives = objectivesResponse.data;
       
-      // Process feedback data
-      const feedback = feedbackResponse.data;
+  //     // Process feedback data
+  //     const feedback = feedbackResponse.data;
       
-      // Calculate total key results from objectives
-      const totalKeyResults = objectives.reduce((sum, obj) => sum + (parseInt(obj.keyResults) || 0), 0);
+  //     // Calculate total key results from objectives
+  //     const totalKeyResults = objectives.reduce((sum, obj) => sum + (parseInt(obj.keyResults) || 0), 0);
       
-      // Calculate objectives at risk
-      const objectivesAtRisk = objectives.filter(obj => 
-        obj.description && obj.description.toLowerCase().includes('risk')
-      ).length;
+  //     // Calculate objectives at risk
+  //     const objectivesAtRisk = objectives.filter(obj => 
+  //       obj.description && obj.description.toLowerCase().includes('risk')
+  //     ).length;
       
-      // Calculate total feedback across all categories
-      const totalFeedback = 
-        (feedback.selfFeedback?.length || 0) + 
-        (feedback.requestedFeedback?.length || 0) + 
-        (feedback.feedbackToReview?.length || 0) + 
-        (feedback.anonymousFeedback?.length || 0);
+  //     // Calculate total feedback across all categories
+  //     const totalFeedback = 
+  //       (feedback.selfFeedback?.length || 0) + 
+  //       (feedback.requestedFeedback?.length || 0) + 
+  //       (feedback.feedbackToReview?.length || 0) + 
+  //       (feedback.anonymousFeedback?.length || 0);
       
-      setDashboardData({
-        objectives,
-        feedback,
-        stats: {
-          totalObjectives: objectives.length,
-          totalKeyResults,
-          totalFeedback,
-          objectivesAtRisk
-        }
-      });
+  //     setDashboardData({
+  //       objectives,
+  //       feedback,
+  //       stats: {
+  //         totalObjectives: objectives.length,
+  //         totalKeyResults,
+  //         totalFeedback,
+  //         objectivesAtRisk
+  //       }
+  //     });
       
-    } catch (err) {
-      console.error("Error fetching dashboard data:", err);
-      setError("Failed to load dashboard data. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   } catch (err) {
+  //     console.error("Error fetching dashboard data:", err);
+  //     setError("Failed to load dashboard data. Please try again later.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const handleRefresh = () => {
-    fetchDashboardData();
-  };
+
+
+  // Add this helper function at the beginning of the PerformanceDashboard component
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Update the fetchDashboardData function
+const fetchDashboardData = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    // Get the authentication token
+    const token = getAuthToken();
+    
+    // Fetch objectives data with auth token
+    const objectivesResponse = await axios.get('http://localhost:5002/api/objectives', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    // Fetch feedback data with auth token
+    const feedbackResponse = await axios.get('http://localhost:5002/api/feedback', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    // Process objectives data
+    const objectives = objectivesResponse.data;
+    
+    // Process feedback data
+    const feedback = feedbackResponse.data;
+    
+    // Calculate total key results from objectives
+    const totalKeyResults = objectives.reduce((sum, obj) => sum + (parseInt(obj.keyResults) || 0), 0);
+    
+    // Calculate objectives at risk
+    const objectivesAtRisk = objectives.filter(obj => 
+      obj.description && obj.description.toLowerCase().includes('risk')
+    ).length;
+    
+    // Calculate total feedback across all categories
+    const totalFeedback = 
+      (feedback.selfFeedback?.length || 0) + 
+      (feedback.requestedFeedback?.length || 0) + 
+      (feedback.feedbackToReview?.length || 0) + 
+      (feedback.anonymousFeedback?.length || 0);
+    
+    setDashboardData({
+      objectives,
+      feedback,
+      stats: {
+        totalObjectives: objectives.length,
+        totalKeyResults,
+        totalFeedback,
+        objectivesAtRisk
+      }
+    });
+    
+  } catch (err) {
+    console.error("Error fetching dashboard data:", err);
+    setError("Failed to load dashboard data. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Update the handleRefresh function
+const handleRefresh = () => {
+  fetchDashboardData();
+};
+
+
 
   const handleTimeRangeChange = (event) => {
     setTimeRange(event.target.value);
