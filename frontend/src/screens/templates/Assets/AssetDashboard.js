@@ -88,8 +88,6 @@ ChartJS.register(
 
 const AssetDashboard = () => {
   const theme = useTheme();
-
-  // State variables
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [assets, setAssets] = useState([]);
@@ -117,15 +115,50 @@ const AssetDashboard = () => {
     fetchAssetData();
   }, []);
 
+  // const fetchAssetData = async () => {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     // Fetch assets data
+  //     const assetsResponse = await axios.get(`${API_URL}/api/assets`);
+
+  //     // Fetch asset batches data
+  //     const batchesResponse = await axios.get(`${API_URL}/api/asset-batches`);
+
+  //     // Set the raw data
+  //     setAssets(assetsResponse.data);
+  //     setAssetBatches(batchesResponse.data);
+
+  //     // Process data for dashboard summary
+  //     processDataForDashboard(assetsResponse.data, batchesResponse.data);
+  //   } catch (error) {
+  //     console.error("Error fetching asset data:", error);
+  //     setError("Failed to load asset data. Please try again.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+   // Helper function to get the auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
+  // Update the fetchAssetData function
   const fetchAssetData = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch assets data
-      const assetsResponse = await axios.get(`${API_URL}/api/assets`);
+      // Get the authentication token
+      const token = getAuthToken();
+      const authHeader = { headers: { 'Authorization': `Bearer ${token}` } };
+      
+      // Fetch assets data with auth token
+      const assetsResponse = await axios.get(`${API_URL}/api/assets`, authHeader);
 
-      // Fetch asset batches data
-      const batchesResponse = await axios.get(`${API_URL}/api/asset-batches`);
+      // Fetch asset batches data with auth token
+      const batchesResponse = await axios.get(`${API_URL}/api/asset-batches`, authHeader);
 
       // Set the raw data
       setAssets(assetsResponse.data);
@@ -141,6 +174,7 @@ const AssetDashboard = () => {
     }
   };
 
+  
   const processDataForDashboard = (assetsData, batchesData) => {
     // Calculate total assets
     const totalAssets = assetsData.length;

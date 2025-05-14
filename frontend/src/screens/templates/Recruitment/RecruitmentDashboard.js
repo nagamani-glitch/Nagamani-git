@@ -38,71 +38,150 @@ const RecruitmentDashboard = () => {
   const [applicants, setApplicants] = useState([]);
   const [skillZones, setSkillZones] = useState([]);
 
+
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
   useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Fetch data from all relevant endpoints
-        const results = await Promise.allSettled([
-          // Fetch candidates from the correct endpoint
-          axios.get('http://localhost:5002/api/recruitment/Recruitment%20Drive'),
-          axios.get('http://localhost:5002/api/recruitment-survey'),
-          // For applicants, we need to check if there's a specific endpoint for hired/not hired
-          axios.get('http://localhost:5002/api/applicantProfiles'),
-          axios.get('http://localhost:5002/api/skill-zone')
-        ]);
-
-        // Process candidates data
-        if (results[0].status === 'fulfilled') {
-          const candidatesData = results[0].value.data;
-          console.log("Candidates data:", candidatesData); // Debug log
-          setCandidates(candidatesData);
-        } else {
-          console.warn("Failed to fetch candidates:", results[0].reason);
-        }
-
-        // Process other data...
-        if (results[1].status === 'fulfilled') {
-          setTemplates(results[1].value.data);
-        } else {
-          console.warn("Failed to fetch templates:", results[1].reason);
-        }
-
-        if (results[2].status === 'fulfilled') {
-          const applicantsData = results[2].value.data;
-          console.log("Applicants data:", applicantsData); // Debug log
-          setApplicants(applicantsData);
-        } else {
-          console.warn("Failed to fetch applicants:", results[2].reason);
-        }
-
-        if (results[3].status === 'fulfilled') {
-          setSkillZones(results[3].value.data);
-        } else {
-          console.warn("Failed to fetch skill zones:", results[3].reason);
-          // Try alternative endpoint if the first one fails
-          try {
-            const skillZoneResponse = await axios.get('http://localhost:5002/api/skillZone');
-            if (skillZoneResponse.data) {
-              setSkillZones(skillZoneResponse.data);
-            }
-          } catch (err) {
-            console.warn("Failed to fetch skill zones from alternative endpoint:", err);
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-        setError("Failed to load some recruitment dashboard data. Partial data may be displayed.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAllData();
   }, []);
 
+    const fetchAllData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Get the authentication token
+      const token = getAuthToken();
+      const authHeader = { headers: { 'Authorization': `Bearer ${token}` } };
+      
+      // Fetch data from all relevant endpoints with auth headers
+      const results = await Promise.allSettled([
+        // Fetch candidates from the correct endpoint with auth
+        axios.get('http://localhost:5002/api/recruitment/Recruitment%20Drive', authHeader),
+        axios.get('http://localhost:5002/api/recruitment-survey', authHeader),
+        // For applicants, we need to check if there's a specific endpoint for hired/not hired
+        axios.get('http://localhost:5002/api/applicantProfiles', authHeader),
+        axios.get('http://localhost:5002/api/skill-zone', authHeader)
+      ]);
+
+      // Process candidates data
+      if (results[0].status === 'fulfilled') {
+        const candidatesData = results[0].value.data;
+        console.log("Candidates data:", candidatesData); // Debug log
+        setCandidates(candidatesData);
+      } else {
+        console.warn("Failed to fetch candidates:", results[0].reason);
+      }
+
+      // Process other data...
+      if (results[1].status === 'fulfilled') {
+        setTemplates(results[1].value.data);
+      } else {
+        console.warn("Failed to fetch templates:", results[1].reason);
+      }
+
+      if (results[2].status === 'fulfilled') {
+        const applicantsData = results[2].value.data;
+        console.log("Applicants data:", applicantsData); // Debug log
+        setApplicants(applicantsData);
+      } else {
+        console.warn("Failed to fetch applicants:", results[2].reason);
+      }
+
+      if (results[3].status === 'fulfilled') {
+        setSkillZones(results[3].value.data);
+      } else {
+        console.warn("Failed to fetch skill zones:", results[3].reason);
+        // Try alternative endpoint if the first one fails
+        try {
+          const skillZoneResponse = await axios.get('http://localhost:5002/api/skillZone', authHeader);
+          if (skillZoneResponse.data) {
+            setSkillZones(skillZoneResponse.data);
+          }
+        } catch (err) {
+          console.warn("Failed to fetch skill zones from alternative endpoint:", err);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      setError("Failed to load some recruitment dashboard data. Partial data may be displayed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  // useEffect(() => {
+  //   const fetchAllData = async () => {
+  //     setLoading(true);
+  //     setError(null);
+  //     try {
+  //       // Fetch data from all relevant endpoints
+  //       const results = await Promise.allSettled([
+  //         // Fetch candidates from the correct endpoint
+  //         axios.get('http://localhost:5002/api/recruitment/Recruitment%20Drive'),
+  //         axios.get('http://localhost:5002/api/recruitment-survey'),
+  //         // For applicants, we need to check if there's a specific endpoint for hired/not hired
+  //         axios.get('http://localhost:5002/api/applicantProfiles'),
+  //         axios.get('http://localhost:5002/api/skill-zone')
+  //       ]);
+
+  //       // Process candidates data
+  //       if (results[0].status === 'fulfilled') {
+  //         const candidatesData = results[0].value.data;
+  //         console.log("Candidates data:", candidatesData); // Debug log
+  //         setCandidates(candidatesData);
+  //       } else {
+  //         console.warn("Failed to fetch candidates:", results[0].reason);
+  //       }
+
+  //       // Process other data...
+  //       if (results[1].status === 'fulfilled') {
+  //         setTemplates(results[1].value.data);
+  //       } else {
+  //         console.warn("Failed to fetch templates:", results[1].reason);
+  //       }
+
+  //       if (results[2].status === 'fulfilled') {
+  //         const applicantsData = results[2].value.data;
+  //         console.log("Applicants data:", applicantsData); // Debug log
+  //         setApplicants(applicantsData);
+  //       } else {
+  //         console.warn("Failed to fetch applicants:", results[2].reason);
+  //       }
+
+  //       if (results[3].status === 'fulfilled') {
+  //         setSkillZones(results[3].value.data);
+  //       } else {
+  //         console.warn("Failed to fetch skill zones:", results[3].reason);
+  //         // Try alternative endpoint if the first one fails
+  //         try {
+  //           const skillZoneResponse = await axios.get('http://localhost:5002/api/skillZone');
+  //           if (skillZoneResponse.data) {
+  //             setSkillZones(skillZoneResponse.data);
+  //           }
+  //         } catch (err) {
+  //           console.warn("Failed to fetch skill zones from alternative endpoint:", err);
+  //         }
+  //       }
+  //     } catch (err) {
+  //       console.error("Error fetching dashboard data:", err);
+  //       setError("Failed to load some recruitment dashboard data. Partial data may be displayed.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchAllData();
+  // }, []);
+
+
+
+
   // Calculate stats from the fetched data
+  
+  
   const statsData = [
     { 
       label: "Total Vacancies", 
