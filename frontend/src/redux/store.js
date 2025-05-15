@@ -2,6 +2,8 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import authReducer from './authSlice';
+import userManagementReducer from './userManagementSlice';
+import companySettingsReducer from './companySettingsSlice';
 import { authMiddleware } from './authMiddleware';
 
 // Configure persist options
@@ -13,6 +15,8 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  userManagement:userManagementReducer,
+  companySettingsReducer: companySettingsReducer,
   // Add other reducers here as needed
 });
 

@@ -292,6 +292,8 @@ import myLeaveRequestRoutes from './routes/myLeaveRequestRoutes.js';
 import leaveRequestRoutes from './routes/leaveRequestRoutes.js';
 // import documentRoute from './routes/documentRoutes-1.js';
 
+import userRoutes from './routes/userRoutes.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -367,7 +369,8 @@ app.use(cors({
         'Content-Type', 
         'Authorization', 
         'Access-Control-Allow-Methods', 
-        'Access-Control-Allow-Origin'
+        'Access-Control-Allow-Origin',
+        'X-Company-Code' 
     ] // Include all necessary headers
 }));
 
@@ -438,6 +441,8 @@ app.use('/api/rotating-worktype', rotatingWorktypeRoutes);
 app.use('/api/leave-requests', myLeaveRequestRoutes);
 app.use('/api/leave-requests', leaveRequestRoutes);
 // app.use('/api/documents', documentRoute);
+
+app.use('/api/users', userRoutes);
 
 // After creating the io instance
 app.set('io', io);

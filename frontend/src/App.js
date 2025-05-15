@@ -19,7 +19,7 @@ import ResetPassword from './screens/authScreens/resetPassword/ResetPassword';
 import Settings from './screens/Settings';
 import { NotificationProvider } from './context/NotificationContext';
 import RegisterCompanyPage from './screens/authScreens/registerScreen/RegisterCompanyPage.js';
-import CompanySettings from './screens/authScreens/auth/CompanySettings.js';
+
 import { selectIsAuthenticated, selectAuthLoading , logoutUser } from './redux/authSlice';
 
 // Create a wrapper component to use hooks
@@ -78,7 +78,7 @@ function AppContent() {
           <Route element={<PrivateRoute />}>
             <Route path='/home' element={<HomeScreen />} />
             <Route path='/Dashboards/*' element={<Dashboard />} />
-            <Route path="/admin/company-settings" element={<CompanySettings />} />
+            
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Routes>

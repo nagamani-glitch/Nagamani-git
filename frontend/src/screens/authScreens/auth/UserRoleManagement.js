@@ -21,16 +21,195 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  Alert
+  Alert,
+  TextField,
+  Grid,
+  InputLabel,
+  Snackbar
 } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { 
+  fetchUsers, 
+  inviteUser, 
+  updateUserRole, 
+  updateUserPermissions,
+  selectUsers,
+  selectUserManagementLoading,
+  selectUserManagementError,
+  selectInviteSuccess,
+  selectUpdateSuccess,
+  clearUserManagementState
+} from '../../../redux/userManagementSlice';
 
 const UserRoleManagement = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const dispatch = useDispatch();
+  
+  // Get state from Redux
+  const users = useSelector(selectUsers);
+  const loading = useSelector(selectUserManagementLoading);
+  const error = useSelector(selectUserManagementError);
+  const inviteSuccess = useSelector(selectInviteSuccess);
+  const updateSuccess = useSelector(selectUpdateSuccess);
+  
   const [selectedUser, setSelectedUser] = useState(null);
   const [openPermissionsDialog, setOpenPermissionsDialog] = useState(false);
   const [selectedPermissions, setSelectedPermissions] = useState([]);
+  const [openInviteDialog, setOpenInviteDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [inviteFormData, setInviteFormData] = useState({
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    email: '',
+    role: 'employee'
+  });
+  const [formErrors, setFormErrors] = useState({});
+
+  // Debug authentication state
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const companyCode = localStorage.getItem('companyCode');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    console.log('Authentication Debug:', {
+      hasToken: !!token,
+      tokenFirstChars: token ? token.substring(0, 10) + '...' : 'none',
+      companyCode,
+      userRole: user.role,
+      userPermissions: user.permissions
+    });
+    
+    // Check if user has the required permission
+    const hasRequiredPermission = user.permissions?.includes('manage_company_settings') || user.role === 'admin';
+    console.log('Has required permission:', hasRequiredPermission);
+    
+    // If no token or no required permission, show error
+    if (!token) {
+      setFormErrors(prev => ({ ...prev, auth: 'No authentication token found. Please log in again.' }));
+    } else if (!hasRequiredPermission) {
+      setFormErrors(prev => ({ ...prev, auth: 'You do not have permission to access this page.' }));
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (inviteSuccess) {
+      setOpenInviteDialog(false);
+      setSuccessMessage('User invited successfully');
+      setInviteFormData({
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        email: '',
+        role: 'employee'
+      });
+      fetchUserData();
+      dispatch(clearUserManagementState());
+    }
+  }, [inviteSuccess, dispatch]);
+
+  useEffect(() => {
+    if (updateSuccess) {
+      setOpenPermissionsDialog(false);
+      setSuccessMessage('User updated successfully');
+      dispatch(clearUserManagementState());
+    }
+  }, [updateSuccess, dispatch]);
+
+  const fetchUserData = () => {
+    dispatch(fetchUsers());
+  };
+
+  const handleRoleChange = (userId, newRole) => {
+    dispatch(updateUserRole({ userId, role: newRole }));
+  };
+
+  const openPermissionEditor = (user) => {
+    setSelectedUser(user);
+    setSelectedPermissions([...user.permissions]);
+    setOpenPermissionsDialog(true);
+  };
+
+  const handlePermissionChange = (permission) => {
+    setSelectedPermissions(prev => {
+      if (prev.includes(permission)) {
+        return prev.filter(p => p !== permission);
+      } else {
+        return [...prev, permission];
+      }
+    });
+  };
+
+  const savePermissions = () => {
+    dispatch(updateUserPermissions({
+      userId: selectedUser._id,
+      permissions: selectedPermissions
+    }));
+  };
+
+  const handleOpenInviteDialog = () => {
+    setOpenInviteDialog(true);
+    setFormErrors({});
+  };
+
+  const handleInviteFormChange = (e) => {
+    const { name, value } = e.target;
+    setInviteFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error for this field if it exists
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateInviteForm = () => {
+    const errors = {};
+    
+    if (!inviteFormData.firstName.trim()) {
+      errors.firstName = 'First name is required';
+    }
+    
+    if (!inviteFormData.lastName.trim()) {
+      errors.lastName = 'Last name is required';
+    }
+    
+    if (!inviteFormData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(inviteFormData.email)) {
+      errors.email = 'Email is invalid';
+    }
+    
+    if (!inviteFormData.role) {
+      errors.role = 'Role is required';
+    }
+    
+    return errors;
+  };
+
+  const handleInviteUser = () => {
+    const errors = validateInviteForm();
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    
+    dispatch(inviteUser(inviteFormData));
+  };
+
+  const handleCloseSnackbar = () => {
+    setSuccessMessage('');
+  };
 
   const permissionGroups = {
     'Employee Management': [
@@ -53,78 +232,7 @@ const UserRoleManagement = () => {
     ]
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get('/api/roles/users');
-      setUsers(response.data);
-      setError('');
-    } catch (error) {
-      setError('Failed to fetch users. Please try again.');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRoleChange = async (userId, newRole) => {
-    try {
-      await axios.put(`/api/roles/users/${userId}/role`, { role: newRole });
-      
-      // Update local state
-      setUsers(users.map(user => 
-        user._id === userId ? { ...user, role: newRole } : user
-      ));
-      
-      // Refresh users to get updated permissions
-      fetchUsers();
-    } catch (error) {
-      setError('Failed to update user role. Please try again.');
-      console.error(error);
-    }
-  };
-
-  const openPermissionEditor = (user) => {
-    setSelectedUser(user);
-    setSelectedPermissions([...user.permissions]);
-    setOpenPermissionsDialog(true);
-  };
-
-  const handlePermissionChange = (permission) => {
-    setSelectedPermissions(prev => {
-      if (prev.includes(permission)) {
-        return prev.filter(p => p !== permission);
-      } else {
-        return [...prev, permission];
-      }
-    });
-  };
-
-  const savePermissions = async () => {
-    try {
-      await axios.put(`/api/roles/users/${selectedUser._id}/permissions`, {
-        permissions: selectedPermissions
-      });
-      
-      // Update local state
-      setUsers(users.map(user => 
-        user._id === selectedUser._id 
-          ? { ...user, permissions: selectedPermissions } 
-          : user
-      ));
-      
-      setOpenPermissionsDialog(false);
-    } catch (error) {
-      setError('Failed to update permissions. Please try again.');
-      console.error(error);
-    }
-  };
-
-  if (loading) return <Typography>Loading users...</Typography>;
+  if (loading && users.length === 0) return <Typography>Loading users...</Typography>;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -133,6 +241,17 @@ const UserRoleManagement = () => {
       </Typography>
       
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {formErrors.auth && <Alert severity="error" sx={{ mb: 2 }}>{formErrors.auth}</Alert>}
+      
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={handleOpenInviteDialog}
+        >
+          Invite New User
+        </Button>
+      </Box>
       
       <TableContainer component={Paper}>
         <Table>
@@ -224,6 +343,105 @@ const UserRoleManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Invite User Dialog */}
+      <Dialog 
+        open={openInviteDialog} 
+        onClose={() => setOpenInviteDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Invite New User</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="First Name"
+                  name="firstName"
+                  value={inviteFormData.firstName}
+                  onChange={handleInviteFormChange}
+                  error={!!formErrors.firstName}
+                  helperText={formErrors.firstName}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Middle Name"
+                  name="middleName"
+                  value={inviteFormData.middleName}
+                  onChange={handleInviteFormChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Last Name"
+                  name="lastName"
+                  value={inviteFormData.lastName}
+                  onChange={handleInviteFormChange}
+                  error={!!formErrors.lastName}
+                  helperText={formErrors.lastName}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={inviteFormData.email}
+                  onChange={handleInviteFormChange}
+                  error={!!formErrors.email}
+                  helperText={formErrors.email}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth error={!!formErrors.role}>
+                  <InputLabel id="role-select-label">Role</InputLabel>
+                  <Select
+                    labelId="role-select-label"
+                    name="role"
+                    value={inviteFormData.role}
+                    onChange={handleInviteFormChange}
+                    label="Role"
+                  >
+                    <MenuItem value="admin">Admin</MenuItem>
+                    <MenuItem value="hr">HR</MenuItem>
+                    <MenuItem value="manager">Manager</MenuItem>
+                    <MenuItem value="employee">Employee</MenuItem>
+                  </Select>
+                  {formErrors.role && (
+                    <Typography variant="caption" color="error">
+                      {formErrors.role}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenInviteDialog(false)}>Cancel</Button>
+          <Button onClick={handleInviteUser} variant="contained" color="primary">
+            Invite User
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message={successMessage}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </Box>
   );
 };

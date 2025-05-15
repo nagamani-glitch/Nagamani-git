@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   Box,
   Typography,
@@ -13,11 +12,24 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Chip
+  Chip,
+  Snackbar
 } from '@mui/material';
+import { useCompanySettings } from '../../../hooks/useCompanySettings';
 
 const CompanySettings = () => {
-  const [companyData, setCompanyData] = useState({
+  const {
+    companyData,
+    loading,
+    error,
+    updateSuccess,
+    getCompanyDetails,
+    updateDetails,
+    updateSettings,
+    clearState
+  } = useCompanySettings();
+  
+  const [localCompanyData, setLocalCompanyData] = useState({
     name: '',
     companyCode: '',
     industry: '',
@@ -44,33 +56,34 @@ const CompanySettings = () => {
     }
   });
   
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   useEffect(() => {
-    fetchCompanyDetails();
+    console.log('CompanySettings component mounted, fetching company details');
+    getCompanyDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchCompanyDetails = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get('/api/company');
-      setCompanyData(response.data);
-      setError('');
-    } catch (error) {
-      setError('Failed to fetch company details. Please try again.');
-      console.error(error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (companyData) {
+      console.log('Updating local company data with fetched data');
+      setLocalCompanyData(companyData);
     }
-  };
+  }, [companyData]);
+
+  useEffect(() => {
+    if (updateSuccess) {
+      setSuccessMessage('Company settings updated successfully');
+      clearState();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updateSuccess]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCompanyData(prev => ({
+    setLocalCompanyData(prev => ({
       ...prev,
       [name]: value
     }));
@@ -78,7 +91,7 @@ const CompanySettings = () => {
 
   const handleAddressChange = (e) => {
     const { name, value } = e.target;
-    setCompanyData(prev => ({
+    setLocalCompanyData(prev => ({
       ...prev,
       address: {
         ...prev.address,
@@ -89,13 +102,13 @@ const CompanySettings = () => {
 
   const handleLeavePolicyChange = (e) => {
     const { name, value } = e.target;
-    setCompanyData(prev => ({
+    setLocalCompanyData(prev => ({
       ...prev,
       settings: {
         ...prev.settings,
         leavePolicy: {
           ...prev.settings.leavePolicy,
-          [name]: parseInt(value, 10)
+          [name]: parseInt(value, 10) || 0
         }
       }
     }));
@@ -103,7 +116,7 @@ const CompanySettings = () => {
 
   const handleWorkingHoursChange = (e) => {
     const { name, value } = e.target;
-    setCompanyData(prev => ({
+    setLocalCompanyData(prev => ({
       ...prev,
       settings: {
         ...prev.settings,
@@ -116,7 +129,7 @@ const CompanySettings = () => {
   };
 
   const handleWorkingDaysChange = (e) => {
-    setCompanyData(prev => ({
+    setLocalCompanyData(prev => ({
       ...prev,
       settings: {
         ...prev.settings,
@@ -126,44 +139,50 @@ const CompanySettings = () => {
   };
 
   const saveCompanyDetails = async () => {
+    console.log('Saving company details:', {
+      name: localCompanyData.name,
+      industry: localCompanyData.industry,
+      contactEmail: localCompanyData.contactEmail,
+      contactPhone: localCompanyData.contactPhone,
+      address: localCompanyData.address
+    });
+    
     try {
-      setError('');
-      setSuccess('');
-      
-      await axios.put('/api/company', {
-        name: companyData.name,
-        industry: companyData.industry,
-        contactEmail: companyData.contactEmail,
-        contactPhone: companyData.contactPhone,
-        address: companyData.address
+      await updateDetails({
+        name: localCompanyData.name,
+        industry: localCompanyData.industry,
+        contactEmail: localCompanyData.contactEmail,
+        contactPhone: localCompanyData.contactPhone,
+        address: localCompanyData.address
       });
-      
-      setSuccess('Company details updated successfully');
     } catch (error) {
-      setError('Failed to update company details. Please try again.');
-      console.error(error);
+      console.error('Error saving company details:', error);
     }
   };
 
   const saveCompanySettings = async () => {
+    console.log('Saving company settings:', {
+      leavePolicy: localCompanyData.settings.leavePolicy,
+      workingHours: localCompanyData.settings.workingHours,
+      workingDays: localCompanyData.settings.workingDays
+    });
+    
     try {
-      setError('');
-      setSuccess('');
-      
-      await axios.put('/api/company/settings', {
-        leavePolicy: companyData.settings.leavePolicy,
-        workingHours: companyData.settings.workingHours,
-        workingDays: companyData.settings.workingDays
+      await updateSettings({
+        leavePolicy: localCompanyData.settings.leavePolicy,
+        workingHours: localCompanyData.settings.workingHours,
+        workingDays: localCompanyData.settings.workingDays
       });
-      
-      setSuccess('Company settings updated successfully');
     } catch (error) {
-      setError('Failed to update company settings. Please try again.');
-      console.error(error);
+      console.error('Error saving company settings:', error);
     }
   };
 
-  if (loading) return <Typography>Loading company details...</Typography>;
+  const handleCloseSnackbar = () => {
+    setSuccessMessage('');
+  };
+
+  if (loading && !localCompanyData.name) return <Typography>Loading company details...</Typography>;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -172,7 +191,6 @@ const CompanySettings = () => {
       </Typography>
       
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
       
       <Grid container spacing={3}>
         {/* Company Details */}
@@ -189,17 +207,17 @@ const CompanySettings = () => {
                   fullWidth
                   label="Company Name"
                   name="name"
-                  value={companyData.name}
+                  value={localCompanyData.name}
                   onChange={handleChange}
                   margin="normal"
                 />
               </Grid>
               <Grid item xs={12} md={6}>
-              <TextField
+                <TextField
                   fullWidth
                   label="Company Code"
                   name="companyCode"
-                  value={companyData.companyCode}
+                  value={localCompanyData.companyCode}
                   disabled
                   margin="normal"
                 />
@@ -209,7 +227,7 @@ const CompanySettings = () => {
                   fullWidth
                   label="Industry"
                   name="industry"
-                  value={companyData.industry}
+                  value={localCompanyData.industry}
                   onChange={handleChange}
                   margin="normal"
                 />
@@ -219,7 +237,7 @@ const CompanySettings = () => {
                   fullWidth
                   label="Contact Email"
                   name="contactEmail"
-                  value={companyData.contactEmail}
+                  value={localCompanyData.contactEmail}
                   onChange={handleChange}
                   margin="normal"
                 />
@@ -229,7 +247,7 @@ const CompanySettings = () => {
                   fullWidth
                   label="Contact Phone"
                   name="contactPhone"
-                  value={companyData.contactPhone}
+                  value={localCompanyData.contactPhone}
                   onChange={handleChange}
                   margin="normal"
                 />
@@ -246,7 +264,7 @@ const CompanySettings = () => {
                   fullWidth
                   label="Street"
                   name="street"
-                  value={companyData.address.street}
+                  value={localCompanyData.address.street}
                   onChange={handleAddressChange}
                   margin="normal"
                 />
@@ -256,7 +274,7 @@ const CompanySettings = () => {
                   fullWidth
                   label="City"
                   name="city"
-                  value={companyData.address.city}
+                  value={localCompanyData.address.city}
                   onChange={handleAddressChange}
                   margin="normal"
                 />
@@ -266,7 +284,7 @@ const CompanySettings = () => {
                   fullWidth
                   label="State/Province"
                   name="state"
-                  value={companyData.address.state}
+                  value={localCompanyData.address.state}
                   onChange={handleAddressChange}
                   margin="normal"
                 />
@@ -276,7 +294,7 @@ const CompanySettings = () => {
                   fullWidth
                   label="Country"
                   name="country"
-                  value={companyData.address.country}
+                  value={localCompanyData.address.country}
                   onChange={handleAddressChange}
                   margin="normal"
                 />
@@ -286,7 +304,7 @@ const CompanySettings = () => {
                   fullWidth
                   label="Zip/Postal Code"
                   name="zipCode"
-                  value={companyData.address.zipCode}
+                  value={localCompanyData.address.zipCode}
                   onChange={handleAddressChange}
                   margin="normal"
                 />
@@ -323,7 +341,7 @@ const CompanySettings = () => {
                   label="Casual Leave Per Year"
                   name="casualLeavePerYear"
                   type="number"
-                  value={companyData.settings.leavePolicy.casualLeavePerYear}
+                  value={localCompanyData.settings.leavePolicy.casualLeavePerYear}
                   onChange={handleLeavePolicyChange}
                   margin="normal"
                   InputProps={{ inputProps: { min: 0 } }}
@@ -335,7 +353,7 @@ const CompanySettings = () => {
                   label="Sick Leave Per Year"
                   name="sickLeavePerYear"
                   type="number"
-                  value={companyData.settings.leavePolicy.sickLeavePerYear}
+                  value={localCompanyData.settings.leavePolicy.sickLeavePerYear}
                   onChange={handleLeavePolicyChange}
                   margin="normal"
                   InputProps={{ inputProps: { min: 0 } }}
@@ -347,7 +365,7 @@ const CompanySettings = () => {
                   label="Earned Leave Per Year"
                   name="earnedLeavePerYear"
                   type="number"
-                  value={companyData.settings.leavePolicy.earnedLeavePerYear}
+                  value={localCompanyData.settings.leavePolicy.earnedLeavePerYear}
                   onChange={handleLeavePolicyChange}
                   margin="normal"
                   InputProps={{ inputProps: { min: 0 } }}
@@ -366,7 +384,7 @@ const CompanySettings = () => {
                   label="Start Time"
                   name="start"
                   type="time"
-                  value={companyData.settings.workingHours.start}
+                  value={localCompanyData.settings.workingHours.start}
                   onChange={handleWorkingHoursChange}
                   margin="normal"
                   InputLabelProps={{ shrink: true }}
@@ -378,7 +396,7 @@ const CompanySettings = () => {
                   label="End Time"
                   name="end"
                   type="time"
-                  value={companyData.settings.workingHours.end}
+                  value={localCompanyData.settings.workingHours.end}
                   onChange={handleWorkingHoursChange}
                   margin="normal"
                   InputLabelProps={{ shrink: true }}
@@ -394,7 +412,7 @@ const CompanySettings = () => {
               <InputLabel>Working Days</InputLabel>
               <Select
                 multiple
-                value={companyData.settings.workingDays}
+                value={localCompanyData.settings.workingDays}
                 onChange={handleWorkingDaysChange}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -423,6 +441,15 @@ const CompanySettings = () => {
           </Paper>
         </Grid>
       </Grid>
+      
+      {/* Success Snackbar */}
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message={successMessage}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </Box>
   );
 };

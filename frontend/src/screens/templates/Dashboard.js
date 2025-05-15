@@ -51,6 +51,8 @@ import ResignationReview from "./Offboarding/ResignationReview";
 import PayrollSystem from "./Payroll/Payrollsystem";
 import Contract from './Payroll/Contract';
 import EmployeeReport from './reports/EmployeeReport';
+import UserRoleManagement from '../authScreens/auth/UserRoleManagement';
+import CompanySettings from '../authScreens/auth/CompanySettings';
 
 
 function Dashboard() {
@@ -134,6 +136,9 @@ function Dashboard() {
           <Route path="/payroll-system" element={<PayrollSystem />} />
           <Route path="/contract" element={<Contract />} />
           <Route path="/employee-report" element={<EmployeeReport />} />
+          <Route path="/user-management" element={<UserRoleManagement />} />
+          <Route path="/company-settings" element={<CompanySettings />} />
+
         </Routes>
       </div>
       <QuickActionButton onNavigate={handleNavigation} />

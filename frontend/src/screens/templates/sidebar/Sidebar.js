@@ -347,6 +347,14 @@ function Sidebar() {
             <li onClick={() => handleNavigation("/Dashboards/restrict-leaves")}>
               Restrict Leaves
             </li>
+            <li onClick={() => handleNavigation("/Dashboards/user-management")}>
+              User Management
+            
+            </li>
+            <li onClick={() => handleNavigation("/Dashboards/company-settings")}>
+              Company Settings
+              
+            </li>
           </ul>
         )}
       </ul>
